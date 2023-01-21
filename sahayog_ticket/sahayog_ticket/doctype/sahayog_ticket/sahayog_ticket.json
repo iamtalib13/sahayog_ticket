@@ -1,0 +1,483 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{dept_name}-{DD}{MM}{YY}{#####}",
+ "color": "green",
+ "creation": "2022-11-10 11:00:24.154179",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "assigned_it",
+  "status",
+  "last_user",
+  "ticket_closed_by",
+  "column_break_4",
+  "remark",
+  "status_onhold",
+  "ticket_duration_section",
+  "on_hold_time",
+  "due_time",
+  "total_days",
+  "total_hours",
+  "column_break",
+  "basic_details_tab",
+  "designation",
+  "full_name",
+  "column_break_5",
+  "phone",
+  "phone2",
+  "emai",
+  "lead_owner",
+  "column_break_17",
+  "region",
+  "branch_name",
+  "tick_section",
+  "priority",
+  "normal_desc",
+  "medium_desc",
+  "urgent_desc",
+  "high_desc",
+  "pricol",
+  "priority_description",
+  "section_break_45",
+  "dept_name",
+  "ticket_type_account",
+  "ticket_type_it",
+  "ticket_type_hr",
+  "ticket_type_operations",
+  "ticket_type_mis",
+  "ticket_type_jll",
+  "ticket_type_facility",
+  "ticket_type_ho",
+  "desc",
+  "cancel_ticket",
+  "ticket_cancellation_reason",
+  "flag",
+  "inprogress_flag",
+  "open_and_read",
+  "message_displayed",
+  "priority_timer"
+ ],
+ "fields": [
+  {
+   "depends_on": "eval:doc.dept_name==\"IT\"",
+   "fieldname": "assigned_it",
+   "fieldtype": "Select",
+   "label": "Assigned To Executive",
+   "options": "\nNone\nGondia Executive\nBhandara Executive - Devendra\nChandrapur Executive - Pravin\nNagpur Executive - Kunal\nGadhchiroli Executive - Sanghdeep",
+   "permlevel": 3,
+   "read_only_depends_on": "eval:doc.status==\"Cancelled\" "
+  },
+  {
+   "fieldname": "basic_details_tab",
+   "fieldtype": "Section Break",
+   "label": "Basic Details"
+  },
+  {
+   "fetch_from": "lead_owner.bio",
+   "fieldname": "designation",
+   "fieldtype": "Data",
+   "label": "Designation",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "lead_owner.full_name",
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "label": "Full Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "lead_owner.phone",
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone 1",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "lead_owner.email",
+   "fieldname": "emai",
+   "fieldtype": "Data",
+   "label": "Email id",
+   "read_only": 1
+  },
+  {
+   "default": "__user",
+   "fieldname": "lead_owner",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "in_list_view": 1,
+   "label": "Email",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_17",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "lead_owner.region",
+   "fieldname": "region",
+   "fieldtype": "Data",
+   "label": "Region",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "lead_owner.location",
+   "fieldname": "branch_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Branch Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tick_section",
+   "fieldtype": "Section Break",
+   "label": "Ticket Details"
+  },
+  {
+   "fieldname": "dept_name",
+   "fieldtype": "Link",
+   "in_global_search": 1,
+   "label": "Department",
+   "options": "Departsection",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "depends_on": "eval:doc.dept_name==\"Accounts\"",
+   "fieldname": "ticket_type_account",
+   "fieldtype": "Select",
+   "label": "Ticket Type of Account Department",
+   "mandatory_depends_on": "eval:doc.dept_name==\"Accounts\"",
+   "options": "\nInsurance\nTA\nOthers",
+   "set_only_once": 1
+  },
+  {
+   "depends_on": "eval:doc.dept_name==\"IT\"\n",
+   "fieldname": "ticket_type_it",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Ticket Type of IT Department",
+   "mandatory_depends_on": "eval:doc.dept_name==\"IT\"",
+   "options": "\nBio metric\nCCTV\nCPU\nKeyboard\nMonitor\nMouse\nMozilla Firefox\nMS Office\nOperating System\nOutlook Mail\nPrinter\nOthers",
+   "set_only_once": 1
+  },
+  {
+   "depends_on": "eval:doc.dept_name==\"Operations\"",
+   "fieldname": "ticket_type_operations",
+   "fieldtype": "Select",
+   "label": "Ticket Type of Operations Department",
+   "mandatory_depends_on": "eval:doc.dept_name==\"Operations\"",
+   "options": "\nAgent Issue\nBR.Net\nCBS User ID Creation\nDay End Issue\nDocument Scan\nEntry Correction\nEOD\nJLL Disbursement\nMobile Banking\nNet Banking\nPassbook Print\nReconciliation\nUPI\nOthers"
+  },
+  {
+   "depends_on": "eval:doc.dept_name==\"HR\"",
+   "fieldname": "ticket_type_hr",
+   "fieldtype": "Select",
+   "label": "Ticket Type of HR Department",
+   "mandatory_depends_on": "eval:doc.dept_name==\"HR\"",
+   "options": "\nAttendance\nFull-n-Final Settlement\nMedical Card\nPF\nSalary\nOthers",
+   "set_only_once": 1
+  },
+  {
+   "depends_on": "eval:doc.dept_name==\"MIS\"",
+   "fieldname": "ticket_type_mis",
+   "fieldtype": "Select",
+   "label": "Ticket Type of MIS Department",
+   "mandatory_depends_on": "eval:doc.dept_name==\"MIS\"",
+   "options": "\nCover Page Not Show in Proper\nDemand Not Show\nExtra OD Show\nFormula Mismatch\nOD Amt in Negative\nPWA Not Show\nReport Not Generate\nTotal Amount Not Show\nOthers"
+  },
+  {
+   "depends_on": "eval:doc.dept_name==\"JLL\"",
+   "fieldname": "ticket_type_jll",
+   "fieldtype": "Select",
+   "label": "Ticket Type of JLL Department",
+   "mandatory_depends_on": "eval:doc.dept_name==\"JLL\"",
+   "options": "\nAbnormal Balance\nAccount Opening\nBachat Gat Loan Recovery Entry\nDeath Case\nFT Entry\nInsurance Format\nInsurance Settlement\nLoan Close\nLoan Individual Process\nRectify Entry\nYES Account Related\nOthers"
+  },
+  {
+   "depends_on": "eval:doc.dept_name==\"Facility\"",
+   "fieldname": "ticket_type_facility",
+   "fieldtype": "Select",
+   "label": "Ticket Type of Facility Department",
+   "mandatory_depends_on": "eval:doc.dept_name==\"Facility\"",
+   "options": "\nEvent Management\nIdentity Card\nTravel Desk\nUniform and Other Utilities\nVisiting Card\nOthers"
+  },
+  {
+   "fieldname": "desc",
+   "fieldtype": "Text",
+   "in_preview": 1,
+   "label": "Description",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "depends_on": "eval:doc.status==\"Open\" || doc.status==\"Read\"",
+   "description": "Only Ticket Owner can Cancel this when Ticket status is OPEN or READ .",
+   "fieldname": "cancel_ticket",
+   "fieldtype": "Select",
+   "label": "Cancel Ticket",
+   "options": "Your Ticket is On-Going\nCancel Ticket",
+   "permlevel": 6,
+   "read_only_depends_on": "eval:doc.status==\"In-Progress\" || doc.status==\"On-Hold\" || doc.status==\"Closed\" || doc.status==\"Cancelled\" || doc.status==\"New\"  "
+  },
+  {
+   "depends_on": "eval:doc.cancel_ticket==\"Cancel Ticket\"",
+   "fieldname": "ticket_cancellation_reason",
+   "fieldtype": "Data",
+   "label": "Ticket Cancellation Reason",
+   "mandatory_depends_on": "eval:doc.cancel_ticket==\"Cancel Ticket\"",
+   "permlevel": 6,
+   "read_only_depends_on": "eval:doc.status==\"In-Progress\" || doc.status==\"On-Hold\" || doc.status==\"Closed\" || doc.status==\"Cancelled\" "
+  },
+  {
+   "depends_on": "eval:doc.status == \"New\" || doc.status == \"Open\" || doc.status == \"Read\" || doc.status == \"In-Progress\" || doc.status == \"On-Hold\" || doc.status == \"Closed\" || doc.status == \"Cancelled\"",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Ticket Status",
+   "options": "New\nOpen\nRead\nIn-Progress\nOn-Hold\nClosed\nCancelled",
+   "permlevel": 1,
+   "read_only_depends_on": "eval:doc.flag==\"Closed\" "
+  },
+  {
+   "depends_on": "eval:doc.status==\"Closed\" ",
+   "fieldname": "remark",
+   "fieldtype": "Small Text",
+   "label": "Ticket Closing Remark",
+   "mandatory_depends_on": "eval:doc.status==\"Closed\"",
+   "permlevel": 1
+  },
+  {
+   "depends_on": "eval:doc.status==\"Open\"",
+   "fieldname": "flag",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "flag"
+  },
+  {
+   "fieldname": "inprogress_flag",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "inprogress flag"
+  },
+  {
+   "default": "none",
+   "fieldname": "open_and_read",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Open and Read",
+   "options": "none\nOpen\nRead"
+  },
+  {
+   "default": "Normal",
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Priority",
+   "options": "\nNormal\nMedium\nHigh\nUrgent",
+   "permlevel": 6,
+   "read_only_depends_on": "eval:doc.status == \"On-Hold\" || doc.status == \"Closed\" || doc.status == \"Cancelled\"    "
+  },
+  {
+   "depends_on": "eval:doc.status == \"On-Hold\"",
+   "fieldname": "status_onhold",
+   "fieldtype": "Select",
+   "label": "Status Description",
+   "options": "Your Ticket is On-Hold and will take 72 Hours to 96 Hours to Resolve",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.priority == \"Medium\"",
+   "fieldname": "medium_desc",
+   "fieldtype": "Select",
+   "label": "Priority Details",
+   "options": "If Priority is Medium, then Your Ticket will Resolved within 24 - 48 Hours",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.priority == \"Normal\"",
+   "fieldname": "normal_desc",
+   "fieldtype": "Select",
+   "label": "Priority Details",
+   "options": "If Priority is Normal, then Your Ticket will Resolved within 48 - 72 Hours",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.priority == \"High\"",
+   "fieldname": "high_desc",
+   "fieldtype": "Select",
+   "label": "Priority Details",
+   "options": "If Priority is High, then Your Ticket will Resolved within 0 - 24 Hours",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.priority == \"Urgent\"",
+   "fieldname": "urgent_desc",
+   "fieldtype": "Select",
+   "label": "Priority Details",
+   "options": "If Priority is Urgent, then Your Ticket will Resolved within 0 - 4 Hours",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.priority == \"Medium\" || doc.priority == \"High\" || doc.priority == \"Urgent\"",
+   "fieldname": "priority_description",
+   "fieldtype": "Small Text",
+   "label": "Priority Description",
+   "mandatory_depends_on": "eval:doc.priority == \"Medium\" || doc.priority == \"High\" || doc.priority == \"Urgent\"",
+   "read_only_depends_on": "eval:doc.status == \"On-Hold\""
+  },
+  {
+   "default": "Now",
+   "fieldname": "on_hold_time",
+   "fieldtype": "Datetime",
+   "hidden": 1,
+   "label": "Ticket Creation Date"
+  },
+  {
+   "fieldname": "due_time",
+   "fieldtype": "Datetime",
+   "label": "Current Date & Time"
+  },
+  {
+   "default": "0",
+   "fieldname": "total_hours",
+   "fieldtype": "Int",
+   "label": "Total Hours",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "total_days",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Total Days",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.status == \"Open\" || doc.status == \"Read\" || doc.status==\"In-Progress\" || doc.status==\"On-Hold\" || doc.status==\"Closed\" || doc.status==\"Cancelled\"",
+   "fieldname": "ticket_duration_section",
+   "fieldtype": "Section Break",
+   "label": "Ticket Duration "
+  },
+  {
+   "fieldname": "column_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "false",
+   "fieldname": "message_displayed",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "message_displayed"
+  },
+  {
+   "fieldname": "pricol",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_45",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "priority_timer",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "priority_timer",
+   "options": "Not-Set\nNormal72\nNormal78\nMedium48\nMedium54\nHigh24\nHigh28\nUrgent4\nUrgent6\nonhold96\nonhold104"
+  },
+  {
+   "depends_on": "eval:doc.dept_name==\"HO\"",
+   "fieldname": "ticket_type_ho",
+   "fieldtype": "Select",
+   "label": "Ticket Type of HO Department",
+   "mandatory_depends_on": "eval:doc.dept_name==\"HO\"",
+   "options": "\nFund Requirement\nCheck Requirement\nTransaction Issues\nGL Creation\nCircular Issues\nLoan Related Issues\nProduct Related Issues\nOthers"
+  },
+  {
+   "fetch_from": "lead_owner.mobile_no",
+   "fieldname": "phone2",
+   "fieldtype": "Data",
+   "label": "Phone 2",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.status==\"Closed\"",
+   "fieldname": "ticket_closed_by",
+   "fieldtype": "Data",
+   "label": "Ticket Closed By",
+   "permlevel": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.status==\"Closed\"",
+   "fieldname": "last_user",
+   "fieldtype": "Data",
+   "label": "last user",
+   "permlevel": 1,
+   "set_only_once": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2023-01-21 14:37:29.194739",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "Sahayog Ticket",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [
+  {
+   "color": "Light Blue",
+   "title": "Read"
+  },
+  {
+   "color": "Green",
+   "title": "Closed"
+  }
+ ],
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1
+}

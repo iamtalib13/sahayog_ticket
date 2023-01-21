@@ -1,0 +1,19 @@
+{
+ "content": null,
+ "creation": "2023-01-21 14:08:16.826597",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2023-01-21 14:08:16.826597",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "open-ticket",
+ "owner": "Administrator",
+ "page_name": "open-ticket",
+ "roles": [],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Open Tickets"
+}
