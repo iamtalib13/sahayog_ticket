@@ -24,14 +24,22 @@
   "column_break",
   "basic_details_tab",
   "designation",
+  "employee_id",
   "full_name",
+  "emp_designation",
+  "emp_phone",
   "column_break_5",
   "phone",
   "phone2",
+  "emp_region",
   "emai",
   "lead_owner",
-  "column_break_17",
   "region",
+  "emp_district",
+  "emp_branch",
+  "column_break_30",
+  "emp_department",
+  "reporting_person",
   "branch_name",
   "tick_section",
   "priority",
@@ -57,7 +65,7 @@
   "flag",
   "inprogress_flag",
   "open_and_read",
-  "message_displayed",
+  "notification_status",
   "priority_timer"
  ],
  "fields": [
@@ -104,6 +112,7 @@
    "fetch_from": "lead_owner.email",
    "fieldname": "emai",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Email id",
    "read_only": 1
   },
@@ -118,10 +127,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "column_break_17",
-   "fieldtype": "Column Break"
-  },
-  {
    "fetch_from": "lead_owner.region",
    "fieldname": "region",
    "fieldtype": "Data",
@@ -133,6 +138,7 @@
    "fieldname": "branch_name",
    "fieldtype": "Data",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Branch Name",
    "read_only": 1
   },
@@ -156,7 +162,7 @@
    "fieldtype": "Select",
    "label": "Ticket Type of Account Department",
    "mandatory_depends_on": "eval:doc.dept_name==\"Accounts\"",
-   "options": "\nInsurance\nTA\nOthers",
+   "options": "\nHealth Insurance\nTravel Allowance\nOthers",
    "set_only_once": 1
   },
   {
@@ -345,6 +351,7 @@
   {
    "fieldname": "due_time",
    "fieldtype": "Datetime",
+   "hidden": 1,
    "label": "Current Date & Time"
   },
   {
@@ -372,13 +379,6 @@
   {
    "fieldname": "column_break",
    "fieldtype": "Column Break"
-  },
-  {
-   "default": "false",
-   "fieldname": "message_displayed",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "label": "message_displayed"
   },
   {
    "fieldname": "pricol",
@@ -429,11 +429,83 @@
    "label": "last user",
    "permlevel": 1,
    "set_only_once": 1
+  },
+  {
+   "fieldname": "notification_status",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "notification status",
+   "options": "not_set\nnormal72_sent\nnormal78_sent\nmedium48_sent\nmedium54_sent\nhigh24_sent\nhigh28_sent\nurgent4_sent\nurgent6_sent"
+  },
+  {
+   "fetch_from": "lead_owner.employee_id",
+   "fieldname": "employee_id",
+   "fieldtype": "Link",
+   "label": "Employee ID",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee_id.cell_number",
+   "fieldname": "emp_phone",
+   "fieldtype": "Data",
+   "label": "Phone",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee_id.region",
+   "fieldname": "emp_region",
+   "fieldtype": "Data",
+   "label": "Region",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee_id.district",
+   "fieldname": "emp_district",
+   "fieldtype": "Data",
+   "label": "District",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.employee_id",
+   "fetch_from": "employee_id.branch",
+   "fieldname": "emp_branch",
+   "fieldtype": "Data",
+   "label": "Branch",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_30",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.employee_id",
+   "fetch_from": "employee_id.department",
+   "fieldname": "emp_department",
+   "fieldtype": "Data",
+   "label": "Department",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.employee_id",
+   "fetch_from": "employee_id.reporting_employee",
+   "fieldname": "reporting_person",
+   "fieldtype": "Data",
+   "label": "Reporting Person",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.employee_id",
+   "fetch_from": "employee_id.designation",
+   "fieldname": "emp_designation",
+   "fieldtype": "Data",
+   "label": "Designation",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-01-21 14:37:29.194739",
+ "modified": "2023-02-11 13:37:49.047201",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
@@ -478,6 +550,5 @@
   }
  ],
  "track_changes": 1,
- "track_seen": 1,
- "track_views": 1
+ "track_seen": 1
 }
