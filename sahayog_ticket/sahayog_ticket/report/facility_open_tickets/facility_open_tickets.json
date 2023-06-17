@@ -1,0 +1,28 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2023-06-13 15:40:18.452097",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "Sahayog",
+ "modified": "2023-06-13 17:02:45.575736",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "Facility Open Tickets",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "query": "SELECT\n  name AS Ticket_ID,\n  employee_id AS Emp_ID,\n  call_log_date AS Ticket_Raised_Date,\n  employee_name AS Emp_Name,\n  designation AS Emp_Designation,\n  emp_department AS Emp_Department,\n  branch_name AS Branch,\n  region AS Region,\n  phone1 AS Contact_No,\n  ticket_type AS Ticket_Type,\n  description AS Ticket_Description,\n  tat AS TAT,\n  status AS Ticket_Status,\n  on_hold_remark AS On_Hold_Remark\n\nFROM\n  `tabSahayog Ticket`\nWHERE\n  dept_name = 'Facility' AND status NOT IN ('Closed', 'Cancelled');\n",
+ "ref_doctype": "Sahayog Ticket",
+ "report_name": "Facility Open Tickets",
+ "report_type": "Query Report",
+ "roles": [
+  {
+   "role": "Grievance Analyst"
+  }
+ ]
+}

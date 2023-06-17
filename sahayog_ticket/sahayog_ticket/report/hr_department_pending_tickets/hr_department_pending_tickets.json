@@ -1,0 +1,116 @@
+{
+ "add_total_row": 1,
+ "columns": [],
+ "creation": "2023-06-08 15:25:32.535357",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "json": "{}",
+ "letter_head": "Sahayog",
+ "modified": "2023-06-13 15:08:42.046261",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "HR Department Pending Tickets",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "query": "SELECT\n  name AS Ticket_ID,\n  employee_id AS Emp_ID,\n  call_log_date AS Ticket_Raised_Date,\n  employee_name AS Emp_Name,\n  designation AS Emp_Designation,\n  emp_department AS Emp_Department,\n  branch_name AS Branch,\n  region AS Region,\n  phone1 AS Primary_Phone,\n  phone2 AS Alternate_Phone\nFROM\n  `tabSahayog Ticket`;\n",
+ "ref_doctype": "Sahayog Ticket",
+ "report_name": "HR Department Pending Tickets",
+ "report_type": "Query Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Employee Self Service"
+  },
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Website Manager"
+  },
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Fulfillment User"
+  },
+  {
+   "role": "Fulfillment User"
+  },
+  {
+   "role": "Executive"
+  },
+  {
+   "role": "IT Manager"
+  },
+  {
+   "role": "IT Senior Manager"
+  },
+  {
+   "role": "CTO"
+  },
+  {
+   "role": "GMHR"
+  },
+  {
+   "role": "HRM RO"
+  },
+  {
+   "role": "HRM HO"
+  },
+  {
+   "role": "HR Executive"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Sahayog System Admin"
+  },
+  {
+   "role": "Operations Co-Ordinator"
+  },
+  {
+   "role": "JLL Manager"
+  },
+  {
+   "role": "Facility"
+  },
+  {
+   "role": "MIS"
+  },
+  {
+   "role": "ticket cancel user"
+  },
+  {
+   "role": "Operations Executive"
+  },
+  {
+   "role": "MIS Executive"
+  },
+  {
+   "role": "JLL Executive"
+  },
+  {
+   "role": "Accounts Executive"
+  },
+  {
+   "role": "Operations HOD"
+  },
+  {
+   "role": "HO HOD"
+  },
+  {
+   "role": "HO asst. HOD"
+  },
+  {
+   "role": "Employee"
+  }
+ ]
+}
