@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include sahayog_ticket *.css
+recursive-include sahayog_ticket *.csv
+recursive-include sahayog_ticket *.html
+recursive-include sahayog_ticket *.ico
+recursive-include sahayog_ticket *.js
+recursive-include sahayog_ticket *.json
+recursive-include sahayog_ticket *.md
+recursive-include sahayog_ticket *.png
+recursive-include sahayog_ticket *.py
+recursive-include sahayog_ticket *.svg
+recursive-include sahayog_ticket *.txt
+recursive-exclude sahayog_ticket *.pyc
