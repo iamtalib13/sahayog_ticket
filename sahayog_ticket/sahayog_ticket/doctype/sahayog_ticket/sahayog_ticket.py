@@ -3,8 +3,9 @@
 
 import frappe
 from frappe.model.document import Document
-from datetime import datetime # from python std library
-from frappe.utils import add_to_date
+
 
 class SahayogTicket(Document):
-	pass
+    pass
+    # def validate(self):
+    #   frappe.msgprint("Working")

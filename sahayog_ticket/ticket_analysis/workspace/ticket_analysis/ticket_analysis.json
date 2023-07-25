@@ -1,0 +1,31 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"KxYx6RKgB_\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Ticket Analysis</span>\",\"col\":12}}]",
+ "creation": "2023-06-22 12:47:31.670538",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Ticket Analysis",
+ "links": [],
+ "modified": "2023-06-22 12:55:58.815947",
+ "modified_by": "Administrator",
+ "module": "Ticket Analysis",
+ "name": "Ticket Analysis",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "Analytics"
+  }
+ ],
+ "sequence_id": 40.0,
+ "shortcuts": [],
+ "title": "Ticket Analysis"
+}
