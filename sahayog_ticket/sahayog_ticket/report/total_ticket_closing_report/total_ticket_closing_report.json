@@ -1,0 +1,121 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2024-01-09 12:21:20.566916",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "Sahayog",
+ "modified": "2024-01-09 12:21:20.566916",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "Total_Ticket_Closing_Report",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "query": "SELECT\n    t.name AS TicketID,\n    t.status,\n    v.docname,\n    u.full_name AS Modified_By_Full_Name,\n    t.creation AS Ticket_Creation_Date,\n    v.modified AS Closed_Date,\n    TIMESTAMPDIFF(DAY, t.creation, v.modified) AS Work_Done_In_Days\nFROM `tabVersion` v\nINNER JOIN `tabSahayog Ticket` t ON v.docname = t.name\nLEFT JOIN `tabUser` u ON v.modified_by = u.email\nWHERE v.ref_doctype = 'Sahayog Ticket'\n  AND v.data LIKE '%%Closed%%';\n",
+ "ref_doctype": "Sahayog Ticket",
+ "report_name": "Total_Ticket_Closing_Report",
+ "report_type": "Query Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Website Manager"
+  },
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Fulfillment User"
+  },
+  {
+   "role": "Fulfillment User"
+  },
+  {
+   "role": "Executive"
+  },
+  {
+   "role": "IT Manager"
+  },
+  {
+   "role": "IT Senior Manager"
+  },
+  {
+   "role": "CTO"
+  },
+  {
+   "role": "GMHR"
+  },
+  {
+   "role": "HRM RO"
+  },
+  {
+   "role": "HRM HO"
+  },
+  {
+   "role": "HR Executive"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Sahayog System Admin"
+  },
+  {
+   "role": "Operations Co-Ordinator"
+  },
+  {
+   "role": "JLL Manager"
+  },
+  {
+   "role": "Facility"
+  },
+  {
+   "role": "MIS"
+  },
+  {
+   "role": "ticket cancel user"
+  },
+  {
+   "role": "Operations Executive"
+  },
+  {
+   "role": "MIS Executive"
+  },
+  {
+   "role": "JLL Executive"
+  },
+  {
+   "role": "Accounts Executive"
+  },
+  {
+   "role": "Operations HOD"
+  },
+  {
+   "role": "HO HOD"
+  },
+  {
+   "role": "HO asst. HOD"
+  },
+  {
+   "role": "Analytics"
+  },
+  {
+   "role": "Admin Executive"
+  },
+  {
+   "role": "Loan Executive"
+  },
+  {
+   "role": "HRM ZO"
+  }
+ ]
+}

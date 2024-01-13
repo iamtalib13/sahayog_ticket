@@ -27,6 +27,10 @@ sahayog_ticket/sahayog_ticket/doctype/sahayog_ticket/sahayog_ticket.js
 sahayog_ticket/sahayog_ticket/doctype/sahayog_ticket/sahayog_ticket.json
 sahayog_ticket/sahayog_ticket/doctype/sahayog_ticket/sahayog_ticket.py
 sahayog_ticket/sahayog_ticket/doctype/sahayog_ticket/test_sahayog_ticket.py
+sahayog_ticket/sahayog_ticket/page/__init__.py
+sahayog_ticket/sahayog_ticket/page/open_ticket/__init__.py
+sahayog_ticket/sahayog_ticket/page/open_ticket/open_ticket.js
+sahayog_ticket/sahayog_ticket/page/open_ticket/open_ticket.json
 sahayog_ticket/templates/__init__.py
 sahayog_ticket/templates/pages/__init__.py
 sahayog_ticket/www/__init__.py
