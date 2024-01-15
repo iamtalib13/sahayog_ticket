@@ -466,7 +466,6 @@ frappe.ui.form.on("Sahayog Ticket", {
       let eid = match ? match[0] : null;
 
       if (eid === frm.doc.employee_id) {
-        frm.disable_save();
         if (frm.doc.status == "Open") {
           frm.set_df_property("cancel_ticket_btn", "hidden", 0);
           document.querySelectorAll(
@@ -479,13 +478,14 @@ frappe.ui.form.on("Sahayog Ticket", {
             "[data-fieldname='cancel_ticket_btn']"
           )[1].style.fontWeight = "bold";
         }
+        {
+          frm.disable_save();
+        }
 
         console.log("matched employee" + eid);
         frm.toggle_display("employee_id", false);
         frm.toggle_display("status", false);
         //frm.toggle_enable("priority", 0);
-
-        frm.disable_save();
 
         if (frm.doc.status == "Cancel") {
         } else if (frm.doc.status == "Resolved") {
@@ -574,8 +574,19 @@ frappe.ui.form.on("Sahayog Ticket", {
             );
           });
         }
-      } else {
+      }
+
+      //For Executives
+      else {
         frm.set_df_property("cancel_ticket_btn", "hidden", 1);
+        if (
+          frm.doc.status == "Read" ||
+          frm.doc.status == "In-Progress" ||
+          frm.doc.status == "On-Hold"
+        ) {
+          frm.disable_save();
+        }
+
         if (
           frm.doc.status == "Re-Opened" ||
           frm.doc.status == "Read" ||
