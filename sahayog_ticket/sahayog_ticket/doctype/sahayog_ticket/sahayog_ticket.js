@@ -296,6 +296,14 @@ frappe.ui.form.on("Sahayog Ticket", {
   },
 
   refresh: function (frm) {
+    var ticketClosingDetailsSection = document.querySelectorAll(
+      "[data-fieldname='ticket_closing_details_section']"
+    )[1];
+
+    // Setting the background color to "#90EE90"
+    if (ticketClosingDetailsSection) {
+      ticketClosingDetailsSection.style.backgroundColor = "#90EE90";
+    }
     if (!frm.is_new()) {
       let emp_id = frm.doc.employee_id;
       let emp_name = frm.doc.employee_name;
@@ -489,90 +497,100 @@ frappe.ui.form.on("Sahayog Ticket", {
 
         if (frm.doc.status == "Cancel") {
         } else if (frm.doc.status == "Resolved") {
-          frm.add_custom_button(__("Close"), function () {
-            frappe.confirm(
-              __("Do you want to close your Ticket ? "),
-              function () {
-                let d = new frappe.ui.Dialog({
-                  title: "Enter Closing Remark",
-                  fields: [
-                    {
-                      label: "Ticket Closing Remark",
-                      fieldname: "remark",
-                      fieldtype: "Small Text",
-                      reqd: 1, // Set reqd property to make it mandatory
+          frm
+            .add_custom_button(__("Close"), function () {
+              frappe.confirm(
+                __("Do you want to close your Ticket ? "),
+                function () {
+                  let d = new frappe.ui.Dialog({
+                    title: "Enter Closing Remark",
+                    fields: [
+                      {
+                        label: "Ticket Closing Remark",
+                        fieldname: "remark",
+                        fieldtype: "Small Text",
+                        reqd: 1, // Set reqd property to make it mandatory
+                      },
+                    ],
+                    size: "small", // small, large, extra-large
+                    primary_action_label: "Submit",
+                    primary_action: function () {
+                      // Your existing logic for handling the dialog submission
+                      if (!d.fields_dict.remark.get_value()) {
+                        frappe.msgprint(__("Please provide Closing remark."));
+                        return;
+                      }
+
+                      frm.set_value("remark", d.fields_dict.remark.get_value());
+
+                      frm.set_value("status", "Closed");
+                      frm.refresh_field("status");
+                      frm.save();
+
+                      d.hide();
                     },
-                  ],
-                  size: "small", // small, large, extra-large
-                  primary_action_label: "Submit",
-                  primary_action: function () {
-                    // Your existing logic for handling the dialog submission
-                    if (!d.fields_dict.remark.get_value()) {
-                      frappe.msgprint(__("Please provide Closing remark."));
-                      return;
-                    }
+                  });
 
-                    frm.set_value("remark", d.fields_dict.remark.get_value());
+                  d.show();
+                },
+                function () {
+                  // Additional logic if No is selected in the confirmation
+                }
+              );
+            })
+            .css({
+              "background-color": "#00CA4E", // Set green color
+              color: "#ffffff", // Set font color to white
+            });
 
-                    frm.set_value("status", "Closed");
-                    frm.refresh_field("status");
-                    frm.save();
+          frm
+            .add_custom_button(__("Re-Open"), function () {
+              frappe.confirm(
+                __("Do you want to re-open your Ticket?"),
+                function () {
+                  let d = new frappe.ui.Dialog({
+                    title: "Enter Re-Open Remark",
+                    fields: [
+                      {
+                        label: "Re-Open Remark",
+                        fieldname: "reopen_remark",
+                        fieldtype: "Small Text",
+                        reqd: 1, // Set reqd property to make it mandatory
+                      },
+                    ],
+                    size: "small", // small, large, extra-large
+                    primary_action_label: "Submit",
+                    primary_action: function () {
+                      // Your existing logic for handling the dialog submission
+                      if (!d.fields_dict.reopen_remark.get_value()) {
+                        frappe.msgprint(__("Please provide Re-Open remark."));
+                        return;
+                      }
 
-                    d.hide();
-                  },
-                });
+                      frm.set_value(
+                        "reopen_remark",
+                        d.fields_dict.reopen_remark.get_value()
+                      );
 
-                d.show();
-              },
-              function () {
-                // Additional logic if No is selected in the confirmation
-              }
-            );
-          });
+                      frm.set_value("status", "Re-Opened");
+                      frm.refresh_field("status");
+                      frm.save();
 
-          frm.add_custom_button(__("Re-Open"), function () {
-            frappe.confirm(
-              __("Do you want to re-open your Ticket?"),
-              function () {
-                let d = new frappe.ui.Dialog({
-                  title: "Enter Re-Open Remark",
-                  fields: [
-                    {
-                      label: "Re-Open Remark",
-                      fieldname: "reopen_remark",
-                      fieldtype: "Small Text",
-                      reqd: 1, // Set reqd property to make it mandatory
+                      d.hide();
                     },
-                  ],
-                  size: "small", // small, large, extra-large
-                  primary_action_label: "Submit",
-                  primary_action: function () {
-                    // Your existing logic for handling the dialog submission
-                    if (!d.fields_dict.reopen_remark.get_value()) {
-                      frappe.msgprint(__("Please provide Re-Open remark."));
-                      return;
-                    }
+                  });
 
-                    frm.set_value(
-                      "reopen_remark",
-                      d.fields_dict.reopen_remark.get_value()
-                    );
-
-                    frm.set_value("status", "Re-Opened");
-                    frm.refresh_field("status");
-                    frm.save();
-
-                    d.hide();
-                  },
-                });
-
-                d.show();
-              },
-              function () {
-                // Additional logic if No is selected in the confirmation
-              }
-            );
-          });
+                  d.show();
+                },
+                function () {
+                  // Additional logic if No is selected in the confirmation
+                }
+              );
+            })
+            .css({
+              "background-color": "#FF605C", // Set green color
+              color: "#ffffff", // Set font color to white
+            });
         }
       }
 
@@ -697,6 +715,7 @@ frappe.ui.form.on("Sahayog Ticket", {
         }
 
         if (frm.doc.status !== "Resolved") {
+          //Resolved Button
           frm.add_custom_button(
             __("Resolved"),
             function () {
@@ -747,8 +766,6 @@ frappe.ui.form.on("Sahayog Ticket", {
             __("Status")
           );
         }
-
-        //Resolved Button
       }
     }
     if (frm.doc.dept_name == "" || null) {
