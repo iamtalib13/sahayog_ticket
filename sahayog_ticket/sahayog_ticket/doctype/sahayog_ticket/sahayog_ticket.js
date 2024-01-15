@@ -3,6 +3,12 @@
 // Hello from
 
 frappe.ui.form.on("Sahayog Ticket", {
+  refresh: function (frm) {
+    if (frm.is_new()) {
+    } else if (!frm.is_new()) {
+    }
+  },
+
   cancel_ticket_btn: function (frm) {
     if (!frm.is_new()) {
       let user = frappe.session.user;
@@ -70,45 +76,36 @@ frappe.ui.form.on("Sahayog Ticket", {
 
   before_save: function (frm) {
     if (!frm.is_new()) {
-      let creation_date_time = frm.doc.creation;
-
-      // Convert the creation_date_time string to a Date object
-      let creationDate = new Date(creation_date_time);
-
-      // Extract the creation time from the Date object in 12-hour AM/PM format
-      let creationTime = creationDate.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-
-      // Print the creation time to the console (for testing)
-
-      frm.set_value("creation_time", creationTime);
-
+      // let creation_date_time = frm.doc.creation;
+      // // Convert the creation_date_time string to a Date object
+      // let creationDate = new Date(creation_date_time);
+      // // Extract the creation time from the Date object in 12-hour AM/PM format
+      // let creationTime = creationDate.toLocaleTimeString([], {
+      //   hour: "2-digit",
+      //   minute: "2-digit",
+      //   hour12: true,
+      // });
+      // // Print the creation time to the console (for testing)
+      // frm.set_value("creation_time", creationTime);
       // You can then use the creationTime variable as needed in your code
     }
   },
 
   refresh: function (frm) {
     if (!frm.is_new()) {
-      let creation_date_time = frm.doc.creation;
-
-      // Convert the creation_date_time string to a Date object
-      let creationDate = new Date(creation_date_time);
-
-      // Extract the creation time from the Date object in 12-hour AM/PM format
-      let creationTime = creationDate.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-
-      // Print the creation time to the console (for testing)
-      console.log("Time: " + creationTime);
-      frm.set_value("creation_time", creationTime);
-
-      // You can then use the creationTime variable as needed in your code
+      // let creation_date_time = frm.doc.creation;
+      // // Convert the creation_date_time string to a Date object
+      // let creationDate = new Date(creation_date_time);
+      // // Extract the creation time from the Date object in 12-hour AM/PM format
+      // let creationTime = creationDate.toLocaleTimeString([], {
+      //   hour: "2-digit",
+      //   minute: "2-digit",
+      //   hour12: true,
+      // });
+      // // Print the creation time to the console (for testing)
+      // console.log("Time: " + creationTime);
+      // frm.set_value("creation_time", creationTime);
+      // // You can then use the creationTime variable as needed in your code
     }
   },
 
@@ -218,30 +215,32 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
   },
   onload_post_render: function (frm) {
-    frm.fields_dict.dept_name.$input.on("input", function (evt) {
-      // Get the selected department value
-      var selected_dept = evt.target.value;
-
-      // Log the selected department to the console
-      console.log(selected_dept);
-      frm.set_value("ticket_type", "");
-    });
+    // frm.fields_dict.dept_name.$input.on("input", function (evt) {
+    //   // Get the selected department value
+    //   var selected_dept = evt.target.value;
+    //   // Log the selected department to the console
+    //   console.log(selected_dept);
+    //   frm.set_value("ticket_type", "");
+    // });
   },
 
   after_save: function (frm) {
-    if (frm.doc.on_hold_time == frm.doc.due_time) {
-      console.log("True");
-      console.log(frm.doc.on_hold_time);
-      console.log(frm.doc.due_time);
-      var dept = frm.doc.dept_name;
-      frm.set_value("status", "Open");
-      msgprint("Ticket is Saved Successfully.");
-      msgprint(dept + " Team will Contact You Shortly");
-      frappe.set_route("List", "Sahayog Ticket");
+    let user = frappe.session.user;
+    let match = user.match(/\d+/);
+    let eid = match ? match[0] : null;
+
+    if (eid === frm.doc.employee_id) {
+      if (frm.doc.status == "Open") {
+        console.log(eid);
+        var dept = frm.doc.dept_name;
+        msgprint("Ticket is Saved Successfully.");
+        msgprint(dept + " Team will Contact You Shortly");
+        frappe.set_route("List", "Sahayog Ticket");
+      } else {
+        //console.log("not owner");
+      }
     } else {
-      console.log("False");
-      console.log(frm.doc.on_hold_time);
-      console.log(frm.doc.due_time);
+      //console.log("not owner");
     }
 
     if (frm.doc.status == "Closed") {
@@ -307,7 +306,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       let first_name = frm.doc.emp_first_name;
       let last_name = frm.doc.emp_last_name;
       let full_name = first_name + " " + last_name;
-      frm.set_value("employee_name", full_name);
+      //frm.set_value("employee_name", full_name);
       let ticket_department = frm.doc.dept_name;
       let ticket_type = frm.doc.ticket_type;
       let ticket_description = frm.doc.description;
@@ -399,29 +398,29 @@ frappe.ui.form.on("Sahayog Ticket", {
         "div#driver-popover-item .driver-popover-footer button.btn-default"
       );
 
-      btnDefault.forEach(function (element) {
-        element.addEventListener("mouseover", function () {
-          element.classList.remove("btn-default");
-          element.classList.add("btn", "btn-danger");
-        });
+      // btnDefault.forEach(function (element) {
+      //   element.addEventListener("mouseover", function () {
+      //     element.classList.remove("btn-default");
+      //     element.classList.add("btn", "btn-danger");
+      //   });
 
-        element.addEventListener("mouseout", function () {
-          element.classList.remove("btn-danger");
-          element.classList.add("btn-default");
-        });
-      });
+      //   element.addEventListener("mouseout", function () {
+      //     element.classList.remove("btn-danger");
+      //     element.classList.add("btn-default");
+      //   });
+      // });
 
-      driverPopoverButton.forEach(function (element) {
-        element.addEventListener("mouseover", function () {
-          element.classList.remove("btn-default");
-          element.classList.add("btn", "btn-danger");
-        });
+      // driverPopoverButton.forEach(function (element) {
+      //   element.addEventListener("mouseover", function () {
+      //     element.classList.remove("btn-default");
+      //     element.classList.add("btn", "btn-danger");
+      //   });
 
-        element.addEventListener("mouseout", function () {
-          element.classList.remove("btn-danger");
-          element.classList.add("btn-default");
-        });
-      });
+      //   element.addEventListener("mouseout", function () {
+      //     element.classList.remove("btn-danger");
+      //     element.classList.add("btn-default");
+      //   });
+      // });
     }
     //----------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------
@@ -430,6 +429,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     console.log("Logged-in-user = " + user);
 
     if (frm.is_new()) {
+      frm.set_df_property("cancel_ticket_btn", "hidden", 1);
       // Get the numeric part of the user string
       let eid = user.match(/\d+/)[0];
 
@@ -461,15 +461,283 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
 
     if (!frm.is_new()) {
-      let eid = user.match(/\d+/)[0];
+      let user = frappe.session.user;
+      let match = user.match(/\d+/);
+      let eid = match ? match[0] : null;
 
       if (eid === frm.doc.employee_id) {
+        frm.disable_save();
+        if (frm.doc.status == "Open") {
+          frm.set_df_property("cancel_ticket_btn", "hidden", 0);
+          document.querySelectorAll(
+            "[data-fieldname='cancel_ticket_btn']"
+          )[1].style.backgroundColor = "red";
+          document.querySelectorAll(
+            "[data-fieldname='cancel_ticket_btn']"
+          )[1].style.color = "white";
+          document.querySelectorAll(
+            "[data-fieldname='cancel_ticket_btn']"
+          )[1].style.fontWeight = "bold";
+        }
+
         console.log("matched employee" + eid);
         frm.toggle_display("employee_id", false);
         frm.toggle_display("status", false);
         //frm.toggle_enable("priority", 0);
 
         frm.disable_save();
+
+        if (frm.doc.status == "Cancel") {
+        } else if (frm.doc.status == "Resolved") {
+          frm.add_custom_button(__("Close"), function () {
+            frappe.confirm(
+              __("Do you want to close your Ticket ? "),
+              function () {
+                let d = new frappe.ui.Dialog({
+                  title: "Enter Closing Remark",
+                  fields: [
+                    {
+                      label: "Ticket Closing Remark",
+                      fieldname: "remark",
+                      fieldtype: "Small Text",
+                      reqd: 1, // Set reqd property to make it mandatory
+                    },
+                  ],
+                  size: "small", // small, large, extra-large
+                  primary_action_label: "Submit",
+                  primary_action: function () {
+                    // Your existing logic for handling the dialog submission
+                    if (!d.fields_dict.remark.get_value()) {
+                      frappe.msgprint(__("Please provide Closing remark."));
+                      return;
+                    }
+
+                    frm.set_value("remark", d.fields_dict.remark.get_value());
+
+                    frm.set_value("status", "Closed");
+                    frm.refresh_field("status");
+                    frm.save();
+
+                    d.hide();
+                  },
+                });
+
+                d.show();
+              },
+              function () {
+                // Additional logic if No is selected in the confirmation
+              }
+            );
+          });
+
+          frm.add_custom_button(__("Re-Open"), function () {
+            frappe.confirm(
+              __("Do you want to re-open your Ticket?"),
+              function () {
+                let d = new frappe.ui.Dialog({
+                  title: "Enter Re-Open Remark",
+                  fields: [
+                    {
+                      label: "Re-Open Remark",
+                      fieldname: "reopen_remark",
+                      fieldtype: "Small Text",
+                      reqd: 1, // Set reqd property to make it mandatory
+                    },
+                  ],
+                  size: "small", // small, large, extra-large
+                  primary_action_label: "Submit",
+                  primary_action: function () {
+                    // Your existing logic for handling the dialog submission
+                    if (!d.fields_dict.reopen_remark.get_value()) {
+                      frappe.msgprint(__("Please provide Re-Open remark."));
+                      return;
+                    }
+
+                    frm.set_value(
+                      "reopen_remark",
+                      d.fields_dict.reopen_remark.get_value()
+                    );
+
+                    frm.set_value("status", "Re-Opened");
+                    frm.refresh_field("status");
+                    frm.save();
+
+                    d.hide();
+                  },
+                });
+
+                d.show();
+              },
+              function () {
+                // Additional logic if No is selected in the confirmation
+              }
+            );
+          });
+        }
+      } else {
+        frm.set_df_property("cancel_ticket_btn", "hidden", 1);
+        if (
+          frm.doc.status == "Re-Opened" ||
+          frm.doc.status == "Read" ||
+          frm.doc.status == "In-Progress"
+        ) {
+          //On-Hold Button
+          frm.add_custom_button(
+            __("On-Hold"),
+            function () {
+              let currentOnHoldRemark = frm.doc.on_hold_remark || ""; // Get the current value or initialize as an empty string
+
+              frappe.confirm(
+                __("Do you want to set On-Hold "),
+                function () {
+                  let d = new frappe.ui.Dialog({
+                    title: "Enter On-Hold Remarks",
+                    fields: [
+                      {
+                        label: "On-Hold Remark",
+                        fieldname: "on_hold_remark",
+                        fieldtype: "Small Text",
+                        reqd: 1, // Set reqd property to make it mandatory
+                        default: currentOnHoldRemark, // Set default value as current remark
+                      },
+                    ],
+                    size: "small", // small, large, extra-large
+                    primary_action_label: "Submit",
+                    primary_action: function () {
+                      // Your existing logic for handling the dialog submission
+                      if (!d.fields_dict.on_hold_remark.get_value()) {
+                        frappe.msgprint(__("Please provide On-Hold remark."));
+                        return;
+                      }
+
+                      frm.set_value(
+                        "on_hold_remark",
+                        d.fields_dict.on_hold_remark.get_value()
+                      );
+
+                      frm.set_value("status", "On-Hold");
+                      frm.refresh_field("status");
+                      frm.save();
+
+                      d.hide();
+                    },
+                  });
+
+                  d.show();
+                },
+                function () {
+                  // Additional logic if No is selected in the confirmation
+                }
+              );
+            },
+            __("Status")
+          );
+        }
+        if (frm.doc.status == "Open") {
+          //Read Button
+          frm.add_custom_button(
+            __("Read"),
+            function () {
+              frappe.confirm(
+                "Are you sure you want to Set Read ",
+                () => {
+                  // action to perform if Yes is selected
+                  frm.set_value("status", "Read");
+                  frm.refresh_field("status");
+
+                  frm.save();
+                },
+                () => {
+                  // action to perform if No is selected
+                }
+              );
+            },
+            __("Status")
+          );
+        }
+        if (
+          frm.doc.status == "Open" ||
+          frm.doc.status == "Read" ||
+          frm.doc.status == "On-Hold"
+        ) {
+          //In-Progress Button
+          frm.add_custom_button(
+            __("In-Progress"),
+            function () {
+              frappe.confirm(
+                "Are you sure you want to Set In-Progress ",
+                () => {
+                  // action to perform if Yes is selected
+                  frm.set_value("status", "In-Progress");
+                  frm.refresh_field("status");
+
+                  frm.save();
+                },
+                () => {
+                  // action to perform if No is selected
+                }
+              );
+            },
+            __("Status")
+          );
+        }
+        if (frm.doc.status == "Resolved") {
+          frm.disable_save();
+        }
+
+        if (frm.doc.status !== "Resolved") {
+          frm.add_custom_button(
+            __("Resolved"),
+            function () {
+              let user = frappe.session.user;
+              frappe.confirm(
+                __("Do you want to Resolve Ticket "),
+                function () {
+                  let d = new frappe.ui.Dialog({
+                    title: "Enter Resolve Remarks",
+                    fields: [
+                      {
+                        label: "Resolved Remark",
+                        fieldname: "resolved_remark",
+                        fieldtype: "Small Text",
+                        reqd: 1, // Set reqd property to make it mandatory
+                      },
+                    ],
+                    size: "small", // small, large, extra-large
+                    primary_action_label: "Submit",
+                    primary_action: function () {
+                      // Your existing logic for handling the dialog submission
+                      if (!d.fields_dict.resolved_remark.get_value()) {
+                        frappe.msgprint(__("Please provide Resolve remark."));
+                        return;
+                      }
+
+                      frm.set_value(
+                        "resolved_remark",
+                        d.fields_dict.resolved_remark.get_value()
+                      );
+
+                      frm.set_value("ticket_resolved_by", user);
+                      frm.set_value("status", "Resolved");
+                      frm.refresh_field("status");
+                      frm.save();
+
+                      d.hide();
+                    },
+                  });
+
+                  d.show();
+                },
+                function () {
+                  // Additional logic if No is selected in the confirmation
+                }
+              );
+            },
+            __("Status")
+          );
+        }
+
+        //Resolved Button
       }
     }
     if (frm.doc.dept_name == "" || null) {
@@ -506,17 +774,15 @@ frappe.ui.form.on("Sahayog Ticket", {
     if (frm.doc.status == "Closed" || frm.doc.status == "Cancelled") {
       frm.disable_save();
     } else if (frm.doc.status !== "Closed" || frm.doc.status !== "Cancelled") {
-      frm.set_value("due_time", frappe.datetime.now_datetime());
-
-      frm.set_value(
-        "total_hours",
-        frappe.datetime.get_hour_diff(frm.doc.due_time, frm.doc.on_hold_time)
-      );
-
-      frm.set_value(
-        "total_days",
-        frappe.datetime.get_day_diff(frm.doc.due_time, frm.doc.on_hold_time)
-      );
+      // frm.set_value("due_time", frappe.datetime.now_datetime());
+      // frm.set_value(
+      //   "total_hours",
+      //   frappe.datetime.get_hour_diff(frm.doc.due_time, frm.doc.on_hold_time)
+      // );
+      // frm.set_value(
+      //   "total_days",
+      //   frappe.datetime.get_day_diff(frm.doc.due_time, frm.doc.on_hold_time)
+      // );
     }
   },
 });

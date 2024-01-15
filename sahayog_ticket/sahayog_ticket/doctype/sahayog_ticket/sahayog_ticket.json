@@ -1,6 +1,5 @@
 {
  "actions": [],
- "allow_rename": 1,
  "autoname": "format:{dept_name}-{DD}{MM}{YY}-{###}",
  "color": "green",
  "creation": "2022-11-10 11:00:24.154179",
@@ -29,11 +28,9 @@
   "tick_section",
   "status",
   "last_user",
-  "ticket_closed_by",
   "column_break_4",
   "on_hold_remark",
   "section_break_onliy",
-  "remark",
   "ticket_duration_section",
   "on_hold_time",
   "due_time",
@@ -51,6 +48,14 @@
   "creation_time",
   "section_break_45",
   "description",
+  "ticket_closing_details_section",
+  "remark",
+  "ticket_reopened_details_section",
+  "reopen_remark",
+  "ticket_resolved_details_section",
+  "ticket_resolved_by",
+  "ticket_resolved_user",
+  "resolved_remark",
   "section_break_tgqgy",
   "cancel_ticket_btn",
   "cancel_ticket",
@@ -136,11 +141,13 @@
    "read_only_depends_on": "eval:doc.status==\"In-Progress\" || doc.status==\"On-Hold\" || doc.status==\"Closed\" || doc.status==\"Cancelled\" "
   },
   {
+   "default": "Open",
    "depends_on": "eval:doc.status == \"New\" || doc.status == \"Open\" || doc.status == \"Read\" || doc.status == \"In-Progress\" || doc.status == \"On-Hold\" || doc.status == \"Closed\" || doc.status == \"Cancelled\"",
    "fieldname": "status",
    "fieldtype": "Select",
+   "in_standard_filter": 1,
    "label": "Ticket Status",
-   "options": "New\nOpen\nRead\nIn-Progress\nOn-Hold\nClosed\nCancelled",
+   "options": "Open\nRead\nIn-Progress\nOn-Hold\nRe-Opened\nResolved\nClosed\nCancelled",
    "permlevel": 1,
    "read_only_depends_on": "eval:doc.flag==\"Closed\" "
   },
@@ -150,7 +157,8 @@
    "fieldtype": "Small Text",
    "label": "Ticket Closing Remark",
    "mandatory_depends_on": "eval:doc.status==\"Closed\"",
-   "permlevel": 1
+   "permlevel": 1,
+   "read_only": 1
   },
   {
    "depends_on": "eval:doc.status==\"Open\"",
@@ -231,14 +239,6 @@
    "fieldtype": "Data",
    "label": "Alternate Phone",
    "read_only": 1
-  },
-  {
-   "depends_on": "eval:doc.status==\"Closed\"",
-   "fieldname": "ticket_closed_by",
-   "fieldtype": "Data",
-   "label": "Ticket Closed By",
-   "permlevel": 1,
-   "set_only_once": 1
   },
   {
    "fieldname": "column_break_4",
@@ -382,17 +382,17 @@
    "fieldtype": "Section Break"
   },
   {
-   "depends_on": "eval:doc.status==\"Open\"",
+   "depends_on": "eval:doc.status==\"Open\" ",
    "fieldname": "cancel_ticket_btn",
    "fieldtype": "Button",
    "label": "Cancel Ticket"
   },
   {
+   "default": "Normal",
    "depends_on": "eval:doc.dept_name==\"IT\" && doc.ticket_type",
    "fieldname": "priority",
    "fieldtype": "Select",
    "label": "Priority",
-   "mandatory_depends_on": "eval:doc.dept_name==\"IT\" ",
    "options": "Normal\nMedium\nHigh\nUrgent",
    "permlevel": 4
   },
@@ -403,11 +403,56 @@
   {
    "fieldname": "column_break_w2jv5",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "resolved_remark",
+   "fieldtype": "Small Text",
+   "label": "Resolved Remark",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reopen_remark",
+   "fieldtype": "Small Text",
+   "label": "Re-open Remark",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.status==\"Resolved\"",
+   "fieldname": "ticket_resolved_by",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Ticket Resolved By",
+   "options": "User",
+   "permlevel": 1
+  },
+  {
+   "depends_on": "eval:doc.status==\"Resolved\"",
+   "fieldname": "ticket_resolved_details_section",
+   "fieldtype": "Section Break",
+   "label": "Ticket Resolved Details"
+  },
+  {
+   "depends_on": "eval:doc.status==\"Re-Opened\"",
+   "fieldname": "ticket_reopened_details_section",
+   "fieldtype": "Section Break",
+   "label": "Ticket Re-Opened Details"
+  },
+  {
+   "fetch_from": "ticket_resolved_by.full_name",
+   "fieldname": "ticket_resolved_user",
+   "fieldtype": "Data",
+   "label": "Ticket Resolved By"
+  },
+  {
+   "depends_on": "eval:doc.status==\"Closed\"",
+   "fieldname": "ticket_closing_details_section",
+   "fieldtype": "Section Break",
+   "label": "Ticket Closing Details"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-10-04 11:28:18.946573",
+ "modified": "2024-01-15 16:06:10.455975",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
@@ -465,6 +510,10 @@
   {
    "color": "Red",
    "title": "Open"
+  },
+  {
+   "color": "Green",
+   "title": "Resolved"
   }
  ],
  "track_changes": 1,
