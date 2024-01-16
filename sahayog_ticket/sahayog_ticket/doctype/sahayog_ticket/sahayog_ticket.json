@@ -29,8 +29,8 @@
   "status",
   "last_user",
   "column_break_4",
-  "on_hold_remark",
   "section_break_onliy",
+  "on_hold_remark",
   "ticket_duration_section",
   "on_hold_time",
   "due_time",
@@ -358,7 +358,8 @@
    "fieldname": "on_hold_remark",
    "fieldtype": "Small Text",
    "label": "On-Hold Remark",
-   "mandatory_depends_on": "eval:doc.status==\"On-Hold\""
+   "mandatory_depends_on": "eval:doc.status==\"On-Hold\"",
+   "read_only": 1
   },
   {
    "fetch_from": "employee_id.first_name",
@@ -399,7 +400,8 @@
   },
   {
    "fieldname": "section_break_onliy",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "On-Hold Remark Details"
   },
   {
    "fieldname": "column_break_w2jv5",
@@ -453,7 +455,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-01-15 16:19:28.681697",
+ "modified": "2024-01-16 10:38:41.468301",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",

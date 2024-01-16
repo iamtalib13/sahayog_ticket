@@ -54,6 +54,7 @@ frappe.ui.form.on("Sahayog Ticket", {
           label: "Ticket Cancellation Reason",
           fieldname: "ticket_cancellation_reason",
           fieldtype: "Data",
+          reqd: 1,
         },
         (values) => {
           console.log(values.ticket_cancellation_reason);
@@ -714,8 +715,13 @@ frappe.ui.form.on("Sahayog Ticket", {
           frm.disable_save();
         }
 
-        if (frm.doc.status !== "Resolved") {
-          //Resolved Button
+        if (
+          frm.doc.status !== "Resolved" &&
+          frm.doc.status !== "Closed" &&
+          frm.doc.status !== "Cancelled"
+        ) {
+          console.log("resolve button");
+          //Resolved Button show
           frm.add_custom_button(
             __("Resolved"),
             function () {
