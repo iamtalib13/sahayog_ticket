@@ -10,13 +10,13 @@
  "idx": 0,
  "is_standard": "Yes",
  "letter_head": "Sahayog",
- "modified": "2024-01-03 10:39:12.447581",
+ "modified": "2024-03-01 12:25:38.629417",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Operation Monthly Report",
  "owner": "Administrator",
  "prepared_report": 0,
- "query": "SELECT\n\n\n  name AS Ticket_ID,\n    ticket_type AS Ticket_Type,\n\n  call_log_date AS Ticket_Raised_Date,\n  employee_id AS Emp_ID,\n\n  employee_name AS Emp_Name,\n\n  branch_name AS Branch\n\nFROM\n  `tabSahayog Ticket`\nWHERE\n  dept_name = 'Operations' \n  AND status = 'Closed'\n  AND call_log_date BETWEEN '2023-12-01' AND '2023-12-31';",
+ "query": "SELECT\n\n\n  name AS Ticket_ID,\n    ticket_type AS Ticket_Type,\n\n  call_log_date AS Ticket_Raised_Date,\n  employee_id AS Emp_ID,\n\n  employee_name AS Emp_Name,\n\n  branch_name AS Branch\n\nFROM\n  `tabSahayog Ticket`\nWHERE\n  dept_name = 'Operations' \n  AND status = 'Closed'\n  AND call_log_date BETWEEN '2024-02-01' AND '2024-02-29';",
  "ref_doctype": "Sahayog Ticket",
  "report_name": "Operation Monthly Report",
  "report_type": "Query Report",
@@ -113,6 +113,9 @@
   },
   {
    "role": "Loan Executive"
+  },
+  {
+   "role": "All"
   }
  ]
 }

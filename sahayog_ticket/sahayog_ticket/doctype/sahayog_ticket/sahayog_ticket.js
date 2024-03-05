@@ -87,26 +87,14 @@ frappe.ui.form.on("Sahayog Ticket", {
       //   hour12: true,
       // });
       // // Print the creation time to the console (for testing)
+      // console.log("Time: " + creationTime);
       // frm.set_value("creation_time", creationTime);
-      // You can then use the creationTime variable as needed in your code
+      // // You can then use the creationTime variable as needed in your code
     }
   },
 
   refresh: function (frm) {
     if (!frm.is_new()) {
-      // let creation_date_time = frm.doc.creation;
-      // // Convert the creation_date_time string to a Date object
-      // let creationDate = new Date(creation_date_time);
-      // // Extract the creation time from the Date object in 12-hour AM/PM format
-      // let creationTime = creationDate.toLocaleTimeString([], {
-      //   hour: "2-digit",
-      //   minute: "2-digit",
-      //   hour12: true,
-      // });
-      // // Print the creation time to the console (for testing)
-      // console.log("Time: " + creationTime);
-      // frm.set_value("creation_time", creationTime);
-      // // You can then use the creationTime variable as needed in your code
     }
   },
 
