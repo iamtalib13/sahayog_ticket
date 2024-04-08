@@ -285,14 +285,14 @@ frappe.ui.form.on("Sahayog Ticket", {
   },
 
   refresh: function (frm) {
-    var ticketClosingDetailsSection = document.querySelectorAll(
-      "[data-fieldname='ticket_closing_details_section']"
-    )[1];
+    //var ticketClosingDetailsSection = document.querySelectorAll(
+    //"[data-fieldname='ticket_closing_details_section']"
+    //    )[1];
 
     // Setting the background color to "#90EE90"
-    if (ticketClosingDetailsSection) {
-      ticketClosingDetailsSection.style.backgroundColor = "#90EE90";
-    }
+    //  if (ticketClosingDetailsSection) {
+    //  ticketClosingDetailsSection.style.backgroundColor = "#90EE90";
+    //}
     if (!frm.is_new()) {
       let emp_id = frm.doc.employee_id;
       let emp_name = frm.doc.employee_name;
@@ -458,11 +458,230 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
 
     if (!frm.is_new()) {
-      let user = frappe.session.user;
-      let match = user.match(/\d+/);
-      let eid = match ? match[0] : null;
+      if (frappe.user.has_role("System Manager")) {
+        console.log("Admin");
+        // In-Progress Button
+        frm.add_custom_button(
+          __("In-Progress"),
+          function () {
+            frappe.confirm(
+              __("Are you sure you want to set In-Progress?"),
+              function () {
+                frm.set_value("status", "In-Progress");
+                frm.refresh_field("status");
+                frm.save();
+              },
+              function () {
+                // Additional logic if No is selected in the confirmation
+              }
+            );
+          },
+          __("Admin")
+        );
+      } else if (frappe.user.has_role("Employee")) {
+        console.log("Employee");
+      } else {
+        if (frappe.user.has_role("CTO")) {
+          console.log("CTO");
+          frm.disable_save();
+          frm.disable_form();
+        } else {
+          console.log("Not Employee");
 
-      if (eid === frm.doc.employee_id) {
+          frm.set_df_property("cancel_ticket_btn", "hidden", 1);
+          if (
+            frm.doc.status == "Read" ||
+            frm.doc.status == "In-Progress" ||
+            frm.doc.status == "On-Hold"
+          ) {
+            frm.disable_save();
+          }
+
+          if (
+            frm.doc.status == "Re-Opened" ||
+            frm.doc.status == "Read" ||
+            frm.doc.status == "In-Progress"
+          ) {
+            //On-Hold Button
+            frm.add_custom_button(
+              __("On-Hold"),
+              function () {
+                let currentOnHoldRemark = frm.doc.on_hold_remark || ""; // Get the current value or initialize as an empty string
+
+                frappe.confirm(
+                  __("Do you want to set On-Hold "),
+                  function () {
+                    let d = new frappe.ui.Dialog({
+                      title: "Enter On-Hold Remarks",
+                      fields: [
+                        {
+                          label: "On-Hold Remark",
+                          fieldname: "on_hold_remark",
+                          fieldtype: "Small Text",
+                          reqd: 1, // Set reqd property to make it mandatory
+                          default: currentOnHoldRemark, // Set default value as current remark
+                        },
+                      ],
+                      size: "small", // small, large, extra-large
+                      primary_action_label: "Submit",
+                      primary_action: function () {
+                        // Your existing logic for handling the dialog submission
+                        if (!d.fields_dict.on_hold_remark.get_value()) {
+                          frappe.msgprint(__("Please provide On-Hold remark."));
+                          return;
+                        }
+
+                        frm.set_value(
+                          "on_hold_remark",
+                          d.fields_dict.on_hold_remark.get_value()
+                        );
+
+                        frm.set_value("status", "On-Hold");
+                        frm.refresh_field("status");
+                        frm.save();
+
+                        d.hide();
+                      },
+                    });
+
+                    d.show();
+                  },
+                  function () {
+                    // Additional logic if No is selected in the confirmation
+                  }
+                );
+              },
+              __("Status")
+            );
+          }
+          if (frm.doc.status == "Open") {
+            //Read Button
+            frm.add_custom_button(
+              __("Read"),
+              function () {
+                frappe.confirm(
+                  "Are you sure you want to Set Read ",
+                  () => {
+                    // action to perform if Yes is selected
+                    frm.set_value("status", "Read");
+                    frm.refresh_field("status");
+
+                    frm.save();
+                  },
+                  () => {
+                    // action to perform if No is selected
+                  }
+                );
+              },
+              __("Status")
+            );
+          }
+          if (
+            frm.doc.status == "Open" ||
+            frm.doc.status == "Read" ||
+            frm.doc.status == "On-Hold"
+          ) {
+            //In-Progress Button
+            frm.add_custom_button(
+              __("In-Progress"),
+              function () {
+                frappe.confirm(
+                  "Are you sure you want to Set In-Progress ",
+                  () => {
+                    // action to perform if Yes is selected
+                    frm.set_value("status", "In-Progress");
+                    frm.refresh_field("status");
+
+                    frm.save();
+                  },
+                  () => {
+                    // action to perform if No is selected
+                  }
+                );
+              },
+              __("Status")
+            );
+          }
+          if (frm.doc.status == "Resolved") {
+            frm.disable_save();
+          }
+
+          if (
+            frm.doc.status !== "Resolved" &&
+            frm.doc.status !== "Closed" &&
+            frm.doc.status !== "Cancelled"
+          ) {
+            console.log("resolve button");
+            //Resolved Button show
+            frm.add_custom_button(
+              __("Resolved"),
+              function () {
+                let user = frappe.session.user;
+                frappe.confirm(
+                  __("Do you want to Resolve Ticket "),
+                  function () {
+                    let d = new frappe.ui.Dialog({
+                      title: "Enter Resolve Remarks",
+                      fields: [
+                        {
+                          label: "Resolved Remark",
+                          fieldname: "resolved_remark",
+                          fieldtype: "Small Text",
+                          reqd: 1, // Set reqd property to make it mandatory
+                        },
+                      ],
+                      size: "small", // small, large, extra-large
+                      primary_action_label: "Submit",
+                      primary_action: function () {
+                        // Your existing logic for handling the dialog submission
+                        if (!d.fields_dict.resolved_remark.get_value()) {
+                          frappe.msgprint(__("Please provide Resolve remark."));
+                          return;
+                        }
+
+                        frm.set_value(
+                          "resolved_remark",
+                          d.fields_dict.resolved_remark.get_value()
+                        );
+
+                        frm.set_value("ticket_resolved_by", user);
+                        frm.set_value("status", "Resolved");
+                        frm.refresh_field("status");
+                        frm.save();
+
+                        d.hide();
+                      },
+                    });
+
+                    d.show();
+                  },
+                  function () {
+                    // Additional logic if No is selected in the confirmation
+                  }
+                );
+              },
+              __("Status")
+            );
+          }
+        }
+      }
+      let user = frappe.session.user;
+      // Get the numeric part of the user string
+      let eid = user.match(/\d+/)[0];
+      // Initialize the modified employee_id
+      let modifiedEmployeeId = "";
+
+      // Check if the user string contains "ABPS" or "MCPS"
+      if (user.includes("ABPS")) {
+        modifiedEmployeeId = "ABPS" + eid;
+      } else if (user.includes("MCPS")) {
+        modifiedEmployeeId = "MCPS" + eid;
+      } else {
+        // If neither "ABPS" nor "MCPS" is found, use the numeric part as is
+        modifiedEmployeeId = eid;
+      }
+
+      if (modifiedEmployeeId === frm.doc.employee_id) {
         if (frm.doc.status == "Open") {
           frm.set_df_property("cancel_ticket_btn", "hidden", 0);
           document.querySelectorAll(
