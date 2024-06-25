@@ -224,7 +224,8 @@ frappe.ui.form.on("Sahayog Ticket", {
         var dept = frm.doc.dept_name;
         msgprint("Ticket is Saved Successfully.");
         msgprint(dept + " Team will Contact You Shortly");
-        frappe.set_route("List", "Sahayog Ticket");
+
+        frappe.set_route("List", "Sahayog Ticket", { status: "Open" });
       } else {
         //console.log("not owner");
       }

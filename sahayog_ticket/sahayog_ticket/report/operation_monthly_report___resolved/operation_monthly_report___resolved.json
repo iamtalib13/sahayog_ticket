@@ -1,7 +1,7 @@
 {
  "add_total_row": 0,
  "columns": [],
- "creation": "2023-10-09 10:38:09.771920",
+ "creation": "2024-06-03 11:49:43.765632",
  "disable_prepared_report": 0,
  "disabled": 0,
  "docstatus": 0,
@@ -10,15 +10,15 @@
  "idx": 0,
  "is_standard": "Yes",
  "letter_head": "Sahayog",
- "modified": "2024-06-03 12:41:21.745256",
+ "modified": "2024-06-03 11:49:43.765632",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
- "name": "Operation Monthly Report",
+ "name": "Operation Monthly Report - Resolved",
  "owner": "Administrator",
  "prepared_report": 0,
- "query": "SELECT\n\n\n  name AS Ticket_ID,\n    ticket_type AS Ticket_Type,\n\n  call_log_date AS Ticket_Raised_Date,\n  employee_id AS Emp_ID,\n\n  employee_name AS Emp_Name,\n\n  branch_name AS Branch\n\nFROM\n  `tabSahayog Ticket`\nWHERE\n  dept_name = 'Operations' \n  AND status = 'Closed'\n  AND call_log_date BETWEEN '2024-05-01' AND '2024-05-31';",
+ "query": "SELECT\n\n\n  name AS Ticket_ID,\n    ticket_type AS Ticket_Type,\n\n  call_log_date AS Ticket_Raised_Date,\n  employee_id AS Emp_ID,\n\n  employee_name AS Emp_Name,\n\n  branch_name AS Branch\n\nFROM\n  `tabSahayog Ticket`\nWHERE\n  dept_name = 'Operations' \n  AND status = 'Resolved'\n  AND call_log_date BETWEEN '2024-05-01' AND '2024-05-31';",
  "ref_doctype": "Sahayog Ticket",
- "report_name": "Operation Monthly Report",
+ "report_name": "Operation Monthly Report - Resolved",
  "report_type": "Query Report",
  "roles": [
   {
@@ -115,7 +115,7 @@
    "role": "Loan Executive"
   },
   {
-   "role": "All"
+   "role": "HRM ZO"
   }
  ]
 }
