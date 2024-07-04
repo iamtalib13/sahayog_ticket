@@ -5,6 +5,7 @@
 frappe.ui.form.on("Sahayog Ticket", {
   refresh: function (frm) {
     if (frm.is_new()) {
+      //new form f
     } else if (!frm.is_new()) {
     }
   },
