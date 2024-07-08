@@ -1,13 +1,203 @@
 // Copyright (c) 2023, Sid and contributors
 
-// Hello from
-
 frappe.ui.form.on("Sahayog Ticket", {
   refresh: function (frm) {
+    $("span.sidebar-toggle-btn").hide();
+    $(".col-lg-2.layout-side-section").hide();
+    frm.trigger("common_hidden_fields");
+    frm.trigger("hide_timeline");
+    frm.trigger("create_asset_request");
+
     if (frm.is_new()) {
-      //new form f
+      //Employee Trigger when form is new
+      frm.trigger("Set_Employee_Details");
+      frm.trigger("Employee_hidden_fields");
     } else if (!frm.is_new()) {
+      frm.trigger("status_color");
+      frm.trigger("it_support_manager_fields_show");
     }
+  },
+
+  create_asset_request: function (frm) {
+    // Check if asset_request_id exists
+    if (frm.doc.asset_request_id) {
+      // Show button to view Asset Request if asset_request_id exists
+      frm.add_custom_button(__("View Asset Request"), function () {
+        frappe.set_route("Form", "Asset Request", frm.doc.asset_request_id);
+      });
+    } else if (
+      // Show "Create Asset Request" button if user has any of the specified roles
+      frappe.user.has_role("IT Support Executive") ||
+      frappe.user.has_role("Admin Support Executive") ||
+      frappe.user.has_role("Stationery Store & Support Manager")
+    ) {
+      frm.add_custom_button(__("Create Asset Request"), function () {
+        let request_department = "";
+
+        if (frappe.user.has_role("IT Support Executive")) {
+          request_department = "IT";
+        } else if (frappe.user.has_role("Admin Support Executive")) {
+          request_department = "Admin";
+        } else if (frappe.user.has_role("Stationery Store & Support Manager")) {
+          request_department = "Stationery";
+        }
+
+        if (request_department) {
+          console.log("Request Department set to " + request_department);
+        } else {
+          console.log("No matching role found");
+        }
+
+        frappe.confirm(
+          __("Are you sure you want to create Asset Request?"),
+          function () {
+            frm.call({
+              method: "create_asset_request", // Use the correct dotted path for your method
+              freeze: true,
+              freeze_message: "Internet Not Stable, Please Wait...",
+              args: {
+                ticket_id: frm.doc.name,
+                employee_id: frm.doc.employee_id,
+                emp_name: frm.doc.employee_name,
+                designation: frm.doc.designation,
+                department: frm.doc.emp_department,
+                region: frm.doc.region,
+                district: frm.doc.district,
+                branch: frm.doc.branch_name,
+                request_to: request_department,
+                phone: frm.doc.phone1,
+                division: frm.doc.division,
+              },
+              callback: function (response) {
+                if (response.message) {
+                  frm.set_value(
+                    "asset_request_id",
+                    response.message.asset_request_id
+                  );
+                  frm.refresh_field("asset_request_id");
+                  frm.save();
+                  frappe.show_alert(
+                    {
+                      message: __("Asset Request created successfully"),
+                      indicator: "green",
+                    },
+                    5
+                  );
+                }
+              },
+            });
+          },
+          function () {
+            // Additional logic if No is selected in the confirmation
+          }
+        );
+      });
+    }
+  },
+  common_hidden_fields: function (frm) {
+    frm.toggle_display("status", false);
+    frm.toggle_display("assigned_it", false);
+  },
+
+  hide_timeline: function (frm) {
+    // Check if the user has the "System Manager" role
+    const hasSystemManagerRole = frappe.user_roles.includes("System Manager");
+
+    // Get all timeline items
+    let timeline_items = frm.timeline.wrapper.find(".timeline-item");
+
+    // Iterate through timeline items and hide entries based on specific criteria
+    timeline_items.each(function () {
+      let item = $(this);
+      let itemText = item.text();
+
+      // Hide entries containing 'OTP', 'New Email', or 'Notification sent to' if the user is not a System Manager
+      if (
+        !hasSystemManagerRole &&
+        (itemText.includes("OTP") ||
+          itemText.includes("New Email") ||
+          itemText.includes("Notification sent to"))
+      ) {
+        item.hide();
+      }
+    });
+  },
+
+  Employee_hidden_fields: function (frm) {
+    frm.trigger("common_hidden_fields");
+    let user = frappe.session.user;
+    let employee_user = frm.doc.employee_user_id;
+
+    if (frappe.user.has_role("Administrator")) {
+    }
+
+    if (user == employee_user) {
+      console.log("Employee matched for hidden fields");
+    }
+  },
+
+  it_support_manager_fields_show: function (frm) {
+    if (frappe.user.has_role("IT Support Manager")) {
+      frm.toggle_display("assigned_it", true);
+    }
+  },
+
+  Set_Employee_Details: function (frm) {
+    let user;
+    if (frm.is_new()) {
+      user = frappe.session.user;
+    } else if (!frm.is_new()) {
+      console.log("Eid-", frm.doc.employee_id);
+      user = frm.doc.employee_id;
+    }
+
+    // Get the numeric part of the user string
+    let eid = user.match(/\d+/)[0];
+
+    // Initialize the modified employee_id
+    let modifiedEmployeeId = "";
+
+    // Check if the user string contains "ABPS" or "MCPS"
+    if (user.includes("ABPS")) {
+      modifiedEmployeeId = "ABPS" + eid;
+    } else if (user.includes("MCPS")) {
+      modifiedEmployeeId = "MCPS" + eid;
+    } else {
+      // If neither "ABPS" nor "MCPS" is found, use the numeric part as is
+      modifiedEmployeeId = eid;
+    }
+
+    // Set the "employee_id" field with the modified value
+    frm.set_value("employee_id", modifiedEmployeeId);
+    let empid = frm.doc.employee_id;
+
+    frm.call({
+      method: "get_emp_details",
+      args: {
+        emp_id: empid,
+      },
+      callback: function (r) {
+        // Check if the message array contains at least one object
+        console.log(r.message);
+        if (r.message.length > 0) {
+          var firstName = r.message[0].first_name;
+          var lastName = r.message[0].last_name;
+          var fullName = firstName + " " + lastName;
+
+          frm.set_value("emp_department", r.message[0].department);
+          frm.set_value("division", r.message[0].division);
+          frm.set_value("region", r.message[0].region);
+          frm.set_value("branch_name", r.message[0].branch);
+          frm.set_value("district", r.message[0].district);
+          frm.set_value("phone1", r.message[0].cell_number);
+          frm.set_value("designation", r.message[0].designation);
+          frm.set_value("emp_first_name", firstName);
+          frm.set_value("emp_last_name", lastName);
+          frm.set_value("employee_name", fullName);
+          frm.set_value("employee_user_id", r.message[0].user_id);
+        }
+      },
+    });
   },
 
   cancel_ticket_btn: function (frm) {
@@ -91,11 +281,6 @@ frappe.ui.form.on("Sahayog Ticket", {
       // console.log("Time: " + creationTime);
       // frm.set_value("creation_time", creationTime);
       // // You can then use the creationTime variable as needed in your code
-    }
-  },
-
-  refresh: function (frm) {
-    if (!frm.is_new()) {
     }
   },
 
@@ -203,6 +388,15 @@ frappe.ui.form.on("Sahayog Ticket", {
         };
       });
     }
+    if (frm.doc.dept_name == "Stationery") {
+      frm.set_query("ticket_type", function () {
+        return {
+          filters: {
+            department: "Stationery",
+          },
+        };
+      });
+    }
   },
   onload_post_render: function (frm) {
     // frm.fields_dict.dept_name.$input.on("input", function (evt) {
@@ -257,35 +451,6 @@ frappe.ui.form.on("Sahayog Ticket", {
 });
 
 frappe.ui.form.on("Sahayog Ticket", {
-  refresh: function (frm) {
-    let label;
-    let color;
-    if (frm.doc.status == "Open") {
-      label = "Open";
-      color = "red";
-    } else if (frm.doc.status == "Read") {
-      label = "Read";
-      color = "orange";
-    } else if (frm.doc.status == "In-Progress") {
-      label = "In-Progress";
-      color = "yellow";
-    } else if (frm.doc.status == "On-Hold") {
-      label = "On-Hold";
-      color = "purple";
-    } else if (frm.doc.status == "Closed") {
-      label = "Closed";
-      color = "green";
-    } else if (frm.doc.status == "Cancelled") {
-      label = "Cancelled";
-      color = "grey";
-    } else {
-      // If the status is not recognized, set a default label and color
-      label = frm.doc.status;
-      color = "grey";
-    }
-    frm.page.set_indicator(__(label), color);
-  },
-
   refresh: function (frm) {
     //var ticketClosingDetailsSection = document.querySelectorAll(
     //"[data-fieldname='ticket_closing_details_section']"
@@ -454,8 +619,8 @@ frappe.ui.form.on("Sahayog Ticket", {
         console.log("matched employee " + modifiedEmployeeId);
 
         // Toggle the display of the "status" field (hide it)
-        frm.toggle_display("employee_id", false);
-        frm.toggle_display("status", false);
+        //  frm.toggle_display("employee_id", false);
+        //frm.toggle_display("status", false);
       }
     }
 

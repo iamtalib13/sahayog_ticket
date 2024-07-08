@@ -9,7 +9,10 @@
  "engine": "InnoDB",
  "field_order": [
   "basic_details_tab",
+  "asset_request_section",
+  "asset_request_id",
   "employee_id",
+  "employee_user_id",
   "emp_first_name",
   "emp_last_name",
   "employee_name",
@@ -25,8 +28,7 @@
   "phone2",
   "company_email",
   "section_break_ayj9j",
-  "tick_section",
-  "status",
+  "ticket_details_tab",
   "last_user",
   "column_break_4",
   "section_break_onliy",
@@ -37,6 +39,7 @@
   "total_hours",
   "section_break_p5rup",
   "assigned_it",
+  "status",
   "dept_name",
   "ticket_type",
   "column_break_mbxv4",
@@ -73,7 +76,6 @@
    "fieldtype": "Select",
    "label": "Assigned To Executive",
    "options": "\nNone\nGondia Executive\nBhandara Executive - Devendra\nChandrapur Executive - Pravin\nNagpur Executive - Kunal\nGadhchiroli Executive - Sanghdeep",
-   "permlevel": 3,
    "read_only_depends_on": "eval:doc.status==\"Cancelled\" "
   },
   {
@@ -107,11 +109,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "tick_section",
-   "fieldtype": "Tab Break",
-   "label": "Ticket Details"
-  },
-  {
    "fieldname": "dept_name",
    "fieldtype": "Link",
    "in_global_search": 1,
@@ -143,15 +140,12 @@
   },
   {
    "default": "Open",
-   "depends_on": "eval:doc.status == \"New\" || doc.status == \"Open\" || doc.status == \"Read\" || doc.status == \"In-Progress\" || doc.status == \"On-Hold\" || doc.status == \"Closed\" || doc.status == \"Cancelled\"",
    "fieldname": "status",
    "fieldtype": "Select",
-   "hidden": 1,
    "in_standard_filter": 1,
    "label": "Ticket Status",
    "options": "Open\nRead\nIn-Progress\nOn-Hold\nRe-Opened\nResolved\nClosed\nCancelled",
-   "permlevel": 1,
-   "read_only_depends_on": "eval:doc.flag==\"Closed\" "
+   "read_only_depends_on": "//eval:doc.flag==\"Closed\" "
   },
   {
    "depends_on": "eval:doc.status==\"Closed\" ",
@@ -159,7 +153,6 @@
    "fieldtype": "Small Text",
    "label": "Ticket Closing Remark",
    "mandatory_depends_on": "eval:doc.status==\"Closed\"",
-   "permlevel": 1,
    "read_only": 1
   },
   {
@@ -251,14 +244,12 @@
    "fieldname": "last_user",
    "fieldtype": "Data",
    "label": "last user",
-   "permlevel": 1,
    "set_only_once": 1
   },
   {
    "fieldname": "employee_id",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "label": "Employee ID",
-   "options": "Employee",
    "read_only": 1
   },
   {
@@ -333,7 +324,7 @@
    "set_only_once": 1
   },
   {
-   "depends_on": "eval:frappe.user.has_role('System Manager')  ",
+   "depends_on": "eval:frappe.user.has_role('System Manager')",
    "fieldname": "basic_details_tab",
    "fieldtype": "Tab Break",
    "label": "Basic Details"
@@ -396,8 +387,7 @@
    "fieldname": "priority",
    "fieldtype": "Select",
    "label": "Priority",
-   "options": "Normal\nMedium\nHigh\nUrgent",
-   "permlevel": 4
+   "options": "Normal\nMedium\nHigh\nUrgent"
   },
   {
    "fieldname": "section_break_onliy",
@@ -426,8 +416,7 @@
    "fieldtype": "Link",
    "hidden": 1,
    "label": "Ticket Resolved By",
-   "options": "User",
-   "permlevel": 1
+   "options": "User"
   },
   {
    "depends_on": "eval:doc.status==\"Resolved\"",
@@ -452,11 +441,33 @@
    "fieldname": "ticket_closing_details_section",
    "fieldtype": "Section Break",
    "label": "Ticket Closing Details"
+  },
+  {
+   "fieldname": "ticket_details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Ticket Details"
+  },
+  {
+   "fieldname": "employee_user_id",
+   "fieldtype": "Data",
+   "label": "Employee User Id",
+   "read_only": 1
+  },
+  {
+   "fieldname": "asset_request_section",
+   "fieldtype": "Section Break",
+   "label": "Asset Request"
+  },
+  {
+   "fieldname": "asset_request_id",
+   "fieldtype": "Link",
+   "label": "Asset Request ID",
+   "options": "Asset Request"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-04-05 17:07:16.493580",
+ "modified": "2024-07-05 17:23:08.925600",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
@@ -472,6 +483,7 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "select": 1,
    "share": 1,
    "write": 1
   },
@@ -484,6 +496,7 @@
    "read": 1,
    "report": 1,
    "role": "Employee",
+   "select": 1,
    "share": 1,
    "write": 1
   }
