@@ -411,7 +411,7 @@
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.status==\"Resolved\"",
+   "depends_on": "eval:doc.status==\"Resolved\" || doc.status==\"Closed\"",
    "fieldname": "ticket_resolved_by",
    "fieldtype": "Link",
    "hidden": 1,
@@ -419,7 +419,7 @@
    "options": "User"
   },
   {
-   "depends_on": "eval:doc.status==\"Resolved\"",
+   "depends_on": "eval:doc.status==\"Resolved\" || doc.status==\"Closed\"",
    "fieldname": "ticket_resolved_details_section",
    "fieldtype": "Section Break",
    "label": "Ticket Resolved Details"
@@ -467,7 +467,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-07-05 17:23:08.925600",
+ "modified": "2024-07-11 17:45:21.894780",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",

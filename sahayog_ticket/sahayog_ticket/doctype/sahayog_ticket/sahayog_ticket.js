@@ -47,7 +47,7 @@ frappe.ui.form.on("Sahayog Ticket", {
         } else {
           console.log("No matching role found");
         }
-
+        let user = frappe.session.user;
         frappe.confirm(
           __("Are you sure you want to create Asset Request?"),
           function () {
@@ -74,15 +74,24 @@ frappe.ui.form.on("Sahayog Ticket", {
                     "asset_request_id",
                     response.message.asset_request_id
                   );
+
                   frm.refresh_field("asset_request_id");
-                  frm.save();
-                  frappe.show_alert(
-                    {
-                      message: __("Asset Request created successfully"),
-                      indicator: "green",
-                    },
-                    5
-                  );
+                
+                        frm.set_value("ticket_resolved_by", user);
+                        frm.set_value("status", "Closed");
+                        frm.set_value("remark", `Created Asset Request - ${response.message.asset_request_id}`);
+                        frm.refresh_field("status");
+                        
+                          frm.save();
+                          frappe.show_alert(
+                            {
+                              message: __("Asset Request created successfully"),
+                              indicator: "green",
+                            },
+                            5
+                          );
+                        
+                  
                 }
               },
             });
