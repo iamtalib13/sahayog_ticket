@@ -58,45 +58,45 @@ frappe.ui.form.on("Sahayog Ticket", {
               freeze: true,
               freeze_message: "Internet Not Stable, Please Wait...",
               args: {
-                ticket_id: frm.doc.name,
-                employee_id: frm.doc.employee_id,
-                emp_name: frm.doc.employee_name,
-                designation: frm.doc.designation,
-                department: frm.doc.emp_department,
-                region: frm.doc.region,
-                district: frm.doc.district,
-                branch: frm.doc.branch_name,
-                request_to: request_department,
-                phone: frm.doc.phone1,
-                division: frm.doc.division,
+                  ticket_id: frm.doc.name,
+                  employee_id: frm.doc.employee_id,
+                  emp_name: frm.doc.employee_name,
+                  designation: frm.doc.designation,
+                  department: frm.doc.emp_department,
+                  region: frm.doc.region,
+                  district: frm.doc.district,
+                  branch: frm.doc.branch_name,
+                  request_to: request_department,
+                  phone: frm.doc.phone1,
+                  division: frm.doc.division,
               },
               callback: function (response) {
-                if (response.message) {
-                  frm.set_value(
-                    "asset_request_id",
-                    response.message.asset_request_id
-                  );
-
-                  frm.refresh_field("asset_request_id");
-                
-                        frm.set_value("ticket_resolved_by", user);
-                        frm.set_value("status", "Closed");
-                        frm.set_value("remark", `Created Asset Request - ${response.message.asset_request_id}`);
-                        frm.refresh_field("status");
-                        
-                          frm.save();
-                          frappe.show_alert(
-                            {
+                  if (response.message && response.message.asset_request_id) {
+                      frm.set_value("asset_request_id", response.message.asset_request_id);
+                      frm.refresh_field("asset_request_id");
+          
+                      frm.set_value("ticket_resolved_by", user);
+                      frm.set_value("status", "Closed");
+                      frm.set_value("remark", `Created Asset Request - ${response.message.asset_request_id}`);
+                      frm.refresh_field("status");
+          
+                      frm.save();
+                      frappe.show_alert(
+                          {
                               message: __("Asset Request created successfully"),
                               indicator: "green",
-                            },
-                            5
-                          );
-                        
-                  
-                }
+                          },
+                          5
+                      );
+                  } else {
+                      frappe.show_alert({
+                          message: __('Please Try Again'),
+                          indicator: 'red'
+                      }, 5);
+                  }
               },
-            });
+          });
+          
           },
           function () {
             // Additional logic if No is selected in the confirmation
