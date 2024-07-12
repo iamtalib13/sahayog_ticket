@@ -27,9 +27,11 @@ frappe.ui.form.on("Sahayog Ticket", {
       });
     } else if (
       // Show "Create Asset Request" button if user has any of the specified roles
-      frappe.user.has_role("IT Support Executive") ||
-      frappe.user.has_role("Admin Support Executive") ||
-      frappe.user.has_role("Stationery Store & Support Manager")
+      frm.doc.status === "Open" && (
+        frappe.user.has_role("IT Support Executive") ||
+        frappe.user.has_role("Admin Support Executive") ||
+        frappe.user.has_role("Stationery Store & Support Manager")
+    )
     ) {
       frm.add_custom_button(__("Create Asset Request"), function () {
         let request_department = "";
