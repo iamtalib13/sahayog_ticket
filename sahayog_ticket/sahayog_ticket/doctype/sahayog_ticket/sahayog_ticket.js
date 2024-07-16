@@ -27,7 +27,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       });
     } else if (
       // Show "Create Asset Request" button if user has any of the specified roles
-      frm.doc.status === "Open" && (
+      frm.doc.status === "On-Hold"||frm.doc.status === "In-Progress"|| frm.doc.status === "Open" && (
         frappe.user.has_role("IT Support Executive") ||
         frappe.user.has_role("Admin Support Executive") ||
         frappe.user.has_role("Stationery Store & Support Manager")
