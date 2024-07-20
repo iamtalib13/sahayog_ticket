@@ -6,13 +6,15 @@ frappe.ui.form.on("Sahayog Ticket", {
     $(".col-lg-2.layout-side-section").hide();
     frm.trigger("common_hidden_fields");
     frm.trigger("hide_timeline");
-    frm.trigger("create_asset_request");
+
+   
 
     if (frm.is_new()) {
       //Employee Trigger when form is new
       frm.trigger("Set_Employee_Details");
       frm.trigger("Employee_hidden_fields");
     } else if (!frm.is_new()) {
+      frm.trigger("create_asset_request");
       frm.trigger("status_color");
       frm.trigger("it_support_manager_fields_show");
     }
@@ -463,6 +465,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
 frappe.ui.form.on("Sahayog Ticket", {
   refresh: function (frm) {
+   
     //var ticketClosingDetailsSection = document.querySelectorAll(
     //"[data-fieldname='ticket_closing_details_section']"
     //    )[1];
@@ -667,6 +670,8 @@ frappe.ui.form.on("Sahayog Ticket", {
           console.log("Not Employee");
 
           frm.set_df_property("cancel_ticket_btn", "hidden", 1);
+         
+
           if (
             frm.doc.status == "Read" ||
             frm.doc.status == "In-Progress" ||
@@ -1176,6 +1181,16 @@ frappe.ui.form.on("Sahayog Ticket", {
 
     const urgent = 4;
     const urgenthit = 6;
+
+    if (frappe.user.has_role("Stationery Store & Support Manager")) {
+           
+      console.log("stationery");
+      frm.remove_custom_button('Resolved','Status');
+      frm.remove_custom_button('Read','Status');
+      frm.remove_custom_button('On-Hold','Status');
+      frm.remove_custom_button('In-Progress','Status');
+
+    }
   },
 });
 
