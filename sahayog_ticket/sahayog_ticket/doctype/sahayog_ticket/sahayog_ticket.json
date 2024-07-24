@@ -11,6 +11,7 @@
   "basic_details_tab",
   "asset_request_section",
   "asset_request_id",
+  "support_system_email",
   "employee_id",
   "employee_user_id",
   "emp_first_name",
@@ -463,11 +464,17 @@
    "fieldtype": "Link",
    "label": "Asset Request ID",
    "options": "Asset Request"
+  },
+  {
+   "default": "support@sahayogmultistate.com",
+   "fieldname": "support_system_email",
+   "fieldtype": "Data",
+   "label": "Support System Email"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-07-11 17:45:21.894780",
+ "modified": "2024-07-24 16:09:16.801881",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
