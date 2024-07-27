@@ -1,13 +1,12 @@
 {
  "actions": [],
- "allow_rename": 1,
  "creation": "2024-07-16 11:55:46.813264",
  "default_view": "List",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "name1",
+  "emp_name",
   "phone",
   "branch",
   "ticket_type",
@@ -15,11 +14,6 @@
   "date"
  ],
  "fields": [
-  {
-   "fieldname": "name1",
-   "fieldtype": "Data",
-   "label": "Name"
-  },
   {
    "fieldname": "phone",
    "fieldtype": "Data",
@@ -33,7 +27,7 @@
   },
   {
    "fieldname": "ticket_type",
-   "fieldtype": "Data",
+   "fieldtype": "Select",
    "label": "Nature of Grievance / Suggestion",
    "options": "\nGrievance\nSuggetion"
   },
@@ -46,11 +40,16 @@
    "fieldname": "date",
    "fieldtype": "Date",
    "label": "Date"
+  },
+  {
+   "fieldname": "emp_name",
+   "fieldtype": "Data",
+   "label": "Name"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-07-16 11:55:46.813264",
+ "modified": "2024-07-27 10:45:45.076838",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Grievances and Redressal",

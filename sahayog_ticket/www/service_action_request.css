@@ -1,0 +1,539 @@
+body {
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  background-color: #121212;
+  color: #fff;
+  padding-top: 4em; /* Add padding to avoid overlap with fixed header */
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  background: #292727;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  max-width: 1000px;
+  overflow: auto;
+  margin: 20px auto;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    align-items: center;
+    margin-top: 70px;
+  }
+  .form-container {
+    margin-bottom: 20px;
+    min-height: 100px;
+    margin-right: 10px;
+  }
+  .form-container form .radio-group .card {
+    justify-content: flex-start;
+  }
+}
+
+.form-container {
+  flex: 1;
+  min-width: 300px;
+  margin-right: -50px;
+  position: relative;
+  overflow: auto;
+}
+
+.image-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-right: 10px;
+}
+
+.image-container img {
+  border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+  .image-container img {
+    max-width: 80%;
+  }
+}
+
+.dots {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 7px;
+  position: relative;
+}
+
+.dots .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ef6b5c;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
+}
+
+.dots .dot:nth-child(2) {
+  background-color: #f6c352;
+}
+
+.dots .dot:nth-child(3) {
+  background-color: #65c259;
+}
+
+@media (max-width: 768px) {
+  .dots {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .dots .dot {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.form-container h1 {
+  margin: 0;
+  font-size: 24px;
+}
+.form-container h3 {
+  margin: 5px 0 15px 0;
+  font-size: 16px;
+  font-weight: normal;
+}
+.form-container form {
+  display: flex;
+  flex-direction: column;
+}
+.form-container form input,
+.form-container form textarea {
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #655d5d;
+  border-radius: 5px;
+  width: 100%;
+  background-color: #333;
+  color: #fff;
+}
+.form-container form textarea {
+  resize: vertical;
+  height: 100px;
+}
+.form-container form .radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.form-container form .radio-group .card {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #655d5d;
+  cursor: pointer;
+  background-color: #333;
+  color: #fff;
+  transition: background-color 0.3s ease;
+  flex: 1 1 45%;
+  box-sizing: border-box;
+  min-width: 120px;
+  justify-content: flex-start;
+}
+.radio-group span {
+  font-size: 16px;
+  color: #aaa; /* Disabled-like color */
+}
+
+input[type="text"],
+input[type="tel"],
+textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #555;
+  border-radius: 5px;
+  background-color: #444;
+  color: #fff;
+}
+
+button {
+  background-color: #555;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #666;
+}
+
+.form-container form input,
+.form-container form textarea {
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #655d5d;
+  border-radius: 5px;
+  width: 100%;
+  background-color: #333;
+  color: #fff;
+  box-sizing: border-box;
+}
+.form-container form textarea {
+  resize: vertical;
+  height: 100px;
+}
+
+.form-container form button {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 25px;
+  background-color: #4889dd;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  align-self: center;
+  margin-top: 20px;
+  transition: background-color 0.3s ease;
+}
+.form-container form button:hover {
+  background-color: black;
+}
+.form-container .radio-group .grievance-card {
+  color: red;
+}
+.form-container .radio-group .suggestion-card {
+  color: green;
+}
+.image-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.image-container img {
+  max-width: 65%;
+  border-radius: 10px;
+}
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    align-items: center;
+  }
+  .form-container {
+    margin-right: 0;
+    margin-bottom: 20px;
+  }
+  .form-container form .radio-group .card {
+    justify-content: flex-start;
+  }
+}
+.grievance {
+  color: #ff3c3c;
+  font-weight: normal;
+}
+.suggestion {
+  color: #bbff64;
+  font-weight: normal;
+}
+
+.thank-you-card {
+  display: none;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  background: #292727;
+  padding: 60px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  max-width: 1000px;
+  margin: 30px;
+  text-align: center;
+  position: relative;
+}
+
+.thank-you-card .dots {
+  position: absolute;
+  top: -5px;
+  left: 0;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+.thank-you-card .dots .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
+}
+
+.thank-you-card .dots .dot:nth-child(1) {
+  background-color: #ef6b5c;
+}
+
+.thank-you-card .dots .dot:nth-child(2) {
+  background-color: #f6c352;
+}
+
+.thank-you-card .dots .dot:nth-child(3) {
+  background-color: #65c259;
+}
+
+.thank-you-card .content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.thank-you-card img.icon {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 20px;
+  margin-right: 20px;
+}
+
+.thank-you-card h1 {
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.thank-you-card p {
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.thank-you-card button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 25px;
+  background-color: #4889dd;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 20px;
+  transition: background-color 0.3s ease;
+}
+
+.thank-you-card button:hover {
+  background-color: black;
+}
+
+.thank-you-card .image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.thank-you-card .image-container img {
+  max-width: 65%;
+  border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+  .thank-you-card {
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+  }
+
+  .thank-you-card .content {
+    align-items: center;
+  }
+
+  .thank-you-card .dots {
+    top: -5px;
+    left: 0;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .thank-you-card .dots .dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .thank-you-card img.icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 15px;
+    margin-right: 0;
+  }
+
+  .thank-you-card h1 {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+
+  .thank-you-card p {
+    font-size: 14px;
+    margin-bottom: 15px;
+  }
+
+  .thank-you-card button {
+    font-size: 14px;
+    margin-top: 20px;
+  }
+}
+header {
+  background-color: #2c2c2c;
+  color: white;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Logo aligned to the left in desktop view */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000; /* Ensure header stays on top */
+}
+
+header img {
+  width: 300px; /* Increased width */
+  height: 70px; /* Increased height */
+  margin-right: 10px;
+}
+
+header h1 {
+  font-size: 24px;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 20px;
+  }
+}
+@media (max-width: 768px) {
+  header {
+    justify-content: center; /* Center logo in mobile view */
+  }
+  header img {
+    margin-right: 0; /* Remove margin in mobile view */
+  }
+  header h1 {
+    font-size: 20px;
+  }
+}
+.form-container form .radio-group .card.selected {
+  border-color: #fff; /* White border for selected card */
+  background-color: #292727; /* Match the background color to unselected state */
+  color: #fff; /* Keep text color white */
+}
+
+.form-container form .radio-group .card.selected span {
+  color: #fff; /* Explicitly set text color to white when selected */
+}
+@media (min-width: 769px) {
+  .form-container form .radio-group .card {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: row;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid #655d5d;
+    border-radius: 5px;
+    background-color: #333;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .form-container form .radio-group .card input[type="radio"] {
+    margin-right: 10px;
+  }
+
+  .form-container form .radio-group .card span {
+    font-size: 16px;
+    color: #655d5d;
+    margin-left: 0;
+  }
+}
+
+/* For mobile view: Radio button and text in a row */
+@media (max-width: 768px) {
+  .form-container form .radio-group .card {
+    display: flex; /* Use flexbox for alignment */
+    flex-direction: row; /* Radio button and text in a row */
+    align-items: center; /* Center items vertically */
+    justify-content: flex-start; /* Align items to the left */
+    gap: 10px; /* Space between the radio button and text */
+  }
+
+  .form-container form .radio-group .card input[type="radio"] {
+    margin-right: 10px; /* Space between radio button and text */
+  }
+
+  .form-container form .radio-group .card span {
+    font-size: 16px; /* Adjust font size if needed */
+  }
+}
+.radio-group {
+  display: flex;
+  gap: 10px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #f5f5f5;
+  transition: background-color 0.3s;
+  user-select: none; /* Prevents text selection */
+}
+
+.card:hover {
+  background-color: #e0e0e0;
+}
+
+.radio-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.radio-icon::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: transparent;
+  position: absolute;
+}
+
+input[type="radio"] {
+  display: none;
+}
+
+input[type="radio"]:checked + .card .radio-icon {
+  border-color: #000000;
+}
+
+input[type="radio"]:checked + .card .radio-icon::before {
+  background-color: #ebebeb;
+}

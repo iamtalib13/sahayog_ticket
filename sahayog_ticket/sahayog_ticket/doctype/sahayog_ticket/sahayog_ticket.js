@@ -7,8 +7,6 @@ frappe.ui.form.on("Sahayog Ticket", {
     frm.trigger("common_hidden_fields");
     frm.trigger("hide_timeline");
 
-   
-
     if (frm.is_new()) {
       //Employee Trigger when form is new
       frm.trigger("Set_Employee_Details");
@@ -29,11 +27,12 @@ frappe.ui.form.on("Sahayog Ticket", {
       });
     } else if (
       // Show "Create Asset Request" button if user has any of the specified roles
-      frm.doc.status === "On-Hold"||frm.doc.status === "In-Progress"|| frm.doc.status === "Open" && (
-        frappe.user.has_role("IT Support Executive") ||
-        frappe.user.has_role("Admin Support Executive") ||
-        frappe.user.has_role("Stationery Store & Support Manager")
-    )
+      frm.doc.status === "On-Hold" ||
+      frm.doc.status === "In-Progress" ||
+      (frm.doc.status === "Open" &&
+        (frappe.user.has_role("IT Support Executive") ||
+          frappe.user.has_role("Admin Support Executive") ||
+          frappe.user.has_role("Stationery Store & Support Manager")))
     ) {
       frm.add_custom_button(__("Create Asset Request"), function () {
         let request_department = "";
@@ -60,45 +59,53 @@ frappe.ui.form.on("Sahayog Ticket", {
               freeze: true,
               freeze_message: "Internet Not Stable, Please Wait...",
               args: {
-                  ticket_id: frm.doc.name,
-                  employee_id: frm.doc.employee_id,
-                  emp_name: frm.doc.employee_name,
-                  designation: frm.doc.designation,
-                  department: frm.doc.emp_department,
-                  region: frm.doc.region,
-                  district: frm.doc.district,
-                  branch: frm.doc.branch_name,
-                  request_to: request_department,
-                  phone: frm.doc.phone1,
-                  division: frm.doc.division,
+                ticket_id: frm.doc.name,
+                employee_id: frm.doc.employee_id,
+                emp_name: frm.doc.employee_name,
+                designation: frm.doc.designation,
+                department: frm.doc.emp_department,
+                region: frm.doc.region,
+                district: frm.doc.district,
+                branch: frm.doc.branch_name,
+                request_to: request_department,
+                phone: frm.doc.phone1,
+                division: frm.doc.division,
               },
               callback: function (response) {
-                  if (response.message && response.message.asset_request_id) {
-                      frm.set_value("asset_request_id", response.message.asset_request_id);
-                      frm.refresh_field("asset_request_id");
-          
-                      frm.set_value("ticket_resolved_by", user);
-                      frm.set_value("status", "Closed");
-                      frm.set_value("remark", `Created Asset Request - ${response.message.asset_request_id}`);
-                      frm.refresh_field("status");
-          
-                      frm.save();
-                      frappe.show_alert(
-                          {
-                              message: __("Asset Request created successfully"),
-                              indicator: "green",
-                          },
-                          5
-                      );
-                  } else {
-                      frappe.show_alert({
-                          message: __('Please Try Again'),
-                          indicator: 'red'
-                      }, 5);
-                  }
+                if (response.message && response.message.asset_request_id) {
+                  frm.set_value(
+                    "asset_request_id",
+                    response.message.asset_request_id
+                  );
+                  frm.refresh_field("asset_request_id");
+
+                  frm.set_value("ticket_resolved_by", user);
+                  frm.set_value("status", "Closed");
+                  frm.set_value(
+                    "remark",
+                    `Created Asset Request - ${response.message.asset_request_id}`
+                  );
+                  frm.refresh_field("status");
+
+                  frm.save();
+                  frappe.show_alert(
+                    {
+                      message: __("Asset Request created successfully"),
+                      indicator: "green",
+                    },
+                    5
+                  );
+                } else {
+                  frappe.show_alert(
+                    {
+                      message: __("Please Try Again"),
+                      indicator: "red",
+                    },
+                    5
+                  );
+                }
               },
-          });
-          
+            });
           },
           function () {
             // Additional logic if No is selected in the confirmation
@@ -300,116 +307,19 @@ frappe.ui.form.on("Sahayog Ticket", {
   dept_name: function (frm) {
     // Clear previous filters
     frm.refresh_field("ticket_type");
-    frm.refresh_field("dept_name");
 
-    // Apply new filter based on selected department
-    if (frm.doc.dept_name == "HR") {
-      frm.set_query("ticket_type", function () {
-        return {
-          filters: {
-            department: "HR",
-          },
-        };
-      });
-    }
+    // Apply new filter based on the selected department
+    const department = frm.doc.dept_name;
 
-    if (frm.doc.dept_name == "Admin") {
-      frm.set_query("ticket_type", function () {
-        return {
-          filters: {
-            department: "Admin",
-          },
-        };
-      });
-    }
-    if (frm.doc.dept_name == "Loan") {
-      frm.set_query("ticket_type", function () {
-        return {
-          filters: {
-            department: "Loan",
-          },
-        };
-      });
-    }
-
-    if (frm.doc.dept_name == "Accounts") {
-      frm.set_query("ticket_type", function () {
-        return {
-          filters: {
-            department: "Accounts",
-          },
-        };
-      });
-    }
-
-    if (frm.doc.dept_name == "IT") {
-      frm.set_query("ticket_type", function () {
-        return {
-          filters: {
-            department: "IT",
-          },
-        };
-      });
-    }
-
-    if (frm.doc.dept_name == "Facility") {
-      frm.set_query("ticket_type", function () {
-        return {
-          filters: {
-            department: "Facility",
-          },
-        };
-      });
-    }
-
-    if (frm.doc.dept_name == "MIS") {
-      frm.set_query("ticket_type", function () {
-        return {
-          filters: {
-            department: "MIS",
-          },
-        };
-      });
-    }
-
-    if (frm.doc.dept_name == "JLL") {
-      frm.set_query("ticket_type", function () {
-        return {
-          filters: {
-            department: "JLL",
-          },
-        };
-      });
-    }
-
-    if (frm.doc.dept_name == "Operations") {
-      frm.set_query("ticket_type", function () {
-        return {
-          filters: {
-            department: "Operations",
-          },
-        };
-      });
-    }
-
-    if (frm.doc.dept_name == "HO") {
-      frm.set_query("ticket_type", function () {
-        return {
-          filters: {
-            department: "HO",
-          },
-        };
-      });
-    }
-    if (frm.doc.dept_name == "Stationery") {
-      frm.set_query("ticket_type", function () {
-        return {
-          filters: {
-            department: "Stationery",
-          },
-        };
-      });
-    }
+    // Apply query filter based on the selected department
+    frm.set_query("ticket_type", function () {
+      return {
+        filters: {
+          department: department,
+          enable: "1",
+        },
+      };
+    });
   },
   onload_post_render: function (frm) {
     // frm.fields_dict.dept_name.$input.on("input", function (evt) {
@@ -465,7 +375,6 @@ frappe.ui.form.on("Sahayog Ticket", {
 
 frappe.ui.form.on("Sahayog Ticket", {
   refresh: function (frm) {
-   
     //var ticketClosingDetailsSection = document.querySelectorAll(
     //"[data-fieldname='ticket_closing_details_section']"
     //    )[1];
@@ -670,7 +579,6 @@ frappe.ui.form.on("Sahayog Ticket", {
           console.log("Not Employee");
 
           frm.set_df_property("cancel_ticket_btn", "hidden", 1);
-         
 
           if (
             frm.doc.status == "Read" ||
@@ -1183,13 +1091,11 @@ frappe.ui.form.on("Sahayog Ticket", {
     const urgenthit = 6;
 
     if (frappe.user.has_role("Stationery Store & Support Manager")) {
-           
       console.log("stationery");
-      frm.remove_custom_button('Resolved','Status');
-      frm.remove_custom_button('Read','Status');
-      frm.remove_custom_button('On-Hold','Status');
-      frm.remove_custom_button('In-Progress','Status');
-
+      frm.remove_custom_button("Resolved", "Status");
+      frm.remove_custom_button("Read", "Status");
+      frm.remove_custom_button("On-Hold", "Status");
+      frm.remove_custom_button("In-Progress", "Status");
     }
   },
 });

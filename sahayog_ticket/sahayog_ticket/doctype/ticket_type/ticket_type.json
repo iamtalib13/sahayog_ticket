@@ -10,7 +10,8 @@
  "field_order": [
   "ticket_type",
   "department",
-  "tat_days"
+  "tat_days",
+  "enable"
  ],
  "fields": [
   {
@@ -30,11 +31,17 @@
    "fieldtype": "Select",
    "label": "TAT days",
    "options": "\nNot-Defined\n30 Days\n15 Days\n10 Days\n7 Days\n6 Days\n5 Days\n3 Days\n2 Days\n1 Day\n4 Hours"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable",
+   "fieldtype": "Check",
+   "label": "Enable"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-07-21 17:09:14.113356",
+ "modified": "2024-07-26 17:47:36.784852",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Ticket Type",
