@@ -17,18 +17,15 @@ import datetime
 #     ob.sendmail("talib.s@sahayogmultistate.com", listOfAddress, message)
 #     print("Email sent successfully.")
 #     ob.quit()
-import datetime
 import frappe
-from frappe.utils import date_diff, nowdate, getdate
-import frappe
-from frappe.utils import now, getdate, date_diff
+from frappe.utils import get_datetime, now, date_diff
 
 def update_tat_age():
     try:
-        # Get the current date
-        current_date = getdate(now())
-
-        # Fetch all Sahayog Ticket records where status is not "Closed" or "Cancelled"
+        # Get the current datetime
+        current_datetime = get_datetime(now())
+        
+        # Fetch all Sahayog Ticket records where status is not "Closed", "Cancelled", or "Resolved"
         tickets = frappe.get_all(
             "Sahayog Ticket",
             filters={"status": ["not in", ["Closed", "Cancelled", "Resolved"]]},
@@ -48,12 +45,22 @@ def update_tat_age():
 
         for ticket in tickets:
             ticket_id = ticket.name
-            creation_datetime = getdate(ticket.creation)
+            
+            # Convert creation datetime string to datetime object
+            creation_datetime = get_datetime(ticket.creation)
+            
+            # Format creation date and time
             creation_date = creation_datetime.strftime("%Y-%m-%d")  # Format YYYY-MM-DD
             creation_time = creation_datetime.strftime("%I:%M %p")  # Format HH:MM AM/PM
 
+            # Debug print statements to verify the raw and formatted values
+            print(f"Raw Creation Datetime: {ticket.creation}")
+            print(f"Parsed Creation Datetime: {creation_datetime}")
+            print(f"Formatted Creation Date: {creation_date}")
+            print(f"Formatted Creation Time: {creation_time}")
+
             # Calculate the total days since creation using date_diff
-            total_days = date_diff(current_date, creation_datetime)
+            total_days = date_diff(current_datetime, creation_datetime)
 
             # Concatenate first_name and last_name
             employee_name = f"{ticket.emp_first_name} {ticket.emp_last_name}"

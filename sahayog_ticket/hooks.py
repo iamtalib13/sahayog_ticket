@@ -108,8 +108,7 @@ app_license = "MIT"
 # # ---------------
 
 scheduler_events = {
-     "cron": {"*/1 * * * *": ["sahayog_ticket.tasks.update_tat_age"]},  # Every minute
-
+    "cron": {"0 0 * * *": ["sahayog_ticket.tasks.update_tat_age"]}, # run daily at 12 AM
 }
 
 # # Testing
