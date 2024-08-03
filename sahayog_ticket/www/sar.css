@@ -46,25 +46,6 @@ body {
   position: relative;
   overflow: auto;
 }
-
-.image-container {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding-right: 10px;
-}
-
-.image-container img {
-  border-radius: 10px;
-}
-
-@media (max-width: 768px) {
-  .image-container img {
-    max-width: 80%;
-  }
-}
-
 .dots {
   display: flex;
   gap: 4px;
@@ -113,16 +94,7 @@ body {
   display: flex;
   flex-direction: column;
 }
-.form-container form input,
-.form-container form textarea {
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #655d5d;
-  border-radius: 5px;
-  width: 100%;
-  background-color: #333;
-  color: #fff;
-}
+
 .form-container form textarea {
   resize: vertical;
   height: 100px;
@@ -140,7 +112,7 @@ body {
   border-radius: 5px;
   border: 1px solid #655d5d;
   cursor: pointer;
-  background-color: #333;
+  background-color: #292727;
   color: #fff;
   transition: background-color 0.3s ease;
   flex: 1 1 45%;
@@ -155,13 +127,14 @@ body {
 
 input[type="text"],
 input[type="tel"],
-textarea {
+textarea,
+select {
   width: 100%;
   padding: 10px;
   margin-bottom: 10px;
   border: 1px solid #555;
   border-radius: 5px;
-  background-color: #444;
+  background-color: #292727;
   color: #fff;
 }
 
@@ -179,19 +152,25 @@ button:hover {
 }
 
 .form-container form input,
-.form-container form textarea {
+.form-container form textarea,
+.form-container form select {
   padding: 10px;
   margin-bottom: 10px;
   border: 1px solid #655d5d;
   border-radius: 5px;
   width: 100%;
-  background-color: #333;
-  color: #fff;
+  color: white;
   box-sizing: border-box;
 }
 .form-container form textarea {
   resize: vertical;
   height: 100px;
+}
+.form-container form input:focus,
+.form-container form textarea:focus {
+  border: 1px solid #fff; /* White border when focused */
+  outline: none; /* Remove default outline if any */
+  background-color: #292727; /* Black background when focused */
 }
 
 .form-container form button {
@@ -246,9 +225,12 @@ button:hover {
   color: #bbff64;
   font-weight: normal;
 }
+.response-section {
+  display: none;
+}
 
 .thank-you-card {
-  display: none;
+  /* display: none; */
   flex-direction: row;
   align-items: center;
   justify-content: center;
@@ -401,10 +383,11 @@ header {
   left: 0;
   width: 100%;
   z-index: 1000; /* Ensure header stays on top */
+  height: 3em;
 }
 
 header img {
-  width: 300px; /* Increased width */
+  width: 200px; /* Increased width */
   height: 70px; /* Increased height */
   margin-right: 10px;
 }
@@ -449,7 +432,7 @@ header h1 {
     padding: 10px;
     border: 1px solid #655d5d;
     border-radius: 5px;
-    background-color: #333;
+    background-color: #292727;
     color: #fff;
     cursor: pointer;
     transition: background-color 0.3s ease;
@@ -507,33 +490,296 @@ header h1 {
 }
 
 .radio-icon {
-  width: 20px;
-  height: 20px;
+  width: 20px; /* Adjusted default width */
+  height: 20px; /* Adjusted default height */
   border-radius: 50%;
-  border: 2px solid #ccc;
+  border: 2px solid #6d6d6d;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
 }
 
+/* Style for the inner circle of the radio button */
 .radio-icon::before {
   content: "";
-  width: 12px;
-  height: 12px;
+  width: 10px; /* Adjusted default width */
+  height: 10px; /* Adjusted default height */
   border-radius: 50%;
   background-color: transparent;
   position: absolute;
 }
 
+/* Adjustments for mobile view */
+@media (max-width: 600px) {
+  .radio-icon {
+    width: 20px; /* Adjusted mobile width */
+    height: 16px; /* Adjusted mobile height */
+  }
+
+  .radio-icon::before {
+    width: 9px; /* Adjusted mobile width */
+    height: 8px; /* Adjusted mobile height */
+  }
+}
+
+/* Adjustments for larger screens */
+@media (min-width: 601px) {
+  .radio-icon {
+    width: 20px; /* Adjusted desktop width */
+    height: 20px; /* Adjusted desktop height */
+  }
+
+  .radio-icon::before {
+    width: 10px; /* Adjusted desktop width */
+    height: 10px; /* Adjusted desktop height */
+  }
+}
+
+/* Hide the default radio input */
 input[type="radio"] {
   display: none;
 }
 
+/* Styles for the checked state */
 input[type="radio"]:checked + .card .radio-icon {
-  border-color: #000000;
+  border-color: #f5efef; /* Border color when checked */
 }
 
 input[type="radio"]:checked + .card .radio-icon::before {
-  background-color: #ebebeb;
+  background-color: #ebebeb; /* Inner circle color when checked */
+}
+
+/* Style for the card label and text */
+.card {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px;
+  border: 2px solid transparent; /* Default border color */
+  border-radius: 8px;
+  transition: border-color 0.3s;
+}
+
+.card span {
+  margin-left: 10px; /* Space between radio icon and text */
+  font-size: 16px; /* Adjust font size as needed */
+  color: #aaa; /* Default text color */
+}
+
+/* Style for checked state card border and text color */
+input[type="radio"]:checked + .card {
+  border-color: #ebebeb; /* Border color for the selected card */
+}
+
+input[type="radio"]:checked + .card span {
+  color: #ebebeb; /* Color for the text when checked */
+}
+
+/* Hover effect for card */
+.card:hover {
+  background-color: #f5f5f5; /* Light background color on hover */
+}
+
+/* Styles for desktop view */
+@media (min-width: 1024px) {
+  /* Adjust the min-width value as needed */
+  .container {
+    padding: 0px; /* Set padding to 0px for desktop view */
+  }
+}
+@media (min-width: 1024) {
+  .image-container img {
+    max-width: 95%;
+    border-radius: 10px;
+  }
+}
+
+/* Styles for desktop view */
+@media (min-width: 1024px) {
+  /* Adjust the min-width value as needed */
+  .form-container {
+    flex: 1;
+    min-width: 500px;
+    margin-left: 70px;
+    margin-right: 20px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    position: relative;
+    overflow: auto;
+  }
+}
+
+/* Styles for desktop view */
+@media (min-width: 1024px) {
+  /* Adjust the min-width value as needed */
+  .small-image {
+    width: 950px; /* Adjust the width percentage to make the image smaller or larger */
+    height: auto; /* Keeps the image's aspect ratio */
+    margin-left: 10px;
+    margin-top: 50px;
+  }
+}
+
+/* Basic styles for text input */
+/* Basic styles for all text input fields and textarea */
+input[type="text"],
+input[type="tel"],
+textarea[name="description"], /* Apply styles specifically for the description textarea */
+textarea[name="branch-name"],
+textarea {
+  width: 100%; /* Adjust width as needed */
+  padding: 10px;
+  border: 2px solid #6d6d6d; /* Default border color */
+  border-radius: 4px;
+  transition: border-color 0.3s;
+  box-sizing: border-box; /* Ensures padding and border are included in the element's total width and height */
+}
+
+/* Style for inputs and textarea when focused */
+input[type="text"]:focus,
+input[type="tel"]:focus,
+textarea[name="description"]:focus,
+textarea[name="branch-name"]:focus, /* Style for the description textarea when focused */
+textarea:focus {
+  border-color: #ffffff; /* White border color when focused */
+  outline: none; /* Remove default outline */
+}
+
+/* Style for inputs and textarea when they have a value entered */
+input[type="text"]:not(:placeholder-shown),
+input[type="tel"]:not(:placeholder-shown),
+textarea[name="description"]:not(:placeholder-shown),
+textarea[name="branch-name"]:not(:placeholder-shown), /* Style for the description textarea when it has a value */
+textarea:not(:placeholder-shown) {
+  border-color: #ffffff; /* White border color when the input or textarea has a value */
+}
+
+/* Placeholder text color */
+input[type="text"]::placeholder,
+input[type="tel"]::placeholder,
+textarea[name="description"]::placeholder,
+textarea[name="branch-name"]::placeholder, /* Placeholder text color for the description textarea */
+textarea::placeholder {
+  color: #999; /* Placeholder text color */
+}
+select#branch-name {
+  width: 100%; /* Adjust width as needed */
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #6d6d6d; /* Default border color */
+  color: #aaa;
+  border-radius: 4px;
+  transition: border-color 0.3s;
+  box-sizing: border-box; /* Ensures padding and border are included in the element's total width and height */
+  appearance: none; /* Removes default styling in some browsers */
+}
+select#branch-name:focus {
+  border-color: #ffffff; /* White border color when focused */
+  outline: none; /* Remove default outline */
+}
+select#branch-name:valid {
+  border-color: #ffffff; /* White border color when the select has a value */
+  color: white;
+}
+.checkbox-label-container {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-label-container input[type="checkbox"] {
+  margin-right: -240px; /* Adjust spacing between checkbox and label */
+  margin-left: -240px; /* Adjust position of checkbox to the left */
+  transform: scale(1.5);
+}
+
+.checkbox-label-container label {
+  margin-left: 10px; /* Remove default margin from label */
+}
+
+/* Mobile view adjustments */
+@media (max-width: 767px) {
+  .checkbox-label-container input[type="checkbox"] {
+    margin-right: -170px; /* Adjust spacing for mobile view */
+    margin-left: -170px; /* Reset left margin for mobile view */
+    transform: scale(1); /* Adjust scale for mobile view */
+  }
+}
+
+/* General styling for input fields, textareas, and select */
+.input-container,
+.select-container {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+input,
+textarea,
+select {
+  position: relative;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+}
+
+/* Styling for the floating label */
+.input-container label,
+.select-container label {
+  position: absolute;
+  top: 12px; /* Adjust this value based on your design needs */
+  left: 12px;
+  font-size: 14px; /* Normal font size */
+  color: #999; /* Default color for the label */
+  pointer-events: none;
+  transition: all 0.3s ease;
+  background: #292727; /* Match background color to avoid overlap */
+  padding: 0 5px; /* Add padding to prevent overlap */
+}
+
+/* When the input/select is focused or has a value, move the label up */
+.input-container input:focus + label,
+.input-container input:not(:placeholder-shown) + label,
+.select-container select:focus + label,
+.select-container select:valid + label {
+  top: -10px; /* Move label above the input */
+  font-size: 12px; /* Smaller font size for the floating label */
+  color: white; /* Color for focused state */
+}
+
+/* Floating label when input is focused or not empty */
+input:focus + label,
+textarea:focus + label,
+input:not(:placeholder-shown) + label,
+textarea:not(:placeholder-shown) + label,
+select:focus + label {
+  top: -8px; /* Adjust based on your design needs */
+  left: 12px; /* Keep it aligned */
+  font-size: 12px; /* Smaller font size when floating */
+  color: white; /* Color for floating label */
+}
+
+/* Placeholder styling */
+input::placeholder,
+textarea::placeholder {
+  color: transparent; /* Hide placeholder text */
+}
+
+/* Adjust input and textarea padding to ensure floating labels do not overlap */
+input,
+textarea {
+  padding-top: 24px; /* Adjust to fit floating label */
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-text-fill-color: white; /* Set the text color to black */
+  /* Set the background color to black */
+  transition: background-color 5000s ease-in-out 0s; /* Smooth transition for background color */
 }

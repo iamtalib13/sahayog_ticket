@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="ta.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css"
+    />
+    <style>
+     
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <img src="/files/sahayog _logo.svg" alt="Logo" class="logo" />
+      <div class="user-info">
+        <div id="userIcon" class="user-icon"></div>
+        <div class="details">
+          <div id="userName" class="name">Talib Sheikh</div>
+          <div class="designation">Assistant Manager</div>
+        </div>
+        <div class="dropdown">
+          <button class="dropdown-toggle">▼</button>
+          <div class="dropdown-menu">
+            <a href="#">Profile</a>
+            <a href="#">Settings</a>
+            <a href="#">Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="full-width-container">
+      <h3>TRAVEL ALLOWANCE SHEET</h3>
+    </div>
+    <div id="container">
+      <div class="button-container">
+        <button id="updateButton" class="updateButton">Update</button>
+        <button id="deleteButton" class="deleteButton">Delete</button>
+      </div>
+      <div id="hot"></div>
+    </div>
+
+    <!-- Handsontable JS -->
+    <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var data = [
+          [
+            false,
+            "2024-07-01",
+            "City A",
+            "08:00",
+            "City B",
+            "10:00",
+            "02:00",
+            "Business Meeting",
+            "Car",
+            "Daily",
+            100,
+            50,
+            30,
+            "Yes",
+            100,
+            280,
+          ],
+          [
+            false,
+            "2024-07-02",
+            "City B",
+            "09:00",
+            "City C",
+            "11:00",
+            "02:00",
+            "Client Visit",
+            "Train",
+            "Hourly",
+            150,
+            70,
+            40,
+            "No",
+            0,
+            110,
+          ],
+          [
+            false,
+            "2024-07-03",
+            "City C",
+            "07:00",
+            "City D",
+            "09:30",
+            "02:30",
+            "Conference",
+            "Flight",
+            "Daily",
+            200,
+            200,
+            60,
+            "Yes",
+            150,
+            410,
+          ],
+        ];
+
+        var container = document.getElementById("hot");
+        var hot = new Handsontable(container, {
+          data: data,
+          rowHeaders: true,
+          colHeaders: [
+            "Select",
+            "DATE",
+            "FROM",
+            "FROM TIME",
+            "TO",
+            "TO TIME",
+            "Total Time Day:HH",
+            "PURPOSE",
+            "Mode Of Travel",
+            "Allowance Type",
+            "KM",
+            "Fare Amount",
+            "DA",
+            "Halting",
+            "Lodging",
+            "Total",
+          ],
+          contextMenu: true,
+          filters: true,
+          dropdownMenu: true,
+          licenseKey: "non-commercial-and-evaluation",
+          columns: [
+            { type: "checkbox" },
+            { type: "date", dateFormat: "YYYY-MM-DD" },
+            { type: "text" },
+            { type: "time" },
+            { type: "text" },
+            { type: "time" },
+            { type: "text" },
+            { type: "text" },
+            { type: "text" },
+            { type: "text" },
+            { type: "numeric" },
+            { type: "numeric" },
+            { type: "numeric" },
+            { type: "dropdown", source: ["Yes", "No"] },
+            { type: "numeric" },
+            { type: "numeric" },
+          ],
+          afterGetColHeader: function (col, TH) {
+            if (col === 0) {
+              var checkbox = document.createElement("input");
+              checkbox.type = "checkbox";
+              checkbox.checked = false;
+
+              checkbox.addEventListener("change", function () {
+                var checked = checkbox.checked;
+                for (var i = 0; i < hot.countRows(); i++) {
+                  hot.setDataAtCell(i, 0, checked);
+                }
+              });
+
+              checkbox.addEventListener("dblclick", function () {
+                checkbox.checked = false;
+                for (var i = 0; i < hot.countRows(); i++) {
+                  hot.setDataAtCell(i, 0, false);
+                }
+              });
+
+              TH.innerHTML = "";
+              TH.appendChild(checkbox);
+            }
+          },
+        });
+
+        document
+          .getElementById("updateButton")
+          .addEventListener("click", function () {
+            var updatedData = hot.getData();
+            console.log(updatedData);
+          });
+
+        document
+          .getElementById("deleteButton")
+          .addEventListener("click", function () {
+            var checkedRows = [];
+            for (var i = 0; i < hot.countRows(); i++) {
+              if (hot.getDataAtCell(i, 0)) {
+                checkedRows.push(i);
+              }
+            }
+
+            checkedRows.sort(function (a, b) {
+              return b - a;
+            });
+
+            checkedRows.forEach(function (rowIndex) {
+              hot.alter("remove_row", rowIndex);
+            });
+          });
+
+        var userName = "Talib Sheikh";
+        var userDesignation = "Assistant Manager";
+
+        document.getElementById("userName").textContent = userName;
+        document.querySelector(".designation").textContent = userDesignation;
+
+        document.getElementById("userIcon").textContent = userName
+          .charAt(0)
+          .toUpperCase();
+      });
+    </script>
+  </body>
+</html>

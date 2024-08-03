@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Service Action Request</title>
+    <link rel="stylesheet" href="sar.css" />
+    <script src="https://unpkg.com/htmx.org@2.0.1"></script>
+  </head>
+  <body>
+    <header>
+      <img
+        src="/files/sahayog _logo.svg"
+        alt="Sahayog Logo"
+        class="header-logo"
+      />
+    </header>
+    <div class="container" id="container">
+      <div class="form-container">
+        <div class="dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+        <br />
+        <div class="form-section" id="form-section">
+          <h1>
+            Create <span class="grievance">Grievance</span> or
+            <span class="suggestion">Suggestion</span>
+          </h1>
+          <h3>Select Type of Action</h3>
+          <form
+            id="submission-form"
+            hx-post="/api/method/sahayog_ticket.sahayog_ticket.doctype.grievances_and_redressal.grievances_and_redressal.submit_form"
+            hx-target="#thank-you-card"
+            hx-swap="innerHTML"
+          >
+            <div class="radio-group">
+              <input
+                type="radio"
+                id="grievance"
+                name="ticket_type"
+                value="Grievance"
+                required
+              />
+              <label for="grievance" class="card grievance-card">
+                <div class="radio-icon"></div>
+                <span>Grievance / शिकायत</span>
+              </label>
+
+              <input
+                type="radio"
+                id="suggestion"
+                name="ticket_type"
+                value="Suggestion"
+                required
+              />
+              <label for="suggestion" class="card suggestion-card">
+                <div class="radio-icon"></div>
+                <span>Suggestion / सुझाव</span>
+              </label>
+            </div>
+
+            <div class="input-container">
+              <input
+                type="text"
+                id="full-name"
+                name="full-name"
+                placeholder=" "
+                required
+              />
+              <label for="full-name">Full Name</label>
+            </div>
+
+            <div class="input-container">
+              <input
+                type="tel"
+                id="phone-number"
+                name="phone-number"
+                placeholder=" "
+                required
+                maxlength="10"
+              />
+              <label for="phone-number">Phone Number</label>
+            </div>
+
+            <div class="select-container">
+              <select
+                id="branch-name"
+                name="branch"
+                placeholder="Branch Name"
+                required
+              ></select>
+              <label for="branch">Select Branch</label>
+            </div>
+
+            <div class="input-container">
+              <textarea
+                id="description"
+                name="description"
+                placeholder=" "
+                required
+              ></textarea>
+              <label for="description">Description</label>
+            </div>
+
+            {% if frappe.session.user != "Guest" %}
+            <div class="checkbox-label-container">
+              <input type="checkbox" id="anonymous" name="anonymous" />
+              <label for="anonymous">Send form as Anonymous user</label>
+            </div>
+
+            {% endif %}
+            <button type="submit">Submit</button>
+          </form>
+        </div>
+        <div
+          class="response-section"
+          id="response-section"
+          style="display: none"
+        >
+          <div class="thank-you-card" id="thank-you-card">
+            <!-- HTMX will replace this content -->
+            {% include "/templates/includes/thank_you.html" %}
+          </div>
+        </div>
+      </div>
+
+      <div class="image-container">
+        <img
+          src="/files/Grievance.jpg"
+          alt="Placeholder Image"
+          class="small-image"
+        />
+      </div>
+    </div>
+
+    <!-- ################################# Validation of fields ################################################################# -->
+
+    <script>
+      /////////////////  Validation of Full_Name, Phone_Number, Branch_name, Decription  //////////////////////////////////////////////////
+
+      // Function to restrict input to specific keys for alphabetic fields
+      function restrictInput(event) {
+        // Allow: backspace, delete, tab, escape, enter, arrow keys
+        if (
+          event.key === "Backspace" ||
+          event.key === "Delete" ||
+          event.key === "Tab" ||
+          event.key === "Escape" ||
+          event.key === "Enter" ||
+          event.key.startsWith("Arrow") ||
+          event.key === " " // space
+        ) {
+          return; // Allow these keys
+        }
+
+        // Allow: alphabets (both lowercase and uppercase)
+        if (/^[a-zA-Z]$/.test(event.key)) {
+          return; // Allow alphabetic characters
+        }
+
+        // Prevent other keys
+        event.preventDefault();
+      }
+
+      // Function to restrict input to numeric digits only
+      function restrictNumericInput(event) {
+        // Allow: backspace, delete, tab, escape, enter, arrow keys
+        if (
+          event.key === "Backspace" ||
+          event.key === "Delete" ||
+          event.key === "Tab" ||
+          event.key === "Escape" ||
+          event.key === "Enter" ||
+          event.key.startsWith("Arrow")
+        ) {
+          return; // Allow these keys
+        }
+
+        // Allow only numeric keys
+        if (/^[0-9]$/.test(event.key)) {
+          return; // Allow numbers
+        }
+
+        // Prevent other keys
+        event.preventDefault();
+      }
+
+      // Function to ensure the phone number field only contains numeric values,
+      // is limited to 10 digits, and does not start with zero
+      function validatePhoneNumber(event) {
+        const input = event.target;
+        const value = input.value;
+
+        // Check if length exceeds 10 digits
+        if (
+          value.length >= 10 &&
+          !["Backspace", "Delete", "ArrowLeft", "ArrowRight"].includes(
+            event.key
+          )
+        ) {
+          event.preventDefault(); // Prevent input if length is 10 and trying to add more
+        }
+
+        // Prevent entry if the first digit is zero and the field is not empty
+        if (value.length === 0 && event.key === "0") {
+          event.preventDefault(); // Prevent starting with zero
+        }
+      }
+
+      // Apply restriction to the specified input fields
+      document
+        .getElementById("full-name")
+        .addEventListener("keydown", restrictInput);
+
+      // Apply restriction and validation to the phone number field
+      document
+        .getElementById("phone-number")
+        .addEventListener("keydown", function (event) {
+          restrictNumericInput(event);
+          validatePhoneNumber(event);
+        });
+
+      // Additional listener for input events to handle cases where users paste text
+      document
+        .getElementById("phone-number")
+        .addEventListener("input", function (event) {
+          const input = event.target;
+          let value = input.value;
+
+          // Remove leading zeros
+          if (value.startsWith("0")) {
+            value = value.replace(/^0+/, "");
+            input.value = value;
+          }
+
+          // Ensure the length does not exceed 10 digits
+          if (value.length > 10) {
+            input.value = value.slice(0, 10);
+          }
+        });
+
+      //##############################THANK YOU CARD VALIDATION ######################################################################
+
+      document.addEventListener("DOMContentLoaded", function () {
+        var formSection = document.getElementById("form-section");
+        var responseSection = document.getElementById("response-section");
+        var form = document.getElementById("submission-form");
+
+        // Add event listener for HTMX response
+        document.body.addEventListener("htmx:afterSwap", function (event) {
+          // Check if the swap was successful and if it affected the target
+          if (event.detail.target.id === "thank-you-card") {
+            // Clear the form fields
+            form.reset();
+            // Hide the form section and show the response section
+            formSection.style.display = "none";
+            responseSection.style.display = "block";
+          }
+        });
+
+        // Warn user about unsaved changes
+        window.addEventListener("beforeunload", function (e) {
+          // Check if the form is not empty
+          if (
+            form.querySelector("input:not([type='radio']):not([value=''])") ||
+            form.querySelector("textarea:not([value=''])")
+          ) {
+            // Standard way to trigger the confirmation dialog
+            e.preventDefault();
+            e.returnValue = ""; // Chrome requires returnValue to be set
+          }
+        });
+      });
+    </script>
+    <script>
+      // Fetch branches and populate dropdown
+      function populateBranches() {
+        fetch(
+          "/api/method/sahayog_ticket.sahayog_ticket.doctype.grievances_and_redressal.grievances_and_redressal.get_branches"
+        )
+          .then((response) => response.json()) // Parse JSON directly
+          .then((data) => {
+            console.log("Branch Data:", data); // Log the entire data object
+
+            const branchSelect = document.getElementById("branch-name");
+            if (branchSelect) {
+              // Start with the default option
+              branchSelect.innerHTML = '<option value=""></option>';
+
+              // Check if branches are inside a message object
+              if (data.message && Array.isArray(data.message.branches)) {
+                // Generate options from data
+                const branches = data.message.branches;
+
+                // Sort branches alphabetically by branch_name
+                branches.sort((a, b) => {
+                  const nameA = a.branch_name.toUpperCase(); // Ignore upper and lowercase
+                  const nameB = b.branch_name.toUpperCase(); // Ignore upper and lowercase
+                  if (nameA < nameB) {
+                    return -1;
+                  }
+                  if (nameA > nameB) {
+                    return 1;
+                  }
+                  return 0;
+                });
+
+                // Create options
+                const options = branches
+                  .map((branch) => {
+                    const branchName = branch.branch_name;
+                    if (branchName) {
+                      return `<option value="${branchName}">${branchName}</option>`;
+                    } else {
+                      console.error(
+                        "Branch field is missing in the branch object:",
+                        branch
+                      );
+                      return ""; // Return empty string if branch field is missing
+                    }
+                  })
+                  .join(""); // Join options into a single string
+
+                // Append options to the select element
+                branchSelect.innerHTML += options;
+              } else {
+                console.error(
+                  "Error fetching branches or unexpected data structure:",
+                  data
+                );
+              }
+            } else {
+              console.error("Dropdown element not found.");
+            }
+          })
+          .catch((error) => console.error("Fetch error:", error));
+      }
+
+      document.addEventListener("DOMContentLoaded", populateBranches);
+    </script>
+    <script>
+      // Variables to store the original values
+      let originalPhoneNumber = "";
+      let originalFullName = "";
+
+      document
+        .getElementById("anonymous")
+        .addEventListener("change", function () {
+          var isChecked = this.checked;
+
+          // Get references to the input elements
+          var phoneNumberInput = document.getElementById("phone-number");
+          var fullNameInput = document.getElementById("full-name");
+
+          if (isChecked) {
+            // Store the original values
+            originalPhoneNumber = phoneNumberInput.value;
+            originalFullName = fullNameInput.value;
+
+            // Set default values if checkbox is checked
+            phoneNumberInput.value = "xxxxxxxxx";
+            fullNameInput.value = "xxxxxxxxx";
+          } else {
+            // Restore the original values if checkbox is unchecked
+            phoneNumberInput.value = originalPhoneNumber;
+            fullNameInput.value = originalFullName;
+          }
+        });
+    </script>
+  </body>
+</html>

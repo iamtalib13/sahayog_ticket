@@ -18,16 +18,20 @@ import datetime
 #     print("Email sent successfully.")
 #     ob.quit()
 import datetime
+import frappe
+from frappe.utils import date_diff, nowdate, getdate
+import frappe
+from frappe.utils import now, getdate, date_diff
 
 def update_tat_age():
     try:
-        # Get the current datetime
-        current_datetime = datetime.datetime.now()
+        # Get the current date
+        current_date = getdate(now())
 
         # Fetch all Sahayog Ticket records where status is not "Closed" or "Cancelled"
         tickets = frappe.get_all(
             "Sahayog Ticket",
-            filters={"status": ["not in", ["Closed", "Cancelled"]]},
+            filters={"status": ["not in", ["Closed", "Cancelled", "Resolved"]]},
             fields=[
                 "name",
                 "creation",
@@ -44,17 +48,17 @@ def update_tat_age():
 
         for ticket in tickets:
             ticket_id = ticket.name
-            creation_datetime = ticket.creation
+            creation_datetime = getdate(ticket.creation)
+            creation_date = creation_datetime.strftime("%Y-%m-%d")  # Format YYYY-MM-DD
             creation_time = creation_datetime.strftime("%I:%M %p")  # Format HH:MM AM/PM
-            dept_name = ticket.dept_name
-            ticket_type = ticket.ticket_type
 
-            # Calculate the total days since creation
-            total_days = (current_datetime.date() - creation_datetime.date()).days
+            # Calculate the total days since creation using date_diff
+            total_days = date_diff(current_date, creation_datetime)
 
             # Concatenate first_name and last_name
-            employee_name = ticket.emp_first_name + " " + ticket.emp_last_name
+            employee_name = f"{ticket.emp_first_name} {ticket.emp_last_name}"
 
+            # Update fields in the document
             frappe.db.set_value(
                 "Sahayog Ticket", ticket_id, "total_days", total_days, update_modified=False
             )
@@ -74,15 +78,23 @@ def update_tat_age():
             # Increment the counter
             updated_records_count += 1
 
+            # Print the updated values
+            print(f"Ticket ID: {ticket_id}")
+            print(f"Creation Date: {creation_date}")
+            print(f"Creation Time: {creation_time}")
+            print(f"Total Days: {total_days}")
+            print(f"Employee Name: {employee_name}")
+
+        # Commit the transaction to the database
         frappe.db.commit()
 
-        # Print the number of records updated
-        print(f"\n\nUpdating total days and employee names for {updated_records_count} records\n\n")
+        # Log the number of records updated
+        frappe.log(f"Updated total days and employee names for {updated_records_count} records")
 
     except Exception as e:
-        # Handle any exceptions and print an error message
-        print(f"Error: {e}")
-        
+        # Handle any exceptions and log an error message
+        frappe.log_error(f"Error in update_tat_age: {e}", "Update TAT Age Error")
+
 import datetime
 
 def print_creation_time():

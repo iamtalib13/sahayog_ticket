@@ -1,0 +1,24 @@
+<div class="content">
+  {% if doc_name %}
+  <img src="/files/tick.png" alt="successful" style="width: 45px" />
+
+  <h1>Thank You!</h1>
+  <p>
+    Your Service Request Number: <br />
+    <b style="font-size: 24px">{{ doc_name }}</b>
+    <br />Please note it for future reference.
+  </p>
+  <button onclick="goHome()">Back to Home</button><br />
+  {% else %}
+  <img src="/files/error.png" alt="successful" style="width: 45px" />
+  <h1>Oops!</h1>
+  <p>There was an issue with your request. Please try again later.</p>
+  <button onclick="goHome()">Back to Home</button><br />
+  {% endif %}
+</div>
+
+<script>
+  function goHome() {
+    window.location.href = "/sar";
+  }
+</script>

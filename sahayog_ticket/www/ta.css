@@ -1,0 +1,373 @@
+body {
+    font-family: Arial, sans-serif;
+    margin-top: 6em;
+    /* Add margin to push the content below the fixed header */
+}
+
+#container {
+    position: relative;
+    /* Relative positioning for absolute child elements */
+    margin: 20px;
+}
+
+#hot {
+    margin-top: 100px;
+    margin-left: -40px;
+   
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
+    background-color: white; /* Background color */
+    padding: 20px 0; /* Vertical padding */
+    z-index: 1000; /* Ensure it stays above other content */
+    justify-content: flex-start; /* Align buttons to the left */
+    padding-left: 10px; /* Add padding to the left if needed */
+    width: 100%;
+}
+
+/* Desktop view */
+@media (min-width: 768px) {
+    .button-container {
+        position: fixed;
+        top: 140px; /* Space from the top */
+        left: 0; /* Align to the left side */
+        width: 100vw; /* Full viewport width */
+    }
+}
+
+/* Mobile view */
+@media (max-width: 767px) {
+    .button-container {
+        top: 140px; 
+        position: static; /* Remove fixed positioning */
+        top: auto; /* Reset top value */
+    }
+}
+
+
+.updateButton, .deleteButton {
+    background-color: #D9D9D9;
+    /* Default background color */
+    color: black;
+    /* Text color */
+    border: none;
+    /* Remove default border */
+    border-radius: 5px;
+    /* Rounded corners */
+    padding: 8px 20px;
+    /* Add some padding */
+    cursor: pointer;
+    /* Change cursor to pointer */
+    transition: background-color 0.3s, transform 0.2s;
+    
+    /* Smooth transitions */
+}
+
+.updateButton:hover, .deleteButton:hover {
+    background-color: #C0C0C0;
+    /* Darker background on hover */
+}
+
+.updateButton:active, .deleteButton:active {
+    transform: scale(0.95);
+    /* Slightly shrink the button when clicked */
+}
+
+.updateButton:focus, .deleteButton:focus {
+    outline: none;
+    /* Remove default outline */
+    box-shadow: 0 0 0 3px rgba(143, 162, 182, 0.5);
+    /* Add a focus ring */
+}
+
+#updateButton {
+    /* Additional styling specific to the Update button */
+}
+
+#deleteButton {
+    /* Additional styling specific to the Delete button */
+}
+
+.full-width-container {
+    width: 100vw;
+    background-color: #90CDCF;
+    margin: 0;
+    /* Reset margin */
+    padding: 7px 0;
+    /* Vertical padding */
+    position:fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    
+}
+
+/* Mobile view adjustments */
+@media (max-width: 768px) {
+    .full-width-container {
+        margin-top: -40px; /* Add space on the top side for mobile view */
+    }
+}
+
+h3 {
+    color: black;
+    padding: 10px;
+    text-align: center;
+    margin: 0;
+    /* Reset margin */
+}
+/* Mobile view adjustments */
+@media (max-width: 768px) {
+    h3 {
+        margin-top: -1px; /* Move h3 element 10px higher for mobile view */
+    }
+}
+.header {
+    background-color: white;
+    color: #000;
+    /* Changed to black for readability */
+    padding: 1em 0;
+    text-align: center;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    height: 4em;
+    line-height: 1em;
+    display: flex;
+    justify-content: space-between;
+    /* Space between logo and user info */
+    align-items: center;
+    padding: 0 1em;
+    
+}
+
+.logo {
+    height: 3em;
+    /* Adjust the logo height as needed */
+}
+/* Mobile view adjustments */
+@media (max-width: 768px) {
+    .logo {
+        margin-left: -300px; /* Move the logo slightly to the left on mobile devices */
+        margin-top: 10px; 
+    } 
+    
+}
+
+/* Ensure the container for Handsontable is scrollable on mobile devices */
+/* Container to enable horizontal scrolling */
+.handsontable-container {
+    overflow-x: auto; /* Enable horizontal scrolling */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    padding: 0 10px; /* Add padding for better appearance */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+/* Ensure Handsontable has enough width to fit all columns */
+#hot {
+    min-width: 100%; /* Make sure Handsontable takes full container width */
+}
+/* Default styles for desktop view */
+#container {
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .full-width-container {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .button-container {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  #hot {
+    width: 100%;
+  }
+  
+  /* Styles for mobile view */
+  @media (max-width: 768px) {
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .logo {
+      width: 100px; /* Adjust size as needed */
+      margin-bottom: 10px;
+    }
+  
+   
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .updateButton, .deleteButton {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  
+    /* Adjust Handsontable container size for mobile */
+    #hot {
+      overflow-x: auto; /* Allow horizontal scrolling */
+    }
+  }
+/* Mobile view styles */
+@media (max-width: 600px) {
+    .button-container {
+        justify-content: flex-start; /* Align buttons to the left */
+        flex-direction: row; /* Ensure buttons are side by side */
+        margin: 0; /* Adjust margin as needed */
+        width: 100%; /* Ensure the container takes full width */
+        text-align: left; /* Remove any centering that might be applied globally */
+        margin-bottom: 20px; /* Add space between button container and table */
+        gap: 20px; /* Add space between buttons */
+    }
+
+    .button-container button {
+        margin: 0; /* Remove all margins */
+        margin-bottom: 10px; /* Add margin to the bottom */
+        margin-top: -75px; /* Adjust top alignment to move buttons down */
+        margin-left: 20px; /* Align buttons to the left */
+        /* Set a smaller width for the buttons */
+        width: 80px; /* Adjust width as needed */
+        /* Ensure buttons do not wrap to the next line */
+        white-space: nowrap;
+    }
+
+    button.updateButton, button.deleteButton {
+        padding: 6px 2px; /* Adjust padding to make buttons smaller */
+        font-size: 12px; /* Smaller font size on mobile */
+        margin-bottom: 10px; /* Add margin to the bottom */
+        margin-top: 1px; /* Ensure consistency with top margin and move buttons down */
+        margin-left: -10px; /* Align buttons to the left */
+    }
+
+    #hot {
+        margin: -30px auto 0; /* Adjust margin-top to move the table higher and center it horizontally */
+        width: calc(100% - 40px); /* Ensure the table takes the full width minus some padding */
+        max-width: 100%; /* Prevent overflow */
+    }
+}
+
+  
+  .user-info {
+    display: flex;
+    margin-top:30px;
+    margin-right:20px; /* Push user-info to the left */
+  }
+  
+  .user-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #80F37E;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    margin-top: -5px;
+    font-size: 20px;
+    font-weight: bold;
+  }
+  
+  .details {
+    margin-right: 20px;
+  }
+  
+  .name {
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .designation {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .dropdown {
+    position: relative;
+  }
+  
+  .dropdown-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    min-width: 150px;
+  }
+  
+  .dropdown-menu a {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: #333;
+  }
+  
+  .dropdown-menu a:hover {
+    background-color: #f4f4f4;
+  }
+  
+  .dropdown:hover .dropdown-menu {
+    display: block;
+  }
+   /* Ensure Handsontable container has dimensions */
+   #hot {
+    width: 100%;
+    height: 400px; /* Adjust height as needed */
+  }
+
+
+  .logo {
+    height: 50px; /* Adjust logo size as needed */
+  }
+/* Mobile view adjustments */
+@media (max-width: 767px) {
+    .user-info {
+        font-size: 14px; /* Adjust font size for mobile */
+        padding: 10px; /* Adjust padding for mobile */
+        width: 80%; /* Adjust width for mobile */
+        transform: scale(0.9); /* Scale down for mobile */
+        margin-left: 260px;
+        margin-top: -45px;
+    }
+
+    .user-icon {
+      margin-right: 10px;
+      margin-bottom: 0;
+    }
+  
+    .details {
+      margin-right: 10px;
+    }
+  
+    .dropdown-menu {
+      min-width: 120px; /* Adjust width for mobile view */
+      right: auto; /* Align dropdown to the left side */
+      left: 0;
+    }
+    
+    .logo {
+      height: 40px; /* Adjust logo size for mobile */
+    }
+  }
+  

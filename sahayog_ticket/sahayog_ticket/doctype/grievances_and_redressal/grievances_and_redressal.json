@@ -6,50 +6,151 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "emp_name",
-  "phone",
+  "anonymous",
+  "column_break_kdlrb",
+  "user_type",
+  "column_break_ur7k0",
+  "employee",
+  "section_break_cg8sd",
+  "full_name",
+  "column_break_iqeum",
   "branch",
+  "column_break_vrbid",
+  "phone",
+  "section_break_ituaz",
   "ticket_type",
+  "column_break_jg637",
   "description",
-  "date"
+  "column_break_tzvub",
+  "date",
+  "tat_details_section",
+  "ticket_age",
+  "level_1_tat",
+  "level_2_tat",
+  "tat_result"
  ],
  "fields": [
   {
    "fieldname": "phone",
    "fieldtype": "Data",
-   "label": "Phone"
+   "label": "Phone",
+   "read_only": 1
   },
   {
    "fieldname": "branch",
    "fieldtype": "Link",
    "label": "Branch",
-   "options": "Branch"
+   "options": "Branch",
+   "read_only": 1
   },
   {
    "fieldname": "ticket_type",
    "fieldtype": "Select",
    "label": "Nature of Grievance / Suggestion",
-   "options": "\nGrievance\nSuggetion"
+   "options": "\nGrievance\nSuggestion",
+   "read_only": 1
   },
   {
    "fieldname": "description",
    "fieldtype": "Text",
-   "label": "Description"
+   "label": "Description",
+   "read_only": 1
   },
   {
+   "default": "Today",
    "fieldname": "date",
    "fieldtype": "Date",
-   "label": "Date"
+   "label": "Date",
+   "read_only": 1
   },
   {
-   "fieldname": "emp_name",
+   "fieldname": "full_name",
    "fieldtype": "Data",
-   "label": "Name"
+   "label": "Full Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Data",
+   "label": "Employee ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "user_type",
+   "fieldtype": "Select",
+   "label": "User Type",
+   "options": "\nGuest\nEmployee",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "anonymous",
+   "fieldtype": "Check",
+   "label": "Send as Anonymous",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_kdlrb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_ur7k0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_iqeum",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_cg8sd",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_vrbid",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_ituaz",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_jg637",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_tzvub",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tat_details_section",
+   "fieldtype": "Section Break",
+   "label": "TAT Details"
+  },
+  {
+   "fieldname": "ticket_age",
+   "fieldtype": "Data",
+   "label": "Ticket Age"
+  },
+  {
+   "fieldname": "level_1_tat",
+   "fieldtype": "Data",
+   "label": "Level 1 TAT"
+  },
+  {
+   "fieldname": "level_2_tat",
+   "fieldtype": "Data",
+   "label": "Level 2 TAT"
+  },
+  {
+   "fieldname": "tat_result",
+   "fieldtype": "Select",
+   "label": "TAT result",
+   "options": "0\n1\n2\n3"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-07-27 10:45:45.076838",
+ "modified": "2024-07-31 16:22:12.146337",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Grievances and Redressal",
