@@ -109,6 +109,8 @@ app_license = "MIT"
 
 scheduler_events = {
     "cron": {"0 0 * * *": ["sahayog_ticket.tasks.update_tat_age"]}, # run daily at 12 AM
+    "cron": {"* * * * *": ["sahayog_ticket.tasks.calculate_grievance_ticket_age"]} # run daily each second
+
 }
 
 # # Testing

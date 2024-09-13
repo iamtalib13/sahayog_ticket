@@ -4,6 +4,8 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import datetime
+from frappe.utils import nowdate, date_diff
+
 
 
 # def send_email():
@@ -123,3 +125,34 @@ def print_creation_time():
     except Exception as e:
         # Handle any exceptions and print an error message
         print(f"Error: {e}")
+
+def calculate_grievance_ticket_age():
+    # Fetch all documents from the "Grievances and Redressal" doctype
+    grievances = frappe.get_all('Grievances and Redressal', fields=['name', 'date', 'level_1_tat', 'level_2_tat'])
+    
+    for grievance in grievances:
+        # Fetch the full document
+        doc = frappe.get_doc('Grievances and Redressal', grievance.name)
+        
+        # Calculate the age of the ticket in days
+        ticket_age = date_diff(nowdate(), doc.date)
+        
+        # Convert TAT levels to integers if they are not None
+        level_1_tat = int(doc.level_1_tat or 5)
+        level_2_tat = int(doc.level_2_tat or 8)
+        
+        # Determine the tat_result based on ticket_age
+        if ticket_age == level_1_tat :
+            tat_result = '1'
+        elif level_1_tat < ticket_age < level_2_tat:
+            tat_result = '2'
+        elif ticket_age >= level_2_tat:
+            tat_result = '3'
+        else:
+           tat_result = '0'  # Ensure tat_result is defined
+        
+        # Update the ticket_age and tat_result fields without updating the modified timestamp
+        frappe.db.set_value('Grievances and Redressal', grievance.name, {
+            'ticket_age': ticket_age,
+            'tat_result': tat_result
+        }, update_modified=False)

@@ -27,6 +27,7 @@
   "ticket_age",
   "level_1_tat",
   "level_2_tat",
+  "level_3_tat",
   "tat_result"
  ],
  "fields": [
@@ -129,28 +130,36 @@
   {
    "fieldname": "ticket_age",
    "fieldtype": "Data",
-   "label": "Ticket Age"
+   "label": "Ticket Age (In Days)"
   },
   {
+   "default": "5",
    "fieldname": "level_1_tat",
    "fieldtype": "Data",
-   "label": "Level 1 TAT"
+   "label": "Level 1 TAT (In Days)"
   },
   {
+   "default": "8",
    "fieldname": "level_2_tat",
    "fieldtype": "Data",
-   "label": "Level 2 TAT"
+   "label": "Level 2 TAT (In Days)"
   },
   {
    "fieldname": "tat_result",
    "fieldtype": "Select",
    "label": "TAT result",
    "options": "0\n1\n2\n3"
+  },
+  {
+   "default": "10",
+   "fieldname": "level_3_tat",
+   "fieldtype": "Data",
+   "label": "Level 3 TAT (In Days)"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-07-31 16:22:12.146337",
+ "modified": "2024-08-07 11:21:41.622527",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Grievances and Redressal",
@@ -172,7 +181,5 @@
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1,
- "track_seen": 1,
- "track_views": 1
+ "track_changes": 1
 }

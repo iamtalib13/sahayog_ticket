@@ -343,7 +343,10 @@ frappe.ui.form.on("Sahayog Ticket", {
         msgprint("Ticket is Saved Successfully.");
         msgprint(dept + " Team will Contact You Shortly");
 
-        frappe.set_route("List", "Sahayog Ticket", { status: "Open" });
+        frappe.set_route("List", "Sahayog Ticket", {
+          status: "Open",
+          employee_user_id: frappe.session.user,
+        });
       } else {
         //console.log("not owner");
       }
@@ -375,6 +378,14 @@ frappe.ui.form.on("Sahayog Ticket", {
 
 frappe.ui.form.on("Sahayog Ticket", {
   refresh: function (frm) {
+    // if (
+    //   frm.doc.status !== "Resolved" ||
+    //   frm.doc.status !== "Closed" ||
+    //   frm.doc.status !== "Cancelled"||
+    // ) {
+    //   frm.disable_save();
+    // }
+
     //var ticketClosingDetailsSection = document.querySelectorAll(
     //"[data-fieldname='ticket_closing_details_section']"
     //    )[1];
@@ -558,6 +569,23 @@ frappe.ui.form.on("Sahayog Ticket", {
               __("Are you sure you want to set In-Progress?"),
               function () {
                 frm.set_value("status", "In-Progress");
+                frm.refresh_field("status");
+                frm.save();
+              },
+              function () {
+                // Additional logic if No is selected in the confirmation
+              }
+            );
+          },
+          __("Admin")
+        );
+        frm.add_custom_button(
+          __("Close"),
+          function () {
+            frappe.confirm(
+              __("Are you sure you want to set In-Progress?"),
+              function () {
+                frm.set_value("status", "Closed");
                 frm.refresh_field("status");
                 frm.save();
               },

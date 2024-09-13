@@ -3,6 +3,7 @@ from frappe import _
 from frappe.model.document import Document
 from werkzeug.wrappers import Response
 
+
 class GrievancesandRedressal(Document):
     pass
 
@@ -78,3 +79,4 @@ def get_branches():
     except Exception as e:
         frappe.log_error(message=str(e), title="Branch Fetch Error")
         return {"error": str(e)}
+    
