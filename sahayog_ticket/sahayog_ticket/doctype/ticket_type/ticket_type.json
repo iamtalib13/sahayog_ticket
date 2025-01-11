@@ -30,7 +30,7 @@
    "fieldname": "tat_days",
    "fieldtype": "Select",
    "label": "TAT days",
-   "options": "\nNot-Defined\n30 Days\n15 Days\n10 Days\n7 Days\n6 Days\n5 Days\n3 Days\n2 Days\n1 Day\n4 Hours"
+   "options": "\nNot-Defined\n30 Days\n15 Days\n10 Days\n7 Days\n6 Days\n5 Days\n3 Days\n2 Days\n1 Day\n4 Hours\n3 Hours"
   },
   {
    "default": "0",
@@ -41,7 +41,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-07-26 17:47:36.784852",
+ "modified": "2024-08-14 11:21:24.408092",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Ticket Type",

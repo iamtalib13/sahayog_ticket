@@ -123,3 +123,45 @@ def print_creation_time():
     except Exception as e:
         # Handle any exceptions and print an error message
         print(f"Error: {e}")
+
+
+def update_reports_to():
+    try:
+        # Fetch all Employee records
+        employees = frappe.get_all(
+            "Employee",
+            fields=["name", "reports_to"]
+        )
+
+        # Initialize a counter for updated records
+        updated_records_count = 0
+
+        for employee in employees:
+            employee_id = employee.name
+            
+            # Store the current 'reports_to' value in a temporary variable
+            temp_reports_to = employee.reports_to
+
+            # Clear the 'reports_to' field by setting it to an empty string
+            frappe.db.set_value("Employee", employee_id, "reports_to", "", update_modified=False)
+
+            # Set the 'reports_to' field back to the original value stored in temp_reports_to
+            frappe.db.set_value("Employee", employee_id, "reports_to", temp_reports_to, update_modified=False)
+
+            # Increment the counter
+            updated_records_count += 1
+
+            # Print the updated values for debugging
+            print(f"Employee ID: {employee_id}")
+            print(f"Reports To (Updated): {temp_reports_to}")
+
+        # Commit the transaction to the database
+        frappe.db.commit()
+
+        # Log the number of records updated
+        frappe.log(f"Updated 'reports_to' field for {updated_records_count} records")
+
+    except Exception as e:
+        # Handle any exceptions and log an error message
+        frappe.log_error(f"Error in update_reports_to: {e}", "Update Reports To Error")
+

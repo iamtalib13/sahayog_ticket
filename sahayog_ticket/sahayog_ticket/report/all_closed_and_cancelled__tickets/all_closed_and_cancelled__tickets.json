@@ -1,0 +1,31 @@
+{
+ "add_total_row": 1,
+ "columns": [],
+ "creation": "2024-09-20 11:47:49.868608",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "Sahayog",
+ "modified": "2024-09-20 11:47:49.868608",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "All Closed and Cancelled  Tickets",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "query": "SELECT\n  name AS Ticket_ID,\n  employee_id AS Emp_ID,\n  call_log_date AS Ticket_Raised_Date,\n  employee_name AS Emp_Name,\n  designation AS Emp_Designation,\n  emp_department AS Emp_Department,\n  branch_name AS Branch,\n  region AS Region,\n  phone1 AS Contact_No,\n  ticket_type AS Ticket_Type,\n  description AS Ticket_Description,\n  tat AS TAT,\n  total_days as Ticket_Age,\n  status AS Ticket_Status,\n  on_hold_remark AS On_Hold_Remark\n\nFROM\n  `tabSahayog Ticket`\nWHERE\n   status IN ('Closed', 'Cancelled');",
+ "ref_doctype": "Sahayog Ticket",
+ "report_name": "All Closed and Cancelled  Tickets",
+ "report_type": "Query Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "CTO"
+  }
+ ]
+}

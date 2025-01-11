@@ -1,0 +1,34 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2024-12-06 10:33:25.218277",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "Sahayog",
+ "modified": "2024-12-06 10:33:34.221330",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "Operation Report - Resolved but not Closed",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "query": "SELECT\n  name AS Ticket_ID,\n    ticket_type AS Ticket_Type,\n\n  call_log_date AS Ticket_Raised_Date,\n  employee_id AS Emp_ID,\n\n  employee_name AS Emp_Name,\n\n  branch_name AS Branch\n\nFROM\n  `tabSahayog Ticket`\nWHERE\n  dept_name = 'Operations' \n  AND status = 'Resolved';",
+ "ref_doctype": "Sahayog Ticket",
+ "report_name": "Operation Report - Resolved but not Closed",
+ "report_type": "Query Report",
+ "roles": [
+  {
+   "role": "Employee"
+  },
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "CTO"
+  }
+ ]
+}

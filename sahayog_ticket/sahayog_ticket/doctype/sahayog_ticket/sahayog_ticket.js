@@ -182,6 +182,8 @@ frappe.ui.form.on("Sahayog Ticket", {
       modifiedEmployeeId = "ABPS" + eid;
     } else if (user.includes("MCPS")) {
       modifiedEmployeeId = "MCPS" + eid;
+    }else if (user.includes("NT")) {
+      modifiedEmployeeId = "NT" + eid;
     } else {
       // If neither "ABPS" nor "MCPS" is found, use the numeric part as is
       modifiedEmployeeId = eid;
@@ -207,6 +209,7 @@ frappe.ui.form.on("Sahayog Ticket", {
           frm.set_value("emp_department", r.message[0].department);
           frm.set_value("division", r.message[0].division);
           frm.set_value("region", r.message[0].region);
+          frm.set_value("zone", r.message[0].zone);
           frm.set_value("branch_name", r.message[0].branch);
           frm.set_value("district", r.message[0].district);
           frm.set_value("phone1", r.message[0].cell_number);
@@ -528,6 +531,8 @@ frappe.ui.form.on("Sahayog Ticket", {
         modifiedEmployeeId = "ABPS" + eid;
       } else if (user.includes("MCPS")) {
         modifiedEmployeeId = "MCPS" + eid;
+      } else if (user.includes("NT")) {
+        modifiedEmployeeId = "NT" + eid;
       } else {
         // If neither "ABPS" nor "MCPS" is found, use the numeric part as is
         modifiedEmployeeId = eid;
@@ -558,6 +563,23 @@ frappe.ui.form.on("Sahayog Ticket", {
               __("Are you sure you want to set In-Progress?"),
               function () {
                 frm.set_value("status", "In-Progress");
+                frm.refresh_field("status");
+                frm.save();
+              },
+              function () {
+                // Additional logic if No is selected in the confirmation
+              }
+            );
+          },
+          __("Admin")
+        );
+        frm.add_custom_button(
+          __("Close"),
+          function () {
+            frappe.confirm(
+              __("Are you sure you want to set In-Progress?"),
+              function () {
+                frm.set_value("status", "Closed");
                 frm.refresh_field("status");
                 frm.save();
               },
@@ -767,6 +789,8 @@ frappe.ui.form.on("Sahayog Ticket", {
         modifiedEmployeeId = "ABPS" + eid;
       } else if (user.includes("MCPS")) {
         modifiedEmployeeId = "MCPS" + eid;
+      } else if (user.includes("NT")) {
+        modifiedEmployeeId = "NT" + eid;
       } else {
         // If neither "ABPS" nor "MCPS" is found, use the numeric part as is
         modifiedEmployeeId = eid;
@@ -789,7 +813,7 @@ frappe.ui.form.on("Sahayog Ticket", {
           frm.disable_save();
         }
 
-        console.log("matched employee" + eid);
+        console.log("matched employee ::" + eid);
         frm.toggle_display("employee_id", false);
         frm.toggle_display("status", false);
         //frm.toggle_enable("priority", 0);

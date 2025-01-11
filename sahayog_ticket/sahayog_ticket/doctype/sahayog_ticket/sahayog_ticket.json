@@ -20,6 +20,7 @@
   "designation",
   "emp_department",
   "column_break_5",
+  "zone",
   "region",
   "district",
   "branch_name",
@@ -106,6 +107,7 @@
    "fieldname": "branch_name",
    "fieldtype": "Data",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Branch",
    "read_only": 1
   },
@@ -249,9 +251,11 @@
   },
   {
    "fieldname": "employee_id",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
    "label": "Employee ID",
-   "read_only": 1
+   "options": "Employee",
+   "read_only_depends_on": "eval:!frappe.user.has_role('System Manager')"
   },
   {
    "fetch_from": "employee_id.cell_number",
@@ -470,11 +474,17 @@
    "fieldname": "support_system_email",
    "fieldtype": "Data",
    "label": "Support System Email"
+  },
+  {
+   "fieldname": "zone",
+   "fieldtype": "Data",
+   "label": "Zone",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-07-24 16:09:16.801881",
+ "modified": "2024-12-30 13:16:29.283397",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
