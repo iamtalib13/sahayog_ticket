@@ -1,0 +1,123 @@
+{
+ "charts": [
+  {
+   "chart_name": "Operation Type Wise Ticket",
+   "label": "Ticket Type Wise Analysis"
+  }
+ ],
+ "content": "[{\"id\":\"utVTYQuaFN\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Welcome To Operation Department</b></span>\",\"col\":12}},{\"id\":\"rQGB8dNc62\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open Tickets\",\"col\":3}},{\"id\":\"ffJeUXS-82\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Read\",\"col\":3}},{\"id\":\"0vbFyE4fua\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"xd3xBrYsuh\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"On-Hold Tickets\",\"col\":3}},{\"id\":\"Uf2wmda53R\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Re-Open\",\"col\":3}},{\"id\":\"2GmyMhZSc_\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Resolved\",\"col\":3}},{\"id\":\"FPLb7otdhE\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"7VHF_eBHmy\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Cancelled\",\"col\":3}},{\"id\":\"kzww3P6rDv\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Operations Recent Tickets\",\"col\":12}},{\"id\":\"0GhLDUwGcT\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h2\\\"><b>Report&nbsp;</b></span>\",\"col\":12}},{\"id\":\"pIC7R-T-MT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Operation Monthly Report\",\"col\":3}},{\"id\":\"spcf6lJAxw\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Ticket Type Wise Analysis\",\"col\":12}}]",
+ "creation": "2022-12-22 15:35:01.611597",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "support",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Operation Tickets",
+ "links": [],
+ "modified": "2025-03-03 14:58:36.434203",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "Operation Tickets",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "My Tickets",
+ "public": 1,
+ "quick_lists": [
+  {
+   "document_type": "Sahayog Ticket",
+   "label": "Operations Recent Tickets",
+   "quick_list_filter": "{\"dept_name\":[\"=\",\"Operations\"]}"
+  }
+ ],
+ "roles": [
+  {
+   "role": "Operations Support Executive"
+  },
+  {
+   "role": "Operations Support Manager"
+  },
+  {
+   "role": "user891"
+  }
+ ],
+ "sequence_id": 11.0,
+ "shortcuts": [
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "Cancelled",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"Operations\"],\"status\":[\"=\",\"Cancelled\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Operation Monthly Report",
+   "link_to": "Operation Monthly Report",
+   "type": "Report"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "On-Hold Tickets",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "[[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Operations\",false],[\"Sahayog Ticket\",\"status\",\"=\",\"On-Hold\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "Open Tickets",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"Operations\"],\"status\":[\"=\",\"Open\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "format": "{}",
+   "label": "Re-Open",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Re-Opened\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Operations\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Yellow",
+   "doc_view": "List",
+   "label": "Read",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"Operations\"],\"status\":[\"=\",\"Read\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "format": "{}",
+   "label": "Resolved",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Resolved\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Operations\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "In-Progress",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"Operations\"],\"status\":[\"=\",\"In-Progress\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Closed",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"Operations\"],\"status\":[\"=\",\"Closed\"]}",
+   "type": "DocType"
+  }
+ ],
+ "title": "Operation Tickets"
+}

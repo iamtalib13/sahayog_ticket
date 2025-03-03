@@ -1,0 +1,33 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"IaMRU2UrA3\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"Tickets Dashboard\",\"col\":12}}]",
+ "creation": "2022-12-23 15:10:17.021613",
+ "custom_blocks": [
+  {
+   "custom_block_name": "Tickets Dashboard",
+   "label": "Tickets Dashboard"
+  }
+ ],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "customer",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "My Tickets",
+ "links": [],
+ "modified": "2025-03-03 14:56:51.296219",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "My Tickets",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 2.0,
+ "shortcuts": [],
+ "title": "My Tickets"
+}

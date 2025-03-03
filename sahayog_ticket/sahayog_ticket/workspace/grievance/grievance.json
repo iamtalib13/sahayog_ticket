@@ -1,0 +1,130 @@
+{
+ "charts": [
+  {
+   "chart_name": "Department Wise Ticket",
+   "label": "Department Wise Total Ticket"
+  }
+ ],
+ "content": "[{\"id\":\"KRc-nt-Ejf\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\">Grievance Analysis</span><br>\",\"col\":12}},{\"id\":\"SNNrgjNFqs\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Department Wise Total Ticket\",\"col\":12}},{\"id\":\"zfarXO-68a\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>IT Tickets</b></span>\",\"col\":12}},{\"id\":\"iGgMBnXNnd\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"IT Open Tickets\",\"col\":4}},{\"id\":\"7LwDshgQO9\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"IT Pending Tickets\",\"col\":4}},{\"id\":\"Qx1rXXvJjg\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"IT Closed Tickets\",\"col\":4}},{\"id\":\"0b_OMN46A6\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>HR Tickets</b></span>\",\"col\":12}},{\"id\":\"wUkHpHc8lO\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"HR Open Tickets\",\"col\":4}},{\"id\":\"VSbyC0zYgg\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"HR Pending Tickets\",\"col\":4}},{\"id\":\"DgBZEZtM3-\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"HR Closed Tickets\",\"col\":4}},{\"id\":\"KARGf7_gPj\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>Operations Tickets</b></span>\",\"col\":12}},{\"id\":\"qIuxJYbZhP\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Operations Open Tickets\",\"col\":4}},{\"id\":\"kQS7wsj5Ql\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Operations Pending Tickets\",\"col\":4}},{\"id\":\"q4y7jQk0mK\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Operations Closed Tickets\",\"col\":4}},{\"id\":\"2Cj4PeZ68A\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>Facility Tickets</b></span>\",\"col\":12}},{\"id\":\"mLk_Pd7ILl\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Facility Open Tickets\",\"col\":4}},{\"id\":\"N3zo1RjUqc\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Facility Pending Tickets\",\"col\":4}},{\"id\":\"RX9qvPTT_0\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Facility Closed Tickets\",\"col\":4}},{\"id\":\"jwtW85rNJq\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>HO Tickets</b></span>\",\"col\":12}},{\"id\":\"2gmuFDfzIp\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"HO Open Tickets\",\"col\":4}},{\"id\":\"izAHJyYGg1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"HO Pending Tickets\",\"col\":4}},{\"id\":\"I2DmGqKmLF\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"HO Closed Tickets\",\"col\":4}},{\"id\":\"pHBUOhBOSq\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>JLL Tickets</b></span>\",\"col\":12}},{\"id\":\"OVDOx0XvED\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"JLL Open Tickets\",\"col\":4}},{\"id\":\"YGur06UwbR\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"JLL Pending Tickets\",\"col\":4}},{\"id\":\"aYfOQwEXfv\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"JLL Closed Tickets\",\"col\":4}},{\"id\":\"zbKBCVmHaZ\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>Accounts Tickets</b></span>\",\"col\":12}},{\"id\":\"GAunPUSjIO\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Accounts Open Tickets\",\"col\":4}},{\"id\":\"Os-20F9NjN\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Accounts Pending Tickets\",\"col\":4}},{\"id\":\"ByGKH3wJ-4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Accounts Closed Tickets\",\"col\":4}},{\"id\":\"tPWksD7L8f\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>MIS Tickets</b></span>\",\"col\":12}},{\"id\":\"xr3__-cc7e\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"MIS Open Tickets\",\"col\":4}},{\"id\":\"U9yL-wxZU9\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"MIS Pending Tickets\",\"col\":4}},{\"id\":\"TfmNJp0hZ4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"MIS Closed Tickets\",\"col\":4}}]",
+ "creation": "2023-06-22 15:51:13.143980",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "website",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Grievance",
+ "links": [],
+ "modified": "2025-03-03 15:00:18.537536",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "Grievance",
+ "number_cards": [
+  {
+   "label": "JLL Open Tickets",
+   "number_card_name": "JLL Open Tickets"
+  },
+  {
+   "label": "IT Open Tickets",
+   "number_card_name": "IT Open Tickets"
+  },
+  {
+   "label": "Accounts Open Tickets",
+   "number_card_name": "Accounts Open Tickets"
+  },
+  {
+   "label": "HR Open Tickets",
+   "number_card_name": "HR Open Tickets"
+  },
+  {
+   "label": "MIS Open Tickets",
+   "number_card_name": "MIS Open Tickets"
+  },
+  {
+   "label": "HR Pending Tickets",
+   "number_card_name": "HR Pending Tickets"
+  },
+  {
+   "label": "JLL Pending Tickets",
+   "number_card_name": "JLL Pending Tickets"
+  },
+  {
+   "label": "MIS Pending Tickets",
+   "number_card_name": "MIS Pending Tickets"
+  },
+  {
+   "label": "IT Pending Tickets",
+   "number_card_name": "IT Pending Tickets"
+  },
+  {
+   "label": "Accounts Pending Tickets",
+   "number_card_name": "Accounts Pending Tickets"
+  },
+  {
+   "label": "Accounts Closed Tickets",
+   "number_card_name": "Accounts Closed Tickets"
+  },
+  {
+   "label": "MIS Closed Tickets",
+   "number_card_name": "MIS Closed Tickets"
+  },
+  {
+   "label": "JLL Closed Tickets",
+   "number_card_name": "JLL Closed Tickets"
+  },
+  {
+   "label": "HR Closed Tickets",
+   "number_card_name": "HR Closed Tickets"
+  },
+  {
+   "label": "IT Closed Tickets",
+   "number_card_name": "IT Closed Tickets"
+  },
+  {
+   "label": "Operations Open Tickets",
+   "number_card_name": "Operations Open Tickets"
+  },
+  {
+   "label": "Operations Pending Tickets",
+   "number_card_name": "Operations Pending Tickets"
+  },
+  {
+   "label": "Operations Closed Tickets",
+   "number_card_name": "Operations Closed Tickets"
+  },
+  {
+   "label": "Facility Open Tickets",
+   "number_card_name": "Facility Open Tickets"
+  },
+  {
+   "label": "Facility Pending Tickets",
+   "number_card_name": "Facility Pending Tickets"
+  },
+  {
+   "label": "Facility Closed Tickets",
+   "number_card_name": "Facility Closed Tickets"
+  },
+  {
+   "label": "HO Open Tickets",
+   "number_card_name": "HO Open Tickets"
+  },
+  {
+   "label": "HO Pending Tickets",
+   "number_card_name": "HO Pending Tickets"
+  },
+  {
+   "label": "HO Closed Tickets",
+   "number_card_name": "HO Closed Tickets"
+  }
+ ],
+ "owner": "Administrator",
+ "parent_page": "My Tickets",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 30.0,
+ "shortcuts": [],
+ "title": "Grievance"
+}

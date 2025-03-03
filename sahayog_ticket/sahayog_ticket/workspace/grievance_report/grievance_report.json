@@ -1,0 +1,127 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"wbMkK0K5gz\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h2\\\"><b>Grievance Report</b></span><br>\",\"col\":12}},{\"id\":\"XV0NI1yNgh\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Overall Report\",\"col\":3}},{\"id\":\"h3_0iHuO0B\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Ticket Report\",\"col\":3}},{\"id\":\"5GOUUpPR4f\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Asset Requisition Report\",\"col\":3}},{\"id\":\"BtnsoQJ8Lh\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Total Ticket closed Report\",\"col\":3}},{\"id\":\"oKh2HuQJ6a\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h2\\\"><b>Department wise Reports</b></span>\",\"col\":12}},{\"id\":\"ZAbwkde6Bj\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"HR\",\"col\":3}},{\"id\":\"17CaD6jOYu\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"IT\",\"col\":3}},{\"id\":\"UGCNcn5zWq\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Operations\",\"col\":3}},{\"id\":\"R7lyuzo0uA\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"HO\",\"col\":3}},{\"id\":\"LzKeguPW17\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Facility\",\"col\":3}},{\"id\":\"AYc9f7hMoL\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"JLL\",\"col\":3}},{\"id\":\"9Y65mjpzGu\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Accounts\",\"col\":3}},{\"id\":\"DwkTa338G7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"MIS\",\"col\":3}},{\"id\":\"B79ohdc3dW\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Admin\",\"col\":3}},{\"id\":\"DtyfuVKZBT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Loan\",\"col\":3}}]",
+ "creation": "2023-06-22 15:59:14.690572",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "unhide",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Grievance Report",
+ "links": [],
+ "modified": "2025-03-03 15:00:28.775975",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "Grievance Report",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "My Tickets",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 31.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Asset Requisition Report",
+   "link_to": "Asset Approval and Dispatch Report",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Admin",
+   "link_to": "Admin Open Tickets",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Overall Report",
+   "link_to": "Department wise Open Tickets",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "HR",
+   "link_to": "HR Open Tickets",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Ticket Report",
+   "link_to": "Monthly Progress Report",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Total Ticket closed Report",
+   "link_to": "Total Ticket Close Report",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Loan",
+   "link_to": "Loan Open Tickets",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "IT",
+   "link_to": "IT Open Tickets",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Operations",
+   "link_to": "Operations Open Tickets",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "HO",
+   "link_to": "HO Open Tickets",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Facility",
+   "link_to": "Facility Open Tickets",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "JLL",
+   "link_to": "JLL Open Tickets",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Accounts",
+   "link_to": "Accounts Open Tickets",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "MIS",
+   "link_to": "MIS Open Tickets",
+   "type": "Report"
+  }
+ ],
+ "title": "Grievance Report"
+}

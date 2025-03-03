@@ -1,0 +1,108 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"x6daoXci9B\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Welcome To Region 4</b></span>\",\"col\":12}},{\"id\":\"DJFwu1oPhO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance\",\"col\":3}},{\"id\":\"d7DP25ktpr\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Form-16\",\"col\":3}},{\"id\":\"HzpJ1rHwjr\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Leave\",\"col\":3}},{\"id\":\"-XpxFHUc9x\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"ID Card\",\"col\":3}},{\"id\":\"bCTWhXzfb6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Salary\",\"col\":3}},{\"id\":\"iYuuzdzr0G\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"PF\",\"col\":3}},{\"id\":\"wM_cjxcp2F\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Medical Card\",\"col\":3}},{\"id\":\"_KngZ5TGNO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Full-n-Final Settlemnt\",\"col\":3}},{\"id\":\"io6Wohkhry\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Other\",\"col\":3}}]",
+ "creation": "2022-12-22 17:30:45.922584",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "map",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "HR Region 4",
+ "links": [],
+ "modified": "2025-03-03 14:58:22.571775",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "HR Region 4",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "HR Tickets",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "HR Support Executive"
+  },
+  {
+   "role": "HR Support Manager"
+  }
+ ],
+ "sequence_id": 10.0,
+ "shortcuts": [
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Attendance",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"HR\"],\"region\":[\"like\",\"%Region-4%\"],\"status\":[\"not in\",[\"Closed\",\"Cancelled\",null]],\"ticket_type\":[\"=\",\"Attendance\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "Form-16",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"HR\"],\"region\":[\"like\",\"%Region-4%\"],\"status\":[\"not in\",[\"Closed\",\"Cancelled\",null]],\"ticket_type\":[\"=\",\"Attendance\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Leave",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"HR\"],\"region\":[\"like\",\"%Region-4%\"],\"status\":[\"not in\",[\"Closed\",\"Cancelled\",null]],\"ticket_type\":[\"=\",\"Leave\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Pink",
+   "doc_view": "List",
+   "label": "ID Card",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"HR\"],\"region\":[\"like\",\"%Region-4%\"],\"status\":[\"not in\",[\"Closed\",\"Cancelled\",null]],\"ticket_type\":[\"=\",\"ID Card\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Cyan",
+   "doc_view": "List",
+   "label": "Salary",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"region\":[\"like\",\"%Region-4%\"],\"dept_name\":[\"=\",\"HR\"],\"status\":[\"not in\",[\"Closed\",\"Cancelled\",null]],\"ticket_type\":[\"=\",\"Salary\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "PF",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"HR\"],\"region\":[\"like\",\"%Region-4%\"],\"status\":[\"not in\",[\"Closed\",\"Cancelled\",null]],\"ticket_type\":[\"=\",\"PF\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "Medical Card",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"region\":[\"like\",\"%Region-4%\"],\"dept_name\":[\"=\",\"HR\"],\"status\":[\"not in\",[\"Closed\",\"Cancelled\",null]],\"ticket_type\":[\"=\",\"Medical Card\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Full-n-Final Settlemnt",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"region\":[\"like\",\"%Region-4%\"],\"dept_name\":[\"=\",\"HR\"],\"status\":[\"not in\",[\"Closed\",\"Cancelled\",null]],\"ticket_type\":[\"=\",\"Full-n-Final Settlement\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Yellow",
+   "doc_view": "List",
+   "label": "Other",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"region\":[\"like\",\"%Region-4%\"],\"dept_name\":[\"=\",\"HR\"],\"status\":[\"not in\",[\"Closed\",\"Cancelled\",null]],\"ticket_type\":[\"=\",\"Others HR Issue\"]}",
+   "type": "DocType"
+  }
+ ],
+ "title": "HR Region 4"
+}

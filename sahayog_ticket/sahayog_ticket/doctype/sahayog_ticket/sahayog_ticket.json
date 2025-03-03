@@ -96,19 +96,21 @@
    "fieldtype": "Column Break"
   },
   {
-   "fetch_from": "employee_id.region",
+   "fetch_from": "employee_id.custom_region",
    "fieldname": "region",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "label": "Region",
+   "options": "Region",
    "read_only": 1
   },
   {
    "fetch_from": "employee_id.branch",
    "fieldname": "branch_name",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Branch",
+   "options": "Branch",
    "read_only": 1
   },
   {
@@ -265,11 +267,12 @@
    "read_only": 1
   },
   {
-   "fetch_from": "employee_id.division",
+   "fetch_from": "employee_id.custom_division",
    "fieldname": "division",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_standard_filter": 1,
-   "label": "Division"
+   "label": "Division",
+   "options": "Division"
   },
   {
    "fetch_from": "employee_id.department",
@@ -476,15 +479,17 @@
    "label": "Support System Email"
   },
   {
+   "fetch_from": "employee_id.custom_zone",
    "fieldname": "zone",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "label": "Zone",
+   "options": "Zone",
    "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-30 13:16:29.283397",
+ "modified": "2025-03-03 14:55:26.889873",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",

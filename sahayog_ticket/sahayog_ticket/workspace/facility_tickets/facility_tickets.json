@@ -1,0 +1,108 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"Zh1InInlLr\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\">Welcome To Facility Department</span>\",\"col\":12}},{\"id\":\"U5_g87oM7W\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open\",\"col\":3}},{\"id\":\"_wV1hVHpxU\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Read\",\"col\":3}},{\"id\":\"YG_LMBvxHZ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"Gtj4-EAdJs\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"On-Hold Tickets\",\"col\":3}},{\"id\":\"wW2OeenlvK\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Re-Open\",\"col\":3}},{\"id\":\"JFNHbKnkR3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Resolved\",\"col\":3}},{\"id\":\"oBGfT9A98d\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"Mn4CVc1q8S\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Cancelled\",\"col\":3}},{\"id\":\"lOsvVrlwFb\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Facility Recent Tickets\",\"col\":12}}]",
+ "creation": "2022-12-27 13:39:51.508638",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "image-view",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Facility Tickets",
+ "links": [],
+ "modified": "2025-03-03 15:00:08.103860",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "Facility Tickets",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "My Tickets",
+ "public": 1,
+ "quick_lists": [
+  {
+   "document_type": "Sahayog Ticket",
+   "label": "Facility Recent Tickets",
+   "quick_list_filter": "{\"dept_name\":[\"=\",\"Facility\"]}"
+  }
+ ],
+ "roles": [
+  {
+   "role": "Facility Support Executive"
+  },
+  {
+   "role": "Facility Support Manager"
+  }
+ ],
+ "sequence_id": 20.0,
+ "shortcuts": [
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "format": "{}",
+   "label": "Re-Open",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Re-Opened\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Facility\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "Cancelled",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"Facility\"],\"status\":[\"=\",\"Cancelled\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Cyan",
+   "doc_view": "List",
+   "label": "On-Hold Tickets",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"Facility\"],\"status\":[\"=\",\"On-Hold\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "Open",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"Facility\"],\"status\":[\"=\",\"Open\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "In-Progress",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"Facility\"],\"status\":[\"=\",\"In-Progress\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "format": "{}",
+   "label": "Resolved",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Resolved\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Facility\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Yellow",
+   "doc_view": "List",
+   "label": "Read",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"Facility\"],\"status\":[\"=\",\"Read\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Closed",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"Facility\"],\"status\":[\"=\",\"Closed\"]}",
+   "type": "DocType"
+  }
+ ],
+ "title": "Facility Tickets"
+}

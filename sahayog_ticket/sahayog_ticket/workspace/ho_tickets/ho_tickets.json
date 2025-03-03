@@ -1,0 +1,108 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"HGlVq53a0z\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">HO Tickets</span>\",\"col\":12}},{\"id\":\"R3MmD2XUZT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open Tickets\",\"col\":3}},{\"id\":\"dm9KXXZhkJ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Read\",\"col\":3}},{\"id\":\"xG28dQ24lA\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress \",\"col\":3}},{\"id\":\"5r6x4ZGDJl\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"On-Hold\",\"col\":3}},{\"id\":\"lJuMDjGL3c\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Re-Open\",\"col\":3}},{\"id\":\"3vZDhLKjIb\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Resolved\",\"col\":3}},{\"id\":\"T982V_hSXN\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"9-dTnLmmyZ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Cancelled\",\"col\":3}},{\"id\":\"6uYGwnf5cQ\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Recent HO Tickets\",\"col\":12}}]",
+ "creation": "2023-01-17 15:42:19.916038",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "organization",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "HO Tickets",
+ "links": [],
+ "modified": "2025-03-03 14:59:59.804156",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "HO Tickets",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "My Tickets",
+ "public": 1,
+ "quick_lists": [
+  {
+   "document_type": "Sahayog Ticket",
+   "label": "Recent HO Tickets",
+   "quick_list_filter": "[[\"Sahayog Ticket\",\"dept_name\",\"=\",\"HO\",false]]"
+  }
+ ],
+ "roles": [
+  {
+   "role": "HO Support Executive"
+  },
+  {
+   "role": "HO Support Manager"
+  }
+ ],
+ "sequence_id": 19.0,
+ "shortcuts": [
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Read",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"HO\"],\"status\":[\"=\",\"Read\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "format": "{}",
+   "label": "Re-Open",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Re-Opened\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"HO\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "Open Tickets",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"HO\"],\"status\":[\"=\",\"Open\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Yellow",
+   "doc_view": "List",
+   "label": "In-Progress ",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"HO\"],\"status\":[\"=\",\"In-Progress\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "format": "{}",
+   "label": "Resolved",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Resolved\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"HO\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Closed",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"HO\"],\"status\":[\"=\",\"Closed\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Cyan",
+   "doc_view": "List",
+   "label": "On-Hold",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"HO\"],\"status\":[\"=\",\"On-Hold\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Cancelled",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "{\"dept_name\":[\"=\",\"HO\"],\"status\":[\"=\",\"Cancelled\"]}",
+   "type": "DocType"
+  }
+ ],
+ "title": "HO Tickets"
+}
