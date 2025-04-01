@@ -112,6 +112,13 @@ frappe.ui.form.on("Sahayog Ticket", {
           }
         );
       });
+      frm.add_custom_button(__("Save"), function () {
+        frm.enable_save();
+        frappe.show_alert({
+          message: __("Saved"),
+          indicator: "green"
+        });
+      });
     }
   },
   common_hidden_fields: function (frm) {

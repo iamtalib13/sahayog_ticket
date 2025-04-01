@@ -61,7 +61,6 @@ def get_emp_details(emp_id):
         as_dict=True,
     )
 
-
 @frappe.whitelist()
 def create_asset_request(
     ticket_id,
@@ -73,8 +72,8 @@ def create_asset_request(
     district,
     branch,
     request_to,
-    phone,
     division,
+    phone=None,  # Make phone optional with a default value of None
 ):
     try:
         # Create a new Asset Request
@@ -90,8 +89,12 @@ def create_asset_request(
         doc.district = district
         doc.branch = branch
         doc.select_department = request_to
-        doc.phone = phone
         doc.division = division
+
+        # Add phone only if it is provided
+        if phone:
+            doc.phone = phone
+
         doc.insert(ignore_permissions=True)  # Ignore permissions to allow creation
         frappe.db.commit()  # Ensure changes are committed
 

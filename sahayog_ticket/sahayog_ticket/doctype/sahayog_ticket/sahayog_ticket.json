@@ -305,7 +305,7 @@
   {
    "depends_on": "eval:doc.ticket_type",
    "fieldname": "description",
-   "fieldtype": "Text",
+   "fieldtype": "Text Editor",
    "in_preview": 1,
    "label": "Description",
    "mandatory_depends_on": "eval:doc.ticket_type",
@@ -325,8 +325,7 @@
    "fieldtype": "Link",
    "label": "Ticket Type",
    "options": "Ticket Type",
-   "reqd": 1,
-   "set_only_once": 1
+   "reqd": 1
   },
   {
    "depends_on": "eval:frappe.user.has_role('System Manager')",
@@ -484,7 +483,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-30 13:16:29.283397",
+ "modified": "2025-03-25 13:49:40.326897",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
