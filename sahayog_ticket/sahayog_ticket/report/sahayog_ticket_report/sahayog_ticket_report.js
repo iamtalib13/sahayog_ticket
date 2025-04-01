@@ -9,7 +9,7 @@ frappe.query_reports["Sahayog Ticket Report"] = {
             "label": __("Status"),
             "fieldtype": "Select",
             "options": [
-				{ "value": "", "label": __(" ") },
+				{ "value": "", "label": __("Select Status") },
                 { "value": "Open", "label": __("Open") },
                 { "value": "Read", "label": __("Read") },
                 { "value": "In-Progress", "label": __("In-Progress") },
@@ -26,7 +26,7 @@ frappe.query_reports["Sahayog Ticket Report"] = {
             "label": __("Priority"),
             "fieldtype": "Select",
             "options": [
-				{ "value": "", "label": __(" ") },
+				{ "value": "", "label": __("Select Priority") },
                 { "value": "Normal", "label": __("Normal") },
                 { "value": "Medium", "label": __("Medium") },
                 { "value": "High", "label": __("High") },
@@ -39,7 +39,7 @@ frappe.query_reports["Sahayog Ticket Report"] = {
             "label": __("Division"),
             "fieldtype": "Select",
             "options": [
-				{ "value": "", "label": __(" ") },
+				{ "value": "", "label": __("Select Division") },
                 { "value": "Multistate", "label": __("Multistate") },
                 { "value": "Microfinance", "label": __("Microfinance") },
                 { "value": "Two Wheeler", "label": __("Two Wheeler") },
@@ -70,6 +70,13 @@ frappe.query_reports["Sahayog Ticket Report"] = {
             "fieldname": "branch_name",
             "label": __("Branch"),
             "fieldtype": "Data",
+            "default": ""
+        },
+        {
+            "fieldname": "department",
+            "label": __("Department"),
+            "fieldtype": "Link",
+            "options": "Departsection",
             "default": ""
         }
     ]
