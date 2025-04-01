@@ -20,6 +20,12 @@ def execute(filters=None):
             "width": "100",
         },
         {
+            "fieldname": "priority",
+            "label": "Priority",
+            "fieldtype": "Data",
+            "width": "100",
+        },
+        {
             "fieldname": "employee_id",
             "label": "Employee ID",
             "fieldtype": "Data",
@@ -39,7 +45,7 @@ def execute(filters=None):
         },
         {
             "fieldname": "emp_department",
-            "label": "Department",
+            "label": "Employee Department",
             "fieldtype": "Data",
             "width": "150",
         },
@@ -57,17 +63,17 @@ def execute(filters=None):
         },
         {
             "fieldname": "dept_name",
-            "label": "Dept Name",
+            "label": "Ticket Department",
             "fieldtype": "Data",
             "width": "150",
         },
         {
-    		"fieldname": "ticket_type",
-    		"label": "Ticket Type",
-    		"fieldtype": "Link",
-    		"options": "Ticket Type", 
-    		"width": "150",
-		},
+            "fieldname": "ticket_type",
+            "label": "Ticket Type",
+            "fieldtype": "Link",
+            "options": "Ticket Type", 
+            "width": "150",
+        },
         {
             "fieldname": "description",
             "label": "Description",
@@ -93,6 +99,7 @@ def execute(filters=None):
         SELECT
             name AS "ticket_id",
             status,
+            priority,
             employee_id,
             employee_name,
             designation,
@@ -133,6 +140,13 @@ def execute(filters=None):
         
         if filters.get("branch_name"):
             conditions.append(f"branch_name = '{filters['branch_name']}'")
+            
+        if filters.get("department"):
+            conditions.append(f"dept_name = '{filters['department']}'")
+        
+        # If conditions are added, append them to the query
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
 
     # Execute the query and fetch the data
     data = frappe.db.sql(query, as_dict=True)
