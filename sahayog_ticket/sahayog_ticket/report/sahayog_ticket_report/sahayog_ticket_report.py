@@ -91,6 +91,12 @@ def execute(filters=None):
             "label": "Resolved Remark",
             "fieldtype": "Data",
             "width": "200",
+        },
+        {
+            "fieldname": "creation",
+            "label": "Created On",
+            "fieldtype": "Datetime",
+            "width": "180",
         }
     ]
     
@@ -110,7 +116,8 @@ def execute(filters=None):
             ticket_type,
             description,
             ticket_resolved_user,
-            resolved_remark
+            resolved_remark,
+            creation
         FROM
             `tabSahayog Ticket`
     """
@@ -119,7 +126,7 @@ def execute(filters=None):
     if filters:
         conditions = []
         
-        # Add filters to the SQL query dynamically based on the provided filters
+        # Add filters dynamically based on the provided values
         if filters.get("status"):
             conditions.append(f"status = '{filters['status']}'")
         
@@ -144,6 +151,21 @@ def execute(filters=None):
         if filters.get("department"):
             conditions.append(f"dept_name = '{filters['department']}'")
         
+        # ✅ Apply date filters
+        from_date = filters.get("from_date")
+        to_date = filters.get("to_date")
+        
+        if from_date and to_date:
+            if from_date > to_date:
+                frappe.throw("From Date cannot be after To Date")
+            conditions.append(f"creation BETWEEN '{from_date} 00:00:00' AND '{to_date} 23:59:59'")
+        
+        elif from_date:
+            conditions.append(f"creation >= '{from_date} 00:00:00'")
+        
+        elif to_date:
+            conditions.append(f"creation <= '{to_date} 23:59:59'")
+
         # If conditions are added, append them to the query
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
