@@ -10,7 +10,6 @@
  "field_order": [
   "basic_details_tab",
   "asset_request_section",
-  "asset_request_id",
   "support_system_email",
   "employee_id",
   "employee_user_id",
@@ -27,9 +26,7 @@
   "division",
   "column_break_17",
   "phone1",
-  "phone2",
   "company_email",
-  "section_break_ayj9j",
   "ticket_details_tab",
   "last_user",
   "column_break_4",
@@ -234,13 +231,6 @@
    "options": "Not-Set\nNormal72\nNormal78\nMedium48\nMedium54\nHigh24\nHigh28\nUrgent4\nUrgent6\nonhold96\nonhold104"
   },
   {
-   "fetch_from": "employee_id.alternate_phone",
-   "fieldname": "phone2",
-   "fieldtype": "Data",
-   "label": "Alternate Phone",
-   "read_only": 1
-  },
-  {
    "fieldname": "column_break_4",
    "fieldtype": "Column Break"
   },
@@ -295,15 +285,11 @@
    "read_only": 1
   },
   {
-   "fetch_from": "employee_id.district",
+   "fetch_from": "employee_id.custom_district",
    "fieldname": "district",
    "fieldtype": "Data",
    "label": "District",
    "read_only": 1
-  },
-  {
-   "fieldname": "section_break_ayj9j",
-   "fieldtype": "Section Break"
   },
   {
    "depends_on": "eval:doc.ticket_type",
@@ -467,12 +453,6 @@
    "label": "Asset Request"
   },
   {
-   "fieldname": "asset_request_id",
-   "fieldtype": "Link",
-   "label": "Asset Request ID",
-   "options": "Asset Request"
-  },
-  {
    "default": "support@sahayogmultistate.com",
    "fieldname": "support_system_email",
    "fieldtype": "Data",
@@ -489,7 +469,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-03 14:55:26.889873",
+ "modified": "2025-05-21 12:54:49.609611",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
@@ -523,6 +503,8 @@
    "write": 1
   }
  ],
+ "quick_entry": 1,
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [

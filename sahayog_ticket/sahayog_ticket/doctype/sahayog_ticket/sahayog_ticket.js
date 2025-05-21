@@ -182,7 +182,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       modifiedEmployeeId = "ABPS" + eid;
     } else if (user.includes("MCPS")) {
       modifiedEmployeeId = "MCPS" + eid;
-    }else if (user.includes("NT")) {
+    } else if (user.includes("NT")) {
       modifiedEmployeeId = "NT" + eid;
     } else {
       // If neither "ABPS" nor "MCPS" is found, use the numeric part as is
@@ -192,35 +192,6 @@ frappe.ui.form.on("Sahayog Ticket", {
     // Set the "employee_id" field with the modified value
     frm.set_value("employee_id", modifiedEmployeeId);
     let empid = frm.doc.employee_id;
-
-    frm.call({
-      method: "get_emp_details",
-      args: {
-        emp_id: empid,
-      },
-      callback: function (r) {
-        // Check if the message array contains at least one object
-        console.log(r.message);
-        if (r.message.length > 0) {
-          var firstName = r.message[0].first_name;
-          var lastName = r.message[0].last_name;
-          var fullName = firstName + " " + lastName;
-
-          frm.set_value("emp_department", r.message[0].department);
-          frm.set_value("division", r.message[0].division);
-          frm.set_value("region", r.message[0].region);
-          frm.set_value("zone", r.message[0].zone);
-          frm.set_value("branch_name", r.message[0].branch);
-          frm.set_value("district", r.message[0].district);
-          frm.set_value("phone1", r.message[0].cell_number);
-          frm.set_value("designation", r.message[0].designation);
-          frm.set_value("emp_first_name", firstName);
-          frm.set_value("emp_last_name", lastName);
-          frm.set_value("employee_name", fullName);
-          frm.set_value("employee_user_id", r.message[0].user_id);
-        }
-      },
-    });
   },
 
   cancel_ticket_btn: function (frm) {
@@ -387,136 +358,144 @@ frappe.ui.form.on("Sahayog Ticket", {
     //  ticketClosingDetailsSection.style.backgroundColor = "#90EE90";
     //}
     if (!frm.is_new()) {
-      let emp_id = frm.doc.employee_id;
-      let emp_name = frm.doc.employee_name;
-      let emp_branch = frm.doc.branch_name;
-      let emp_division = frm.doc.division;
-      let emp_phone = frm.doc.phone1;
-      let emp_designation = frm.doc.designation;
-      let first_name = frm.doc.emp_first_name;
-      let last_name = frm.doc.emp_last_name;
-      let full_name = first_name + " " + last_name;
-      //frm.set_value("employee_name", full_name);
-      let ticket_department = frm.doc.dept_name;
-      let ticket_type = frm.doc.ticket_type;
-      let ticket_description = frm.doc.description;
-      let ticket_tat = frm.doc.tat;
-      let ticket_status = frm.doc.status;
-      var intro_owner =
-        "<div style='display: flex; align-items: stretch;'>" +
-        "<div style='flex-basis: 35%; padding: 5px; border-radius: 10px 0 0 10px; margin-right: -5px; overflow: hidden;'>" +
-        "<div style='background-color: #2a265f; padding: 15px; height: 100%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); border-top-left-radius: 10px; border-bottom-left-radius: 10px; line-height: 1;'>" +
-        "<div style='display: flex; flex-wrap: wrap; justify-content: flex-end;'>" +
-        "<div style='width: 60%;'>" +
-        "<p style='font-size: 12px; margin-bottom: 3px;'>ID</p>" +
-        "<p style='font-size: 13px; margin-bottom: 10px;'><b>" +
-        emp_id +
-        "</b></p>" +
-        "<p style='font-size: 12px; margin-bottom: 3px;'>Employee</p>" +
-        "<p style='font-size: 13px; margin-bottom: 10px;'><b>" +
-        full_name +
-        "</b></p>" +
-        "<p style='font-size: 12px; margin-bottom: 3px;'>Designation</p>" +
-        "<p style='font-size: 13px; margin-bottom: 10px;'><b>" +
-        emp_designation +
-        "</b></p>" +
-        "</div>" +
-        "<div class='second' style='width: 40%;text-align: left;'>" +
-        "<p style='font-size: 12px; margin-bottom: 3px;'>Branch</p>" +
-        "<p style='font-size: 13px; '><b>" +
-        emp_branch +
-        "</b></p>" +
-        "<p style='font-size: 12px; margin-bottom: 3px;'>Division</p>" +
-        "<p style='font-size: 13px; margin-bottom: 10px;'><b>" +
-        emp_division +
-        "</b></p>" +
-        "<p style='font-size: 12px; margin-bottom: 3px;'>Phone</p>" +
-        "<p style='font-size: 13px; '><b>" +
-        emp_phone +
-        "</b></p>" +
-        "</div>" +
-        "</div>" +
-        "</div>" +
-        "</div>" +
-        "<div style='flex-basis: 65%; padding: 5px; border-radius: 0 10px 10px 0; margin-left: -5px; overflow: hidden;'>" +
-        "<div style='background-color: #9693ff; padding: 15px; height: 100%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); border-top-right-radius: 10px; border-bottom-right-radius: 10px; line-height: 1;'>" +
-        "<table style='width: 100%; table-layout: fixed; color: black;'>" +
-        "<colgroup>" +
-        "<col style='width: 25%;'>" +
-        "<col style='width: 25%;'>" +
-        "<col style='width: 25%;'>" +
-        "<col style='width: 25%;'>" +
-        "</colgroup>" +
-        "<tr>" +
-        "<td style='font-size: 12px; text-align: left;'>Raised To</td>" +
-        "<td style='font-size: 12px; text-align: left;'>Type</td>" +
-        "<td style='font-size: 12px; text-align: left;'>Status</td>" +
-        "<td style='font-size: 12px; text-align: left;'>TAT</td>" +
-        "</tr>" +
-        "<tr>" +
-        "<td style='font-size: 13px; font-weight: bold; text-align: left;'>" +
-        ticket_department +
-        "</td>" +
-        "<td style='font-size: 13px; font-weight: bold; text-align: left;'>" +
-        ticket_type +
-        "</td>" +
-        "<td style='font-size: 13px; font-weight: bold; text-align: left;'>" +
-        ticket_status +
-        "</td>" +
-        "<td style='font-size: 13px; font-weight: bold; text-align: left;'>" +
-        ticket_tat +
-        "</td>" +
-        "</tr>" +
-        "</table>" +
-        "<br><p style='font-size: 12px; margin-top: 10px; color:black'>Description</p>" +
-        "<p style='font-size: 13px; color:black'><b>" +
-        ticket_description +
-        "</b></p>" +
-        "</div>" +
-        "</div>" +
-        "</div>";
+      // Fetch employee data
+      frappe.db.get_value(
+        "Employee",
+        { employee_number: frm.doc.employee_id },
+        [
+          "employee_name",
+          "designation",
+          "branch",
+          "cell_number",
+          "department",
+          "custom_district",
+        ],
+        function (r) {
+          if (r && r.employee_name) {
+            // Employee data
+            const emp_id = frm.doc.employee_id;
+            const full_name = r.employee_name;
+            const emp_designation = r.designation || "Not specified";
+            const emp_branch = r.branch || "Not specified";
+            const emp_division = r.department || "Not specified";
+            const emp_phone = r.cell_number || "Not available";
+            const emp_district = r.custom_district || "";
+            const emp_profile_picture =
+              "https://cdn-icons-png.flaticon.com/128/1144/1144709.png"; // Default if no picture
 
-      frm.set_intro(intro_owner);
+            // Ticket data
+            const ticket_department = frm.doc.dept_name || "Not specified";
+            const ticket_type = frm.doc.ticket_type || "Not specified";
+            const ticket_status = frm.doc.status || "Open";
+            const ticket_tat = frm.doc.tat || "N/A";
+            const ticket_description =
+              frm.doc.description || "No description provided";
 
-      var formMessage = document.querySelector(".form-message.blue");
-      formMessage.style.background = "transparent";
-      formMessage.style.padding = "0";
-      formMessage.style.color = "white";
+            // Combined HTML layout
+            const intro_owner = `
+  <div class="employee-ticket-card">
+    <div class="employee-photo">
+      <img class="profile-image" src="${emp_profile_picture}" alt="Profile Image" />
+    </div>
+    <div class="employee-details">
+      <div class="employee-name-id"><strong>${full_name}</strong> - ${emp_id}</div>
+      
+      <div class="employee-meta">
+        ${emp_designation}, ${emp_branch}, ${emp_division}, ${emp_district}<br>
+        Phone : ${emp_phone}
+      </div>
+    </div>
+  </div>
 
-      var btnDefault = document.querySelectorAll(".btn.btn-default");
-      var driverPopoverButton = document.querySelectorAll(
-        "div#driver-popover-item .driver-popover-footer button.btn-default"
-      );
+  <div class="ticket-details-row">
+    <div><strong>${ticket_department}</strong></div>
+    <div>${ticket_type}</div>
+    <div>${ticket_status}</div>
+    <div>${ticket_tat}</div>
+  </div>
 
-      // btnDefault.forEach(function (element) {
-      //   element.addEventListener("mouseover", function () {
-      //     element.classList.remove("btn-default");
-      //     element.classList.add("btn", "btn-danger");
-      //   });
-
-      //   element.addEventListener("mouseout", function () {
-      //     element.classList.remove("btn-danger");
-      //     element.classList.add("btn-default");
-      //   });
-      // });
-
-      // driverPopoverButton.forEach(function (element) {
-      //   element.addEventListener("mouseover", function () {
-      //     element.classList.remove("btn-default");
-      //     element.classList.add("btn", "btn-danger");
-      //   });
-
-      //   element.addEventListener("mouseout", function () {
-      //     element.classList.remove("btn-danger");
-      //     element.classList.add("btn-default");
-      //   });
-      // });
+  <style>
+    .employee-ticket-card {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+    background: linear-gradient(90deg, #673AB7, #512DA8, #303F9F);#c3c3c3
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-radius: 9px;
     }
+
+    .employee-photo {
+      margin-right: 15px;
+    }
+
+    .profile-image {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #fff;
+    }
+
+    .employee-details {
+      display: flex;
+      flex-direction: column;
+      bott
+    }
+
+    .employee-name-id {
+      font-size: 16px;
+      margin-bottom: -3px;
+    }
+
+    .employee-meta {
+      font-size: 13px;
+      color: #c3c3c3;
+    }
+
+    .ticket-details-row {
+      display: flex;
+      gap: 20px;
+      padding: 10px 15px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #084d8c;
+    }
+
+    @media (max-width: 768px) {
+      .employee-ticket-card {
+        flex-direction: column;
+        text-align: center;
+      }
+      .ticket-details-row {
+        flex-direction: column;
+        gap: 5px;
+      }
+    }
+  </style>
+`;
+
+            frm.set_intro(intro_owner);
+            var formMessage = document.querySelector(".form-message.blue");
+            formMessage.style.background = "transparent";
+            formMessage.style.padding = "0";
+            formMessage.style.color = "white";
+
+            var btnDefault = document.querySelectorAll(".btn.btn-default");
+            var driverPopoverButton = document.querySelectorAll(
+              "div#driver-popover-item .driver-popover-footer button.btn-default"
+            );
+          } else {
+            console.error("[ERROR] No employee data found");
+            frm.set_intro("Employee information not available", "red");
+          }
+        }
+      );
+    }
+
     //----------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------
     let user = frappe.session.user;
-
-    console.log("Logged-in-user = " + user);
 
     if (frm.is_new()) {
       frm.set_df_property("cancel_ticket_btn", "hidden", 1);

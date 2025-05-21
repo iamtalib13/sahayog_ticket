@@ -54,15 +54,6 @@ def get_counts(employee_id):
 
 
 @frappe.whitelist()
-def get_emp_details(emp_id):
-    return frappe.db.sql(
-        f"""select department,division,region,zone,branch,district,employee_name,cell_number,reporting_employee,reporting_employee_user_id,reporting_employee_email,reporting_person_designation,designation,first_name,last_name,user_id
-        from `tabEmployee` where employee_id='{emp_id}';""",
-        as_dict=True,
-    )
-
-
-@frappe.whitelist()
 def create_asset_request(
     ticket_id,
     employee_id,
