@@ -312,7 +312,6 @@ frappe.ui.form.on("Sahayog Ticket", {
 
     if (eid === frm.doc.employee_id) {
       if (frm.doc.status == "Open") {
-        console.log(eid);
         var dept = frm.doc.dept_name;
         msgprint("Ticket is Saved Successfully.");
         msgprint(dept + " Team will Contact You Shortly");
@@ -369,6 +368,7 @@ frappe.ui.form.on("Sahayog Ticket", {
           "cell_number",
           "department",
           "custom_district",
+          "custom_division",
         ],
         function (r) {
           if (r && r.employee_name) {
@@ -377,103 +377,114 @@ frappe.ui.form.on("Sahayog Ticket", {
             const full_name = r.employee_name;
             const emp_designation = r.designation || "Not specified";
             const emp_branch = r.branch || "Not specified";
-            const emp_division = r.department || "Not specified";
+            const emp_department = r.department || "Not specified";
             const emp_phone = r.cell_number || "Not available";
-            const emp_district = r.custom_district || "";
+            const emp_division = r.custom_division || "Not available";
             const emp_profile_picture =
-              "https://cdn-icons-png.flaticon.com/128/1144/1144709.png"; // Default if no picture
+              "https://cdn-icons-png.flaticon.com/128/1710/1710475.png"; // Default if no picture
 
             // Ticket data
             const ticket_department = frm.doc.dept_name || "Not specified";
             const ticket_type = frm.doc.ticket_type || "Not specified";
-            const ticket_status = frm.doc.status || "Open";
             const ticket_tat = frm.doc.tat || "N/A";
-            const ticket_description =
-              frm.doc.description || "No description provided";
-
             // Combined HTML layout
             const intro_owner = `
-  <div class="employee-ticket-card">
-    <div class="employee-photo">
-      <img class="profile-image" src="${emp_profile_picture}" alt="Profile Image" />
-    </div>
-    <div class="employee-details">
-      <div class="employee-name-id"><strong>${full_name}</strong> - ${emp_id}</div>
-      
-      <div class="employee-meta">
-        ${emp_designation}, ${emp_branch}, ${emp_division}, ${emp_district}<br>
-        Phone : ${emp_phone}
-      </div>
-    </div>
-  </div>
-
-  <div class="ticket-details-row">
-    <div><strong>${ticket_department}</strong></div>
-    <div>${ticket_type}</div>
-    <div>${ticket_status}</div>
-    <div>${ticket_tat}</div>
-  </div>
-
-  <style>
-    .employee-ticket-card {
-      display: flex;
-      align-items: center;
-      padding: 15px;
-    background: linear-gradient(90deg, #673AB7, #512DA8, #303F9F);#c3c3c3
-      border-radius: 10px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      border-radius: 9px;
-    }
-
-    .employee-photo {
-      margin-right: 15px;
-    }
-
-    .profile-image {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #fff;
-    }
-
-    .employee-details {
-      display: flex;
-      flex-direction: column;
-      bott
-    }
-
-    .employee-name-id {
-      font-size: 16px;
-      margin-bottom: -3px;
-    }
-
-    .employee-meta {
-      font-size: 13px;
-      color: #c3c3c3;
-    }
-
-    .ticket-details-row {
-      display: flex;
-      gap: 20px;
-      padding: 10px 15px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #084d8c;
-    }
-
-    @media (max-width: 768px) {
-      .employee-ticket-card {
-        flex-direction: column;
-        text-align: center;
-      }
-      .ticket-details-row {
-        flex-direction: column;
-        gap: 5px;
-      }
-    }
-  </style>
-`;
+            <div class="employee-ticket-card">
+              <div class="employee-photo">
+                <img class="profile-image" src="${emp_profile_picture}" alt="Profile Image" />
+              </div>
+              <div class="employee-details">
+                <div class="employee-name-id"><strong>${full_name}</strong> - ${emp_id}</div>
+                
+                <div class="employee-meta">
+                  ${emp_designation}, ${emp_department}, ${emp_branch}, ${emp_division}<br>
+                  Phone : ${emp_phone}
+                </div>
+              </div>
+            </div>
+          
+            <div class="terminal-style">
+              <div class="terminal-line">
+                <span class="terminal-prompt">${full_name}:~$</span>
+                <span class="terminal-command">${ticket_department} → ${ticket_type} → ${ticket_tat}</span>
+              </div>
+            </div>
+          
+            <style>
+              /* Terminal Style */
+              .terminal-style {
+                background-color: #282c34;
+                color: #abb2bf;
+                padding: 12px;
+                border-radius: 6px;
+                font-family: 'Courier New', monospace;
+                margin: 5px 0px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+              }
+          
+              .terminal-prompt {
+                color: #98c379; /* Green color for prompt */
+                margin-right: 8px;
+              }
+          
+              .terminal-command {
+                color: #e06c75; /* Red color for command */
+              }
+          
+              .terminal-command::before {
+                content: " ";
+              }
+          
+              /* Employee Card (unchanged) */
+              .employee-ticket-card {
+                display: flex;
+                align-items: center;
+                padding: 15px;
+                background: linear-gradient(90deg, #673AB7, #512DA8, #303F9F);
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                border-radius: 9px;
+                font-family: 'Courier New', monospace;
+              }
+          
+              .employee-photo {
+                margin-right: 15px;
+              }
+          
+              .profile-image {
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                object-fit: cover;
+              
+              }
+          
+              .employee-details {
+                display: flex;
+                flex-direction: column;
+              }
+          
+              .employee-name-id {
+                font-size: 16px;
+                margin-bottom: -3px;
+              }
+          
+              .employee-meta {
+                font-size: 13px;
+                color: #c3c3c3;
+              }
+          
+              @media (max-width: 768px) {
+                .employee-ticket-card {
+                  flex-direction: column;
+                  text-align: center;
+                }
+                .terminal-style {
+                  margin: 10px 5px;
+                  font-size: 13px;
+                }
+              }
+            </style>
+          `;
 
             frm.set_intro(intro_owner);
             var formMessage = document.querySelector(".form-message.blue");
@@ -519,12 +530,9 @@ frappe.ui.form.on("Sahayog Ticket", {
 
       // Set the "employee_id" field with the modified value
       frm.set_value("employee_id", modifiedEmployeeId);
-      console.log("ID SET");
 
       // Check if the extracted employee ID matches the "employee_id" field
       if (modifiedEmployeeId === frm.doc.employee_id) {
-        console.log("matched employee " + modifiedEmployeeId);
-
         // Toggle the display of the "status" field (hide it)
         //  frm.toggle_display("employee_id", false);
         //frm.toggle_display("status", false);
@@ -533,7 +541,6 @@ frappe.ui.form.on("Sahayog Ticket", {
 
     if (!frm.is_new()) {
       if (frappe.user.has_role("System Manager")) {
-        console.log("Admin");
         // In-Progress Button
         frm.add_custom_button(
           __("In-Progress"),
@@ -792,7 +799,6 @@ frappe.ui.form.on("Sahayog Ticket", {
           frm.disable_save();
         }
 
-        console.log("matched employee ::" + eid);
         frm.toggle_display("employee_id", false);
         frm.toggle_display("status", false);
         //frm.toggle_enable("priority", 0);
