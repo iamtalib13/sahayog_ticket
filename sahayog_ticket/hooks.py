@@ -67,7 +67,6 @@ app_license = "MIT"
 # # after_install = "sahayog_ticket.install.after_install"
 
 after_migrate = [
-    "sahayog_ticket.patches.fixtures.create_departsection_records.execute",
     "sahayog_ticket.patches.fixtures.create_sahayog_ticket_roles.execute",
     "sahayog_ticket.patches.fixtures.map_roles_to_departsection.execute",
 ]
