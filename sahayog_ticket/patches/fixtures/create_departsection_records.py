@@ -11,6 +11,7 @@ def execute():
         "Accounts",
         "HR",
         "IT"
+        
     ]
 
     for dept in departments:
