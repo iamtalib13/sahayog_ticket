@@ -94,3 +94,25 @@ def create_asset_request(
     except Exception as e:
         frappe.log_error(f"Error creating Asset Request: {e}")
         return {"message": f"Error: {e}"}
+
+
+@frappe.whitelist()
+def get_employee_info(employee_number):
+    employee = frappe.get_value(
+        "Employee",
+        {"employee_number": employee_number},
+        [
+            "employee_name",
+            "designation",
+            "branch",
+            "cell_number",
+            "department",
+            "custom_district",
+            "custom_division"
+        ],
+        as_dict=True,
+    )
+    if not employee:
+        return {}
+
+    return employee
