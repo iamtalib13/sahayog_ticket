@@ -7,59 +7,64 @@ import frappe
 
 def get_permission_query_conditions(user):
     """
-    Returns SQL conditions to restrict `Sahayog Ticket` records visible to the user.
+    Returns SQL conditions to restrict Sahayog Ticket records visible to the user.
     User can see:
     - Tickets they own
-    - Tickets whose dept_name is in the departments mapped to user's roles via Departsection Role
+    - Tickets whose dept_name is in departments mapped to user's roles via Departsection Role
+    - Tickets they have explicit permission to via role permissions
     """
     if not user or user == "Administrator":
         return ""
 
-    # Get all roles of the user
+    conditions = []
     roles = frappe.get_roles(user)
 
-    # Get all departments mapped to user's roles via 'Departsection Role'
+    # Tickets owned by user
+    conditions.append(f"`tabSahayog Ticket`.owner = {frappe.db.escape(user)}")
+
+    # Get departments from Departsection Role
     departments = frappe.get_all(
         "Departsection Role",
         filters={"role": ["in", roles]},
         pluck="parent"
     )
 
-    # Condition to allow tickets owned by the user
-    conditions = [f"`tabSahayog Ticket`.owner = {frappe.db.escape(user)}"]
-
     if departments:
-        # Escape each department and join with commas without adding extra quotes
         escaped_departments = [frappe.db.escape(dept) for dept in departments]
-        dept_list = ", ".join(escaped_departments)
-        conditions.append(f"`tabSahayog Ticket`.dept_name IN ({dept_list})")
+        conditions.append(f"`tabSahayog Ticket`.dept_name IN ({', '.join(escaped_departments)})")
 
-    # Combine conditions with OR operator
-    return " OR ".join(conditions)
+    # Include standard role permissions
+    if "System Manager" not in roles:
+        standard_perms = frappe.permissions.get_permission_query_conditions("Sahayog Ticket", user)
+        if standard_perms:
+            conditions.append(standard_perms)
 
+    return "(" + " OR ".join(conditions) + ")" if conditions else ""
 
 def has_permission(doc, ptype, user):
     """
-    Checks if the user has permission to access the given document.
-    Permission granted if:
+    Check document-level permission for Sahayog Ticket
+    Allows access if:
     - User is Administrator
-    - User owns the document
-    - Document's dept_name is in user's departments (mapped via roles)
+    - User owns the ticket
+    - Ticket department matches user's department roles
+    - User has standard role permissions
     """
     if user == "Administrator":
         return True
 
-    if doc.owner == user:
+    if doc.get("owner") == user:
         return True
 
-    # Get all roles of the user
-    roles = frappe.get_roles(user)
+    # Check standard permissions first
+    if frappe.has_permission("Sahayog Ticket", ptype=ptype, user=user):
+        return True
 
-    # Get all departments mapped to user's roles
-    departments = frappe.get_all(
+    # Check department access
+    user_departments = frappe.get_all(
         "Departsection Role",
-        filters={"role": ["in", roles]},
+        filters={"role": ["in", frappe.get_roles(user)]},
         pluck="parent"
     )
 
-    return doc.get("dept_name") in departments
+    return doc.get("dept_name") in user_departments
