@@ -67,10 +67,12 @@ app_license = "MIT"
 # # after_install = "sahayog_ticket.install.after_install"
 
 after_migrate = [
+    "sahayog_ticket.patches.fixtures.remove_doc_perm.execute",  # cleanup first
     "sahayog_ticket.patches.fixtures.create_departsection_records.execute",
     "sahayog_ticket.patches.fixtures.create_sahayog_ticket_roles.execute",
     "sahayog_ticket.patches.fixtures.map_roles_to_departsection.execute",
 ]
+
 
 
 # # Uninstallation
@@ -90,7 +92,7 @@ after_migrate = [
 # # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
-    "Sahayog Ticket": "sahayog_ticket.permission.sahayog_ticket_permission_condition"
+    "Sahayog Ticket": "sahayog_ticket.permission.get_permission_query_conditions"
 }
 
 # #

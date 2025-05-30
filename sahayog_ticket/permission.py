@@ -1,66 +1,52 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025, Your Company
+# For license information, please see license.txt
+
+from __future__ import unicode_literals
 import frappe
 
-def sahayog_ticket_permission_condition(user=None):
-    if not user:
-        user = frappe.session.user
-
-    conditions = [f"`tabSahayog Ticket`.owner = '{user}'"]
+def get_permission_query_conditions(user):
+    if not user or user == "Administrator":
+        return ""
 
     # Get all roles of the user
-    user_roles = set(frappe.get_roles(user))
+    roles = frappe.get_roles(user)
 
-    permitted_roles = []
+    # Get all departments mapped to user's roles via 'Departsection Role'
+    departments = frappe.get_all(
+        "Departsection Role",
+        filters={"role": ["in", roles]},
+        pluck="parent"
+    )
 
-    for role in user_roles:
-        existing_perm = frappe.db.get_value(
-            "Custom DocPerm",
-            {
-                "role": role,
-                "parent": "Departsection",
-                "permlevel": 0,
-            },
-            ["name", "read", "select"]
-        )
+    # Always allow user to see their own tickets
+    conditions = [f"`tabSahayog Ticket`.owner = {frappe.db.escape(user)}"]
 
-        if existing_perm:
-            perm_name, has_read, has_select = existing_perm
-            if has_read and has_select:
-                # Role already has permission, skip adding
-                permitted_roles.append(role)
-            else:
-                # Permission record exists but missing read/select, update it
-                perm_doc = frappe.get_doc("Custom DocPerm", perm_name)
-                perm_doc.read = 1
-                perm_doc.select = 1
-                perm_doc.save(ignore_permissions=True)
-                permitted_roles.append(role)
-        else:
-            # No permission record, create new permission
-            perm = frappe.new_doc("Custom DocPerm")
-            perm.update({
-                "role": role,
-                "parent": "Departsection",
-                "parenttype": "DocType",
-                "permlevel": 0,
-                "read": 1,
-                "select": 1
-            })
-            perm.insert(ignore_permissions=True)
-            permitted_roles.append(role)
+    if departments:
+        # Escape and format departments list for SQL
+        escaped_departments = [frappe.db.escape(dept) for dept in departments]
+        dept_list = ", ".join(f"'{dept}'" for dept in escaped_departments)
+        conditions.append(f"`tabSahayog Ticket`.dept_name IN ({dept_list})")
 
-    if permitted_roles:
-        allowed_departsections = frappe.get_all(
-            "Departsection Role",
-            filters={
-                "role": ["in", permitted_roles]
-            },
-            pluck="parent",
-            ignore_permissions=True
-        )
+    return " OR ".join(conditions)
 
-        if allowed_departsections:
-            dept_filter = "', '".join(allowed_departsections)
-            conditions.append(f"`tabSahayog Ticket`.dept_name IN ('{dept_filter}')")
+def has_permission(doc, ptype, user):
+    if user == "Administrator":
+        return True
 
-    condition_query = " OR ".join(conditions)
-    return condition_query
+    # Always allow user to access their own documents
+    if doc.owner == user:
+        return True
+
+    # Get all roles of the user
+    roles = frappe.get_roles(user)
+
+    # Get all departments mapped to user's roles
+    departments = frappe.get_all(
+        "Departsection Role",
+        filters={"role": ["in", roles]},
+        pluck="parent"
+    )
+
+    # Allow if document's dept_name matches one of user's departments
+    return doc.get("dept_name") in departments
