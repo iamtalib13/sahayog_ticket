@@ -17,7 +17,11 @@ def execute():
     }
 
     for dept_name, roles in department_role_map.items():
-        depart_doc = frappe.get_doc("Departsection", {"dept_name": dept_name})
+        try:
+            depart_doc = frappe.get_doc("Departsection", {"dept_name": dept_name})
+        except frappe.DoesNotExistError:
+            print(f"❌ Departsection '{dept_name}' does not exist, skipping.")
+            continue
 
         existing_roles = [d.role for d in depart_doc.get("department_roles") or []]
 
@@ -30,15 +34,34 @@ def execute():
             else:
                 print(f"ℹ️ Role '{role}' already mapped to department '{dept_name}', skipping")
 
+            # Add Read and Select permission on Departsection for this role if not exists
+            if not frappe.db.exists(
+                "Custom DocPerm",
+                {
+                    "parent": "Departsection",
+                    "role": role,
+                    "read": 1
+                }
+            ):
+                perm = frappe.get_doc({
+                    "doctype": "Custom DocPerm",
+                    "role": role,
+                    "parent": "Departsection",
+                    "parenttype": "DocType",
+                    "parentfield": "permissions",
+                    "read": 1,
+                    "select": 1,
+                    "permlevel": 0
+                })
+                perm.insert(ignore_permissions=True)
+                print(f"🔐 Added Read & Select permission for role '{role}' on Departsection")
+            else:
+                print(f"✅ Permission already exists for role '{role}' on Departsection")
+
         if new_roles_added:
             depart_doc.save(ignore_permissions=True)
-            print(f"✅ Saved updated mapping for department '{dept_name}'")
+            print(f"💾 Saved updated mapping for department '{dept_name}'")
         else:
             print(f"✅ No changes needed for department '{dept_name}'")
 
     print("🎉 Role mapping to Departsection completed successfully.")
-    
-    
-    
-
-
