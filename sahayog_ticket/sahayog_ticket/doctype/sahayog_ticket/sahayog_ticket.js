@@ -2,10 +2,10 @@
 
 frappe.ui.form.on("Sahayog Ticket", {
   refresh: function (frm) {
-    $("span.sidebar-toggle-btn").hide();
-    $(".col-lg-2.layout-side-section").hide();
+    //$("span.sidebar-toggle-btn").hide();
+    //$(".col-lg-2.layout-side-section").hide();
     frm.trigger("common_hidden_fields");
-    frm.trigger("hide_timeline");
+    //frm.trigger("hide_timeline");
 
     if (frm.is_new()) {
       //Employee Trigger when form is new
@@ -358,31 +358,31 @@ frappe.ui.form.on("Sahayog Ticket", {
     //}
     if (!frm.is_new()) {
       // Fetch employee data
-     
+
       frm.call({
         method: "get_employee_info",
         args: {
-            employee_number: frm.doc.employee_id
+          employee_number: frm.doc.employee_id,
         },
         callback: function (r) {
-            if (r.message) {
-              let data = r.message;  // avoid overwriting 'r'
-              // Employee data
-              const emp_id = frm.doc.employee_id;
-              const full_name = data.employee_name;
-              const emp_designation = data.designation || "Not specified";
-              const emp_branch = data.branch || "Not specified";
-              const emp_department = data.department || "Not specified";
-              const emp_phone = data.cell_number || "Not available";
-              const emp_division = data.custom_division || "Not available";
-              const emp_profile_picture =
-                "https://cdn-icons-png.flaticon.com/128/1710/1710475.png"; // Default if no picture
-  
-              // Ticket data
-              const ticket_department = frm.doc.dept_name || "Not specified";
-              const ticket_type = frm.doc.ticket_type || "Not specified";
-              const ticket_tat = frm.doc.tat || "N/A";
-  
+          if (r.message) {
+            let data = r.message; // avoid overwriting 'r'
+            // Employee data
+            const emp_id = frm.doc.employee_id;
+            const full_name = data.employee_name;
+            const emp_designation = data.designation || "Not specified";
+            const emp_branch = data.branch || "Not specified";
+            const emp_department = data.department || "Not specified";
+            const emp_phone = data.cell_number || "Not available";
+            const emp_division = data.custom_division || "Not available";
+            const emp_profile_picture =
+              "https://cdn-icons-png.flaticon.com/128/1710/1710475.png"; // Default if no picture
+
+            // Ticket data
+            const ticket_department = frm.doc.dept_name || "Not specified";
+            const ticket_type = frm.doc.ticket_type || "Not specified";
+            const ticket_tat = frm.doc.tat || "N/A";
+
             // Combined HTML layout
             const intro_owner = `
             <div class="employee-ticket-card">
@@ -492,12 +492,12 @@ frappe.ui.form.on("Sahayog Ticket", {
             var driverPopoverButton = document.querySelectorAll(
               "div#driver-popover-item .driver-popover-footer button.btn-default"
             );
-            } else {
-                frm.set_intro("Employee information not available", "red");
-                console.error("[ERROR] No employee data found");
-            }
-        }
-    });
+          } else {
+            frm.set_intro("Employee information not available", "red");
+            console.error("[ERROR] No employee data found");
+          }
+        },
+      });
     }
 
     //----------------------------------------------------------------------------------------------
