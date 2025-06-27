@@ -34,7 +34,7 @@ frappe.ui.form.on("Sahayog Ticket", {
           frappe.user.has_role("Admin Support Executive") ||
           frappe.user.has_role("Stationery Store & Support Manager")))
     ) {
-      frm.add_custom_button(__("Create Asset Request"), function () {
+      frm.add_custom_button(__("Create Material Request"), function () {
         let request_department = "";
 
         if (frappe.user.has_role("IT Support Executive")) {
