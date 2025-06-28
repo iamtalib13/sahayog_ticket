@@ -1,6 +1,5 @@
 {
  "actions": [],
- "allow_rename": 1,
  "autoname": "field:dept_name",
  "creation": "2022-11-14 11:02:20.016740",
  "default_view": "List",
@@ -31,7 +30,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-06-26 17:17:55.372269",
+ "modified": "2025-06-27 15:48:04.947418",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Departsection",
@@ -57,6 +56,17 @@
    "read": 1,
    "report": 1,
    "role": "All",
+   "select": 1,
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "select": 1,
    "share": 1
   }
  ],
