@@ -146,7 +146,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "in_standard_filter": 1,
-   "label": "Ticket Status",
+   "label": "Status",
    "options": "Open\nIn-Progress\nClosed",
    "read_only_depends_on": "//eval:doc.flag==\"Closed\" "
   },
@@ -477,7 +477,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-06-27 16:41:58.879764",
+ "modified": "2025-06-28 11:01:39.411654",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
