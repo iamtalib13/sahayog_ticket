@@ -150,7 +150,7 @@
             url.searchParams.set("branch_name", JSON.stringify(["Equals", name]));
             url.searchParams.set("district_name", JSON.stringify(["like", `%${currentDistrict}%`]));
             url.searchParams.set("dept_name", "IT");
-            window.location.href = url.toString();
+            window.top.location.href = url.toString();
           });
           branchesGrid.appendChild(card);
         });
