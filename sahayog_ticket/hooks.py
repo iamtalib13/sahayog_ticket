@@ -174,3 +174,16 @@ scheduler_events = {
 # # auth_hooks = [
 # # 	"sahayog_ticket.auth.validate"
 # # ]
+fixtures = [
+    {"dt": "Custom HTML Block", "filters": [
+        [
+            "name",
+            "in",
+            {
+				"IT Dashboard"
+				
+			}
+        ]
+    ]},
+
+]
