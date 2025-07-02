@@ -1,8 +1,13 @@
 {
  "charts": [],
- "content": "[{\"id\":\"Jivc_9WEQx\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Welcome To IT Department</b></span>\",\"col\":12}},{\"id\":\"W-SUVYB37x\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Executives Pending Work</b></span>\",\"col\":12}},{\"id\":\"QWJBIMj82N\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Gondia Executive\",\"col\":3}},{\"id\":\"Gywy6yhQ7M\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Bhandara Executive\",\"col\":3}},{\"id\":\"pHoe20Id0I\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Nagpur Executive\",\"col\":3}},{\"id\":\"bEqkhSBbVS\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Chandrapur Executive\",\"col\":3}},{\"id\":\"B497eM3Uub\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Gadhchiroli Executive\",\"col\":3}},{\"id\":\"gTBIhhtFcy\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"School Executive\",\"col\":3}},{\"id\":\"sIYzMCTlwJ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"CCTV Executive\",\"col\":3}}]",
+ "content": "[{\"id\":\"-D6bTo-XRw\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"IT Dashboard\",\"col\":12}},{\"id\":\"Jg3s6E6qME\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>IT Tickets</b></span>\",\"col\":12}}]",
  "creation": "2022-12-22 14:13:19.148126",
- "custom_blocks": [],
+ "custom_blocks": [
+  {
+   "custom_block_name": "IT Dashboard",
+   "label": "IT Dashboard"
+  }
+ ],
  "docstatus": 0,
  "doctype": "Workspace",
  "for_user": "",
@@ -12,7 +17,7 @@
  "is_hidden": 0,
  "label": "IT Executives",
  "links": [],
- "modified": "2025-03-03 14:57:29.732135",
+ "modified": "2025-07-02 17:56:24.111443",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "IT Executives",
@@ -30,56 +35,6 @@
   }
  ],
  "sequence_id": 5.0,
- "shortcuts": [
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Bhandara Executive",
-   "link_to": "Bhandara District Dashboard",
-   "type": "Dashboard"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Gondia Executive",
-   "link_to": "Gondia District Dashboard",
-   "type": "Dashboard"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "School Executive",
-   "link_to": "School Dashboard",
-   "type": "Dashboard"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "CCTV Executive",
-   "link_to": "CCTV Dashboard",
-   "type": "Dashboard"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Nagpur Executive",
-   "link_to": "Nagpur District Dashboard",
-   "type": "Dashboard"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Chandrapur Executive",
-   "link_to": "Chandrapur District Dashboard",
-   "type": "Dashboard"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Gadhchiroli Executive",
-   "link_to": "Gadchiroli Dashboard",
-   "type": "Dashboard"
-  }
- ],
+ "shortcuts": [],
  "title": "IT Executives"
 }
