@@ -10,6 +10,7 @@
  "field_order": [
   "basic_details_tab",
   "asset_request_section",
+  "asset_request_id",
   "support_system_email",
   "employee_id",
   "employee_user_id",
@@ -31,7 +32,7 @@
   "last_user",
   "column_break_4",
   "section_break_onliy",
-  "on_hold_remark",
+  "executive_remark",
   "ticket_duration_section",
   "on_hold_time",
   "due_time",
@@ -341,14 +342,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.status==\"On-Hold\"",
-   "fieldname": "on_hold_remark",
-   "fieldtype": "Small Text",
-   "label": "On-Hold Remark",
-   "mandatory_depends_on": "eval:doc.status==\"On-Hold\"",
-   "read_only": 1
-  },
-  {
    "fetch_from": "employee_id.first_name",
    "fieldname": "emp_first_name",
    "fieldtype": "Data",
@@ -387,7 +380,7 @@
   {
    "fieldname": "section_break_onliy",
    "fieldtype": "Section Break",
-   "label": "On-Hold Remark Details"
+   "label": "Executive Remark"
   },
   {
    "fieldname": "column_break_w2jv5",
@@ -473,11 +466,24 @@
    "fieldtype": "Table",
    "label": "Request Detail",
    "options": "Ticket Item"
+  },
+  {
+   "depends_on": "eval:doc.status==\"In-Progress\"",
+   "fieldname": "executive_remark",
+   "fieldtype": "Small Text",
+   "label": "Executive Remark",
+   "mandatory_depends_on": "eval:doc.status==\"On-Hold\"",
+   "read_only": 1
+  },
+  {
+   "fieldname": "asset_request_id",
+   "fieldtype": "Data",
+   "label": "asset_request_id"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-06-27 16:41:58.879764",
+ "modified": "2025-07-04 16:20:00.814316",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",

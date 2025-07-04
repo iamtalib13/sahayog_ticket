@@ -536,6 +536,31 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
 
     if (!frm.is_new()) {
+
+if (
+    frappe.user.has_role("IT Support Executive") ||
+    frappe.user.has_role("Admin Support Executive") ||
+    frappe.user.has_role("Operations Support Executive") ||
+    frappe.user.has_role("HR Support Executive") ||
+    frappe.user.has_role("Accounts Support Executive") ||
+    frappe.user.has_role("HO Support Executive") ||
+    frappe.user.has_role("Facility Support Executive") ||
+    frappe.user.has_role("Loan Support Executive")
+) {
+    console.log("User has one of the Support Executive roles");
+     
+    // Show buttons based on ticket status
+    if (frm.doc.status === "Open") {
+      frm.trigger("In_Progress_button");
+      frm.trigger("close_button");
+    } else if (frm.doc.status === "In-Progress") {
+      frm.trigger("close_button");
+      frm.trigger("executive_remark");
+    }
+}
+
+
+
       if (frappe.user.has_role("System Manager")) {
         // In-Progress Button
         frm.add_custom_button(
@@ -598,104 +623,100 @@ frappe.ui.form.on("Sahayog Ticket", {
             frm.doc.status == "In-Progress"
           ) {
             //On-Hold Button
-            frm.add_custom_button(
-              __("On-Hold"),
-              function () {
-                let currentOnHoldRemark = frm.doc.on_hold_remark || ""; // Get the current value or initialize as an empty string
+            // frm.add_custom_button(
+            //   __("On-Hold"),
+            //   function () {
+            //     let currentOnHoldRemark = frm.doc.on_hold_remark || ""; // Get the current value or initialize as an empty string
 
-                frappe.confirm(
-                  __("Do you want to set On-Hold "),
-                  function () {
-                    let d = new frappe.ui.Dialog({
-                      title: "Enter On-Hold Remarks",
-                      fields: [
-                        {
-                          label: "On-Hold Remark",
-                          fieldname: "on_hold_remark",
-                          fieldtype: "Small Text",
-                          reqd: 1, // Set reqd property to make it mandatory
-                          default: currentOnHoldRemark, // Set default value as current remark
-                        },
-                      ],
-                      size: "small", // small, large, extra-large
-                      primary_action_label: "Submit",
-                      primary_action: function () {
-                        // Your existing logic for handling the dialog submission
-                        if (!d.fields_dict.on_hold_remark.get_value()) {
-                          frappe.msgprint(__("Please provide On-Hold remark."));
-                          return;
-                        }
+            //     frappe.confirm(
+            //       __("Do you want to set On-Hold "),
+            //       function () {
+            //         let d = new frappe.ui.Dialog({
+            //           title: "Enter On-Hold Remarks",
+            //           fields: [
+            //             {
+            //               label: "On-Hold Remark",
+            //               fieldname: "on_hold_remark",
+            //               fieldtype: "Small Text",
+            //               reqd: 1, // Set reqd property to make it mandatory
+            //               default: currentOnHoldRemark, // Set default value as current remark
+            //             },
+            //           ],
+            //           size: "small", // small, large, extra-large
+            //           primary_action_label: "Submit",
+            //           primary_action: function () {
+            //             // Your existing logic for handling the dialog submission
+            //             if (!d.fields_dict.on_hold_remark.get_value()) {
+            //               frappe.msgprint(__("Please provide On-Hold remark."));
+            //               return;
+            //             }
 
-                        frm.set_value(
-                          "on_hold_remark",
-                          d.fields_dict.on_hold_remark.get_value()
-                        );
+            //             frm.set_value(
+            //               "on_hold_remark",
+            //               d.fields_dict.on_hold_remark.get_value()
+            //             );
 
-                        frm.set_value("status", "On-Hold");
-                        frm.refresh_field("status");
-                        frm.save();
+            //             frm.set_value("status", "On-Hold");
+            //             frm.refresh_field("status");
+            //             frm.save();
 
-                        d.hide();
-                      },
-                    });
+            //             d.hide();
+            //           },
+            //         });
 
-                    d.show();
-                  },
-                  function () {
-                    // Additional logic if No is selected in the confirmation
-                  }
-                );
-              },
-              __("Status")
-            );
+            //         d.show();
+            //       },
+            //       function () {
+            //         // Additional logic if No is selected in the confirmation
+            //       }
+            //     );
+            //   },
+            //   __("Status")
+            // );
           }
           if (frm.doc.status == "Open") {
             //Read Button
-            frm.add_custom_button(
-              __("Read"),
-              function () {
-                frappe.confirm(
-                  "Are you sure you want to Set Read ",
-                  () => {
-                    // action to perform if Yes is selected
-                    frm.set_value("status", "Read");
-                    frm.refresh_field("status");
+            // frm.add_custom_button(
+            //   __("Read"),
+            //   function () {
+            //     frappe.confirm(
+            //       "Are you sure you want to Set Read ",
+            //       () => {
+            //         // action to perform if Yes is selected
+            //         frm.set_value("status", "Read");
+            //         frm.refresh_field("status");
 
-                    frm.save();
-                  },
-                  () => {
-                    // action to perform if No is selected
-                  }
-                );
-              },
-              __("Status")
-            );
+            //         frm.save();
+            //       },
+            //       () => {
+            //         // action to perform if No is selected
+            //       }
+            //     );
+            //   },
+            //   __("Status")
+            // );
           }
-          if (
-            frm.doc.status == "Open" ||
-            frm.doc.status == "Read" ||
-            frm.doc.status == "On-Hold"
-          ) {
+          if (frm.doc.status == "Open") {
             //In-Progress Button
-            frm.add_custom_button(
-              __("In-Progress"),
-              function () {
-                frappe.confirm(
-                  "Are you sure you want to Set In-Progress ",
-                  () => {
-                    // action to perform if Yes is selected
-                    frm.set_value("status", "In-Progress");
-                    frm.refresh_field("status");
+            // frm.add_custom_button(
+            //   __("In-Progress"),
+            //   function () {
+            //     frappe.confirm(
+            //       "Are you sure you want to Set In-Progress ",
+            //       () => {
+            //         // action to perform if Yes is selected
+            //         frm.set_value("status", "In-Progress");
+            //         frm.refresh_field("status");
 
-                    frm.save();
-                  },
-                  () => {
-                    // action to perform if No is selected
-                  }
-                );
-              },
-              __("Status")
-            );
+            //         frm.save();
+            //       },
+            //       () => {
+            //         // action to perform if No is selected
+            //       }
+            //     );
+            //   },
+            //   __("Status")
+            // );
           }
           if (frm.doc.status == "Resolved") {
             frm.disable_save();
@@ -914,79 +935,79 @@ frappe.ui.form.on("Sahayog Ticket", {
           frm.doc.status == "Read" ||
           frm.doc.status == "In-Progress"
         ) {
-          //On-Hold Button
-          frm.add_custom_button(
-            __("On-Hold"),
-            function () {
-              let currentOnHoldRemark = frm.doc.on_hold_remark || ""; // Get the current value or initialize as an empty string
+          //In-Progress Button
+          // frm.add_custom_button(
+          //   __("In-Progress"),
+          //   function () {
+          //     let currentOnHoldRemark = frm.doc.on_hold_remark || ""; // Get the current value or initialize as an empty string
 
-              frappe.confirm(
-                __("Do you want to set On-Hold "),
-                function () {
-                  let d = new frappe.ui.Dialog({
-                    title: "Enter On-Hold Remarks",
-                    fields: [
-                      {
-                        label: "On-Hold Remark",
-                        fieldname: "on_hold_remark",
-                        fieldtype: "Small Text",
-                        reqd: 1, // Set reqd property to make it mandatory
-                        default: currentOnHoldRemark, // Set default value as current remark
-                      },
-                    ],
-                    size: "small", // small, large, extra-large
-                    primary_action_label: "Submit",
-                    primary_action: function () {
-                      // Your existing logic for handling the dialog submission
-                      if (!d.fields_dict.on_hold_remark.get_value()) {
-                        frappe.msgprint(__("Please provide On-Hold remark."));
-                        return;
-                      }
+          //     frappe.confirm(
+          //       __("Do you want to set In-Progress "),
+          //       function () {
+          //         let d = new frappe.ui.Dialog({
+          //           title: "Enter On-Hold Remarks",
+          //           fields: [
+          //             {
+          //               label: "In-Progress Remark",
+          //               fieldname: "on_hold_remark",
+          //               fieldtype: "Small Text",
+          //               reqd: 1, // Set reqd property to make it mandatory
+          //               default: currentOnHoldRemark, // Set default value as current remark
+          //             },
+          //           ],
+          //           size: "small", // small, large, extra-large
+          //           primary_action_label: "Submit",
+          //           primary_action: function () {
+          //             // Your existing logic for handling the dialog submission
+          //             if (!d.fields_dict.on_hold_remark.get_value()) {
+          //               frappe.msgprint(__("Please provide On-Hold remark."));
+          //               return;
+          //             }
 
-                      frm.set_value(
-                        "on_hold_remark",
-                        d.fields_dict.on_hold_remark.get_value()
-                      );
+          //             frm.set_value(
+          //               "on_hold_remark",
+          //               d.fields_dict.on_hold_remark.get_value()
+          //             );
 
-                      frm.set_value("status", "On-Hold");
-                      frm.refresh_field("status");
-                      frm.save();
+          //             frm.set_value("status", "In-Progress");
+          //             frm.refresh_field("status");
+          //             frm.save();
 
-                      d.hide();
-                    },
-                  });
+          //             d.hide();
+          //           },
+          //         });
 
-                  d.show();
-                },
-                function () {
-                  // Additional logic if No is selected in the confirmation
-                }
-              );
-            },
-            __("Status")
-          );
+          //         d.show();
+          //       },
+          //       function () {
+          //         // Additional logic if No is selected in the confirmation
+          //       }
+          //     );
+          //   },
+          //   __("Status")
+          // );
         }
         if (frm.doc.status == "Open") {
           //Read Button
-          frm.add_custom_button(
-            __("Read"),
-            function () {
-              frappe.confirm(
-                "Are you sure you want to Set Read ",
-                () => {
-                  // action to perform if Yes is selected
-                  frm.set_value("status", "Read");
-                  frm.refresh_field("status");
+          // frm.add_custom_button(
+          //   __("Read"),
+          //   function () {
+          //     frappe.confirm(
+          //       "Are you sure you want to Set Read ",
+          //       () => {
+          //         // action to perform if Yes is selected
+          //         frm.set_value("status", "Read");
+          //         frm.refresh_field("status");
 
-                  frm.save();
-                },
-                () => {
-                  // action to perform if No is selected
-                }
-              );
-            },
-            __("Status")
-          );
+          //         frm.save();
+          //       },
+          //       () => {
+          //         // action to perform if No is selected
+          //       }
+          //     );
+          //   },
+          //   __("Status")
+          // );
         }
         if (
           frm.doc.status == "Open" ||
@@ -1025,55 +1046,7 @@ frappe.ui.form.on("Sahayog Ticket", {
         ) {
           console.log("resolve button");
           //Resolved Button show
-          frm.add_custom_button(
-            __("Resolved"),
-            function () {
-              let user = frappe.session.user;
-              frappe.confirm(
-                __("Do you want to Resolve Ticket "),
-                function () {
-                  let d = new frappe.ui.Dialog({
-                    title: "Enter Resolve Remarks",
-                    fields: [
-                      {
-                        label: "Resolved Remark",
-                        fieldname: "resolved_remark",
-                        fieldtype: "Small Text",
-                        reqd: 1, // Set reqd property to make it mandatory
-                      },
-                    ],
-                    size: "small", // small, large, extra-large
-                    primary_action_label: "Submit",
-                    primary_action: function () {
-                      // Your existing logic for handling the dialog submission
-                      if (!d.fields_dict.resolved_remark.get_value()) {
-                        frappe.msgprint(__("Please provide Resolve remark."));
-                        return;
-                      }
-
-                      frm.set_value(
-                        "resolved_remark",
-                        d.fields_dict.resolved_remark.get_value()
-                      );
-
-                      frm.set_value("ticket_resolved_by", user);
-                      frm.set_value("status", "Resolved");
-                      frm.refresh_field("status");
-                      frm.save();
-
-                      d.hide();
-                    },
-                  });
-
-                  d.show();
-                },
-                function () {
-                  // Additional logic if No is selected in the confirmation
-                }
-              );
-            },
-            __("Status")
-          );
+         
         }
       }
     }
@@ -1102,6 +1075,151 @@ frappe.ui.form.on("Sahayog Ticket", {
       frm.remove_custom_button("On-Hold", "Status");
       frm.remove_custom_button("In-Progress", "Status");
     }
+  },
+
+
+  close_button:function(frm) {
+    frm.add_custom_button(
+            __("Close"),
+            function () {
+              let user = frappe.session.user;
+              frappe.confirm(
+                __("Do you want to Close the Ticket "),
+                function () {
+                  let d = new frappe.ui.Dialog({
+                    title: "Enter Closing Remark",
+                    fields: [
+                      {
+                        label: "Closing Remark",
+                        fieldname: "resolved_remark",
+                        fieldtype: "Small Text",
+                        reqd: 1, // Set reqd property to make it mandatory
+                      },
+                    ],
+                    size: "small", // small, large, extra-large
+                    primary_action_label: "Submit",
+                    primary_action: function () {
+                      // Your existing logic for handling the dialog submission
+                      if (!d.fields_dict.resolved_remark.get_value()) {
+                        frappe.msgprint(__("Please provide Closing remark."));
+                        return;
+                      }
+
+                      frm.set_value(
+                        "remark",
+                        d.fields_dict.resolved_remark.get_value()
+                      );
+
+                      frm.set_value("ticket_resolved_by", user);
+                      frm.set_value("status", "Closed");
+                      frm.refresh_field("status");
+                      frm.save();
+
+                      d.hide();
+                    },
+                  });
+
+                  d.show();
+                },
+                function () {
+                  // Additional logic if No is selected in the confirmation
+                }
+              );
+            },
+            __("Status")
+          );
+  },
+  In_Progress_button: function (frm) {
+       frm.add_custom_button(
+            __("In-Progress"),
+            function () {
+              let currentOnHoldRemark = frm.doc.on_hold_remark || ""; // Get the current value or initialize as an empty string
+
+              frappe.confirm(
+                __("Do you want to set In-Progress "),
+                function () {
+                  let d = new frappe.ui.Dialog({
+                    title: "Enter In-Progress Remarks",
+                    fields: [
+                      {
+                        label: "In-Progress Remark",
+                        fieldname: "executive_remark",
+                        fieldtype: "Small Text",
+                        reqd: 1, // Set reqd property to make it mandatory
+                        default: currentOnHoldRemark, // Set default value as current remark
+                      },
+                    ],
+                    size: "small", // small, large, extra-large
+                    primary_action_label: "Submit",
+                    primary_action: function () {
+                      // Your existing logic for handling the dialog submission
+                      if (!d.fields_dict.executive_remark.get_value()) {
+                        frappe.msgprint(__("Please provide In-Progress remark."));
+                        return;
+                      }
+
+                      frm.set_value(
+                        "executive_remark",
+                        d.fields_dict.executive_remark.get_value()
+                      );
+
+                      frm.set_value("status", "In-Progress");
+                      frm.refresh_field("status");
+                      frm.save();
+
+                      d.hide();
+                    },
+                  });
+
+                  d.show();
+                },
+                function () {
+                  // Additional logic if No is selected in the confirmation
+                }
+              );
+            },
+            __("Status")
+          );
+  
+  
+  },
+
+  executive_remark: function (frm) {
+   frm.add_custom_button(
+      __("Set Executive Remark"),
+      function () {
+        let currentRemark = frm.doc.executive_remark || "";
+
+        let d = new frappe.ui.Dialog({
+          title: "Executive Remark",
+          fields: [
+            {
+              label: "Executive Remark",
+              fieldname: "executive_remark",
+              fieldtype: "Small Text",
+              reqd: 1,
+              default: currentRemark,
+            },
+          ],
+          primary_action_label: "Save",
+          primary_action: function () {
+            let remark = d.get_value("executive_remark");
+
+            if (!remark) {
+              frappe.msgprint(__("Please enter the Executive Remark."));
+              return;
+            }
+
+            frm.set_value("executive_remark", remark);
+            frm.save();
+            d.hide();
+          },
+        });
+
+        d.show();
+      },
+      __("Actions") // Optional group label
+    );
   },
 });
 
