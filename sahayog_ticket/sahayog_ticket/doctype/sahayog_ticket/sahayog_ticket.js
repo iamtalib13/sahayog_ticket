@@ -823,99 +823,99 @@ if (
         if (frm.doc.status == "Cancel") {
         } else if (frm.doc.status == "Resolved") {
           frm
-            .add_custom_button(__("Close"), function () {
-              frappe.confirm(
-                __("Do you want to close your Ticket ? "),
-                function () {
-                  let d = new frappe.ui.Dialog({
-                    title: "Enter Closing Remark",
-                    fields: [
-                      {
-                        label: "Ticket Closing Remark",
-                        fieldname: "remark",
-                        fieldtype: "Small Text",
-                        reqd: 1, // Set reqd property to make it mandatory
-                      },
-                    ],
-                    size: "small", // small, large, extra-large
-                    primary_action_label: "Submit",
-                    primary_action: function () {
-                      // Your existing logic for handling the dialog submission
-                      if (!d.fields_dict.remark.get_value()) {
-                        frappe.msgprint(__("Please provide Closing remark."));
-                        return;
-                      }
+            // .add_custom_button(__("Close"), function () {
+            //   frappe.confirm(
+            //     __("Do you want to close your Ticket ? "),
+            //     function () {
+            //       let d = new frappe.ui.Dialog({
+            //         title: "Enter Closing Remark",
+            //         fields: [
+            //           {
+            //             label: "Ticket Closing Remark",
+            //             fieldname: "remark",
+            //             fieldtype: "Small Text",
+            //             reqd: 1, // Set reqd property to make it mandatory
+            //           },
+            //         ],
+            //         size: "small", // small, large, extra-large
+            //         primary_action_label: "Submit",
+            //         primary_action: function () {
+            //           // Your existing logic for handling the dialog submission
+            //           if (!d.fields_dict.remark.get_value()) {
+            //             frappe.msgprint(__("Please provide Closing remark."));
+            //             return;
+            //           }
 
-                      frm.set_value("remark", d.fields_dict.remark.get_value());
+            //           frm.set_value("remark", d.fields_dict.remark.get_value());
 
-                      frm.set_value("status", "Closed");
-                      frm.refresh_field("status");
-                      frm.save();
+            //           frm.set_value("status", "Closed");
+            //           frm.refresh_field("status");
+            //           frm.save();
 
-                      d.hide();
-                    },
-                  });
+            //           d.hide();
+            //         },
+            //       });
 
-                  d.show();
-                },
-                function () {
-                  // Additional logic if No is selected in the confirmation
-                }
-              );
-            })
-            .css({
-              "background-color": "#00CA4E", // Set green color
-              color: "#ffffff", // Set font color to white
-            });
+            //       d.show();
+            //     },
+            //     function () {
+            //       // Additional logic if No is selected in the confirmation
+            //     }
+            //   );
+            // })
+            // .css({
+            //   "background-color": "#00CA4E", // Set green color
+            //   color: "#ffffff", // Set font color to white
+            // });
 
-          frm
-            .add_custom_button(__("Re-Open"), function () {
-              frappe.confirm(
-                __("Do you want to re-open your Ticket?"),
-                function () {
-                  let d = new frappe.ui.Dialog({
-                    title: "Enter Re-Open Remark",
-                    fields: [
-                      {
-                        label: "Re-Open Remark",
-                        fieldname: "reopen_remark",
-                        fieldtype: "Small Text",
-                        reqd: 1, // Set reqd property to make it mandatory
-                      },
-                    ],
-                    size: "small", // small, large, extra-large
-                    primary_action_label: "Submit",
-                    primary_action: function () {
-                      // Your existing logic for handling the dialog submission
-                      if (!d.fields_dict.reopen_remark.get_value()) {
-                        frappe.msgprint(__("Please provide Re-Open remark."));
-                        return;
-                      }
+          // frm
+          //   .add_custom_button(__("Re-Open"), function () {
+          //     frappe.confirm(
+          //       __("Do you want to re-open your Ticket?"),
+          //       function () {
+          //         let d = new frappe.ui.Dialog({
+          //           title: "Enter Re-Open Remark",
+          //           fields: [
+          //             {
+          //               label: "Re-Open Remark",
+          //               fieldname: "reopen_remark",
+          //               fieldtype: "Small Text",
+          //               reqd: 1, // Set reqd property to make it mandatory
+          //             },
+          //           ],
+          //           size: "small", // small, large, extra-large
+          //           primary_action_label: "Submit",
+          //           primary_action: function () {
+          //             // Your existing logic for handling the dialog submission
+          //             if (!d.fields_dict.reopen_remark.get_value()) {
+          //               frappe.msgprint(__("Please provide Re-Open remark."));
+          //               return;
+          //             }
 
-                      frm.set_value(
-                        "reopen_remark",
-                        d.fields_dict.reopen_remark.get_value()
-                      );
+          //             frm.set_value(
+          //               "reopen_remark",
+          //               d.fields_dict.reopen_remark.get_value()
+          //             );
 
-                      frm.set_value("status", "Re-Opened");
-                      frm.refresh_field("status");
-                      frm.save();
+          //             frm.set_value("status", "Re-Opened");
+          //             frm.refresh_field("status");
+          //             frm.save();
 
-                      d.hide();
-                    },
-                  });
+          //             d.hide();
+          //           },
+          //         });
 
-                  d.show();
-                },
-                function () {
-                  // Additional logic if No is selected in the confirmation
-                }
-              );
-            })
-            .css({
-              "background-color": "#FF605C", // Set green color
-              color: "#ffffff", // Set font color to white
-            });
+          //         d.show();
+          //       },
+          //       function () {
+          //         // Additional logic if No is selected in the confirmation
+          //       }
+          //     );
+          //   })
+          //   .css({
+          //     "background-color": "#FF605C", // Set green color
+          //     color: "#ffffff", // Set font color to white
+          //   });
         }
       }
 
@@ -1015,25 +1015,25 @@ if (
           frm.doc.status == "On-Hold"
         ) {
           //In-Progress Button
-          frm.add_custom_button(
-            __("In-Progress"),
-            function () {
-              frappe.confirm(
-                "Are you sure you want to Set In-Progress ",
-                () => {
-                  // action to perform if Yes is selected
-                  frm.set_value("status", "In-Progress");
-                  frm.refresh_field("status");
+          // frm.add_custom_button(
+          //   __("In-Progress"),
+          //   function () {
+          //     frappe.confirm(
+          //       "Are you sure you want to Set In-Progress ",
+          //       () => {
+          //         // action to perform if Yes is selected
+          //         frm.set_value("status", "In-Progress");
+          //         frm.refresh_field("status");
 
-                  frm.save();
-                },
-                () => {
-                  // action to perform if No is selected
-                }
-              );
-            },
-            __("Status")
-          );
+          //         frm.save();
+          //       },
+          //       () => {
+          //         // action to perform if No is selected
+          //       }
+          //     );
+          //   },
+          //   __("Status")
+          // );
         }
         if (frm.doc.status == "Resolved") {
           frm.disable_save();
