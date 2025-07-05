@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"Ka3jjo7wcN\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Loan Tickets</b></span>\",\"col\":12}},{\"id\":\"gnmqQy1NZq\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open\",\"col\":3}},{\"id\":\"SjalNORg_X\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Read\",\"col\":3}},{\"id\":\"Ht9snXsak4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"NnpqxbuTM-\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"On-Hold\",\"col\":3}},{\"id\":\"BhTtqkunWr\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Re-Open\",\"col\":3}},{\"id\":\"w8ExntK6h1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Resolved\",\"col\":3}},{\"id\":\"f9K0YWP7HT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"TTiSL0jBTe\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Cancelled\",\"col\":3}},{\"id\":\"szzqcKzJco\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Recent Tickets\",\"col\":12}}]",
+ "content": "[{\"id\":\"Ka3jjo7wcN\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Loan Tickets</b></span>\",\"col\":12}},{\"id\":\"gnmqQy1NZq\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open\",\"col\":3}},{\"id\":\"Ht9snXsak4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"f9K0YWP7HT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"szzqcKzJco\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Recent Tickets\",\"col\":12}}]",
  "creation": "2023-07-21 13:07:08.210285",
  "custom_blocks": [],
  "docstatus": 0,
@@ -12,7 +12,7 @@
  "is_hidden": 0,
  "label": "Loan Tickets",
  "links": [],
- "modified": "2025-03-03 14:59:50.694306",
+ "modified": "2025-07-05 18:21:32.017922",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Loan Tickets",
@@ -47,33 +47,6 @@
    "type": "DocType"
   },
   {
-   "color": "Red",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Re-Open",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Re-Opened\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Loan\",false]]",
-   "type": "DocType"
-  },
-  {
-   "color": "Blue",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Read",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"dept_name\":[\"=\",\"Loan\"],\"status\":[\"=\",\"Read\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Green",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Resolved",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Resolved\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Loan\",false]]",
-   "type": "DocType"
-  },
-  {
    "color": "Cyan",
    "doc_view": "List",
    "format": "{}",
@@ -89,24 +62,6 @@
    "label": "Closed",
    "link_to": "Sahayog Ticket",
    "stats_filter": "{\"dept_name\":[\"=\",\"Loan\"],\"status\":[\"=\",\"Closed\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Yellow",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "On-Hold",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"dept_name\":[\"=\",\"Loan\"],\"status\":[\"=\",\"On-Hold\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Orange",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Cancelled",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"dept_name\":[\"=\",\"Loan\"],\"status\":[\"=\",\"Cancelled\"]}",
    "type": "DocType"
   }
  ],
