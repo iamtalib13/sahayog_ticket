@@ -32,7 +32,7 @@
   "last_user",
   "column_break_4",
   "section_break_onliy",
-  "executive_remark",
+  "executive_rema",
   "ticket_duration_section",
   "on_hold_time",
   "due_time",
@@ -468,22 +468,22 @@
    "options": "Ticket Item"
   },
   {
+   "fieldname": "asset_request_id",
+   "fieldtype": "Data",
+   "label": "asset_request_id"
+  },
+  {
    "depends_on": "eval:doc.status==\"In-Progress\"",
-   "fieldname": "executive_remark",
+   "fieldname": "executive_rema",
    "fieldtype": "Small Text",
    "label": "Executive Remark",
    "mandatory_depends_on": "eval:doc.status==\"On-Hold\"",
    "read_only": 1
-  },
-  {
-   "fieldname": "asset_request_id",
-   "fieldtype": "Data",
-   "label": "asset_request_id"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-04 16:20:00.814316",
+ "modified": "2025-07-05 17:35:11.372555",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
