@@ -829,6 +829,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       .add_custom_button(__("Re-Open"), function () {
         console.log("Re-Open button clicked");
       })
+
       .css({
         "background-color": "#FFA500", // Orange color
         color: "white",

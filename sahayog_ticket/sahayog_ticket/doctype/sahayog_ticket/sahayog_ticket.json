@@ -71,7 +71,10 @@
   "inprogress_flag",
   "open_and_read",
   "message_displayed",
-  "priority_timer"
+  "priority_timer",
+  "status_log_tab",
+  "status_log_details_section",
+  "status_log"
  ],
  "fields": [
   {
@@ -497,11 +500,28 @@
    "fieldname": "ticket_resolved_on",
    "fieldtype": "Datetime",
    "label": "Resolved On"
+  },
+  {
+   "depends_on": "eval:frappe.user.has_role('System Manager')",
+   "fieldname": "status_log_tab",
+   "fieldtype": "Tab Break",
+   "label": "Status Log"
+  },
+  {
+   "fieldname": "status_log_details_section",
+   "fieldtype": "Section Break",
+   "label": "Status Log Details"
+  },
+  {
+   "fieldname": "status_log",
+   "fieldtype": "Table",
+   "label": "Status Log",
+   "options": "Ticket Status Log"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-09 15:20:44.026737",
+ "modified": "2025-07-09 17:21:05.636871",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
