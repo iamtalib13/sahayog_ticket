@@ -9,6 +9,7 @@ from datetime import datetime
 class SahayogTicket(Document):
     def before_save(self):
         self.set_creation_time()
+        
 
     def set_creation_time(self):
         creation_date_time = self.creation
@@ -24,6 +25,8 @@ class SahayogTicket(Document):
 
     def before_insert(self):
         self.status = "Open"
+
+
 
 
 @frappe.whitelist()

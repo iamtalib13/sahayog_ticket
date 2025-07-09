@@ -348,7 +348,6 @@ frappe.ui.form.on("Sahayog Ticket", {
 
 frappe.ui.form.on("Sahayog Ticket", {
   refresh: function (frm) {
-   
     if (!frm.is_new()) {
       // Fetch employee data
 
@@ -529,69 +528,41 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
 
     if (!frm.is_new()) {
+      if (
+        frappe.user.has_role("IT Support Executive") ||
+        frappe.user.has_role("Admin Support Executive") ||
+        frappe.user.has_role("Operations Support Executive") ||
+        frappe.user.has_role("HR Support Executive") ||
+        frappe.user.has_role("Accounts Support Executive") ||
+        frappe.user.has_role("HO Support Executive") ||
+        frappe.user.has_role("Facility Support Executive") ||
+        frappe.user.has_role("Loan Support Executive") ||
+        frappe.user.has_role("CBS Support Executive")
+      ) {
+        console.log("User has one of the Support Executive roles");
 
-if (
-    frappe.user.has_role("IT Support Executive") ||
-    frappe.user.has_role("Admin Support Executive") ||
-    frappe.user.has_role("Operations Support Executive") ||
-    frappe.user.has_role("HR Support Executive") ||
-    frappe.user.has_role("Accounts Support Executive") ||
-    frappe.user.has_role("HO Support Executive") ||
-    frappe.user.has_role("Facility Support Executive") ||
-    frappe.user.has_role("Loan Support Executive")
-) {
-    console.log("User has one of the Support Executive roles");
-     
-    // Show buttons based on ticket status
-    if (frm.doc.status === "Open") {
-      frm.trigger("In_Progress_button");
-      frm.trigger("close_button");
-    } else if (frm.doc.status === "In-Progress") {
-      frm.trigger("close_button");
-      frm.trigger("executive_remark");
-    }
-}
-
-
+        // Show buttons based on ticket status
+        if (frm.doc.status === "Open") {
+          frm.trigger("In_Progress_button");
+          frm.trigger("resolve_button");
+        } else if (frm.doc.status === "In-Progress") {
+          frm.trigger("resolve_button");
+          frm.trigger("executive_remark");
+        }
+      }
 
       if (frappe.user.has_role("System Manager")) {
-        // // In-Progress Button
-        // frm.add_custom_button(
-        //   __("In-Progress"),
-        //   function () {
-        //     frappe.confirm(
-        //       __("Are you sure you want to set In-Progress?"),
-        //       function () {
-        //         frm.set_value("status", "In-Progress");
-        //         frm.refresh_field("status");
-        //         frm.save();
-        //       },
-        //       function () {
-        //         // Additional logic if No is selected in the confirmation
-        //       }
-        //     );
-        //   },
-        //   __("Admin")
-        // );
-        // frm.add_custom_button(
-        //   __("Close"),
-        //   function () {
-        //     frappe.confirm(
-        //       __("Are you sure you want to set In-Progress?"),
-        //       function () {
-        //         frm.set_value("status", "Closed");
-        //         frm.refresh_field("status");
-        //         frm.save();
-        //       },
-        //       function () {
-        //         // Additional logic if No is selected in the confirmation
-        //       }
-        //     );
-        //   },
-        //   __("Admin")
-        // );
       } else if (frappe.user.has_role("Employee")) {
         console.log("Employee");
+        // Employee buttons (outside executive role check)
+        if (
+          frm.doc.status === "Resolved" &&
+          frm.doc.owner === frappe.session.user
+        ) {
+          console.log(frm.doc.owner);
+          frm.trigger("reopen_button");
+          frm.trigger("close_button");
+        }
       } else {
         if (frappe.user.has_role("CTO")) {
           console.log("CTO");
@@ -615,32 +586,10 @@ if (
             frm.doc.status == "Read" ||
             frm.doc.status == "In-Progress"
           ) {
-         
           }
           if (frm.doc.status == "Open") {
-            //Read Button
-            // frm.add_custom_button(
-            //   __("Read"),
-            //   function () {
-            //     frappe.confirm(
-            //       "Are you sure you want to Set Read ",
-            //       () => {
-            //         // action to perform if Yes is selected
-            //         frm.set_value("status", "Read");
-            //         frm.refresh_field("status");
-
-            //         frm.save();
-            //       },
-            //       () => {
-            //         // action to perform if No is selected
-            //       }
-            //     );
-            //   },
-            //   __("Status")
-            // );
           }
           if (frm.doc.status == "Open") {
-           
           }
           if (frm.doc.status == "Resolved") {
             frm.disable_save();
@@ -653,13 +602,13 @@ if (
           ) {
             console.log("resolve button");
             //Resolved Button show
-           
           }
         }
       }
       let user = frappe.session.user;
       // Get the numeric part of the user string
       let eid = user.match(/\d+/)[0];
+      console.log("Eid-", eid);
       // Initialize the modified employee_id
       let modifiedEmployeeId = "";
 
@@ -698,100 +647,7 @@ if (
 
         if (frm.doc.status == "Cancel") {
         } else if (frm.doc.status == "Resolved") {
-          frm
-            // .add_custom_button(__("Close"), function () {
-            //   frappe.confirm(
-            //     __("Do you want to close your Ticket ? "),
-            //     function () {
-            //       let d = new frappe.ui.Dialog({
-            //         title: "Enter Closing Remark",
-            //         fields: [
-            //           {
-            //             label: "Ticket Closing Remark",
-            //             fieldname: "remark",
-            //             fieldtype: "Small Text",
-            //             reqd: 1, // Set reqd property to make it mandatory
-            //           },
-            //         ],
-            //         size: "small", // small, large, extra-large
-            //         primary_action_label: "Submit",
-            //         primary_action: function () {
-            //           // Your existing logic for handling the dialog submission
-            //           if (!d.fields_dict.remark.get_value()) {
-            //             frappe.msgprint(__("Please provide Closing remark."));
-            //             return;
-            //           }
-
-            //           frm.set_value("remark", d.fields_dict.remark.get_value());
-
-            //           frm.set_value("status", "Closed");
-            //           frm.refresh_field("status");
-            //           frm.save();
-
-            //           d.hide();
-            //         },
-            //       });
-
-            //       d.show();
-            //     },
-            //     function () {
-            //       // Additional logic if No is selected in the confirmation
-            //     }
-            //   );
-            // })
-            // .css({
-            //   "background-color": "#00CA4E", // Set green color
-            //   color: "#ffffff", // Set font color to white
-            // });
-
-          // frm
-          //   .add_custom_button(__("Re-Open"), function () {
-          //     frappe.confirm(
-          //       __("Do you want to re-open your Ticket?"),
-          //       function () {
-          //         let d = new frappe.ui.Dialog({
-          //           title: "Enter Re-Open Remark",
-          //           fields: [
-          //             {
-          //               label: "Re-Open Remark",
-          //               fieldname: "reopen_remark",
-          //               fieldtype: "Small Text",
-          //               reqd: 1, // Set reqd property to make it mandatory
-          //             },
-          //           ],
-          //           size: "small", // small, large, extra-large
-          //           primary_action_label: "Submit",
-          //           primary_action: function () {
-          //             // Your existing logic for handling the dialog submission
-          //             if (!d.fields_dict.reopen_remark.get_value()) {
-          //               frappe.msgprint(__("Please provide Re-Open remark."));
-          //               return;
-          //             }
-
-          //             frm.set_value(
-          //               "reopen_remark",
-          //               d.fields_dict.reopen_remark.get_value()
-          //             );
-
-          //             frm.set_value("status", "Re-Opened");
-          //             frm.refresh_field("status");
-          //             frm.save();
-
-          //             d.hide();
-          //           },
-          //         });
-
-          //         d.show();
-          //       },
-          //       function () {
-          //         // Additional logic if No is selected in the confirmation
-          //       }
-          //     );
-          //   })
-          //   .css({
-          //     "background-color": "#FF605C", // Set green color
-          //     color: "#ffffff", // Set font color to white
-          //   });
+          frm;
         }
       }
 
@@ -811,36 +667,13 @@ if (
           frm.doc.status == "Read" ||
           frm.doc.status == "In-Progress"
         ) {
-         
         }
-        if (frm.doc.status == "Open") {
-          //Read Button
-          // frm.add_custom_button(
-          //   __("Read"),
-          //   function () {
-          //     frappe.confirm(
-          //       "Are you sure you want to Set Read ",
-          //       () => {
-          //         // action to perform if Yes is selected
-          //         frm.set_value("status", "Read");
-          //         frm.refresh_field("status");
 
-          //         frm.save();
-          //       },
-          //       () => {
-          //         // action to perform if No is selected
-          //       }
-          //     );
-          //   },
-          //   __("Status")
-          // );
-        }
         if (
           frm.doc.status == "Open" ||
           frm.doc.status == "Read" ||
           frm.doc.status == "On-Hold"
         ) {
-      
         }
         if (frm.doc.status == "Resolved") {
           frm.disable_save();
@@ -853,7 +686,6 @@ if (
         ) {
           console.log("resolve button");
           //Resolved Button show
-         
         }
       }
     }
@@ -884,115 +716,140 @@ if (
     }
   },
 
-
-  close_button:function(frm) {
-    frm.add_custom_button(
-            __("Close"),
-            function () {
-              let user = frappe.session.user;
-              frappe.confirm(
-                __("Do you want to Close the Ticket "),
-                function () {
-                  let d = new frappe.ui.Dialog({
-                    title: "Enter Closing Remark",
-                    fields: [
-                      {
-                        label: "Closing Remark",
-                        fieldname: "resolved_remark",
-                        fieldtype: "Small Text",
-                        reqd: 1, // Set reqd property to make it mandatory
-                      },
-                    ],
-                    size: "small", // small, large, extra-large
-                    primary_action_label: "Submit",
-                    primary_action: function () {
-                      // Your existing logic for handling the dialog submission
-                      if (!d.fields_dict.resolved_remark.get_value()) {
-                        frappe.msgprint(__("Please provide Closing remark."));
-                        return;
-                      }
-
-                      frm.set_value(
-                        "remark",
-                        d.fields_dict.resolved_remark.get_value()
-                      );
-
-                      frm.set_value("ticket_resolved_by", user);
-                      frm.set_value("status", "Closed");
-                      frm.refresh_field("status");
-                      frm.save();
-
-                      d.hide();
-                    },
-                  });
-
-                  d.show();
-                },
-                function () {
-                  // Additional logic if No is selected in the confirmation
-                }
-              );
-            },
-            __("Status")
-          );
-  },
   In_Progress_button: function (frm) {
-       frm.add_custom_button(
-            __("In-Progress"),
-            function () {
-              let currentOnHoldRemark = frm.doc.on_hold_remark || ""; // Get the current value or initialize as an empty string
+    frm.add_custom_button(
+      __("In-Progress"),
+      function () {
+        let currentOnHoldRemark = frm.doc.on_hold_remark || ""; // Get the current value or initialize as an empty string
 
-              frappe.confirm(
-                __("Do you want to set In-Progress "),
-                function () {
-                  let d = new frappe.ui.Dialog({
-                    title: "Enter In-Progress Remarks",
-                    fields: [
-                      {
-                        label: "In-Progress Remark",
-                        fieldname: "executive_remark",
-                        fieldtype: "Small Text",
-                        reqd: 1, // Set reqd property to make it mandatory
-                        default: currentOnHoldRemark, // Set default value as current remark
-                      },
-                    ],
-                    size: "small", // small, large, extra-large
-                    primary_action_label: "Submit",
-                    primary_action: function () {
-                      // Your existing logic for handling the dialog submission
-                      if (!d.fields_dict.executive_remark.get_value()) {
-                        frappe.msgprint(__("Please provide In-Progress remark."));
-                        return;
-                      }
-
-                      frm.set_value(
-                        "executive_remark",
-                        d.fields_dict.executive_remark.get_value()
-                      );
-
-                      frm.set_value("status", "In-Progress");
-                      frm.refresh_field("status");
-                      frm.save();
-
-                      d.hide();
-                    },
-                  });
-
-                  d.show();
+        frappe.confirm(
+          __("Do you want to set In-Progress "),
+          function () {
+            let d = new frappe.ui.Dialog({
+              title: "Enter In-Progress Remarks",
+              fields: [
+                {
+                  label: "In-Progress Remark",
+                  fieldname: "executive_remark",
+                  fieldtype: "Small Text",
+                  reqd: 1, // Set reqd property to make it mandatory
+                  default: currentOnHoldRemark, // Set default value as current remark
                 },
-                function () {
-                  // Additional logic if No is selected in the confirmation
+              ],
+              size: "small", // small, large, extra-large
+              primary_action_label: "Submit",
+              primary_action: function () {
+                // Your existing logic for handling the dialog submission
+                if (!d.fields_dict.executive_remark.get_value()) {
+                  frappe.msgprint(__("Please provide In-Progress remark."));
+                  return;
                 }
-              );
-            },
-            __("Status")
-          );
-  
-  
+
+                frm.set_value(
+                  "executive_remark",
+                  d.fields_dict.executive_remark.get_value()
+                );
+
+                frm.set_value("status", "In-Progress");
+                frm.refresh_field("status");
+                frm.save();
+
+                d.hide();
+              },
+            });
+
+            d.show();
+          },
+          function () {
+            // Additional logic if No is selected in the confirmation
+          }
+        );
+      },
+      __("Status")
+    );
+  },
+  resolve_button: function (frm) {
+    frm.add_custom_button(
+      __("Resolve"),
+      function () {
+        let user = frappe.session.user;
+        frappe.confirm(
+          __("Do you want to Resolve the Ticket "),
+          function () {
+            let d = new frappe.ui.Dialog({
+              title: "Enter Resolve Remark",
+              fields: [
+                {
+                  label: "Resolve Remark",
+                  fieldname: "resolved_remark",
+                  fieldtype: "Small Text",
+                  reqd: 1, // Set reqd property to make it mandatory
+                },
+              ],
+              size: "small", // small, large, extra-large
+              primary_action_label: "Submit",
+              primary_action: function () {
+                // Your existing logic for handling the dialog submission
+                if (!d.fields_dict.resolved_remark.get_value()) {
+                  frappe.msgprint(__("Please provide Resolve remark."));
+                  return;
+                }
+
+                frm.set_value(
+                  "remark",
+                  d.fields_dict.resolved_remark.get_value()
+                );
+
+                frm.set_value("ticket_resolved_by", user);
+                frm.set_value("status", "Resolved");
+                frm.set_value(
+                  "ticket_resolved_on",
+                  frappe.datetime.now_datetime()
+                );
+                frm.refresh_field("status");
+                frm.save();
+
+                d.hide();
+              },
+            });
+
+            d.show();
+          },
+          function () {
+            // Additional logic if No is selected in the confirmation
+          }
+        );
+      },
+      __("Status")
+    );
+  },
+
+  reopen_button: function (frm) {
+    frm
+      .add_custom_button(__("Re-Open"), function () {
+        console.log("Re-Open button clicked");
+      })
+      .css({
+        "background-color": "#FFA500", // Orange color
+        color: "white",
+        "border-color": "#FF8C00",
+      });
+  },
+
+  close_button: function (frm) {
+    frm
+      .add_custom_button(__("Close"), function () {
+        console.log("Close button clicked");
+      })
+      .css({
+        "background-color": "#FF0000", // Red color
+        color: "white",
+        "border-color": "#B22222",
+      });
   },
 
   executive_remark: function (frm) {
-   frm.add_custom_button(
+    frm.add_custom_button(
       __("Set Executive Remark"),
       function () {
         let currentRemark = frm.doc.executive_remark || "";
