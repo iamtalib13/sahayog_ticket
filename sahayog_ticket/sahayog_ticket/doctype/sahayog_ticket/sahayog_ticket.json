@@ -56,10 +56,13 @@
   "remark",
   "ticket_reopened_details_section",
   "reopen_remark",
+  "ticket_assigned_details_section",
+  "assigned_to",
   "ticket_resolved_details_section",
   "ticket_resolved_by",
   "ticket_resolved_user",
   "resolved_remark",
+  "ticket_resolved_on",
   "section_break_tgqgy",
   "cancel_ticket_btn",
   "cancel_ticket",
@@ -148,7 +151,7 @@
    "fieldtype": "Select",
    "in_standard_filter": 1,
    "label": "Ticket Status",
-   "options": "Open\nIn-Progress\nClosed",
+   "options": "Open\nIn-Progress\nResolved\nClosed",
    "read_only_depends_on": "//eval:doc.flag==\"Closed\" "
   },
   {
@@ -402,7 +405,6 @@
    "depends_on": "eval:doc.status==\"Resolved\" || doc.status==\"Closed\"",
    "fieldname": "ticket_resolved_by",
    "fieldtype": "Link",
-   "hidden": 1,
    "label": "Ticket Resolved By",
    "options": "User"
   },
@@ -479,11 +481,27 @@
    "label": "Executive Remark",
    "mandatory_depends_on": "eval:doc.status==\"On-Hold\"",
    "read_only": 1
+  },
+  {
+   "fieldname": "ticket_assigned_details_section",
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "label": "Ticket Assigned Details"
+  },
+  {
+   "fieldname": "assigned_to",
+   "fieldtype": "Data",
+   "label": "Assigned To"
+  },
+  {
+   "fieldname": "ticket_resolved_on",
+   "fieldtype": "Datetime",
+   "label": "Resolved On"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-05 17:37:07.522469",
+ "modified": "2025-07-09 15:20:44.026737",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
