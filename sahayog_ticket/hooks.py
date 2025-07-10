@@ -181,8 +181,8 @@ fixtures = [
             "in",
             {
 				"IT Dashboard",
-                "Tickets Dashboard"
-				
+        "Finacle Dashboard",
+        "Tickets Dashboard"
 			}
         ]
     ]},
