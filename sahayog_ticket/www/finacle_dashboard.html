@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Finacle Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-900 m-0 p-0">
+
+  <!-- Cards -->
+  <div class="flex flex-wrap justify-center gap-6 mb-10 px-4">
+    <div onclick="navigateToStatus('Open')" class="cursor-pointer bg-blue-50 px-8 py-5 rounded-xl text-center shadow hover:shadow-md transition w-40">
+      <h2 class="text-xs font-semibold text-blue-700 uppercase tracking-wide">Open</h2>
+      <p id="open-count" class="text-2xl font-bold text-blue-800 mt-1">0</p>
+    </div>
+    <div onclick="navigateToStatus('In-Progress')" class="cursor-pointer bg-yellow-50 px-8 py-5 rounded-xl text-center shadow hover:shadow-md transition w-40">
+      <h2 class="text-xs font-semibold text-yellow-700 uppercase tracking-wide">In Progress</h2>
+      <p id="inprogress-count" class="text-2xl font-bold text-yellow-800 mt-1">0</p>
+    </div>
+    <div class="cursor-default bg-gray-100 px-8 py-5 rounded-xl text-center shadow w-40">
+      <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Resolved</h2>
+      <p class="text-2xl font-bold text-gray-700 mt-1">--</p>
+    </div>
+    <div onclick="navigateToStatus('Closed')" class="cursor-pointer bg-green-50 px-8 py-5 rounded-xl text-center shadow hover:shadow-md transition w-40">
+      <h2 class="text-xs font-semibold text-green-700 uppercase tracking-wide">Closed</h2>
+      <p id="closed-count" class="text-2xl font-bold text-green-800 mt-1">0</p>
+    </div>
+  </div>
+
+  <!-- Charts Container -->
+  <div class="flex flex-col lg:flex-row gap-4 px-4">
+    <!-- Stacked Bar Chart -->
+    <div class="bg-white p-6 rounded-xl shadow w-full lg:w-1/2">
+      <h2 class="text-xl font-bold mb-4">Zone-Wise Ticket Types Distribution</h2>
+      <canvas id="ticketChart" height="188" width="500"></canvas>
+    </div>
+    <!-- Donut Chart -->
+    <div class="bg-white p-6 rounded-xl shadow w-full lg:w-1/2">
+      <h2 class="text-xl font-bold mb-4">Ticket Types Distribution</h2>
+      <div class="w-full">
+        <canvas id="donutChart" style="height: 300px;"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function navigateToStatus(status) {
+      const url = new URL("/app/sahayog-ticket", window.location.origin);
+      url.searchParams.set("status", status);
+      window.top.location.href = url.toString();
+    }
+
+    async function loadDashboard() {
+      const res = await fetch('/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_zone');
+      const data = await res.json();
+
+      const zones = data.message.zones;
+      const types = data.message.ticket_types;
+      const counts = data.message.counts;
+
+      document.getElementById('open-count').innerText = counts.open;
+      document.getElementById('inprogress-count').innerText = counts.in_progress;
+      document.getElementById('closed-count').innerText = counts.closed;
+
+      const baseColors = ['#3b82f6', '#facc15', '#10b981', '#f472b6', '#6366f1', '#fb923c', '#14b8a6', '#ef4444'];
+
+      // Sort zones by total Open + In-Progress
+      zones.sort((a, b) => {
+        const totalA = a.regions.reduce((sum, r) => sum + (r.Open || 0) + (r["In-Progress"] || 0), 0);
+        const totalB = b.regions.reduce((sum, r) => sum + (r.Open || 0) + (r["In-Progress"] || 0), 0);
+        return totalB - totalA;
+      });
+
+      const zoneLabels = [];
+      const regionMap = {};
+      const regionColors = {};
+      let colorIndex = 0;
+
+      zones.forEach(zone => {
+        zoneLabels.push(zone.zone);
+        zone.regions.forEach(region => {
+          const reg = region.region;
+          if (!regionMap[reg]) {
+            regionMap[reg] = {};
+            regionColors[reg] = baseColors[colorIndex++ % baseColors.length];
+          }
+          regionMap[reg][zone.zone] = (regionMap[reg][zone.zone] || 0) + (region.Open || 0) + (region["In-Progress"] || 0);
+        });
+      });
+
+      const ctx = document.getElementById('ticketChart').getContext('2d');
+      const datasets = Object.entries(regionMap).map(([region, zoneData]) => {
+        return {
+          label: region,
+          data: zoneLabels.map(zone => zoneData[zone] || 0),
+          backgroundColor: regionColors[region],
+          borderWidth: 0
+        };
+      });
+
+      let maxY = 0;
+      zoneLabels.forEach(zone => {
+        let total = 0;
+        Object.values(regionMap).forEach(region => {
+          total += region[zone] || 0;
+        });
+        if (total > maxY) maxY = total;
+      });
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: { labels: zoneLabels, datasets },
+        options: {
+          responsive: false,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: ${ctx.raw}`
+              }
+            },
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              grid: { display: false, drawBorder: false },
+              ticks: { padding: 10 },
+              barPercentage: 0.8,
+              categoryPercentage: 0.8
+            },
+            y: {
+              stacked: true,
+              beginAtZero: true,
+              grid: { display: false, drawBorder: false },
+              ticks: {
+                font: { size: 12 },
+                padding: 2
+              },
+              max: maxY,
+              min: 0
+            }
+          }
+        }
+      });
+
+      const donutCtx = document.getElementById('donutChart').getContext('2d');
+      types.sort((a, b) => b.count - a.count);
+      const donutData = types.map(t => t.count);
+      const donutLabels = types.map(t => t.type);
+      const total = donutData.reduce((a, b) => a + b, 0);
+
+      new Chart(donutCtx, {
+        type: 'bar',
+        data: {
+          labels: donutLabels,
+          datasets: [{
+            label: 'Ticket Types',
+            data: donutData,
+            backgroundColor: baseColors
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  const value = ctx.raw;
+                  const percentage = ((value / total) * 100).toFixed(1);
+                  return `${ctx.label}: ${percentage}%`;
+                }
+              }
+            }
+          },
+          cutout: '70'
+        }
+      });
+    }
+
+    loadDashboard();
+  </script>
+
+</body>
+</html>
