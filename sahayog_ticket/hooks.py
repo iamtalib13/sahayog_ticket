@@ -180,7 +180,8 @@ fixtures = [
             "name",
             "in",
             {
-				"IT Dashboard"
+				"IT Dashboard",
+                "Finacle Dashboard"
 				
 			}
         ]
