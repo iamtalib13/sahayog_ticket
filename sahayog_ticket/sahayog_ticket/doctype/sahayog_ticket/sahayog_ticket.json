@@ -53,7 +53,7 @@
   "request_detail",
   "description",
   "ticket_closing_details_section",
-  "remark",
+  "close_remark",
   "ticket_reopened_details_section",
   "reopen_remark",
   "ticket_assigned_details_section",
@@ -156,14 +156,6 @@
    "label": "Ticket Status",
    "options": "Open\nIn-Progress\nResolved\nClosed",
    "read_only_depends_on": "//eval:doc.flag==\"Closed\" "
-  },
-  {
-   "depends_on": "eval:doc.status==\"Closed\" ",
-   "fieldname": "remark",
-   "fieldtype": "Small Text",
-   "label": "Ticket Closing Remark",
-   "mandatory_depends_on": "eval:doc.status==\"Closed\"",
-   "read_only": 1
   },
   {
    "depends_on": "eval:doc.status==\"Open\"",
@@ -517,11 +509,19 @@
    "fieldtype": "Table",
    "label": "Status Log",
    "options": "Ticket Status Log"
+  },
+  {
+   "depends_on": "eval:doc.status==\"Closed\" ",
+   "fieldname": "close_remark",
+   "fieldtype": "Small Text",
+   "label": "Ticket Closing Remark",
+   "mandatory_depends_on": "eval:doc.status==\"Closed\"",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-09 17:21:05.636871",
+ "modified": "2025-07-10 11:03:31.320088",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
