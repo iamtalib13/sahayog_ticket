@@ -10,7 +10,7 @@
 <body class="bg-gray-50 text-gray-900 m-0 p-0">
 
   <!-- Cards -->
-  <div class="flex flex-wrap justify-center gap-6 mb-10 px-4">
+  <div id="card_mrig" class="flex flex-wrap justify-center gap-6 mb-10 px-4">
     <div onclick="navigateToStatus('Open')" class="cursor-pointer bg-blue-50 px-8 py-5 rounded-xl text-center shadow hover:shadow-md transition w-40">
       <h2 class="text-xs font-semibold text-blue-700 uppercase tracking-wide">Open</h2>
       <p id="open-count" class="text-2xl font-bold text-blue-800 mt-1">0</p>
@@ -60,6 +60,7 @@
       const types = data.message.ticket_types;
       const counts = data.message.counts;
 
+      document.getElementById("card_mrig").style.margin = "30px 30px 30px 30px";
       document.getElementById('open-count').innerText = counts.open;
       document.getElementById('inprogress-count').innerText = counts.in_progress;
       document.getElementById('closed-count').innerText = counts.closed;
