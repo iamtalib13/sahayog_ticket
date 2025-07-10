@@ -142,7 +142,7 @@ def get_zone():
     cbs_types = (
         "Other CBS Issue", "Passbook Print", "FD Print", "CIF",
         "Office Account", "Loan Account", "TD Account",
-        "Current Account", "Saving Account", "New Requirement"
+        "Current Account", "Saving Account"
     )
 
     # Fetch CBS-only data grouped by zone, region, status, and ticket_type
