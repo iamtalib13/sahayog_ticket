@@ -30,7 +30,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-06-27 15:48:04.947418",
+ "modified": "2025-07-09 10:41:35.516915",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Departsection",
@@ -46,6 +46,7 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "select": 1,
    "share": 1,
    "write": 1
   },

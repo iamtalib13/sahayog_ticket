@@ -9,6 +9,24 @@ from datetime import datetime
 class SahayogTicket(Document):
     def before_save(self):
         self.set_creation_time()
+        self.track_status_change()
+    
+    def track_status_change(self):
+        if not self._doc_before_save:
+            return
+    
+        previous_status = self._doc_before_save.status
+        current_status = self.status
+    
+        if previous_status != current_status:
+            self.append("status_log", {
+                "from_status": previous_status,
+                "to_status": current_status,
+                "status_change_by": frappe.session.user,
+                "status_change_on": frappe.utils.now_datetime(),
+                "status_remark": f"Status changed from {previous_status} to {current_status}"
+            })
+        
 
     def set_creation_time(self):
         creation_date_time = self.creation
@@ -24,6 +42,8 @@ class SahayogTicket(Document):
 
     def before_insert(self):
         self.status = "Open"
+
+
 
 
 @frappe.whitelist()
