@@ -82,7 +82,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                   frm.set_value("ticket_resolved_by", user);
                   frm.set_value("status", "Closed");
                   frm.set_value(
-                    "remark",
+                    "close_remark",
                     `Created Asset Request - ${response.message.asset_request_id}`
                   );
                   frm.refresh_field("status");
@@ -329,7 +329,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
       frm.set_df_property("assigned_it", "read_only", 1);
 
-      frm.set_df_property("remark", "read_only", 1);
+      frm.set_df_property("close_remark", "read_only", 1);
 
       msgprint("Ticket is Closed Successfully . .");
       frm.disable_save();
@@ -546,6 +546,7 @@ frappe.ui.form.on("Sahayog Ticket", {
           frm.trigger("In_Progress_button");
           frm.trigger("resolve_button");
         } else if (frm.doc.status === "In-Progress") {
+          frm.trigger("assign_to_button");
           frm.trigger("resolve_button");
           frm.trigger("executive_remark");
         }
@@ -716,6 +717,10 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
   },
 
+  assign_to_button: function (frm) {
+    console.log("Assign to Button Triggered");
+  },
+
   In_Progress_button: function (frm) {
     frm.add_custom_button(
       __("In-Progress"),
@@ -796,7 +801,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                 }
 
                 frm.set_value(
-                  "remark",
+                  "resolved_remark",
                   d.fields_dict.resolved_remark.get_value()
                 );
 
@@ -824,31 +829,101 @@ frappe.ui.form.on("Sahayog Ticket", {
     );
   },
 
+  // function to create a custom button to re-open the ticket
   reopen_button: function (frm) {
     frm
       .add_custom_button(__("Re-Open"), function () {
-        console.log("Re-Open button clicked");
-      })
+        frappe.confirm(
+          __("Do you want to Re-Open the Ticket?"),
+          function () {
+            const d = new frappe.ui.Dialog({
+              title: __("Enter Re-Open Remark"),
+              fields: [
+                {
+                  label: "Re-Open Remark",
+                  fieldname: "reopen_remark",
+                  fieldtype: "Small Text",
+                  reqd: 1,
+                },
+              ],
+              primary_action_label: __("Submit"),
+              primary_action: function () {
+                const values = d.get_values();
+                if (!values) return;
 
+                frm.set_value("reopen_remark", values.reopen_remark);
+                frm.set_value("status", "Open");
+                frm.set_value("ticket_resolved_by", "");
+                frm.set_value("ticket_resolved_user", "");
+                frm.set_value("ticket_resolved_on", "");
+
+                frm.save().then(() => {
+                  frappe.msgprint(__("Ticket has been re-opened."));
+                });
+
+                d.hide();
+              },
+            });
+
+            d.show();
+          },
+          function () {
+            // Do nothing or show a message
+          }
+        );
+      })
       .css({
-        "background-color": "#FFA500", // Orange color
+        "background-color": "#FFA500",
         color: "white",
         "border-color": "#FF8C00",
       });
   },
 
+  // function to create a custom button to close the ticket
   close_button: function (frm) {
     frm
       .add_custom_button(__("Close"), function () {
-        console.log("Close button clicked");
+        frappe.confirm(
+          __(
+            "Do you want to Close the Ticket? Once it is closed, it cannot be re-opened."
+          ),
+          function () {
+            const d = new frappe.ui.Dialog({
+              title: __("Enter Close Remark"),
+              fields: [
+                {
+                  label: "Close Remark",
+                  fieldname: "close_remark",
+                  fieldtype: "Small Text",
+                  reqd: 1,
+                },
+              ],
+              primary_action_label: __("Submit"),
+              primary_action: function () {
+                const values = d.get_values();
+                if (!values) return;
+
+                frm.set_value("close_remark", values.close_remark);
+                frm.set_value("status", "Closed");
+                frm.save();
+
+                d.hide();
+              },
+            });
+
+            d.show();
+          },
+          function () {
+            // Do nothing or show message on cancel
+          }
+        );
       })
       .css({
-        "background-color": "#FF0000", // Red color
+        "background-color": "#DC143C", // Crimson or red
         color: "white",
         "border-color": "#B22222",
       });
   },
-
   executive_remark: function (frm) {
     frm.add_custom_button(
       __("Set Executive Remark"),
