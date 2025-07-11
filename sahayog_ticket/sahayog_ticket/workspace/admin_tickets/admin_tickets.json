@@ -5,7 +5,7 @@
    "label": "Ticket Type Wise Analysis"
   }
  ],
- "content": "[{\"id\":\"NLr9XCIgW5\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Admin Tickets</b></span>\",\"col\":12}},{\"id\":\"SjjC7RlNkv\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open\",\"col\":3}},{\"id\":\"YCzExkC6il\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Read\",\"col\":3}},{\"id\":\"59FqEPsPpd\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"VSuvb_qwWe\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"On-Hold\",\"col\":3}},{\"id\":\"rAbiEBkYHi\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Re-Open\",\"col\":3}},{\"id\":\"ti4OvU7o2Q\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Resolved\",\"col\":3}},{\"id\":\"LqNeYtF1pt\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"JTTxL22G8k\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Cancelled\",\"col\":3}},{\"id\":\"6lKJp-qHPy\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Recent Tickets\",\"col\":12}},{\"id\":\"UaNXG0WKwH\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Ticket Type Wise Analysis\",\"col\":12}}]",
+ "content": "[{\"id\":\"NLr9XCIgW5\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Admin Tickets</b></span>\",\"col\":12}},{\"id\":\"SjjC7RlNkv\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open\",\"col\":3}},{\"id\":\"59FqEPsPpd\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"LqNeYtF1pt\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"6lKJp-qHPy\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Recent Tickets\",\"col\":12}},{\"id\":\"UaNXG0WKwH\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Ticket Type Wise Analysis\",\"col\":12}}]",
  "creation": "2023-07-21 11:47:58.605696",
  "custom_blocks": [],
  "docstatus": 0,
@@ -17,7 +17,7 @@
  "is_hidden": 0,
  "label": "Admin Tickets",
  "links": [],
- "modified": "2025-03-03 14:59:17.909473",
+ "modified": "2025-07-05 18:20:39.490470",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Admin Tickets",
@@ -43,15 +43,6 @@
  "sequence_id": 15.0,
  "shortcuts": [
   {
-   "color": "Red",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Re-Open",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Re-Opened\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Admin\",false]]",
-   "type": "DocType"
-  },
-  {
    "color": "Cyan",
    "doc_view": "List",
    "format": "{}",
@@ -70,48 +61,12 @@
    "type": "DocType"
   },
   {
-   "color": "Orange",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Read",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"dept_name\":[\"=\",\"Admin\"],\"status\":[\"=\",\"Read\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Green",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Resolved",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Resolved\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Admin\",false]]",
-   "type": "DocType"
-  },
-  {
    "color": "Green",
    "doc_view": "List",
    "format": "{}",
    "label": "Closed",
    "link_to": "Sahayog Ticket",
    "stats_filter": "{\"dept_name\":[\"=\",\"Admin\"],\"status\":[\"=\",\"Closed\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Yellow",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "On-Hold",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"dept_name\":[\"=\",\"Admin\"],\"status\":[\"=\",\"On-Hold\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Red",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Cancelled",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"dept_name\":[\"=\",\"Admin\"],\"status\":[\"=\",\"Cancelled\"]}",
    "type": "DocType"
   }
  ],

@@ -10,6 +10,7 @@
  "field_order": [
   "basic_details_tab",
   "asset_request_section",
+  "asset_request_id",
   "support_system_email",
   "employee_id",
   "employee_user_id",
@@ -31,7 +32,7 @@
   "last_user",
   "column_break_4",
   "section_break_onliy",
-  "on_hold_remark",
+  "executive_remark",
   "ticket_duration_section",
   "on_hold_time",
   "due_time",
@@ -52,13 +53,17 @@
   "request_detail",
   "description",
   "ticket_closing_details_section",
-  "remark",
+  "close_remark",
   "ticket_reopened_details_section",
   "reopen_remark",
+  "ticket_assigned_details_section",
+  "assigned_to",
+  "assigned_to_name",
   "ticket_resolved_details_section",
   "ticket_resolved_by",
   "ticket_resolved_user",
   "resolved_remark",
+  "ticket_resolved_on",
   "section_break_tgqgy",
   "cancel_ticket_btn",
   "cancel_ticket",
@@ -67,7 +72,10 @@
   "inprogress_flag",
   "open_and_read",
   "message_displayed",
-  "priority_timer"
+  "priority_timer",
+  "status_log_tab",
+  "status_log_details_section",
+  "status_log"
  ],
  "fields": [
   {
@@ -147,16 +155,8 @@
    "fieldtype": "Select",
    "in_standard_filter": 1,
    "label": "Ticket Status",
-   "options": "Open\nIn-Progress\nClosed",
+   "options": "Open\nIn-Progress\nResolved\nClosed",
    "read_only_depends_on": "//eval:doc.flag==\"Closed\" "
-  },
-  {
-   "depends_on": "eval:doc.status==\"Closed\" ",
-   "fieldname": "remark",
-   "fieldtype": "Small Text",
-   "label": "Ticket Closing Remark",
-   "mandatory_depends_on": "eval:doc.status==\"Closed\"",
-   "read_only": 1
   },
   {
    "depends_on": "eval:doc.status==\"Open\"",
@@ -341,14 +341,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.status==\"On-Hold\"",
-   "fieldname": "on_hold_remark",
-   "fieldtype": "Small Text",
-   "label": "On-Hold Remark",
-   "mandatory_depends_on": "eval:doc.status==\"On-Hold\"",
-   "read_only": 1
-  },
-  {
    "fetch_from": "employee_id.first_name",
    "fieldname": "emp_first_name",
    "fieldtype": "Data",
@@ -387,7 +379,7 @@
   {
    "fieldname": "section_break_onliy",
    "fieldtype": "Section Break",
-   "label": "On-Hold Remark Details"
+   "label": "Executive Remark"
   },
   {
    "fieldname": "column_break_w2jv5",
@@ -409,7 +401,6 @@
    "depends_on": "eval:doc.status==\"Resolved\" || doc.status==\"Closed\"",
    "fieldname": "ticket_resolved_by",
    "fieldtype": "Link",
-   "hidden": 1,
    "label": "Ticket Resolved By",
    "options": "User"
   },
@@ -473,11 +464,71 @@
    "fieldtype": "Table",
    "label": "Request Detail",
    "options": "Ticket Item"
+  },
+  {
+   "fieldname": "asset_request_id",
+   "fieldtype": "Data",
+   "label": "asset_request_id"
+  },
+  {
+   "depends_on": "eval:doc.status==\"In-Progress\"",
+   "fieldname": "executive_remark",
+   "fieldtype": "Small Text",
+   "label": "Executive Remark",
+   "mandatory_depends_on": "eval:doc.status==\"On-Hold\"",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ticket_assigned_details_section",
+   "fieldtype": "Section Break",
+   "label": "Ticket Assigned Details"
+  },
+  {
+   "fieldname": "assigned_to",
+   "fieldtype": "Link",
+   "label": "Assigned To",
+   "options": "User"
+  },
+  {
+   "fieldname": "ticket_resolved_on",
+   "fieldtype": "Datetime",
+   "label": "Resolved On"
+  },
+  {
+   "depends_on": "eval:frappe.user.has_role('System Manager')",
+   "fieldname": "status_log_tab",
+   "fieldtype": "Tab Break",
+   "label": "Status Log"
+  },
+  {
+   "fieldname": "status_log_details_section",
+   "fieldtype": "Section Break",
+   "label": "Status Log Details"
+  },
+  {
+   "fieldname": "status_log",
+   "fieldtype": "Table",
+   "label": "Status Log",
+   "options": "Ticket Status Log"
+  },
+  {
+   "depends_on": "eval:doc.status==\"Closed\" ",
+   "fieldname": "close_remark",
+   "fieldtype": "Small Text",
+   "label": "Ticket Closing Remark",
+   "mandatory_depends_on": "eval:doc.status==\"Closed\"",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "assigned_to.full_name",
+   "fieldname": "assigned_to_name",
+   "fieldtype": "Data",
+   "label": "Assigned User Name"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-06-27 16:41:58.879764",
+ "modified": "2025-07-10 17:36:22.159625",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",

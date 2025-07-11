@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"Lb1342m4wb\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Stationery Ticket Management</b></span>\",\"col\":12}},{\"id\":\"WDxtUKiWIZ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open\",\"col\":3}},{\"id\":\"vOEM8FUbev\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Read\",\"col\":3}},{\"id\":\"E4zrJJIR4m\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"CGIfAGxZDQ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"On-Hold\",\"col\":3}},{\"id\":\"oKKgkYClZ-\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Re-Open\",\"col\":3}},{\"id\":\"X57qDDopAS\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Resolved\",\"col\":3}},{\"id\":\"KTUZT6KV27\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"FVfnIkrcDB\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Cancelled\",\"col\":3}}]",
+ "content": "[{\"id\":\"Lb1342m4wb\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Stationery Ticket Management</b></span>\",\"col\":12}},{\"id\":\"WDxtUKiWIZ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open\",\"col\":3}},{\"id\":\"E4zrJJIR4m\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"KTUZT6KV27\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}}]",
  "creation": "2024-07-04 16:53:47.846081",
  "custom_blocks": [],
  "docstatus": 0,
@@ -12,7 +12,7 @@
  "is_hidden": 0,
  "label": "Stationery",
  "links": [],
- "modified": "2025-03-03 14:59:29.022752",
+ "modified": "2025-07-05 18:20:56.309596",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Stationery",
@@ -38,15 +38,6 @@
    "type": "DocType"
   },
   {
-   "color": "Blue",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Read",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Stationery\",false],[\"Sahayog Ticket\",\"status\",\"=\",\"Read\",false]]",
-   "type": "DocType"
-  },
-  {
    "color": "Yellow",
    "doc_view": "List",
    "format": "{}",
@@ -56,48 +47,12 @@
    "type": "DocType"
   },
   {
-   "color": "Orange",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "On-Hold",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Stationery\",false],[\"Sahayog Ticket\",\"status\",\"=\",\"On-Hold\",false]]",
-   "type": "DocType"
-  },
-  {
-   "color": "Red",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Re-Open",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Stationery\",false],[\"Sahayog Ticket\",\"status\",\"=\",\"Re-Opened\",false]]",
-   "type": "DocType"
-  },
-  {
-   "color": "Green",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Resolved",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Stationery\",false],[\"Sahayog Ticket\",\"status\",\"=\",\"Resolved\",false]]",
-   "type": "DocType"
-  },
-  {
    "color": "Cyan",
    "doc_view": "List",
    "format": "{}",
    "label": "Closed",
    "link_to": "Sahayog Ticket",
    "stats_filter": "[[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Stationery\",false],[\"Sahayog Ticket\",\"status\",\"=\",\"Closed\",false]]",
-   "type": "DocType"
-  },
-  {
-   "color": "Red",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Cancelled",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Stationery\",false],[\"Sahayog Ticket\",\"status\",\"=\",\"Cancelled\",false]]",
    "type": "DocType"
   }
  ],

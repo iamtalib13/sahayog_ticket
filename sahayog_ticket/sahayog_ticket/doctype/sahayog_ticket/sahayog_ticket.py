@@ -9,6 +9,24 @@ from datetime import datetime
 class SahayogTicket(Document):
     def before_save(self):
         self.set_creation_time()
+        self.track_status_change()
+    
+    def track_status_change(self):
+        if not self._doc_before_save:
+            return
+    
+        previous_status = self._doc_before_save.status
+        current_status = self.status
+    
+        if previous_status != current_status:
+            self.append("status_log", {
+                "from_status": previous_status,
+                "to_status": current_status,
+                "status_change_by": frappe.session.user,
+                "status_change_on": frappe.utils.now_datetime(),
+                "status_remark": f"Status changed from {previous_status} to {current_status}"
+            })
+        
 
     def set_creation_time(self):
         creation_date_time = self.creation
@@ -24,6 +42,42 @@ class SahayogTicket(Document):
 
     def before_insert(self):
         self.status = "Open"
+
+
+@frappe.whitelist()
+def get_users_by_departsection_roles(departsection):
+    if not departsection:
+        return []
+
+    # Fetch roles from the child table in Departsection
+    roles = frappe.get_all("Departsection Role",  # child table
+        filters={"parent": departsection},
+        fields=["role"]
+    )
+
+    role_names = [r.role for r in roles]
+
+    if not role_names:
+        return []
+
+    current_user = frappe.session.user
+
+    # Fetch users having those roles, excluding current user
+    users = frappe.db.sql("""
+        SELECT DISTINCT `tabUser`.name
+        FROM `tabUser`
+        INNER JOIN `tabHas Role` ON `tabHas Role`.parent = `tabUser`.name
+        WHERE `tabHas Role`.role IN %(roles)s
+        AND `tabUser`.enabled = 1
+        AND `tabUser`.name NOT IN ("Guest", "Administrator")
+        AND `tabUser`.name != %(current_user)s
+    """, {
+        "roles": tuple(role_names),
+        "current_user": current_user
+    })
+
+    return [u[0] for u in users]
+
 
 
 @frappe.whitelist()
@@ -142,8 +196,7 @@ def get_it_tickets():
 
 @frappe.whitelist()
 def get_zone():
-    
-    # Fetch CBS tickets grouped by status
+
     raw_data = frappe.db.sql("""
         SELECT
             ticket_type AS type,  

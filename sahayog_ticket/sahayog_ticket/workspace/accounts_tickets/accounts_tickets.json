@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"hPytysRnjT\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Welcome To Accounts Department</b></span>\",\"col\":12}},{\"id\":\"6kWA1DMa7X\",\"type\":\"paragraph\",\"data\":{\"text\":\"<b>Ticket Details of Accounts Department</b>\",\"col\":12}},{\"id\":\"slTgeWx2Tn\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open Tickets\",\"col\":3}},{\"id\":\"l16xNSPoeL\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Read Tickets\",\"col\":3}},{\"id\":\"KiPuTGjBLE\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress Tickets\",\"col\":3}},{\"id\":\"FtdNr2tSP8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"On-Hold Tickets\",\"col\":3}},{\"id\":\"W7EQ0WfWCc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Re-Open\",\"col\":3}},{\"id\":\"11KOiB46MV\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Resolved\",\"col\":3}},{\"id\":\"9Jat7-pi84\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed Tickets\",\"col\":3}},{\"id\":\"zTgqjZGzJ0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Cancelled\",\"col\":3}},{\"id\":\"-FpC1Nf6C4\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Accounts Recent Tickets\",\"col\":12}}]",
+ "content": "[{\"id\":\"hPytysRnjT\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Welcome To Accounts Department</b></span>\",\"col\":12}},{\"id\":\"6kWA1DMa7X\",\"type\":\"paragraph\",\"data\":{\"text\":\"<b>Ticket Details of Accounts Department</b>\",\"col\":12}},{\"id\":\"slTgeWx2Tn\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open Tickets\",\"col\":3}},{\"id\":\"KiPuTGjBLE\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress Tickets\",\"col\":3}},{\"id\":\"9Jat7-pi84\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed Tickets\",\"col\":3}},{\"id\":\"-FpC1Nf6C4\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Accounts Recent Tickets\",\"col\":12}}]",
  "creation": "2022-12-24 11:37:04.536679",
  "custom_blocks": [],
  "docstatus": 0,
@@ -12,7 +12,7 @@
  "is_hidden": 0,
  "label": "Accounts Tickets",
  "links": [],
- "modified": "2025-03-03 14:59:41.168554",
+ "modified": "2025-07-05 18:21:15.765767",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Accounts Tickets",
@@ -40,51 +40,9 @@
   {
    "color": "Red",
    "doc_view": "List",
-   "format": "{}",
-   "label": "Re-Open",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Re-Opened\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Accounts\",false]]",
-   "type": "DocType"
-  },
-  {
-   "color": "Red",
-   "doc_view": "List",
    "label": "Open Tickets",
    "link_to": "Sahayog Ticket",
    "stats_filter": "{\"dept_name\":[\"=\",\"Accounts\"],\"status\":[\"=\",\"Open\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Cyan",
-   "doc_view": "List",
-   "label": "On-Hold Tickets",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"dept_name\":[\"=\",\"Accounts\"],\"status\":[\"=\",\"On-Hold\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Green",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Resolved",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Resolved\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Accounts\",false]]",
-   "type": "DocType"
-  },
-  {
-   "color": "Yellow",
-   "doc_view": "List",
-   "label": "Read Tickets",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"dept_name\":[\"=\",\"Accounts\"],\"status\":[\"=\",\"Read\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Red",
-   "doc_view": "List",
-   "label": "Cancelled",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"dept_name\",\"=\",\"Accounts\",false],[\"Sahayog Ticket\",\"status\",\"=\",\"Cancelled\",false]]",
    "type": "DocType"
   },
   {

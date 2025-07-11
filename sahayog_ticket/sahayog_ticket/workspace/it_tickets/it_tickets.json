@@ -5,7 +5,7 @@
    "label": "Ticket Type Wise Analysis"
   }
  ],
- "content": "[{\"id\":\"4rvEr1_tHC\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Welcome To IT Department</b></span>\",\"col\":12}},{\"id\":\"UwbpfzIn7s\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Ticket Details of IT Department</b></span>\",\"col\":12}},{\"id\":\"gJfqlPXf-0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open \",\"col\":3}},{\"id\":\"rMo7Plh0AW\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Read\",\"col\":3}},{\"id\":\"X3eW1vykBF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"BgV6CyE3BI\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"On-Hold\",\"col\":3}},{\"id\":\"NOABHouJDM\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Re-Open\",\"col\":3}},{\"id\":\"WO5RdEPMij\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Resolved\",\"col\":3}},{\"id\":\"VSEjM7PolO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"wvfgBbjl0r\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Cancelled\",\"col\":3}},{\"id\":\"WNuBZcIIUZ\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Recent IT Tickets\",\"col\":12}},{\"id\":\"A-AVI5AnlS\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Ticket Type Wise Analysis\",\"col\":12}}]",
+ "content": "[{\"id\":\"4rvEr1_tHC\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Welcome To IT Department</b></span>\",\"col\":12}},{\"id\":\"gJfqlPXf-0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open \",\"col\":3}},{\"id\":\"X3eW1vykBF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"VSEjM7PolO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"A-AVI5AnlS\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Ticket Type Wise Analysis\",\"col\":12}},{\"id\":\"XqKa8dY2ZK\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sahayog Ticket Report\",\"col\":3}}]",
  "creation": "2022-12-22 15:02:50.819030",
  "custom_blocks": [],
  "docstatus": 0,
@@ -17,7 +17,7 @@
  "is_hidden": 0,
  "label": "IT Tickets",
  "links": [],
- "modified": "2025-03-03 14:57:05.930017",
+ "modified": "2025-07-05 18:19:30.483000",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "IT Tickets",
@@ -25,13 +25,7 @@
  "owner": "Administrator",
  "parent_page": "My Tickets",
  "public": 1,
- "quick_lists": [
-  {
-   "document_type": "Sahayog Ticket",
-   "label": "Recent IT Tickets",
-   "quick_list_filter": "{\"dept_name\":[\"=\",\"IT\"]}"
-  }
- ],
+ "quick_lists": [],
  "roles": [
   {
    "role": "IT Support Executive"
@@ -45,19 +39,10 @@
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Cancelled",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"dept_name\":[\"=\",\"IT\"],\"status\":[\"=\",\"Cancelled\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Red",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Re-Open",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Re-Opened\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"IT\",false]]",
-   "type": "DocType"
+   "label": "Sahayog Ticket Report",
+   "link_to": "Sahayog Ticket Report",
+   "report_ref_doctype": "Sahayog Ticket",
+   "type": "Report"
   },
   {
    "color": "Red",
@@ -69,38 +54,12 @@
    "type": "DocType"
   },
   {
-   "color": "Blue",
-   "doc_view": "List",
-   "format": "{} Read",
-   "label": "Read",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"dept_name\":[\"=\",\"IT\"],\"status\":[\"=\",\"Read\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Cyan",
-   "doc_view": "List",
-   "label": "On-Hold",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"dept_name\":[\"=\",\"IT\"],\"status\":[\"=\",\"On-Hold\"]}",
-   "type": "DocType"
-  },
-  {
    "color": "Yellow",
    "doc_view": "List",
    "format": "{} Working",
    "label": "In-Progress",
    "link_to": "Sahayog Ticket",
    "stats_filter": "{\"dept_name\":[\"=\",\"IT\"],\"status\":[\"=\",\"In-Progress\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Green",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Resolved",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Resolved\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"IT\",false]]",
    "type": "DocType"
   },
   {
