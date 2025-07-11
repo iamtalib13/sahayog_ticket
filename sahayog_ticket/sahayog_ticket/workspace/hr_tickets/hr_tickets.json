@@ -5,7 +5,7 @@
    "label": "Ticket Type Wise Analysis"
   }
  ],
- "content": "[{\"id\":\"IwP41lHb0K\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b></b></span><span class=\\\"h2\\\"><b>Welcome To HR Department</b></span>\",\"col\":12}},{\"id\":\"x83DzZYLvM\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open\",\"col\":3}},{\"id\":\"NV570Zj4NT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Read\",\"col\":3}},{\"id\":\"XFBIhNiwou\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"DrcLPFJmTI\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"On-Hold\",\"col\":3}},{\"id\":\"5o0-OIuLKL\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Re-Open\",\"col\":3}},{\"id\":\"F2561Lo9ZH\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Resolved\",\"col\":3}},{\"id\":\"xWKw-X2_fY\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"9DfISK1dtN\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Cancelled\",\"col\":3}},{\"id\":\"PogmoYZ-Wd\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Recent HR Tickets\",\"col\":12}},{\"id\":\"LffLXVTXeY\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Ticket Type Wise Analysis\",\"col\":12}}]",
+ "content": "[{\"id\":\"IwP41lHb0K\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b></b></span><span class=\\\"h2\\\"><b>Welcome To HR Department</b></span>\",\"col\":12}},{\"id\":\"x83DzZYLvM\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open\",\"col\":3}},{\"id\":\"XFBIhNiwou\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"xWKw-X2_fY\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"PogmoYZ-Wd\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Recent HR Tickets\",\"col\":12}},{\"id\":\"LffLXVTXeY\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Ticket Type Wise Analysis\",\"col\":12}}]",
  "creation": "2022-12-21 14:11:14.223640",
  "custom_blocks": [],
  "docstatus": 0,
@@ -17,7 +17,7 @@
  "is_hidden": 0,
  "label": "HR Tickets",
  "links": [],
- "modified": "2025-03-03 14:57:40.452035",
+ "modified": "2025-07-05 18:19:51.867492",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "HR Tickets",
@@ -45,15 +45,6 @@
   {
    "color": "Red",
    "doc_view": "List",
-   "format": "{}",
-   "label": "Re-Open",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Re-Opened\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"HR\",false]]",
-   "type": "DocType"
-  },
-  {
-   "color": "Red",
-   "doc_view": "List",
    "format": "{} Open",
    "label": "Open",
    "link_to": "Sahayog Ticket",
@@ -70,47 +61,12 @@
    "type": "DocType"
   },
   {
-   "color": "Yellow",
-   "doc_view": "List",
-   "format": "{} Read",
-   "label": "Read",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"status\":[\"=\",\"Read\"],\"dept_name\":[\"=\",\"HR\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Green",
-   "doc_view": "List",
-   "format": "{}",
-   "label": "Resolved",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Resolved\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"HR\",false]]",
-   "type": "DocType"
-  },
-  {
-   "color": "Pink",
-   "doc_view": "List",
-   "format": "{} On-Hold",
-   "label": "On-Hold",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"status\":[\"=\",\"On-Hold\"],\"dept_name\":[\"=\",\"HR\"]}",
-   "type": "DocType"
-  },
-  {
    "color": "Green",
    "doc_view": "List",
    "format": "{} Closed",
    "label": "Closed",
    "link_to": "Sahayog Ticket",
    "stats_filter": "{\"status\":[\"=\",\"Closed\"],\"dept_name\":[\"=\",\"HR\"]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Cancelled",
-   "link_to": "Sahayog Ticket",
-   "stats_filter": "{\"status\":[\"=\",\"Cancelled\"],\"dept_name\":[\"=\",\"HR\"]}",
    "type": "DocType"
   }
  ],

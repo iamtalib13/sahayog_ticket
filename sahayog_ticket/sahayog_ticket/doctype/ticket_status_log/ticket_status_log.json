@@ -1,0 +1,63 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-07-09 17:09:12.654083",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "from_status",
+  "to_status",
+  "status_change_by",
+  "status_change_on",
+  "status_remark"
+ ],
+ "fields": [
+  {
+   "fieldname": "status_remark",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Remark"
+  },
+  {
+   "fieldname": "status_change_by",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Change By"
+  },
+  {
+   "fieldname": "status_change_on",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Change On"
+  },
+  {
+   "fieldname": "from_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "From Status",
+   "options": "Open\nIn-Progress\nResolved\nClosed"
+  },
+  {
+   "fieldname": "to_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "To Status",
+   "options": "Open\nIn-Progress\nResolved\nClosed"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-07-09 17:54:55.222032",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "Ticket Status Log",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

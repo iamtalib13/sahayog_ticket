@@ -165,3 +165,34 @@ def update_reports_to():
         # Handle any exceptions and log an error message
         frappe.log_error(f"Error in update_reports_to: {e}", "Update Reports To Error")
 
+
+def patch_ticket_status():
+    status_map = {
+        "Open": "Open",
+        "Read": "In-Progress",
+        "In-Progress": "In-Progress",
+        "On-Hold": "In-Progress",
+        "Re-Opened": "Open",
+        "Resolved": "Closed",
+        "Closed": "Closed",
+        "Cancelled": "Closed"
+    }
+
+    tickets = frappe.get_all("Sahayog Ticket", fields=["name", "status"])
+
+    for ticket in tickets:
+        old_status = ticket.status
+        new_status = status_map.get(old_status)
+
+        if new_status and new_status != old_status:
+            frappe.db.set_value(
+                "Sahayog Ticket",
+                ticket.name,
+                "status",
+                new_status,
+                update_modified=False  # 🛑 Don't update `modified` field
+            )
+            print(f"Updated: {ticket.name} - {old_status} ➡ {new_status}")
+
+    frappe.db.commit()
+    print("✅ Status normalization complete (without touching modified timestamps).")
