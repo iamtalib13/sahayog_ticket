@@ -55,7 +55,7 @@
     async function loadDashboard() {
       const res = await fetch('/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_zone');
       const data = await res.json();
-      console.log("data", data);
+      console.log("data",data);
 
       const zones = data.message.zones;
       const types = data.message.ticket_types;

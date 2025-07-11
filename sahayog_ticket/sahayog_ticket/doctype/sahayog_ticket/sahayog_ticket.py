@@ -219,8 +219,8 @@ def get_zone():
         ticket_type = row.ticket_type or "Unknown Type"
         status = row.status or "Open"
         count = row.count or 0
-
         # Initialize zone and region structures if not already present
+
         zone_data = result.setdefault(zone, {"zone": zone, "regions": {}})
         region_data = zone_data["regions"].setdefault(region, {
             "region": region,
@@ -232,8 +232,7 @@ def get_zone():
 
         # Increment the count for the current status
         region_data[status] += count
-
-        # Update total counts for each status
+    
         if status == "Open":
             total_open += count
         elif status == "In-Progress":
@@ -241,12 +240,18 @@ def get_zone():
         elif status == "Closed":
             total_closed += count
 
-    # Convert result dictionary to a list format for output
+    # Convert result dictionary to a list format
     final_result = [{
         "zone": zone,
         "regions": list(data["regions"].values())
     } for zone, data in result.items()]
-    
+    # Ticket types (for donut chart)
+    ticket_types_raw = frappe.db.sql("""
+        SELECT ticket_type AS type, COUNT(*) AS count
+        FROM `tabSahayog Ticket`
+        WHERE dept_name = 'CBS'
+        GROUP BY ticket_type
+    """, as_dict=True)
 
     return {
         "zones": final_result,
