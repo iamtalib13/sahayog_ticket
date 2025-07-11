@@ -1,0 +1,41 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"YzUfTqbYYp\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Finacle Dashboard</span>\",\"col\":12}},{\"id\":\"MIygmZl2hw\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"Finacle Dashboard\",\"col\":12}}]",
+ "creation": "2025-07-08 10:53:37.017555",
+ "custom_blocks": [
+  {
+   "custom_block_name": "Finacle Dashboard",
+   "label": "Finacle Dashboard"
+  }
+ ],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "kanban",
+ "idx": 0,
+ "indicator_color": "",
+ "is_hidden": 0,
+ "label": "CBS Tickets",
+ "links": [],
+ "modified": "2025-07-10 16:58:40.982840",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "CBS Tickets",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "My Tickets",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "CBS Support Executive"
+  },
+  {
+   "role": "CBS Support Manager"
+  }
+ ],
+ "sequence_id": 45.0,
+ "shortcuts": [],
+ "title": "CBS Tickets"
+}

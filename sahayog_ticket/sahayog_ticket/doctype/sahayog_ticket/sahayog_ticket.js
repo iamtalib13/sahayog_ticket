@@ -582,16 +582,6 @@ frappe.ui.form.on("Sahayog Ticket", {
             frm.disable_save();
           }
 
-          if (
-            frm.doc.status == "Re-Opened" ||
-            frm.doc.status == "Read" ||
-            frm.doc.status == "In-Progress"
-          ) {
-          }
-          if (frm.doc.status == "Open") {
-          }
-          if (frm.doc.status == "Open") {
-          }
           if (frm.doc.status == "Resolved") {
             frm.disable_save();
           }
@@ -663,19 +653,6 @@ frappe.ui.form.on("Sahayog Ticket", {
           frm.disable_save();
         }
 
-        if (
-          frm.doc.status == "Re-Opened" ||
-          frm.doc.status == "Read" ||
-          frm.doc.status == "In-Progress"
-        ) {
-        }
-
-        if (
-          frm.doc.status == "Open" ||
-          frm.doc.status == "Read" ||
-          frm.doc.status == "On-Hold"
-        ) {
-        }
         if (frm.doc.status == "Resolved") {
           frm.disable_save();
         }
@@ -718,7 +695,51 @@ frappe.ui.form.on("Sahayog Ticket", {
   },
 
   assign_to_button: function (frm) {
-    console.log("Assign to Button Triggered");
+    frm.add_custom_button(__("Assign to"), async function () {
+      if (!frm.doc.dept_name) {
+        frappe.msgprint(__("Please select a Department first."));
+        return;
+      }
+
+      // Get matching users from server
+      frm.call({
+        method: "get_users_by_departsection_roles",
+        args: {
+          departsection: frm.doc.dept_name,
+        },
+        callback: function (r) {
+          if (r.message && r.message.length > 0) {
+            frappe.prompt(
+              {
+                label: __("Assign to"),
+                fieldname: "assigned_to",
+                fieldtype: "Link",
+                options: "User",
+                reqd: 1,
+                get_query: () => {
+                  return {
+                    filters: {
+                      name: ["in", r.message], // r.message is an array of user emails
+                    },
+                  };
+                },
+              },
+              function (values) {
+                if (values.assigned_to) {
+                  frm.set_value("assigned_to", values.assigned_to);
+
+                  frm.save();
+                } else {
+                  frappe.msgprint(__("Please select a user to assign."));
+                }
+              }
+            );
+          } else {
+            frappe.msgprint(__("No eligible users found for this department."));
+          }
+        },
+      });
+    });
   },
 
   In_Progress_button: function (frm) {
@@ -757,6 +778,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
                 frm.set_value("status", "In-Progress");
                 frm.refresh_field("status");
+                frm.set_value("assigned_to", frappe.session.user);
                 frm.save();
 
                 d.hide();

@@ -58,6 +58,7 @@
   "reopen_remark",
   "ticket_assigned_details_section",
   "assigned_to",
+  "assigned_to_name",
   "ticket_resolved_details_section",
   "ticket_resolved_by",
   "ticket_resolved_user",
@@ -480,13 +481,13 @@
   {
    "fieldname": "ticket_assigned_details_section",
    "fieldtype": "Section Break",
-   "hidden": 1,
    "label": "Ticket Assigned Details"
   },
   {
    "fieldname": "assigned_to",
-   "fieldtype": "Data",
-   "label": "Assigned To"
+   "fieldtype": "Link",
+   "label": "Assigned To",
+   "options": "User"
   },
   {
    "fieldname": "ticket_resolved_on",
@@ -517,11 +518,17 @@
    "label": "Ticket Closing Remark",
    "mandatory_depends_on": "eval:doc.status==\"Closed\"",
    "read_only": 1
+  },
+  {
+   "fetch_from": "assigned_to.full_name",
+   "fieldname": "assigned_to_name",
+   "fieldtype": "Data",
+   "label": "Assigned User Name"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-10 11:03:31.320088",
+ "modified": "2025-07-10 17:36:22.159625",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
