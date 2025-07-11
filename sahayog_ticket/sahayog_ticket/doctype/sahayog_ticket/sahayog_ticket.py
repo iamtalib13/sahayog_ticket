@@ -44,6 +44,40 @@ class SahayogTicket(Document):
         self.status = "Open"
 
 
+@frappe.whitelist()
+def get_users_by_departsection_roles(departsection):
+    if not departsection:
+        return []
+
+    # Fetch roles from the child table in Departsection
+    roles = frappe.get_all("Departsection Role",  # child table
+        filters={"parent": departsection},
+        fields=["role"]
+    )
+
+    role_names = [r.role for r in roles]
+
+    if not role_names:
+        return []
+
+    current_user = frappe.session.user
+
+    # Fetch users having those roles, excluding current user
+    users = frappe.db.sql("""
+        SELECT DISTINCT `tabUser`.name
+        FROM `tabUser`
+        INNER JOIN `tabHas Role` ON `tabHas Role`.parent = `tabUser`.name
+        WHERE `tabHas Role`.role IN %(roles)s
+        AND `tabUser`.enabled = 1
+        AND `tabUser`.name NOT IN ("Guest", "Administrator")
+        AND `tabUser`.name != %(current_user)s
+    """, {
+        "roles": tuple(role_names),
+        "current_user": current_user
+    })
+
+    return [u[0] for u in users]
+
 
 
 @frappe.whitelist()

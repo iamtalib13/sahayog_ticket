@@ -11,6 +11,7 @@ def get_permission_query_conditions(user):
     Returns SQL conditions to restrict `Sahayog Ticket` records visible to the user.
     User can see:
     - Tickets they own
+    - Tickets assigned to them (via `assigned_to`)
     - Tickets whose dept_name is in the departments mapped to user's roles via Departsection Role
     """
     if not user or user == "Administrator":
@@ -26,17 +27,21 @@ def get_permission_query_conditions(user):
         pluck="parent"
     )
 
-    # Condition to allow tickets owned by the user
-    conditions = [f"`tabSahayog Ticket`.owner = {frappe.db.escape(user)}"]
+    # Base conditions
+    user_escaped = frappe.db.escape(user)
+    conditions = [
+        f"`tabSahayog Ticket`.owner = {user_escaped}",
+        f"`tabSahayog Ticket`.assigned_to = {user_escaped}"
+    ]
 
     if departments:
-        # Escape each department and join with commas without adding extra quotes
         escaped_departments = [frappe.db.escape(dept) for dept in departments]
         dept_list = ", ".join(escaped_departments)
         conditions.append(f"`tabSahayog Ticket`.dept_name IN ({dept_list})")
 
-    # Combine conditions with OR operator
+    # Combine conditions with OR
     return " OR ".join(conditions)
+
 
 
 def has_permission(doc, ptype, user):
