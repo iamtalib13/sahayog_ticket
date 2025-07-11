@@ -190,30 +190,37 @@ def get_it_tickets():
 
     return list(result.values())
 
+
+
 # This function retrieves the zone-wise ticket counts for specific CBS-related ticket types.
+
 @frappe.whitelist()
 def get_zone():
 
     raw_data = frappe.db.sql("""
-        SELECT 
+        SELECT
+            ticket_type AS type,  
             status,
             COUNT(*) AS count
         FROM `tabSahayog Ticket`
         WHERE dept_name = 'CBS'
-        GROUP BY status
+        GROUP BY status,ticket_type
     """, as_dict=True)
 
     result = {}
     total_open = total_inprogress = total_closed = 0
 
+    # Process each row of raw data
     for row in raw_data:
+
+        # Extract or set default values for zone, region, ticket_type, and status
         zone = row.zone or "Unknown"
         region = row.region or "Unknown Region"
         ticket_type = row.ticket_type or "Unknown Type"
         status = row.status or "Open"
         count = row.count or 0
+        # Initialize zone and region structures if not already present
 
-        # Initialize zone and region structures
         zone_data = result.setdefault(zone, {"zone": zone, "regions": {}})
         region_data = zone_data["regions"].setdefault(region, {
             "region": region,
@@ -223,9 +230,9 @@ def get_zone():
             "Closed": 0
         })
 
+        # Increment the count for the current status
         region_data[status] += count
-
-        # Update total counts
+    
         if status == "Open":
             total_open += count
         elif status == "In-Progress":
@@ -238,7 +245,6 @@ def get_zone():
         "zone": zone,
         "regions": list(data["regions"].values())
     } for zone, data in result.items()]
-
     # Ticket types (for donut chart)
     ticket_types_raw = frappe.db.sql("""
         SELECT ticket_type AS type, COUNT(*) AS count
@@ -249,7 +255,7 @@ def get_zone():
 
     return {
         "zones": final_result,
-        "ticket_types": ticket_types_raw,
+        "ticket_types": raw_data,
         "counts": {
             "open": total_open,
             "in_progress": total_inprogress,
