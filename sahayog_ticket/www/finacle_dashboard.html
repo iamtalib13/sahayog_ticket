@@ -9,25 +9,34 @@
 </head>
 <body class="bg-gray-50 text-gray-900 m-0 p-0">
 
-
-  <div id="card_margin" class="flex flex-wrap justify-center gap-6 mb-10 px-4">
-    <div onclick="navigateToStatus('Open')" class="cursor-pointer bg-blue-50 px-8 py-5 rounded-xl text-center shadow hover:shadow-md transition w-40">
-      <h2 class="text-xs font-semibold text-blue-700 uppercase tracking-wide">Open</h2>
-      <p id="open-count" class="text-2xl font-bold text-blue-800 mt-1">0</p>
-    </div>
-    <div onclick="navigateToStatus('In-Progress')" class="cursor-pointer bg-yellow-50 px-8 py-5 rounded-xl text-center shadow hover:shadow-md transition w-40">
-      <h2 class="text-xs font-semibold text-yellow-700 uppercase tracking-wide">In Progress</h2>
-      <p id="inprogress-count" class="text-2xl font-bold text-yellow-800 mt-1">0</p>
-    </div>
-    <div onclick="navigateToStatus('Resolved')" class="cursor-default bg-gray-100 px-8 py-5 rounded-xl text-center shadow hover:shadow-md transition w-40">
-      <h2 class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Resolved</h2>
-      <p id="resolved" class="text-2xl font-bold text-gray-800 mt-1">0</p>
-    </div>
-    <div onclick="navigateToStatus('Closed')" class="cursor-pointer bg-green-50 px-8 py-5 rounded-xl text-center shadow hover:shadow-md transition w-40">
-      <h2 class="text-xs font-semibold text-green-700 uppercase tracking-wide">Closed</h2>
-      <p id="closed-count" class="text-2xl font-bold text-green-800 mt-1">0</p>
-    </div>
+<!-- Cards -->
+<div id="card_margin" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 px-6">
+  <div onclick="navigateToStatus('Open')" class="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition">
+    <h2 class="text-sm text-gray-500 font-semibold uppercase">Open</h2>
+    <p id="open-count" class="text-3xl font-bold text-blue-600 mt-1">0</p>
+    <p class="text-xs text-gray-400 mt-1">+0% from last week</p>
   </div>
+
+  <div onclick="navigateToStatus('In-Progress')" class="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition">
+    <h2 class="text-sm text-gray-500 font-semibold uppercase">In Progress</h2>
+    <p id="inprogress-count" class="text-3xl font-bold text-yellow-600 mt-1">0</p>
+    <p class="text-xs text-gray-400 mt-1">-0.2% from last week</p>
+  </div>
+
+  <div onclick="navigateToStatus('Resolved')" class="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition">
+    <h2 class="text-sm text-gray-500 font-semibold uppercase">Resolved</h2>
+    <p id="resolved" class="text-3xl font-bold text-gray-700 mt-1">0</p>
+    <p class="text-xs text-gray-400 mt-1">--</p>
+  </div>
+
+  <div onclick="navigateToStatus('Closed')" class="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition">
+    <h2 class="text-sm text-gray-500 font-semibold uppercase">Closed</h2>
+    <p id="closed-count" class="text-3xl font-bold text-green-600 mt-1">0</p>
+    <p class="text-xs text-gray-400 mt-1">+10% from last week</p>
+  </div>
+</div>
+
+
 
   <!-- Charts Container -->
   <div class="flex flex-col lg:flex-row gap-4 px-4">
@@ -53,139 +62,142 @@
     }
 
     async function loadDashboard() {
-      const res = await fetch('/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_zone');
-      const data = await res.json();
-      console.log("data",data);
+  try {
+    const res = await fetch('/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_zone');
+    const { message } = await res.json();
+    const { zones, ticket_types: types, counts } = message;
 
-      const zones = data.message.zones;
-      const types = data.message.ticket_types;
-      const counts = data.message.counts;
+    // Update counts
+    document.getElementById('open-count').textContent = counts.open;
+    document.getElementById('inprogress-count').textContent = counts.in_progress;
+    document.getElementById('closed-count').textContent = counts.closed;
 
-      document.getElementById("card_margin").style.margin = "30px 30px 30px 30px";
-      document.getElementById('open-count').innerText = counts.open;
-      document.getElementById('inprogress-count').innerText = counts.in_progress;
-      document.getElementById('closed-count').innerText = counts.closed;
+    const baseColors = ['#3b82f6', '#facc15', '#10b981', '#f472b6', '#6366f1', '#fb923c', '#14b8a6', '#ef4444'];
 
-      const baseColors = ['#3b82f6', '#facc15', '#10b981', '#f472b6', '#6366f1', '#fb923c', '#14b8a6', '#ef4444'];
+    // Sort zones by total activity
+    zones.sort((a, b) => {
+      const sum = (r) => (r.Open || 0) + (r["In-Progress"] || 0);
+      const totalA = a.regions.reduce((s, r) => s + sum(r), 0);
+      const totalB = b.regions.reduce((s, r) => s + sum(r), 0);
+      return totalB - totalA;
+    });
 
-      // Sort zones by total Open + In-Progress
-      zones.sort((a, b) => {
-        const totalA = a.regions.reduce((sum, r) => sum + (r.Open || 0) + (r["In-Progress"] || 0), 0);
-        const totalB = b.regions.reduce((sum, r) => sum + (r.Open || 0) + (r["In-Progress"] || 0), 0);
-        return totalB - totalA;
-      });
+    const zoneLabels = [];
+    const regionMap = {};
+    const regionColors = {};
+    let colorIndex = 0;
 
-      const zoneLabels = [];
-      const regionMap = {};
-      const regionColors = {};
-      let colorIndex = 0;
+    for (const zone of zones) {
+      zoneLabels.push(zone.zone);
+      for (const region of zone.regions) {
+        const reg = region.region;
+        if (!regionMap[reg]) {
+          regionMap[reg] = {};
+          regionColors[reg] = baseColors[colorIndex++ % baseColors.length];
+        }
+        const value = (region.Open || 0) + (region["In-Progress"] || 0);
+        regionMap[reg][zone.zone] = (regionMap[reg][zone.zone] || 0) + value;
+      }
+    }
 
-      zones.forEach(zone => {
-        zoneLabels.push(zone.zone);
-        zone.regions.forEach(region => {
-          const reg = region.region;
-          if (!regionMap[reg]) {
-            regionMap[reg] = {};
-            regionColors[reg] = baseColors[colorIndex++ % baseColors.length];
-          }
-          regionMap[reg][zone.zone] = (regionMap[reg][zone.zone] || 0) + (region.Open || 0) + (region["In-Progress"] || 0);
-        });
-      });
+    // Calculate max Y
+    const maxY = Math.max(...zoneLabels.map(zone =>
+      Object.values(regionMap).reduce((sum, region) => sum + (region[zone] || 0), 0)
+    ));
 
-      const ctx = document.getElementById('ticketChart').getContext('2d');
-      const datasets = Object.entries(regionMap).map(([region, zoneData]) => {
-        return {
+    const stackedCtx = document.getElementById('ticketChart').getContext('2d');
+    const stackedChart = new Chart(stackedCtx, {
+      type: 'bar',
+      data: {
+        labels: zoneLabels,
+        datasets: Object.entries(regionMap).map(([region, zoneData]) => ({
           label: region,
           data: zoneLabels.map(zone => zoneData[zone] || 0),
           backgroundColor: regionColors[region],
           borderWidth: 0
-        };
-      });
-
-      let maxY = 0;
-      zoneLabels.forEach(zone => {
-        let total = 0;
-        Object.values(regionMap).forEach(region => {
-          total += region[zone] || 0;
-        });
-        if (total > maxY) maxY = total;
-      });
-
-      new Chart(ctx, {
-        type: 'bar',
-        data: { labels: zoneLabels, datasets },
-        options: {
-          responsive: false,
-          maintainAspectRatio: false,
-          plugins: {
-            tooltip: {
-              callbacks: {
-                title: () => '',
-                label: ctx => `${ctx.dataset.label}: ${ctx.raw}`
-              }
-            },
-            legend: { display: false }
-          },
-          scales: {
-            x: {
-              stacked: true,
-              grid: { display: false, drawBorder: false },
-              ticks: { padding: 10 },
-              barPercentage: 0.8,
-              categoryPercentage: 0.8
-            },
-            y: {
-              stacked: true,
-              beginAtZero: true,
-              grid: { display: false, drawBorder: false },
-              ticks: {
-                font: { size: 12 },
-                padding: 2
-              },
-              max: maxY,
-              min: 0
+        }))
+      },
+      options: {
+        responsive: false,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              title: () => '',
+              label: ctx => `${ctx.dataset.label}: ${ctx.raw}`
             }
+          },
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            grid: { display: false, drawBorder: false },
+            ticks: { padding: 10 },
+            barPercentage: 0.8,
+            categoryPercentage: 0.8
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            max: maxY,
+            ticks: { font: { size: 12 }, padding: 2 },
+            grid: { display: false, drawBorder: false }
           }
         }
-      });
+      }
+    });
 
-      const donutCtx = document.getElementById('donutChart').getContext('2d');
-      types.sort((a, b) => b.count - a.count);
-      const donutData = types.map(t => t.count);
-      const donutLabels = types.map(t => t.type);
-      const total = donutData.reduce((a, b) => a + b, 0);
-
-      new Chart(donutCtx, {
-        type: 'bar',
-        data: {
-          labels: donutLabels,
-          datasets: [{
-            data: donutData,
-            backgroundColor: baseColors
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                title: () => '',
-                label: ctx => {
-                  const value = ctx.raw;
-                  const percentage = ((value / total) * 100).toFixed(1);
-                  return `${ctx.label}: ${percentage}%`;
-                }
-              }
-            }
-          },
-          cutout: '70'
+    // DONUT chart
+    const donutCtx = document.getElementById('donutChart').getContext('2d');
+    types.sort((a, b) => b.count - a.count);
+    const donutData = types.map(t => t.count);
+    const donutLabels = types.map(t => t.type);
+    // BAR chart for Ticket Types Distribution
+    new Chart(donutCtx, {
+      type: 'bar',
+      data: {
+      labels: donutLabels,
+      datasets: [{
+        data: donutData,
+        backgroundColor: baseColors,
+      }]
+      },
+      options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+        callbacks: {
+          title: ctx => ctx[0]?.label || '',
+          label: ctx => {
+          const value = ctx.raw;
+          return `${ctx.label}: ${value}`;
+          }
         }
+        }
+      },
+      scales: {
+        x: {
+        grid: { display: false },
+        ticks: { font: { size: 12 } }
+        },
+        y: {
+        beginAtZero: true,
+        grid: { display: true },
+        ticks: { font: { size: 12 } }
+        }
+      }
+      }
       });
+  
+    } catch (error) {
+      console.error(error);
     }
-
-    loadDashboard();
-  </script>
+  }
+  
+      loadDashboard();
+    </script>
 
 </body>
 </html>

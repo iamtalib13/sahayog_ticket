@@ -207,7 +207,8 @@ def get_zone():
 
     raw_data = frappe.db.sql("""
         SELECT
-            ticket_type AS type,  
+            ticket_type AS type,             
+            zone,                
             status,
             COUNT(*) AS count
         FROM `tabSahayog Ticket`
