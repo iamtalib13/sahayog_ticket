@@ -8,9 +8,16 @@ from datetime import datetime
 
 class SahayogTicket(Document):
     def before_save(self):
+        if self.is_new():
+            self.status = "Open"  # Ensure status is set for new tickets
+    
         self.set_creation_time()
         self.track_status_change()
-    
+
+    def validate(self):
+        if not self.status:
+            self.status = "Open"
+        
     def track_status_change(self):
         if not self._doc_before_save:
             return
@@ -40,8 +47,8 @@ class SahayogTicket(Document):
     def format_time(self, creation_datetime):
         return creation_datetime.strftime("%I:%M %p")
 
-    def before_insert(self):
-        self.status = "Open"
+    # def before_insert(self):
+    #     self.status = "Open"
 
 
 @frappe.whitelist()
@@ -162,7 +169,8 @@ def get_employee_info(employee_number):
             "cell_number",
             "department",
             "custom_district",
-            "custom_division"
+            "custom_division",
+            
         ],
         as_dict=True,
     )

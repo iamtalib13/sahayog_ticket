@@ -481,13 +481,15 @@
   {
    "fieldname": "ticket_assigned_details_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Ticket Assigned Details"
   },
   {
    "fieldname": "assigned_to",
    "fieldtype": "Link",
    "label": "Assigned To",
-   "options": "User"
+   "options": "User",
+   "read_only": 1
   },
   {
    "fieldname": "ticket_resolved_on",
@@ -523,12 +525,13 @@
    "fetch_from": "assigned_to.full_name",
    "fieldname": "assigned_to_name",
    "fieldtype": "Data",
-   "label": "Assigned User Name"
+   "label": "Assigned User Name",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-10 17:36:22.159625",
+ "modified": "2025-07-12 12:17:29.975905",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
