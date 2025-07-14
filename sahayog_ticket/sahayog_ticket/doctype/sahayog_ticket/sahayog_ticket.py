@@ -198,39 +198,40 @@ def get_it_tickets():
 
     return list(result.values())
 
-
-
 # This function retrieves the zone-wise ticket counts for specific CBS-related ticket types.
 
 @frappe.whitelist()
 def get_zone():
-
+    # Single query to fetch all CBS ticket data
     raw_data = frappe.db.sql("""
         SELECT
-            ticket_type AS type,             
-            zone,                
+            ticket_type AS type,
+            zone,
             status,
+            assigned_to,
             COUNT(*) AS count
         FROM `tabSahayog Ticket`
         WHERE dept_name = 'CBS'
-        GROUP BY status,ticket_type
+        GROUP BY ticket_type, zone, region, status, assigned_to
     """, as_dict=True)
 
-    result = {}
+    zone_result = {}
+    executive_result = {}
     total_open = total_inprogress = total_closed = 0
 
-    # Process each row of raw data
     for row in raw_data:
-
-        # Extract or set default values for zone, region, ticket_type, and status
+        # ----- ZONE WISE STRUCTURE -----
         zone = row.zone or "Unknown"
         region = row.region or "Unknown Region"
-        ticket_type = row.ticket_type or "Unknown Type"
+        ticket_type = row.type or "Unknown Type"
         status = row.status or "Open"
         count = row.count or 0
-        # Initialize zone and region structures if not already present
 
-        zone_data = result.setdefault(zone, {"zone": zone, "regions": {}})
+        zone_data = zone_result.setdefault(zone, {
+            "zone": zone,
+            "regions": {}
+        })
+
         region_data = zone_data["regions"].setdefault(region, {
             "region": region,
             "ticket_type": ticket_type,
@@ -239,9 +240,8 @@ def get_zone():
             "Closed": 0
         })
 
-        # Increment the count for the current status
         region_data[status] += count
-    
+
         if status == "Open":
             total_open += count
         elif status == "In-Progress":
@@ -249,25 +249,32 @@ def get_zone():
         elif status == "Closed":
             total_closed += count
 
-    # Convert result dictionary to a list format
-    final_result = [{
-        "zone": zone,
-        "regions": list(data["regions"].values())
-    } for zone, data in result.items()]
-    # Ticket types (for donut chart)
-    ticket_types_raw = frappe.db.sql("""
-        SELECT ticket_type AS type, COUNT(*) AS count
-        FROM `tabSahayog Ticket`
-        WHERE dept_name = 'CBS'
-        GROUP BY ticket_type
-    """, as_dict=True)
+        # ----- EXECUTIVE WISE STRUCTURE -----
+        executive = row.assigned_to
+        if executive:
+            exec_data = executive_result.setdefault(executive, {
+                "executive": executive,
+                "Pending": 0
+            })
+
+            if status in ("Open", "In-Progress"):
+                exec_data["Pending"] += count
+
+    # Final formatting
+    zone_final = [{
+        "zone": z["zone"],
+        "regions": list(z["regions"].values())
+    } for z in zone_result.values()]
+
+    executive_final = list(executive_result.values())
 
     return {
-        "zones": final_result,
-        "ticket_types": raw_data,
+        "zones": zone_final,
+        "ticket_types": raw_data,  # Optional: could be filtered to just types if needed
         "counts": {
             "open": total_open,
             "in_progress": total_inprogress,
             "closed": total_closed
-        }
+        },
+        "executives": executive_final
     }

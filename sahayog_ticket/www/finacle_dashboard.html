@@ -16,19 +16,16 @@
     <p id="open-count" class="text-3xl font-bold text-blue-600 mt-1">0</p>
     <p class="text-xs text-gray-400 mt-1">+0% from last week</p>
   </div>
-
   <div onclick="navigateToStatus('In-Progress')" class="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition">
     <h2 class="text-sm text-gray-500 font-semibold uppercase">In Progress</h2>
     <p id="inprogress-count" class="text-3xl font-bold text-yellow-600 mt-1">0</p>
     <p class="text-xs text-gray-400 mt-1">-0.2% from last week</p>
   </div>
-
   <div onclick="navigateToStatus('Resolved')" class="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition">
     <h2 class="text-sm text-gray-500 font-semibold uppercase">Resolved</h2>
     <p id="resolved" class="text-3xl font-bold text-gray-700 mt-1">0</p>
     <p class="text-xs text-gray-400 mt-1">--</p>
   </div>
-
   <div onclick="navigateToStatus('Closed')" class="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition">
     <h2 class="text-sm text-gray-500 font-semibold uppercase">Closed</h2>
     <p id="closed-count" class="text-3xl font-bold text-green-600 mt-1">0</p>
@@ -36,168 +33,191 @@
   </div>
 </div>
 
-
-
-  <!-- Charts Container -->
-  <div class="flex flex-col lg:flex-row gap-4 px-4">
-    <!-- Stacked Bar Chart -->
-    <div class="bg-white p-6 rounded-xl shadow w-full lg:w-1/2">
-      <h2 class="text-xl font-bold mb-4">Zone-Wise Ticket Types Distribution</h2>
-      <canvas id="ticketChart" height="188" width="500"></canvas>
-    </div>
-    <!-- Donut Chart -->
-    <div class="bg-white p-6 rounded-xl shadow w-full lg:w-1/2">
-      <h2 class="text-xl font-bold mb-4">Ticket Types Distribution</h2>
-      <div class="w-full">
-        <canvas id="donutChart" style="height: 300px;"></canvas>
-      </div>
+<!-- Charts Container -->
+<div class="flex flex-col lg:flex-row gap-4 px-4">
+  <!-- Stacked Bar Chart -->
+  <div class="bg-white p-6 rounded-xl shadow w-full lg:w-1/2">
+    <h2 class="text-xl font-bold mb-4">Zone-Wise Ticket Types Distribution</h2>
+    <canvas id="ticketChart" height="188" width="500"></canvas>
+  </div>
+  <!-- Ticket Types Bar Chart -->
+  <div class="bg-white p-6 rounded-xl shadow w-full lg:w-1/2">
+    <h2 class="text-xl font-bold mb-4">Ticket Types Distribution</h2>
+    <div class="w-full">
+      <canvas id="donutChart" style="height: 300px;"></canvas>
     </div>
   </div>
+</div>
 
-  <script>
-    function navigateToStatus(status) {
-      const url = new URL("/app/sahayog-ticket", window.location.origin);
-      url.searchParams.set("status", status);
-      window.top.location.href = url.toString();
-    }
+<!-- Executive Ticket Summary -->
+<div class="bg-white p-6 rounded-xl shadow mt-6 w-full">
+  <h2 class="text-xl font-bold mb-4">Executive-wise CBS Ticket Count</h2>
+  <canvas id="executiveChart" height="180"></canvas>
+</div>
 
-    async function loadDashboard() {
-  try {
-    const res = await fetch('/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_zone');
-    const { message } = await res.json();
-    const { zones, ticket_types: types, counts } = message;
+<script>
+  function navigateToStatus(status) {
+    const url = new URL("/app/sahayog-ticket", window.location.origin);
+    url.searchParams.set("status", status);
+    window.top.location.href = url.toString();
+  }
 
-    // Update counts
-    document.getElementById('open-count').textContent = counts.open;
-    document.getElementById('inprogress-count').textContent = counts.in_progress;
-    document.getElementById('closed-count').textContent = counts.closed;
+  async function loadDashboard() {
+    try {
+      const res = await fetch('/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_zone');
+      const { message } = await res.json();
+      const { zones, ticket_types: types, counts, executives = [] } = message;
 
-    const baseColors = ['#3b82f6', '#facc15', '#10b981', '#f472b6', '#6366f1', '#fb923c', '#14b8a6', '#ef4444'];
+      // Update card counts and margin
+      document.getElementById("card_margin").style.margin = "30px";
+      document.getElementById('open-count').textContent = counts.open;
+      document.getElementById('inprogress-count').textContent = counts.in_progress;
+      document.getElementById('closed-count').textContent = counts.closed;
 
-    // Sort zones by total activity
-    zones.sort((a, b) => {
-      const sum = (r) => (r.Open || 0) + (r["In-Progress"] || 0);
-      const totalA = a.regions.reduce((s, r) => s + sum(r), 0);
-      const totalB = b.regions.reduce((s, r) => s + sum(r), 0);
-      return totalB - totalA;
-    });
+      const baseColors = ['#3b82f6', '#facc15', '#10b981', '#f472b6', '#6366f1', '#fb923c', '#14b8a6', '#ef4444'];
 
-    const zoneLabels = [];
-    const regionMap = {};
-    const regionColors = {};
-    let colorIndex = 0;
+      // Prepare stacked bar chart data
+      zones.sort((a, b) => {
+        const sum = r => (r.Open || 0) + (r["In-Progress"] || 0);
+        const totalA = a.regions.reduce((s, r) => s + sum(r), 0);
+        const totalB = b.regions.reduce((s, r) => s + sum(r), 0);
+        return totalB - totalA;
+      });
 
-    for (const zone of zones) {
-      zoneLabels.push(zone.zone);
-      for (const region of zone.regions) {
-        const reg = region.region;
-        if (!regionMap[reg]) {
-          regionMap[reg] = {};
-          regionColors[reg] = baseColors[colorIndex++ % baseColors.length];
+      const zoneLabels = zones.map(z => z.zone);
+      const regionMap = {};
+      const regionColors = {};
+      let colorIndex = 0;
+
+      zones.forEach(zone => {
+        zone.regions.forEach(region => {
+          const reg = region.region;
+          if (!regionMap[reg]) {
+            regionMap[reg] = {};
+            regionColors[reg] = baseColors[colorIndex++ % baseColors.length];
+          }
+          const value = (region.Open || 0) + (region["In-Progress"] || 0);
+          regionMap[reg][zone.zone] = (regionMap[reg][zone.zone] || 0) + value;
+        });
+      });
+
+      const maxY = Math.max(...zoneLabels.map(zone =>
+        Object.values(regionMap).reduce((sum, region) => sum + (region[zone] || 0), 0)
+      ));
+
+      // Stacked Bar Chart
+      new Chart(document.getElementById('ticketChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: zoneLabels,
+          datasets: Object.entries(regionMap).map(([region, zoneData]) => ({
+            label: region,
+            data: zoneLabels.map(zone => zoneData[zone] || 0),
+            backgroundColor: regionColors[region],
+            borderWidth: 0
+          }))
+        },
+        options: {
+          responsive: false,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                title: () => '',
+                label: ctx => `${ctx.dataset.label}: ${ctx.raw}`
+              }
+            },
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              grid: { display: false, drawBorder: false },
+              ticks: { padding: 10 },
+              barPercentage: 0.8,
+              categoryPercentage: 0.8
+            },
+            y: {
+              stacked: true,
+              beginAtZero: true,
+              max: maxY,
+              ticks: { font: { size: 12 }, padding: 2 },
+              grid: { display: false, drawBorder: false }
+            }
+          }
         }
-        const value = (region.Open || 0) + (region["In-Progress"] || 0);
-        regionMap[reg][zone.zone] = (regionMap[reg][zone.zone] || 0) + value;
-      }
-    }
+      });
 
-    // Calculate max Y
-    const maxY = Math.max(...zoneLabels.map(zone =>
-      Object.values(regionMap).reduce((sum, region) => sum + (region[zone] || 0), 0)
-    ));
-
-    const stackedCtx = document.getElementById('ticketChart').getContext('2d');
-    const stackedChart = new Chart(stackedCtx, {
-      type: 'bar',
-      data: {
-        labels: zoneLabels,
-        datasets: Object.entries(regionMap).map(([region, zoneData]) => ({
-          label: region,
-          data: zoneLabels.map(zone => zoneData[zone] || 0),
-          backgroundColor: regionColors[region],
-          borderWidth: 0
-        }))
-      },
-      options: {
-        responsive: false,
-        maintainAspectRatio: false,
-        plugins: {
-          tooltip: {
-            callbacks: {
-              title: () => '',
-              label: ctx => `${ctx.dataset.label}: ${ctx.raw}`
+      // Ticket Types Bar Chart
+      types.sort((a, b) => b.count - a.count);
+      new Chart(document.getElementById('donutChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: types.map(t => t.type),
+          datasets: [{
+            data: types.map(t => t.count),
+            backgroundColor: baseColors,
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: ctx => ctx[0]?.label || '',
+                label: ctx => `${ctx.label}: ${ctx.raw}`
+              }
             }
           },
-          legend: { display: false }
-        },
-        scales: {
-          x: {
-            stacked: true,
-            grid: { display: false, drawBorder: false },
-            ticks: { padding: 10 },
-            barPercentage: 0.8,
-            categoryPercentage: 0.8
-          },
-          y: {
-            stacked: true,
-            beginAtZero: true,
-            max: maxY,
-            ticks: { font: { size: 12 }, padding: 2 },
-            grid: { display: false, drawBorder: false }
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 12 } }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { display: true },
+              ticks: { font: { size: 12 } }
+            }
           }
         }
-      }
-    });
-
-    // DONUT chart
-    const donutCtx = document.getElementById('donutChart').getContext('2d');
-    types.sort((a, b) => b.count - a.count);
-    const donutData = types.map(t => t.count);
-    const donutLabels = types.map(t => t.type);
-    // BAR chart for Ticket Types Distribution
-    new Chart(donutCtx, {
-      type: 'bar',
-      data: {
-      labels: donutLabels,
-      datasets: [{
-        data: donutData,
-        backgroundColor: baseColors,
-      }]
-      },
-      options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-        callbacks: {
-          title: ctx => ctx[0]?.label || '',
-          label: ctx => {
-          const value = ctx.raw;
-          return `${ctx.label}: ${value}`;
-          }
-        }
-        }
-      },
-      scales: {
-        x: {
-        grid: { display: false },
-        ticks: { font: { size: 12 } }
-        },
-        y: {
-        beginAtZero: true,
-        grid: { display: true },
-        ticks: { font: { size: 12 } }
-        }
-      }
-      }
       });
-  
+
+      // Executive-wise Ticket Chart
+      const execCtx = document.getElementById('executiveChart').getContext('2d');
+      if (!executives.length) {
+        execCtx.font = '16px sans-serif';
+        execCtx.textAlign = 'center';
+        execCtx.fillText('No Executive', execCtx.canvas.width / 2, execCtx.canvas.height / 2);
+      } else {
+        new Chart(execCtx, {
+          type: 'bar',
+          data: {
+            labels: executives.map(e => e.executive),
+            datasets: [{
+              label: 'Pending Tickets',
+              data: executives.map(e => e.Pending),
+              backgroundColor: '#3b82f6'
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { title: { display: true, text: 'Executive' } },
+              y: { beginAtZero: true, title: { display: true, text: 'Pending Tickets' } }
+            }
+          }
+        });
+      }
     } catch (error) {
       console.error(error);
     }
   }
-  
-      loadDashboard();
-    </script>
+
+  loadDashboard();
+</script>
 
 </body>
 </html>
