@@ -1,13 +1,13 @@
 {
- "charts": [],
- "content": "[{\"id\":\"YzUfTqbYYp\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Finacle Dashboard</span>\",\"col\":12}},{\"id\":\"MIygmZl2hw\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"Finacle Dashboard\",\"col\":12}}]",
- "creation": "2025-07-08 10:53:37.017555",
- "custom_blocks": [
+ "charts": [
   {
-   "custom_block_name": "Finacle Dashboard",
-   "label": "Finacle Dashboard"
+   "chart_name": "Type-Wise CBS Tickets",
+   "label": "Type-Wise CBS Tickets"
   }
  ],
+ "content": "[{\"id\":\"YzUfTqbYYp\",\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px; letter-spacing: 0.18px;\\\"><b>CBS Tickets</b></span>\",\"col\":12}},{\"id\":\"yY_apTFnDw\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Open\",\"col\":3}},{\"id\":\"4LlaxSvtEt\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"In-Progress\",\"col\":3}},{\"id\":\"HAIkKXrYlT\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Resolved\",\"col\":3}},{\"id\":\"tM6YvsZnV5\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Closed\",\"col\":3}},{\"id\":\"ctzfbG02oo\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Type-Wise CBS Tickets\",\"col\":12}}]",
+ "creation": "2025-07-08 10:53:37.017555",
+ "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
  "for_user": "",
@@ -18,11 +18,28 @@
  "is_hidden": 0,
  "label": "CBS Tickets",
  "links": [],
- "modified": "2025-07-12 11:41:10.950645",
+ "modified": "2025-07-14 11:29:03.738462",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "CBS Tickets",
- "number_cards": [],
+ "number_cards": [
+  {
+   "label": "Open",
+   "number_card_name": "Open CBS Tickets"
+  },
+  {
+   "label": "In-Progress",
+   "number_card_name": "In-Progress CBS Tickets"
+  },
+  {
+   "label": "Resolved",
+   "number_card_name": "Resolved CBS Tickets"
+  },
+  {
+   "label": "Closed",
+   "number_card_name": "Closed CBS Tickets"
+  }
+ ],
  "owner": "Administrator",
  "parent_page": "My Tickets",
  "public": 1,
