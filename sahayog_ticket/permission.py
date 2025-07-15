@@ -30,10 +30,9 @@ def get_permission_query_conditions(user):
     # Base conditions
     user_escaped = frappe.db.escape(user)
     conditions = [
-        f"`tabSahayog Ticket`.owner = {user_escaped}",
-        f"`tabSahayog Ticket`.assigned_to = {user_escaped}"
+        f"`tabSahayog Ticket`.owner = {user_escaped}"
+        # f"`tabSahayog Ticket`.assigned_to = {user_escaped}"  # Temporarily disabled to prevent SQL error
     ]
-
     if departments:
         escaped_departments = [frappe.db.escape(dept) for dept in departments]
         dept_list = ", ".join(escaped_departments)
