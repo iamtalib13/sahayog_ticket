@@ -7,39 +7,41 @@ from __future__ import unicode_literals
 import frappe
 
 def get_permission_query_conditions(user):
-    """
-    Returns SQL conditions to restrict `Sahayog Ticket` records visible to the user.
-    User can see:
-    - Tickets they own
-    - Tickets assigned to them (via `assigned_to`)
-    - Tickets whose dept_name is in the departments mapped to user's roles via Departsection Role
-    """
     if not user or user == "Administrator":
         return ""
 
-    # Get all roles of the user
     roles = frappe.get_roles(user)
 
-    # Get all departments mapped to user's roles via 'Departsection Role'
+    # Get departments mapped to user's roles
     departments = frappe.get_all(
         "Departsection Role",
         filters={"role": ["in", roles]},
         pluck="parent"
     )
 
-    # Base conditions
-    user_escaped = frappe.db.escape(user)
-    conditions = [
-        f"`tabSahayog Ticket`.owner = {user_escaped}"
-        # f"`tabSahayog Ticket`.assigned_to = {user_escaped}"  # Temporarily disabled to prevent SQL error
-    ]
-    if departments:
-        escaped_departments = [frappe.db.escape(dept) for dept in departments]
-        dept_list = ", ".join(escaped_departments)
-        conditions.append(f"`tabSahayog Ticket`.dept_name IN ({dept_list})")
+    if not departments:
+        return ""  # No dept access
 
-    # Combine conditions with OR
+    user_escaped = frappe.db.escape(user)
+    escaped_departments = [frappe.db.escape(dept) for dept in departments]
+    dept_list = ", ".join(escaped_departments)
+
+    conditions = []
+
+    # ✅ CASE 1: Dept match & assigned_to is empty
+    conditions.append(
+        f"(`tabSahayog Ticket`.dept_name IN ({dept_list}) AND "
+        f"(`tabSahayog Ticket`.assigned_to IS NULL OR `tabSahayog Ticket`.assigned_to = ''))"
+    )
+
+    # ✅ CASE 2: Dept match & assigned_to is the current user
+    conditions.append(
+        f"(`tabSahayog Ticket`.dept_name IN ({dept_list}) AND "
+        f"`tabSahayog Ticket`.assigned_to = {user_escaped})"
+    )
+
     return " OR ".join(conditions)
+
 
 
 
