@@ -5,11 +5,16 @@ import frappe
 from frappe.model.document import Document
 from datetime import datetime
 
+from frappe.utils import now_datetime, add_to_date
+
 
 class SahayogTicket(Document):
     def before_save(self):
         if self.is_new():
             self.status = "Open"  # Ensure status is set for new tickets
+
+        # if not self.employee_id:  # Only set if not already set
+        #     self.set_employee_id()
     
         self.set_creation_time()
         self.track_status_change()
@@ -46,9 +51,19 @@ class SahayogTicket(Document):
 
     def format_time(self, creation_datetime):
         return creation_datetime.strftime("%I:%M %p")
+    
+    # def set_employee_id(self):
+    #     current_user = self.owner
+    #     employee = frappe.get_value("Employee", {"user_id": current_user}, ["name", "employee_number"])
+
+    #     if employee:
+    #         self.employee_id = employee[1]  # Assuming employee_number is desired
+    #     else:
+    #         frappe.throw("No Employee record found for the current user.")
 
     # def before_insert(self):
     #     self.status = "Open"
+
 
 
 @frappe.whitelist()
@@ -85,6 +100,39 @@ def get_users_by_departsection_roles(departsection):
 
     return [u[0] for u in users]
 
+
+# This function automatically closes tickets that have been resolved for more than 48 hours.
+
+def auto_close_resolved_tickets():
+    frappe.log_error("Auto-close job triggered", "DEBUG")
+
+    threshold_time = add_to_date(now_datetime(), minutes=-2)  # Use minutes for quick testing
+
+    tickets = frappe.get_all("Sahayog Ticket", 
+        filters={
+            "status": "Resolved",
+            "ticket_resolved_on": ["<", threshold_time]
+        },
+        fields=["name"]
+    )
+
+    frappe.log_error(f"Found {len(tickets)} tickets to close", "DEBUG")
+
+    for ticket in tickets:
+        doc = frappe.get_doc("Sahayog Ticket", ticket.name)
+    
+        if doc.status == "Resolved":
+            frappe.log_error(f"Attempting to close Ticket: {doc.name}", "DEBUG")
+            doc.status = "Closed"
+    
+            try:
+                doc.flags.ignore_mandatory = True
+                doc.flags.ignore_validate = True  # Add this too
+                doc.save(ignore_permissions=True)
+                frappe.db.commit()
+                frappe.log_error(f"Ticket {doc.name} auto-closed successfully", "DEBUG")
+            except Exception as e:
+                frappe.log_error(f"Failed to auto-close ticket {doc.name}: {str(e)}", "ERROR")
 
 
 @frappe.whitelist()
@@ -126,7 +174,7 @@ def create_asset_request(
     branch,
     request_to,
     phone,
-    division,
+    division
 ):
     try:
         # Create a new Asset Request
