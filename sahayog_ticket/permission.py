@@ -5,68 +5,76 @@
 
 from __future__ import unicode_literals
 import frappe
+from frappe.utils import cint
 
-def get_permission_query_conditions(user):
-    if not user or user == "Administrator":
-        return ""
+def get_user_departments(user):
+    """Get departments associated with user's roles"""
+    if not user:
+        user = frappe.session.user
+    
+    if user == "Administrator":
+        return []  # Empty list means no department filtering for admin
 
     roles = frappe.get_roles(user)
-
-    # Get departments mapped to user's roles
-    departments = frappe.get_all(
+    return frappe.get_all(
         "Departsection Role",
         filters={"role": ["in", roles]},
         pluck="parent"
-    )
+    ) or []
 
-    if not departments:
-        return ""  # No dept access
+def get_permission_query_conditions(user):
+    if not user:
+        user = frappe.session.user
 
+    if user == "Administrator":
+        return ""  # No restrictions for admin
+
+    departments = get_user_departments(user)
     user_escaped = frappe.db.escape(user)
-    escaped_departments = [frappe.db.escape(dept) for dept in departments]
-    dept_list = ", ".join(escaped_departments)
 
     conditions = []
-
-    # ✅ CASE 1: Dept match & assigned_to is empty
-    conditions.append(
-        f"(`tabSahayog Ticket`.dept_name IN ({dept_list}) AND "
-        f"(`tabSahayog Ticket`.assigned_to IS NULL OR `tabSahayog Ticket`.assigned_to = ''))"
-    )
-
-    # ✅ CASE 2: Dept match & assigned_to is the current user
-    conditions.append(
-        f"(`tabSahayog Ticket`.dept_name IN ({dept_list}) AND "
-        f"`tabSahayog Ticket`.assigned_to = {user_escaped})"
-    )
-
-    return " OR ".join(conditions)
-
-
-
+    
+    # Condition 1: Owner can always see their tickets
+    conditions.append(f"`tabSahayog Ticket`.owner = {user_escaped}")
+    
+    # Condition 2: Department members can see tickets in their department
+    if departments:
+        dept_list = ", ".join([frappe.db.escape(dept) for dept in departments])
+        conditions.append(
+            f"(`tabSahayog Ticket`.dept_name IN ({dept_list}) AND "
+            f"IFNULL(`tabSahayog Ticket`.assigned_to, '') IN ('', {user_escaped}))"
+        )
+    
+    # Condition 3: Assigned user can always see the ticket
+    conditions.append(f"`tabSahayog Ticket`.assigned_to = {user_escaped}")
+    
+    return " OR ".join(conditions) if conditions else "0 = 1"
 
 def has_permission(doc, ptype, user):
-    """
-    Checks if the user has permission to access the given document.
-    Permission granted if:
-    - User is Administrator
-    - User owns the document
-    - Document's dept_name is in user's departments (mapped via roles)
-    """
+    if not user:
+        user = frappe.session.user
+
+    # 1. Administrator has full access
     if user == "Administrator":
         return True
 
+    # 2. Owner has full access
     if doc.owner == user:
         return True
 
-    # Get all roles of the user
-    roles = frappe.get_roles(user)
+    # 3. Assigned user has full access
+    if doc.assigned_to == user:
+        return True
 
-    # Get all departments mapped to user's roles
-    departments = frappe.get_all(
-        "Departsection Role",
-        filters={"role": ["in", roles]},
-        pluck="parent"
-    )
+    # 4. Department members have conditional access
+    departments = get_user_departments(user)
+    if doc.dept_name in departments:
+        # For read operations
+        if ptype == "read":
+            return True
+        # For write operations, allow if unassigned or has special role
+        elif ptype in ["write", "submit", "cancel", "delete"]:
+            return (not doc.assigned_to or 
+                   "Department Head" in frappe.get_roles(user))
 
-    return doc.get("dept_name") in departments
+    return False

@@ -94,10 +94,11 @@ permission_query_conditions = {
     "Sahayog Ticket": "sahayog_ticket.permission.get_permission_query_conditions"
 }
 
-# #
-# # has_permission = {
-# # 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# # }
+#
+# has_permission = {
+# 	"Sahayog Ticket": "sahayog_ticket.permission.has_permission",
+# 	# "Event": "frappe.desk.doctype.event.event.has_permission",
+# }
 
 # # DocType Class
 # # ---------------
@@ -117,7 +118,12 @@ permission_query_conditions = {
 # # ---------------
 
 scheduler_events = {
-    "cron": {"0 0 * * *": ["sahayog_ticket.tasks.update_tat_age"]}, # run daily at 12 AM
+    "cron": {
+        "0 0 * * *": ["sahayog_ticket.tasks.update_tat_age"],  # Run daily at 12 AM
+        # "* * * * *": [
+        #     "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.auto_close_resolved_tickets"
+        # ],  # Run every minute
+    }
 }
 
 # # Testing

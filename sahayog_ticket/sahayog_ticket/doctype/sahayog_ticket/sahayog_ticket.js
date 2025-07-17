@@ -1,14 +1,11 @@
 // Copyright (c) 2023, Sid and contributors
 
-// Copyright (c) 2023, Sid and contributors
-
 frappe.ui.form.on("Sahayog Ticket", {
   refresh: function (frm) {
     frm.trigger("common_hidden_fields");
     frm.trigger("hide_timeline");
 
     if (frm.is_new()) {
-      frm.trigger("Set_Employee_Details");
       console.log("New Form - Set Employee Details");
       frm.trigger("Employee_hidden_fields");
     } else if (!frm.is_new()) {
@@ -25,23 +22,8 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
 
     // Button visibility and form control logic
-    let user = frappe.session.user;
     if (frm.is_new()) {
       frm.set_df_property("cancel_ticket_btn", "hidden", 1);
-      let eid = user.match(/\d+/)[0];
-      let modifiedEmployeeId = "";
-
-      if (user.includes("ABPS")) {
-        modifiedEmployeeId = "ABPS" + eid;
-      } else if (user.includes("MCPS")) {
-        modifiedEmployeeId = "MCPS" + eid;
-      } else if (user.includes("NT")) {
-        modifiedEmployeeId = "NT" + eid;
-      } else {
-        modifiedEmployeeId = eid;
-      }
-
-      frm.set_value("employee_id", modifiedEmployeeId);
     }
 
     if (!frm.is_new()) {
@@ -153,6 +135,35 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
   },
 
+  before_save: function (frm) {
+    let ticket_owner = frm.doc.owner;
+    console.log("Ticket Owner:", ticket_owner);
+
+    if (ticket_owner) {
+      frappe.call({
+        method: "frappe.client.get_list",
+        args: {
+          doctype: "Employee",
+          filters: {
+            user_id: ticket_owner,
+          },
+          fields: ["name", "employee_number"],
+          limit_page_length: 1,
+        },
+        callback: function (response) {
+          if (response.message && response.message.length > 0) {
+            let employee = response.message[0];
+            frm.set_value("employee_id", employee.employee_number);
+            frm.refresh_field("employee_id");
+            console.log("Employee Number:", employee.employee_number);
+          } else {
+            console.log("No Employee found for user:", ticket_owner);
+          }
+        },
+      });
+    }
+  },
+
   set_intro: function (frm) {
     // Refresh-specific logic moved here from second handler
     if (!frm.is_new()) {
@@ -178,7 +189,15 @@ frappe.ui.form.on("Sahayog Ticket", {
             const ticket_department = frm.doc.dept_name || "Not specified";
             const ticket_type = frm.doc.ticket_type || "Not specified";
             const ticket_tat = frm.doc.tat || "N/A";
-            const ticket_assigned_to = frm.doc.assigned_to_name;
+            // const ticket_assigned_to = frm.doc.assigned_to_name;
+
+            const is_resolved = frm.doc.status === "Resolved";
+            const ticket_assigned_label = is_resolved
+              ? "Resolved by:"
+              : "Assign to:";
+            const ticket_assigned_to = is_resolved
+              ? frm.doc.ticket_resolved_user || " "
+              : frm.doc.assigned_to_name || " ";
 
             const intro_owner = `
               <div class="employee-ticket-card">
@@ -199,8 +218,9 @@ frappe.ui.form.on("Sahayog Ticket", {
                   <span class="terminal-command">${ticket_department} → ${ticket_type} → ${ticket_tat}</span>
                 </div>
                 <div class="terminal-end">
-                  <span class="terminal-prompt">Assign to:</span>
+                  <span class="terminal-prompt">${ticket_assigned_label}</span>
                   <span class="terminal-command">${ticket_assigned_to}</span>
+
 
                 </div>
               </div>
@@ -282,10 +302,6 @@ frappe.ui.form.on("Sahayog Ticket", {
         },
       });
     }
-  },
-
-  before_save: function (frm) {
-    // Empty as per original
   },
 
   after_save: function (frm) {
@@ -404,6 +420,10 @@ frappe.ui.form.on("Sahayog Ticket", {
                     5
                   );
                 } else {
+                  console.log(
+                    "Error creating Asset Request:",
+                    response.message
+                  );
                   frappe.show_alert(
                     {
                       message: __("Please Try Again"),
@@ -458,31 +478,6 @@ frappe.ui.form.on("Sahayog Ticket", {
     if (frappe.user.has_role("IT Support Manager")) {
       frm.toggle_display("assigned_it", true);
     }
-  },
-
-  Set_Employee_Details: function (frm) {
-    let user;
-    if (frm.is_new()) {
-      user = frappe.session.user;
-    } else if (!frm.is_new()) {
-      console.log("Eid-", frm.doc.employee_id);
-      user = frm.doc.employee_id;
-    }
-
-    let eid = user.match(/\d+/)[0];
-    let modifiedEmployeeId = "";
-
-    if (user.includes("ABPS")) {
-      modifiedEmployeeId = "ABPS" + eid;
-    } else if (user.includes("MCPS")) {
-      modifiedEmployeeId = "MCPS" + eid;
-    } else if (user.includes("NT")) {
-      modifiedEmployeeId = "NT" + eid;
-    } else {
-      modifiedEmployeeId = eid;
-    }
-
-    frm.set_value("employee_id", modifiedEmployeeId);
   },
 
   cancel_ticket_btn: function (frm) {
