@@ -479,17 +479,16 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval:frappe.user.has_role(\"System Manager\");",
    "fieldname": "ticket_assigned_details_section",
    "fieldtype": "Section Break",
-   "hidden": 1,
    "label": "Ticket Assigned Details"
   },
   {
    "fieldname": "assigned_to",
    "fieldtype": "Link",
    "label": "Assigned To",
-   "options": "User",
-   "read_only": 1
+   "options": "User"
   },
   {
    "fieldname": "ticket_resolved_on",
@@ -531,7 +530,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-12 12:17:29.975905",
+ "modified": "2025-07-17 17:05:59.301013",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",

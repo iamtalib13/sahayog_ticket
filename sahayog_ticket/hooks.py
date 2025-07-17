@@ -67,9 +67,9 @@ app_license = "MIT"
 # # after_install = "sahayog_ticket.install.after_install"
 
 after_migrate = [
-    "sahayog_ticket.patches.fixtures.create_departsection_records.execute",
-    "sahayog_ticket.patches.fixtures.create_sahayog_ticket_roles.execute",
-    "sahayog_ticket.patches.fixtures.map_roles_to_departsection.execute",
+    # "sahayog_ticket.patches.fixtures.create_departsection_records.execute",
+    # "sahayog_ticket.patches.fixtures.create_sahayog_ticket_roles.execute",
+    # "sahayog_ticket.patches.fixtures.map_roles_to_departsection.execute",
 ]
 
 
@@ -119,10 +119,10 @@ permission_query_conditions = {
 
 scheduler_events = {
     "cron": {
-        "0 0 * * *": ["sahayog_ticket.tasks.update_tat_age"],  # Run daily at 12 AM
-        # "* * * * *": [
-        #     "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.auto_close_resolved_tickets"
-        # ],  # Run every minute
+        "0 0 * * *": [
+            "sahayog_ticket.tasks.update_tat_age",
+            "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.auto_close_resolved_tickets"
+        ],  # Daily at 12 AM    
     }
 }
 

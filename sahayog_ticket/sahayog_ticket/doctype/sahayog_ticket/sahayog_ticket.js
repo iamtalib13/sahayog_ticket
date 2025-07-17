@@ -197,11 +197,14 @@ frappe.ui.form.on("Sahayog Ticket", {
             const ticket_tat = frm.doc.tat || "N/A";
             // const ticket_assigned_to = frm.doc.assigned_to_name;
 
-            const is_resolved = frm.doc.status === "Resolved";
-            const ticket_assigned_label = is_resolved
+            const is_resolved_or_closed = ["Resolved", "Closed"].includes(
+              frm.doc.status
+            );
+            const ticket_assigned_label = is_resolved_or_closed
               ? "Resolved by:"
               : "Assign to:";
-            const ticket_assigned_to = is_resolved
+
+            const ticket_assigned_to = is_resolved_or_closed
               ? frm.doc.ticket_resolved_user || " "
               : frm.doc.assigned_to_name || " ";
 
@@ -658,6 +661,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                 "ticket_resolved_on",
                 frappe.datetime.now_datetime()
               );
+              frm.set_value("assigned_to", user);
               frm.save();
               d.hide();
             },

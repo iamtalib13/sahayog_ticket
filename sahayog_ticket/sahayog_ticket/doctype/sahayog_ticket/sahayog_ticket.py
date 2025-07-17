@@ -106,7 +106,7 @@ def get_users_by_departsection_roles(departsection):
 def auto_close_resolved_tickets():
     frappe.log_error("Auto-close job triggered", "DEBUG")
 
-    threshold_time = add_to_date(now_datetime(), minutes=-2)  # Use minutes for quick testing
+    threshold_time = add_to_date(now_datetime(), minutes=-48)  # Use minutes for quick testing
 
     tickets = frappe.get_all("Sahayog Ticket", 
         filters={
