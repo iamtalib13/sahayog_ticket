@@ -5,6 +5,12 @@ frappe.ui.form.on("Sahayog Ticket", {
     frm.trigger("common_hidden_fields");
     frm.trigger("hide_timeline");
 
+    // Check if the user is an employee and has a specific role
+    if (frm.doc.status === "Closed") {
+      frappe.show_alert("This ticket is closed and cannot be edited.");
+      frm.disable_form();
+    }
+
     if (frm.is_new()) {
       console.log("New Form - Set Employee Details");
       frm.trigger("Employee_hidden_fields");
