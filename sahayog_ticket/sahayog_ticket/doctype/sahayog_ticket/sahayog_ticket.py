@@ -9,19 +9,13 @@ from frappe.utils import now_datetime, add_to_date
 
 
 class SahayogTicket(Document):
-    def before_save(self):
-        if self.is_new():
-            self.status = "Open"  # Ensure status is set for new tickets
-
-        # if not self.employee_id:  # Only set if not already set
-        #     self.set_employee_id()
-    
-        self.set_creation_time()
+    def before_save(self):   
+        #self.set_creation_time()
         self.track_status_change()
 
-    def validate(self):
-        if not self.status:
-            self.status = "Open"
+    # def validate(self):
+    #     if not self.status:
+    #         self.status = "Open"
         
     def track_status_change(self):
         if not self._doc_before_save:
@@ -52,18 +46,6 @@ class SahayogTicket(Document):
     def format_time(self, creation_datetime):
         return creation_datetime.strftime("%I:%M %p")
     
-    # def set_employee_id(self):
-    #     current_user = self.owner
-    #     employee = frappe.get_value("Employee", {"user_id": current_user}, ["name", "employee_number"])
-
-    #     if employee:
-    #         self.employee_id = employee[1]  # Assuming employee_number is desired
-    #     else:
-    #         frappe.throw("No Employee record found for the current user.")
-
-    # def before_insert(self):
-    #     self.status = "Open"
-
 
 
 @frappe.whitelist()
