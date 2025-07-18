@@ -90,42 +90,42 @@ frappe.ui.form.on("Sahayog Ticket", {
         }
       }
 
-      let eid = user.match(/\d+/)[0];
-      console.log("Eid-", eid);
-      let modifiedEmployeeId = "";
+      // let eid = user.match(/\d+/)[0];
+      // console.log("Eid-", eid);
+      // let modifiedEmployeeId = "";
 
-      if (user.includes("ABPS")) {
-        modifiedEmployeeId = "ABPS" + eid;
-      } else if (user.includes("MCPS")) {
-        modifiedEmployeeId = "MCPS" + eid;
-      } else if (user.includes("NT")) {
-        modifiedEmployeeId = "NT" + eid;
-      } else {
-        modifiedEmployeeId = eid;
-      }
+      // if (user.includes("ABPS")) {
+      //   modifiedEmployeeId = "ABPS" + eid;
+      // } else if (user.includes("MCPS")) {
+      //   modifiedEmployeeId = "MCPS" + eid;
+      // } else if (user.includes("NT")) {
+      //   modifiedEmployeeId = "NT" + eid;
+      // } else {
+      //   modifiedEmployeeId = eid;
+      // }
 
-      if (modifiedEmployeeId === frm.doc.employee_id) {
-        if (frm.doc.status == "Open") {
-          frm.set_df_property("cancel_ticket_btn", "hidden", 0);
-          document.querySelectorAll(
-            "[data-fieldname='cancel_ticket_btn']"
-          )[1].style.backgroundColor = "red";
-          document.querySelectorAll(
-            "[data-fieldname='cancel_ticket_btn']"
-          )[1].style.color = "white";
-          document.querySelectorAll(
-            "[data-fieldname='cancel_ticket_btn']"
-          )[1].style.fontWeight = "bold";
-        }
-        {
-          frm.disable_save();
-        }
+      // if (modifiedEmployeeId === frm.doc.employee_id) {
+      //   if (frm.doc.status == "Open") {
+      //     frm.set_df_property("cancel_ticket_btn", "hidden", 0);
+      //     document.querySelectorAll(
+      //       "[data-fieldname='cancel_ticket_btn']"
+      //     )[1].style.backgroundColor = "red";
+      //     document.querySelectorAll(
+      //       "[data-fieldname='cancel_ticket_btn']"
+      //     )[1].style.color = "white";
+      //     document.querySelectorAll(
+      //       "[data-fieldname='cancel_ticket_btn']"
+      //     )[1].style.fontWeight = "bold";
+      //   }
+      //   {
+      //     frm.disable_save();
+      //   }
 
-        frm.toggle_display("employee_id", false);
-        frm.toggle_display("status", false);
-      } else {
-        frm.set_df_property("cancel_ticket_btn", "hidden", 1);
-      }
+      //   frm.toggle_display("employee_id", false);
+      //   frm.toggle_display("status", false);
+      // } else {
+      //   frm.set_df_property("cancel_ticket_btn", "hidden", 1);
+      // }
     }
 
     if (frm.doc.dept_name == "" || null) {
@@ -172,7 +172,8 @@ frappe.ui.form.on("Sahayog Ticket", {
 
   set_intro: function (frm) {
     // Refresh-specific logic moved here from second handler
-    if (!frm.is_new()) {
+    if (!frm.is_new() && !frm.__intro_shown) {
+      frm.__intro_shown = true; // ✅ Set flag to prevent showing again
       frm.call({
         method: "get_employee_info",
         args: {
@@ -300,6 +301,7 @@ frappe.ui.form.on("Sahayog Ticket", {
             `;
 
             frm.set_intro(intro_owner);
+
             var formMessage = document.querySelector(".form-message.blue");
             formMessage.style.background = "transparent";
             formMessage.style.padding = "0";
@@ -310,38 +312,40 @@ frappe.ui.form.on("Sahayog Ticket", {
           }
         },
       });
+    } else {
+      frm.__intro_shown = false;
     }
   },
 
-  after_save: function (frm) {
-    let user = frappe.session.user;
-    let match = user.match(/\d+/);
-    let eid = match ? match[0] : null;
+  // after_save: function (frm) {
+  //   let user = frappe.session.user;
+  //   let match = user.match(/\d+/);
+  //   let eid = match ? match[0] : null;
 
-    if (eid === frm.doc.employee_id) {
-      if (frm.doc.status == "Open") {
-        var dept = frm.doc.dept_name;
-        msgprint("Ticket is Saved Successfully.");
-        msgprint(dept + " Team will Contact You Shortly");
-        frappe.set_route("List", "Sahayog Ticket", { status: "Open" });
-      }
-    }
+  //   if (eid === frm.doc.employee_id) {
+  //     if (frm.doc.status == "Open") {
+  //       var dept = frm.doc.dept_name;
+  //       msgprint("Ticket is Saved Successfully.");
+  //       msgprint(dept + " Team will Contact You Shortly");
+  //       frappe.set_route("List", "Sahayog Ticket", { status: "Open" });
+  //     }
+  //   }
 
-    if (frm.doc.status == "Closed") {
-      frm.set_df_property("status", "read_only", 1);
-      frm.set_df_property("assigned_it", "read_only", 1);
-      frm.set_df_property("close_remark", "read_only", 1);
-      msgprint("Ticket is Closed Successfully . .");
-      frm.disable_save();
-    }
+  //   if (frm.doc.status == "Closed") {
+  //     frm.set_df_property("status", "read_only", 1);
+  //     frm.set_df_property("assigned_it", "read_only", 1);
+  //     frm.set_df_property("close_remark", "read_only", 1);
+  //     msgprint("Ticket is Closed Successfully . .");
+  //     frm.disable_save();
+  //   }
 
-    if (frm.doc.cancel_ticket == "Cancel Ticket") {
-      frm.set_df_property("status", "read_only", 1);
-      frm.set_df_property("assigned_it", "read_only", 1);
-      msgprint("Ticket is Cancelled Successfully . .");
-      frm.disable_save();
-    }
-  },
+  //   if (frm.doc.cancel_ticket == "Cancel Ticket") {
+  //     frm.set_df_property("status", "read_only", 1);
+  //     frm.set_df_property("assigned_it", "read_only", 1);
+  //     msgprint("Ticket is Cancelled Successfully . .");
+  //     frm.disable_save();
+  //   }
+  // },
 
   dept_name: function (frm) {
     console.log("Dept : " + frm.doc.dept_name);
@@ -489,50 +493,50 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
   },
 
-  cancel_ticket_btn: function (frm) {
-    if (!frm.is_new()) {
-      let user = frappe.session.user;
-      let eid = user.match(/\d+/)[0];
+  // cancel_ticket_btn: function (frm) {
+  //   if (!frm.is_new()) {
+  //     let user = frappe.session.user;
+  //     let eid = user.match(/\d+/)[0];
 
-      if (eid === frm.doc.employee_id) {
-        frm.trigger("cancel_ticket_function");
-      } else {
-        frappe.show_alert({
-          message: "Only Ticket Owner can Close this Ticket !!",
-          indicator: "red",
-        });
-      }
-    }
-  },
+  //     if (eid === frm.doc.employee_id) {
+  //       frm.trigger("cancel_ticket_function");
+  //     } else {
+  //       frappe.show_alert({
+  //         message: "Only Ticket Owner can Close this Ticket !!",
+  //         indicator: "red",
+  //       });
+  //     }
+  //   }
+  // },
 
-  cancel_ticket_function: function (frm) {
-    if (frm.doc.status == "Open") {
-      frappe.prompt(
-        {
-          label: "Ticket Cancellation Reason",
-          fieldname: "ticket_cancellation_reason",
-          fieldtype: "Data",
-          reqd: 1,
-        },
-        (values) => {
-          console.log(values.ticket_cancellation_reason);
-          frm.set_value("cancel_ticket", "Cancel Ticket");
-          frm.set_value(
-            "ticket_cancellation_reason",
-            values.ticket_cancellation_reason
-          );
-          frm.set_value("status", "Cancelled");
-          frm.refresh_field("status");
-          frm.save();
-        }
-      );
-    } else {
-      frappe.show_alert({
-        message: "Ticket Already Cancelled",
-        indicator: "red",
-      });
-    }
-  },
+  // cancel_ticket_function: function (frm) {
+  //   if (frm.doc.status == "Open") {
+  //     frappe.prompt(
+  //       {
+  //         label: "Ticket Cancellation Reason",
+  //         fieldname: "ticket_cancellation_reason",
+  //         fieldtype: "Data",
+  //         reqd: 1,
+  //       },
+  //       (values) => {
+  //         console.log(values.ticket_cancellation_reason);
+  //         frm.set_value("cancel_ticket", "Cancel Ticket");
+  //         frm.set_value(
+  //           "ticket_cancellation_reason",
+  //           values.ticket_cancellation_reason
+  //         );
+  //         frm.set_value("status", "Cancelled");
+  //         frm.refresh_field("status");
+  //         frm.save();
+  //       }
+  //     );
+  //   } else {
+  //     frappe.show_alert({
+  //       message: "Ticket Already Cancelled",
+  //       indicator: "red",
+  //     });
+  //   }
+  // },
 
   assign_to_button: function (frm) {
     frm.add_custom_button(__("Assign to"), async function () {
