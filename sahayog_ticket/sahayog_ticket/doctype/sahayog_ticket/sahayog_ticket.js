@@ -191,121 +191,158 @@ frappe.ui.form.on("Sahayog Ticket", {
             const emp_phone = data.cell_number || "Not available";
             const emp_division = data.custom_division || "Not available";
             const emp_profile_picture =
-              "https://cdn-icons-png.flaticon.com/128/1710/1710475.png";
+              "/assets/sahayog_ticket/images/profile.png";
 
             const ticket_department = frm.doc.dept_name || "Not specified";
             const ticket_type = frm.doc.ticket_type || "Not specified";
             const ticket_tat = frm.doc.tat || "N/A";
-            // const ticket_assigned_to = frm.doc.assigned_to_name;
 
             const is_resolved_or_closed = ["Resolved", "Closed"].includes(
               frm.doc.status
             );
             const ticket_assigned_label = is_resolved_or_closed
               ? "Resolved by:"
-              : "Assign to:";
+              : "Assigned to:";
+            let ticket_assigned_to = is_resolved_or_closed
+              ? frm.doc.ticket_resolved_user
+              : frm.doc.assigned_to_name;
 
-            const ticket_assigned_to = is_resolved_or_closed
-              ? frm.doc.ticket_resolved_user || " "
-              : frm.doc.assigned_to_name || " ";
+            // ✅ Show fallback message if not assigned
+            if (!ticket_assigned_to || ticket_assigned_to.trim() === "") {
+              ticket_assigned_to = "Executive will be assigned shortly.";
+            }
 
             const intro_owner = `
-              <div class="employee-ticket-card">
-                <div class="employee-photo">
-                  <img class="profile-image" src="${emp_profile_picture}" alt="Profile Image" />
-                </div>
-                <div class="employee-details">
-                  <div class="employee-name-id"><strong>${full_name}</strong> - ${emp_id}</div>
-                  <div class="employee-meta">
-                    ${emp_designation}, ${emp_department}, ${emp_branch}, ${emp_division}<br>
-                    Phone : ${emp_phone}
-                  </div>
-                </div>
-              </div>
-              <div class="terminal-style">
-                <div class="terminal-line">
-                  <span class="terminal-prompt">${full_name}:~$</span>
-                  <span class="terminal-command">${ticket_department} → ${ticket_type} → ${ticket_tat}</span>
-                </div>
-                <div class="terminal-end">
-                  <span class="terminal-prompt">${ticket_assigned_label}</span>
-                  <span class="terminal-command">${ticket_assigned_to}</span>
+        <div class="ticket-employee-card">
+          <div class="ticket-employee-photo">
+            <img class="ticket-profile-image" src="${emp_profile_picture}" alt="Profile Image" />
+          </div>
+          <div class="ticket-employee-details">
+            <div class="ticket-employee-name-id"><strong>${full_name}</strong> - ${emp_id}</div>
+            <div class="ticket-employee-meta">
+              ${emp_designation}, ${emp_department}, ${emp_branch}, ${emp_division}<br>
+              Phone : ${emp_phone}
+            </div>
+          </div>
+        </div>
 
+        <div class="ticket-terminal">
+          <div class="ticket-terminal-info">
+            <div class="ticket-info-pair"><strong>Request To:</strong> ${ticket_department}</div>
+            <div class="ticket-info-pair"><strong>Issue:</strong> ${ticket_type}</div>
+            <div class="ticket-info-pair"><strong>TAT:</strong> ${ticket_tat}</div>
+          </div>
+          <div class="ticket-terminal-end">
+            <span class="ticket-terminal-prompt">${ticket_assigned_label}</span>
+            <span class="ticket-terminal-command">${ticket_assigned_to}</span>
+          </div>
+        </div>
 
-                </div>
-              </div>
+        <style>
+          .ticket-employee-card {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: #ededed;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            color: #006767;
+          }
 
-              <style>
-                .terminal-style {
-                  background-color: #282c34;
-                  color: #abb2bf;
-                  padding: 12px;
-                  border-radius: 6px;
-                  font-family: 'Courier New', monospace;
-                  margin: 5px 0px;
-                  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-                  display: flex;
-                  justify-content: space-between;
-                }
-                .terminal-prompt {
-                  color: #98c379;
-                  margin-right: 8px;
-                }
-                .terminal-command {
-                  color: #e06c75;
-                }
-                .terminal-command::before {
-                  content: " ";
-                }
-                .employee-ticket-card {
-                  display: flex;
-                  align-items: center;
-                  padding: 15px;
-                  background: linear-gradient(90deg, #673AB7, #512DA8, #303F9F);
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                  border-radius: 9px;
-                  font-family: 'Courier New', monospace;
-                }
-                .employee-photo {
-                  margin-right: 15px;
-                }
-                .profile-image {
-                  width: 60px;
-                  height: 60px;
-                  border-radius: 50%;
-                  object-fit: cover;
-                }
-                .employee-details {
-                  display: flex;
-                  flex-direction: column;
-                }
-                .employee-name-id {
-                  font-size: 16px;
-                  margin-bottom: -3px;
-                }
-                .employee-meta {
-                  font-size: 13px;
-                  color: #c3c3c3;
-                }
-                @media (max-width: 768px) {
-                  .employee-ticket-card {
-                    flex-direction: column;
-                    text-align: center;
-                  }
-                  .terminal-style {
-                    margin: 10px 5px;
-                    font-size: 13px;
-                  }
-                }
-              </style>
-            `;
+          .ticket-employee-photo {
+            margin-right: 15px;
+          }
+
+          .ticket-profile-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+          }
+
+          .ticket-employee-details {
+            display: flex;
+            flex-direction: column;
+          }
+
+          .ticket-employee-name-id {
+            font-size: 16px;
+            margin-bottom: 4px;
+            font-weight: bold;
+            color: #006767;
+            margin-bottom: -4px;
+          }
+
+          .ticket-employee-meta {
+            font-size: 13px;
+            color: #006767;
+          }
+
+          .ticket-terminal {
+            border: 1px solid #d3d3d3;
+            background-color: #ededed;
+            color: #006767;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+          }
+
+          .ticket-terminal-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            color: #006767;
+            margin-bottom: 6px;
+          }
+
+          .ticket-info-pair {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+          }
+
+          .ticket-terminal-prompt {
+            color: #006767;
+            margin-right: 8px;
+            font-weight: bold;
+          }
+
+          .ticket-terminal-command {
+            color: #006767;
+          }
+
+          @media (max-width: 768px) {
+            .ticket-employee-card {
+              flex-direction: column;
+              text-align: center;
+            }
+
+            .ticket-terminal {
+              font-size: 13px;
+            }
+
+            .ticket-terminal-info {
+              flex-direction: column;
+              gap: 4px;
+            }
+          }
+        </style>
+      `;
 
             frm.set_intro(intro_owner);
 
             var formMessage = document.querySelector(".form-message.blue");
-            formMessage.style.background = "transparent";
-            formMessage.style.padding = "0";
-            formMessage.style.color = "white";
+            if (formMessage) {
+              formMessage.style.background = "#ededed";
+              formMessage.style.padding = "0";
+              formMessage.style.color = "#006767";
+            }
           } else {
             frm.set_intro("Employee information not available", "red");
             console.error("[ERROR] No employee data found");
