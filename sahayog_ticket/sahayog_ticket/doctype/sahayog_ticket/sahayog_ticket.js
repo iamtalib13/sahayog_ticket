@@ -4,6 +4,7 @@ frappe.ui.form.on("Sahayog Ticket", {
   refresh: function (frm) {
     frm.trigger("common_hidden_fields");
     frm.trigger("hide_timeline");
+    frm.trigger("hide_sidebar_options");
 
     // Check if the user is an employee and has a specific role
     if (frm.doc.status === "Closed") {
@@ -832,5 +833,16 @@ frappe.ui.form.on("Sahayog Ticket", {
       },
       __("Actions")
     );
+  },
+
+  hide_sidebar_options(frm) {
+    if (!frappe.user.has_role("System Manager")) {
+      $(".form-assignments").hide();
+      //$(".form-attachments").hide();
+      $(".form-shared").hide();
+      $(".form-tags").hide();
+      //$(".form-sidebar-stats").hide();
+      //$(".list-unstyled.sidebar-menu.text-muted").hide();
+    }
   },
 });
