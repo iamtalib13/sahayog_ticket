@@ -1,0 +1,41 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"mSxeUxF-sL\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Ticket Report</span>\",\"col\":12}},{\"id\":\"f-K9wVdSsQ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sahayog Ticket Report\",\"col\":3}}]",
+ "creation": "2025-07-28 12:12:11.399979",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Ticket Report",
+ "links": [],
+ "modified": "2025-07-28 12:13:01.548002",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "Ticket Report",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "My Tickets",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "Facility Support Executive"
+  }
+ ],
+ "sequence_id": 87.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Sahayog Ticket Report",
+   "link_to": "Sahayog Ticket Report",
+   "report_ref_doctype": "Sahayog Ticket",
+   "type": "Report"
+  }
+ ],
+ "title": "Ticket Report"
+}
