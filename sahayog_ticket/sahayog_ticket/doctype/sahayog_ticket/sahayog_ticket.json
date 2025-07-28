@@ -475,7 +475,6 @@
    "fieldname": "executive_remark",
    "fieldtype": "Small Text",
    "label": "Executive Remark",
-   "mandatory_depends_on": "eval:doc.status==\"On-Hold\"",
    "read_only": 1
   },
   {
@@ -530,7 +529,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-17 17:05:59.301013",
+ "modified": "2025-07-28 13:35:21.690231",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
