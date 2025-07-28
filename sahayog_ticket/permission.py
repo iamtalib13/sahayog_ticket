@@ -33,21 +33,18 @@ def get_permission_query_conditions(user):
     user_escaped = frappe.db.escape(user)
 
     conditions = []
-    
+
     # Condition 1: Owner can always see their tickets
     conditions.append(f"`tabSahayog Ticket`.owner = {user_escaped}")
-    
-    # Condition 2: Department members can see tickets in their department
+
+    # Condition 2: Department members can see tickets in their department (without assigned_to check)
     if departments:
         dept_list = ", ".join([frappe.db.escape(dept) for dept in departments])
-        conditions.append(
-            f"(`tabSahayog Ticket`.dept_name IN ({dept_list}) AND "
-            f"IFNULL(`tabSahayog Ticket`.assigned_to, '') IN ('', {user_escaped}))"
-        )
-    
-    # Condition 3: Assigned user can always see the ticket
-    conditions.append(f"`tabSahayog Ticket`.assigned_to = {user_escaped}")
-    
+        conditions.append(f"`tabSahayog Ticket`.dept_name IN ({dept_list})")
+
+    # Removed Condition 3: Assigned user access
+    # conditions.append(f"`tabSahayog Ticket`.assigned_to = {user_escaped}")
+
     return " OR ".join(conditions) if conditions else "0 = 1"
 
 def has_permission(doc, ptype, user):
