@@ -2,10 +2,20 @@
 # For license information, please see license.txt
 
 import frappe
-from frappe.utils import getdate, format_datetime
-
+from frappe.utils import getdate, format_datetime, nowdate
+from datetime import datetime
 
 def execute(filters=None):
+    if not filters:
+        filters = {}
+
+    # If no from_date or to_date provided, set to current month by default
+    if not filters.get("from_date"):
+        today = getdate(nowdate())
+        filters["from_date"] = today.replace(day=1).strftime("%Y-%m-%d")
+    if not filters.get("to_date"):
+        filters["to_date"] = nowdate()
+
     columns = get_columns()
     data = get_data(filters)
     return columns, data
@@ -57,16 +67,13 @@ def get_data(filters):
             tat,
             total_days,
             creation
-        FROM
-            `tabSahayog Ticket`
+        FROM `tabSahayog Ticket`
         {f"WHERE {conditions}" if conditions else ""}
-        ORDER BY
-            creation DESC
+        ORDER BY creation DESC
     """
 
     data = frappe.db.sql(query, as_dict=True)
 
-    # Format the datetime for "Created On"
     for row in data:
         if row.get("creation"):
             row["creation_formatted"] = format_datetime(row["creation"], "dd/MM/yyyy hh:mm a")
@@ -75,9 +82,6 @@ def get_data(filters):
 
 
 def get_conditions(filters):
-    if not filters:
-        return ""
-
     conditions = []
     validate_dates(filters)
 
@@ -95,15 +99,12 @@ def get_conditions(filters):
     add("branch_name")
     add("department", db_field="dept_name")
 
-    from_date = filters.get("from_date")
-    to_date = filters.get("to_date")
-
-    if from_date and to_date:
-        conditions.append(f"creation BETWEEN '{from_date} 00:00:00' AND '{to_date} 23:59:59'")
-    elif from_date:
-        conditions.append(f"creation >= '{from_date} 00:00:00'")
-    elif to_date:
-        conditions.append(f"creation <= '{to_date} 23:59:59'")
+    if filters.get("from_date") and filters.get("to_date"):
+        conditions.append(f"creation BETWEEN '{filters['from_date']} 00:00:00' AND '{filters['to_date']} 23:59:59'")
+    elif filters.get("from_date"):
+        conditions.append(f"creation >= '{filters['from_date']} 00:00:00'")
+    elif filters.get("to_date"):
+        conditions.append(f"creation <= '{filters['to_date']} 23:59:59'")
 
     return " AND ".join(conditions)
 
@@ -111,6 +112,5 @@ def get_conditions(filters):
 def validate_dates(filters):
     from_date = filters.get("from_date")
     to_date = filters.get("to_date")
-
     if from_date and to_date and getdate(from_date) > getdate(to_date):
         frappe.throw("From Date cannot be after To Date")
