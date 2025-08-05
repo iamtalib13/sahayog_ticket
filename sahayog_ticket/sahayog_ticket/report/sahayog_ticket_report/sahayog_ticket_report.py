@@ -18,6 +18,8 @@ def execute(filters=None):
         {"fieldname": "description", "label": "Description", "fieldtype": "Data", "width": 200},
         {"fieldname": "ticket_resolved_user", "label": "Resolved By", "fieldtype": "Data", "width": 150},
         {"fieldname": "resolved_remark", "label": "Resolved Remark", "fieldtype": "Data", "width": 200},
+        {"fieldname": "tat", "label": "TAT (Estimated Time for Resolution)", "fieldtype": "Int", "width": 180},
+        {"fieldname": "total_days", "label": "Ticket Age (Days)", "fieldtype": "Int", "width": 150},
         {"fieldname": "creation", "label": "Created On", "fieldtype": "Datetime", "width": 180},
     ]
 
@@ -39,6 +41,8 @@ def execute(filters=None):
             description,
             ticket_resolved_user,
             resolved_remark,
+            tat,
+            total_days,
             creation
         FROM
             `tabSahayog Ticket`
