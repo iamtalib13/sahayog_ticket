@@ -95,6 +95,16 @@
           const result = await res.json();
           data = result.message || [];
           data.sort((a, b) => b.pending - a.pending);
+          // Calculate total pending tickets across all districts
+let totalTickets = data.reduce((sum, d) => sum + (d.pending || 0), 0);
+
+// Update heading with total
+const mainHeading = document.getElementById("mainHeading");
+mainHeading.innerHTML = `
+    IT Ticket Dashboard - <span id="viewMode">District Wise</span>
+    <span class="text-lg text-gray-500 ml-4">(Total: ${totalTickets})</span>
+`;
+
           renderDistricts();
         } catch (err) {
           console.error("Failed to fetch ticket data:", err);
