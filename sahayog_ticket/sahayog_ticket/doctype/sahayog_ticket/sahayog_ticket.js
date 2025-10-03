@@ -488,6 +488,103 @@ frappe.ui.form.on("Sahayog Ticket", {
           }
         );
       });
+
+      frm.add_custom_button(__("Assign to"), function () {
+        let assignedUser = frm.doc.assigned_to || "";
+        frappe.call({
+          method:
+            "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_support_executives",
+          args: { dept_name: frm.doc.dept_name },
+          callback: function (r) {
+            if (r.message && r.message.length) {
+              let html = "";
+
+              // Table header row
+              html += `<div style="display:flex; font-weight:700; font-size:13px; color:#087b74; PADDING-LEFT: 29PX; background:#e3f3f3; border-radius:11px 11px 0 0; border:1.5px solid #e0e3e7; margin-bottom:2px;">
+                    <div style="width:32px; PADDING-RIGHT: 54PX;">#</div>
+                    <div style="flex:1;">Executive</div>
+                    <div style="width:110px; text-align:right; PADDING-RIGHT: 53PX;">Pending</div>
+                </div>`;
+
+              // Calculate max count for bar scaling
+              let maxCount = Math.max(
+                ...r.message.map((u) => {
+                  let m = u[1].match(/\((\d+) tickets assigned\)/);
+                  return m ? parseInt(m[1], 10) : 0;
+                })
+              );
+
+              let index = 1;
+
+              r.message.forEach((u) => {
+                let match = u[1].match(/^(.*) \((\d+) tickets assigned\)$/);
+                let name = match ? match[1].trim() : u[1];
+                let count = match ? parseInt(match[2], 10) : 0;
+                let barWidth = maxCount ? (count / maxCount) * 60 : 0; // max 60px
+                let isAssigned = u[0] === assignedUser;
+
+                html += `<div style="
+                        display:flex; align-items:center; background:#f3f6f9; border-radius:0 0 11px 11px; 
+                        border:1.5px solid #e0e3e7; margin:2px 0 10px 0; padding:0 18px;">
+                        
+                        <div style="width:32px; text-align:center; color:#6c757d; font-size:12px; font-weight:600; margin-right:10px;">
+                            ${index++}
+                        </div>
+                        
+                        <input type="radio" name="assigned_to" value="${
+                          u[0]
+                        }" ${
+                  isAssigned ? "checked" : ""
+                } style="margin-right:15px; accent-color:#087b74; width:18px;height:18px;">
+
+                        <span style="flex:1; color:#087b74; font-size:12px; font-weight:600; display:flex; align-items:center;">
+                            ${name}
+                            ${
+                              isAssigned
+                                ? `<span style="background:#ff8f00; color:#fff; 
+                                   font-size:10px; padding:2px 6px; border-radius:8px; margin-left:10px;">Assigned</span>`
+                                : ""
+                            }
+                        </span>
+
+                        <span style="
+                            width:110px; text-align:right;
+                            display:flex; justify-content:flex-end; align-items:center;
+                            background:#e3f3f3;color:#107561;
+                            border-radius:10px; padding:0 15px;
+                            font-size:15px; font-weight:600; border:1.2px solid #c0ebe9;">
+                            ${count}
+                            <span style="
+                                display:inline-block; height:7px; border-radius:4px;
+                                width:${barWidth}px; background:#2cbfae; margin-left:9px; transition:width .3s;">
+                            </span>
+                            <span style="font-weight:400; font-size:13px; color:#43786d; margin-left:4px;">Tickets</span>
+                        </span>
+                    </div>`;
+              });
+
+              let d = new frappe.ui.Dialog({
+                title: __("Select Manager for Approval"),
+                fields: [
+                  { fieldtype: "HTML", fieldname: "user_html", options: html },
+                ],
+                primary_action_label: __("Assign"),
+                primary_action() {
+                  let selected = $("input[name='assigned_to']:checked").val();
+                  if (!selected) {
+                    frappe.msgprint(__("Please select a user."));
+                    return;
+                  }
+                  frm.set_value("assigned_to", selected);
+                  frm.save();
+                  d.hide();
+                },
+              });
+              d.show();
+            }
+          },
+        });
+      });
     }
   },
 

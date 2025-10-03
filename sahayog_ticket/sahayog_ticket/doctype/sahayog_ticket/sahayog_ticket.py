@@ -308,3 +308,48 @@ def get_zone():
         },
         "executives": executive_final
     }
+# sahayog ticket assigned_to logic
+# API Path: /api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_support_executives
+@frappe.whitelist()
+def get_it_support_executives(doctype=None, txt=None, searchfield=None, start=0, page_len=20, filters=None):
+    filters = frappe.parse_json(filters) if filters else {}
+    dept_name = filters.get("dept_name") or "IT"
+
+    roles = []
+    try:
+        departsection = frappe.get_doc("Departsection", dept_name)
+        roles = [d.role for d in getattr(departsection, "department_roles", [])]
+    except frappe.DoesNotExistError:
+        roles = []
+    except Exception as e:
+        frappe.log_error(message=str(e), title="Error fetching roles in get_it_support_executives")
+        roles = []
+
+    user_list = []
+    if roles:
+        user_ids = [ur.parent for ur in frappe.get_all("Has Role", filters={"role": ["in", roles]}, fields=["parent"])]
+        if user_ids:
+            user_records = frappe.get_all(
+                "User",
+                filters={"name": ["in", user_ids]},
+                fields=["name", "full_name"],
+                limit_start=start,
+                limit_page_length=page_len,
+            )
+            txt = (txt or "").lower()
+
+            assigned_counts = frappe.get_all(
+                "Sahayog Ticket",
+                filters={"assigned_to": ["in", user_ids]},
+                fields=["assigned_to", "count(name) as count"],
+                group_by="assigned_to"
+            )
+            counts_map = {a.assigned_to: a.count for a in assigned_counts}
+
+            for user in user_records:
+                if txt in user.name.lower() or (user.full_name and txt in user.full_name.lower()):
+                    count = counts_map.get(user.name, 0)
+                    label = f"{user.full_name or user.name} ({count} tickets assigned)"
+                    user_list.append((user.name, label))
+
+    return user_list
