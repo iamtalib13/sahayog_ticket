@@ -5,6 +5,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     frm.trigger("common_hidden_fields");
     frm.trigger("hide_timeline");
     frm.trigger("hide_sidebar_options");
+    frm.trigger("custom_buttons");
 
     // Check if the user is an employee and has a specific role
     if (frm.doc.status === "Closed") {
@@ -488,7 +489,15 @@ frappe.ui.form.on("Sahayog Ticket", {
           }
         );
       });
+    }
+  },
+  custom_buttons: function (frm) {
+    // Check karo ki koi bhi role mein "Manager" word hai
+    let hasManagerRole = frappe.user_roles.some((role) =>
+      role.includes("Manager")
+    );
 
+    if (hasManagerRole) {
       frm.add_custom_button(__("Assign to"), function () {
         let assignedUser = frm.doc.assigned_to || "";
         frappe.call({
@@ -585,6 +594,8 @@ frappe.ui.form.on("Sahayog Ticket", {
           },
         });
       });
+    } else {
+      console.log("User does not have any Manager role");
     }
   },
 

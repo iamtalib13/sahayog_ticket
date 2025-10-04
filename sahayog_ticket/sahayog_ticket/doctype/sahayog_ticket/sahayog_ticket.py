@@ -313,7 +313,7 @@ def get_zone():
 @frappe.whitelist()
 def get_it_support_executives(doctype=None, txt=None, searchfield=None, start=0, page_len=20, filters=None):
     filters = frappe.parse_json(filters) if filters else {}
-    dept_name = filters.get("dept_name") or "IT"
+    dept_name = filters.get("dept_name")
 
     roles = []
     try:
