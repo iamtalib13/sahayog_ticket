@@ -314,7 +314,8 @@ def get_zone():
 @frappe.whitelist()
 def get_it_support_executives(doctype=None, txt=None, searchfield=None, start=0, page_len=20, filters=None):
     filters = frappe.parse_json(filters) if filters else {}
-    dept_name = filters.get("dept_name")
+    dept_name = filters.get("dept_name") or "Operations"
+
 
     roles = []
     try:
@@ -332,7 +333,7 @@ def get_it_support_executives(doctype=None, txt=None, searchfield=None, start=0,
         if user_ids:
             user_records = frappe.get_all(
                 "User",
-                filters={"name": ["in", user_ids]},
+                filters={"email": ["in", user_ids], "name": ["!=", "Administrator"]},
                 fields=["name", "full_name"],
                 limit_start=start,
                 limit_page_length=page_len,
@@ -341,10 +342,14 @@ def get_it_support_executives(doctype=None, txt=None, searchfield=None, start=0,
 
             assigned_counts = frappe.get_all(
                 "Sahayog Ticket",
-                filters={"assigned_to": ["in", user_ids]},
+                filters={
+                    "assigned_to": ["in", user_ids],
+                    "status": ["not in", ["Resolved", "Closed"]]
+                },
                 fields=["assigned_to", "count(name) as count"],
                 group_by="assigned_to"
             )
+
             counts_map = {a.assigned_to: a.count for a in assigned_counts}
 
             for user in user_records:
