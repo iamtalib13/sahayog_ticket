@@ -503,8 +503,9 @@ frappe.ui.form.on("Sahayog Ticket", {
         frappe.call({
           method:
             "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_support_executives",
-          args: { dept_name: frm.doc.dept_name },
+          args: { filters: JSON.stringify({ dept_name: frm.doc.dept_name }) },
           callback: function (r) {
+            console.log("Dept Name for Assigned To:", frm.doc.dept_name);
             if (r.message && r.message.length) {
               let html = "";
 
