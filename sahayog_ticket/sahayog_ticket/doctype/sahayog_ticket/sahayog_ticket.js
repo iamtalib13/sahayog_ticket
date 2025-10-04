@@ -595,7 +595,7 @@ frappe.ui.form.on("Sahayog Ticket", {
         });
       });
     } else {
-      console.log("User does not have any Manager role");
+      console.log("User does not have any Manager role.");
     }
   },
 

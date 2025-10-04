@@ -310,6 +310,7 @@ def get_zone():
     }
 # sahayog ticket assigned_to logic
 # API Path: /api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_support_executives
+
 @frappe.whitelist()
 def get_it_support_executives(doctype=None, txt=None, searchfield=None, start=0, page_len=20, filters=None):
     filters = frappe.parse_json(filters) if filters else {}
