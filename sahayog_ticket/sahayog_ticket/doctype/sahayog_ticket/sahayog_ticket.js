@@ -492,7 +492,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
   },
   custom_buttons: function (frm) {
-    // Check karo ki koi bhi role mein "Manager" word hai
+    // Check if user has any role containing "Manager"
     let hasManagerRole = frappe.user_roles.some((role) =>
       role.includes("Manager")
     );
@@ -507,70 +507,70 @@ frappe.ui.form.on("Sahayog Ticket", {
           callback: function (r) {
             console.log("Dept Name for Assigned To:", frm.doc.dept_name);
             if (r.message && r.message.length) {
-              let html = "";
-
-              // Table header row
-              html += `<div style="display:flex; font-weight:700; font-size:13px; color:#087b74; PADDING-LEFT: 29PX; background:#e3f3f3; border-radius:11px 11px 0 0; border:1.5px solid #e0e3e7; margin-bottom:2px;">
-                    <div style="width:32px; PADDING-RIGHT: 54PX;">#</div>
-                    <div style="flex:1;">Executive</div>
-                    <div style="width:110px; text-align:right; PADDING-RIGHT: 53PX;">Pending</div>
-                </div>`;
-
-              // Calculate max count for bar scaling
-              let maxCount = Math.max(
-                ...r.message.map((u) => {
-                  let m = u[1].match(/\((\d+) tickets assigned\)/);
-                  return m ? parseInt(m[1], 10) : 0;
-                })
-              );
-
-              let index = 1;
-
-              r.message.forEach((u) => {
+              // Convert r.message to array of objects for sorting
+              let users = r.message.map((u) => {
                 let match = u[1].match(/^(.*) \((\d+) tickets assigned\)$/);
                 let name = match ? match[1].trim() : u[1];
                 let count = match ? parseInt(match[2], 10) : 0;
-                let barWidth = maxCount ? (count / maxCount) * 60 : 0; // max 60px
-                let isAssigned = u[0] === assignedUser;
+                return { id: u[0], label: u[1], name: name, count: count };
+              });
+
+              // Sort: assigned user first, then ascending ticket count
+              users.sort((a, b) => {
+                if (a.id === assignedUser && b.id !== assignedUser) return -1;
+                if (b.id === assignedUser && a.id !== assignedUser) return 1;
+                return a.count - b.count;
+              });
+
+              // Calculate max count for scaling bars
+              let maxCount = Math.max(...users.map((u) => u.count));
+
+              // Build HTML header
+              let html = `<div style="display:flex; font-weight:700; font-size:13px; color:#087b74; padding-left:29px; background:#e3f3f3; border-radius:11px 11px 0 0; border:1.5px solid #e0e3e7; margin-bottom:2px;">
+                          <div style="width:32px; padding-right:54px;">#</div>
+                          <div style="flex:1;">Executive</div>
+                          <div style="width:110px; text-align:right; padding-right:53px;">Pending</div>
+                        </div>`;
+
+              // Build rows
+              let index = 1;
+              users.forEach((u) => {
+                let barWidth = maxCount ? (u.count / maxCount) * 60 : 0;
+                let isAssigned = u.id === assignedUser;
 
                 html += `<div style="
                         display:flex; align-items:center; background:#f3f6f9; border-radius:0 0 11px 11px; 
                         border:1.5px solid #e0e3e7; margin:2px 0 10px 0; padding:0 18px;">
-                        
                         <div style="width:32px; text-align:center; color:#6c757d; font-size:12px; font-weight:600; margin-right:10px;">
-                            ${index++}
+                          ${index++}
                         </div>
-                        
                         <input type="radio" name="assigned_to" value="${
-                          u[0]
+                          u.id
                         }" ${
                   isAssigned ? "checked" : ""
                 } style="margin-right:15px; accent-color:#087b74; width:18px;height:18px;">
-
                         <span style="flex:1; color:#087b74; font-size:12px; font-weight:600; display:flex; align-items:center;">
-                            ${name}
-                            ${
-                              isAssigned
-                                ? `<span style="background:#ff8f00; color:#fff; 
-                                   font-size:10px; padding:2px 6px; border-radius:8px; margin-left:10px;">Assigned</span>`
-                                : ""
-                            }
+                          ${u.name}
+                          ${
+                            isAssigned
+                              ? `<span style="background:#ff8f00; color:#fff; font-size:10px; padding:2px 6px; border-radius:8px; margin-left:10px;">Assigned</span>`
+                              : ""
+                          }
                         </span>
-
                         <span style="
-                            width:110px; text-align:right;
-                            display:flex; justify-content:flex-end; align-items:center;
-                            background:#e3f3f3;color:#107561;
-                            border-radius:10px; padding:0 15px;
-                            font-size:15px; font-weight:600; border:1.2px solid #c0ebe9;">
-                            ${count}
-                            <span style="
-                                display:inline-block; height:7px; border-radius:4px;
-                                width:${barWidth}px; background:#2cbfae; margin-left:9px; transition:width .3s;">
-                            </span>
-                            <span style="font-weight:400; font-size:13px; color:#43786d; margin-left:4px;">Tickets</span>
+                          width:110px; text-align:right;
+                          display:flex; justify-content:flex-end; align-items:center;
+                          background:#e3f3f3;color:#107561;
+                          border-radius:10px; padding:0 15px;
+                          font-size:15px; font-weight:600; border:1.2px solid #c0ebe9;">
+                          ${u.count}
+                          <span style="
+                            display:inline-block; height:7px; border-radius:4px;
+                            width:${barWidth}px; background:#2cbfae; margin-left:9px; transition:width .3s;">
+                          </span>
+                          <span style="font-weight:400; font-size:13px; color:#43786d; margin-left:4px;">Tickets</span>
                         </span>
-                    </div>`;
+                      </div>`;
               });
 
               let d = new frappe.ui.Dialog({
