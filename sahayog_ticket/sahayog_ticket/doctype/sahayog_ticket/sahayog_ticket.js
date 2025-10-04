@@ -142,6 +142,11 @@ frappe.ui.form.on("Sahayog Ticket", {
       frm.remove_custom_button("In-Progress", "Status");
     }
   },
+  onload: function (frm) {
+    if (!frm.is_new()) {
+      frm.trigger("set_intro");
+    }
+  },
 
   before_save: function (frm) {
     let ticket_owner = frm.doc.owner;
