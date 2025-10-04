@@ -574,7 +574,7 @@ frappe.ui.form.on("Sahayog Ticket", {
               });
 
               let d = new frappe.ui.Dialog({
-                title: __("Select Manager for Approval"),
+                title: __("Select Executive to Assign ticket"),
                 fields: [
                   { fieldtype: "HTML", fieldname: "user_html", options: html },
                 ],
