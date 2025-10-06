@@ -312,9 +312,9 @@ def get_zone():
 # API Path: /api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_support_executives
 
 @frappe.whitelist()
-def get_it_support_executives(doctype=None, txt=None, searchfield=None, start=0, page_len=20, filters=None):
+def get_it_support_executives(doctype=None, txt=None, searchfield=None, filters=None):
     filters = frappe.parse_json(filters) if filters else {}
-    dept_name = filters.get("dept_name") or "Operations"
+    dept_name = filters.get("dept_name") or "IT"
 
 
     roles = []
@@ -333,10 +333,9 @@ def get_it_support_executives(doctype=None, txt=None, searchfield=None, start=0,
         if user_ids:
             user_records = frappe.get_all(
                 "User",
-                filters={"email": ["in", user_ids], "name": ["!=", "Administrator"]},
-                fields=["name", "full_name"],
-                limit_start=start,
-                limit_page_length=page_len,
+                filters={"email": ["in", user_ids], "name": ["!=", "Administrator"],"enabled": 1},
+                fields=["name", "full_name",],
+                limit_page_length=0,
             )
             txt = (txt or "").lower()
 
