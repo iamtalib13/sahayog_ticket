@@ -1,0 +1,22 @@
+{
+ "content": null,
+ "creation": "2025-10-06 12:32:00.176786",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2025-10-07 17:25:00.864749",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "assign-role",
+ "owner": "Administrator",
+ "page_name": "assign-role",
+ "roles": [
+  {
+   "role": "IT Store Manager"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0
+}
