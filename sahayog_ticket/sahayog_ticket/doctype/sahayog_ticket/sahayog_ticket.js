@@ -581,21 +581,54 @@ frappe.ui.form.on("Sahayog Ticket", {
               let d = new frappe.ui.Dialog({
                 title: __("Select Executive to Assign ticket"),
                 fields: [
-                  { fieldtype: "HTML", fieldname: "user_html", options: html },
+                  {
+                    fieldtype: "HTML",
+                    fieldname: "search_input",
+                    options: `<input type="text" id="exec_search" placeholder="Search executives..." style="width: 100%; padding: 6px 8px; margin-bottom: 8px; font-size: 14px;">`,
+                  },
+                  {
+                    fieldtype: "HTML",
+                    fieldname: "user_html",
+                    options: `<div id="exec_list_wrapper" style="max-height: 300px; overflow-y: auto;">${html}</div>`,
+                  },
                 ],
                 primary_action_label: __("Assign"),
-                primary_action() {
-                  let selected = $("input[name='assigned_to']:checked").val();
+                primary_action: function () {
+                  // Scope selection to dialog to avoid clashes with other dialogs/pages
+                  let selected = d.$wrapper
+                    .find("input[name='assigned_to']:checked")
+                    .val();
                   if (!selected) {
                     frappe.msgprint(__("Please select a user."));
                     return;
                   }
+
+                  // Set and save, then refresh the form once save completes
                   frm.set_value("assigned_to", selected);
-                  frm.save();
-                  d.hide();
+                  frm.save().then(() => {
+                    d.hide();
+                    // Refresh current document instead of a full page reload
+                    try {
+                      frm.reload_doc();
+                    } catch (e) {
+                      // fallback to full reload if reload_doc isn't available
+                      location.reload();
+                    }
+                  });
                 },
               });
+
+              // Show the dialog
               d.show();
+
+              // Add search functionality scoped to the dialog wrapper to avoid global handlers
+              d.$wrapper.on("input", "#exec_search", function () {
+                let query = $(this).val().toLowerCase();
+                d.$wrapper.find("#exec_list_wrapper > div").each(function () {
+                  let text = $(this).text().toLowerCase();
+                  $(this).toggle(text.indexOf(query) !== -1);
+                });
+              });
             }
           },
         });
