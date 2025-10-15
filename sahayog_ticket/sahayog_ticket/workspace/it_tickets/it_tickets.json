@@ -5,7 +5,7 @@
    "label": "Ticket Type Wise Analysis"
   }
  ],
- "content": "[{\"id\":\"4rvEr1_tHC\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Welcome To IT Department</b></span>\",\"col\":12}},{\"id\":\"gJfqlPXf-0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open \",\"col\":3}},{\"id\":\"X3eW1vykBF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"VSEjM7PolO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"A-AVI5AnlS\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Ticket Type Wise Analysis\",\"col\":12}},{\"id\":\"XqKa8dY2ZK\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sahayog Ticket Report\",\"col\":3}}]",
+ "content": "[{\"id\":\"4rvEr1_tHC\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><b>Welcome To IT Department</b></span>\",\"col\":12}},{\"id\":\"gJfqlPXf-0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open \",\"col\":3}},{\"id\":\"X3eW1vykBF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"In-Progress\",\"col\":3}},{\"id\":\"jdVI007hfY\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Resolved\",\"col\":3}},{\"id\":\"VSEjM7PolO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Closed\",\"col\":3}},{\"id\":\"A-AVI5AnlS\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Ticket Type Wise Analysis\",\"col\":12}},{\"id\":\"XqKa8dY2ZK\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sahayog Ticket Report\",\"col\":3}}]",
  "creation": "2022-12-22 15:02:50.819030",
  "custom_blocks": [],
  "docstatus": 0,
@@ -17,7 +17,7 @@
  "is_hidden": 0,
  "label": "IT Tickets",
  "links": [],
- "modified": "2025-07-05 18:19:30.483000",
+ "modified": "2025-10-15 13:14:05.438782",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "IT Tickets",
@@ -36,6 +36,15 @@
  ],
  "sequence_id": 3.0,
  "shortcuts": [
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "format": "{}",
+   "label": "Resolved",
+   "link_to": "Sahayog Ticket",
+   "stats_filter": "[[\"Sahayog Ticket\",\"status\",\"=\",\"Resolved\",false],[\"Sahayog Ticket\",\"dept_name\",\"=\",\"IT\",false]]",
+   "type": "DocType"
+  },
   {
    "color": "Grey",
    "doc_view": "List",
