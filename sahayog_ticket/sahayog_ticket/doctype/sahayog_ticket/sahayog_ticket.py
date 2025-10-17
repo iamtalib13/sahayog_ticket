@@ -6,6 +6,8 @@ from frappe.model.document import Document
 from datetime import datetime
 
 from frappe.utils import now_datetime, add_to_date
+from frappe.utils.password import update_password
+from frappe import _
 
 
 class SahayogTicket(Document):
@@ -314,7 +316,7 @@ def get_zone():
 @frappe.whitelist()
 def get_it_support_executives(doctype=None, txt=None, searchfield=None, filters=None):
     filters = frappe.parse_json(filters) if filters else {}
-    dept_name = filters.get("dept_name") or "IT"
+    dept_name = filters.get("dept_name")
 
 
     roles = []
@@ -358,3 +360,37 @@ def get_it_support_executives(doctype=None, txt=None, searchfield=None, filters=
                     user_list.append((user.name, label))
 
     return user_list
+
+@frappe.whitelist()
+def get_user_details(username):
+    """
+    Takes 'username' as input, checks if it exists in the User doctype,
+    and returns the user's full_name and email.
+    """
+    user = frappe.db.get_value(
+        "User",
+        {"username": username},
+        ["full_name", "email"],
+        as_dict=True
+    )
+
+    if not user:
+        frappe.throw(f"No user found with username: {username}")
+
+    return user
+
+@frappe.whitelist(allow_guest=False)
+def reset_user_password(email, new_password):
+    try:
+        user_name = frappe.db.get_value("User", {"email": email}, "name")
+        if not user_name:
+            return {"message": "error: User not found"}
+
+        update_password(user_name, new_password)
+        frappe.db.commit()
+        return {"message": "success"}
+
+    except Exception as e:
+        frappe.log_error(f"Password reset failed for {email}: {str(e)}", "Password Reset Error")
+        return {"message": f"error: {str(e)}"}
+

@@ -55,6 +55,7 @@ frappe.ui.form.on("Sahayog Ticket", {
           frm.trigger("assign_to_button");
           frm.trigger("resolve_button");
           frm.trigger("executive_remark");
+          frm.trigger("reset_user_password");
         }
       }
 
@@ -980,6 +981,122 @@ frappe.ui.form.on("Sahayog Ticket", {
       },
       __("Actions")
     );
+  },
+  reset_user_password: function (frm) {
+    let hasManagerRole = frappe.user_roles.some(
+      (role) =>
+        role.toLowerCase().includes("manager") ||
+        role.toLowerCase().includes("executive")
+    );
+
+    if (hasManagerRole) {
+      frm.add_custom_button(
+        __("Reset User Password"),
+        function () {
+          let d = new frappe.ui.Dialog({
+            title: __("Reset User Password"),
+            fields: [
+              {
+                fieldtype: "Data",
+                label: "User ID",
+                fieldname: "user_id",
+                reqd: 1,
+              },
+              {
+                fieldtype: "Section Break",
+              },
+              {
+                fieldtype: "HTML",
+                fieldname: "user_info_html",
+              },
+            ],
+            primary_action_label: __("Check"),
+            primary_action(values) {
+              if (!values.user_id) {
+                frappe.msgprint(__("Please enter a User ID."));
+                return;
+              }
+
+              frappe.call({
+                method:
+                  "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_user_details",
+                args: { username: values.user_id },
+                callback: function (r) {
+                  if (r.message) {
+                    // Show user info
+                    d.set_value(
+                      "user_info_html",
+                      `<b>Full Name:</b> ${r.message.full_name}<br/>
+                   <b>USER ID:</b> ${r.message.email}`
+                    );
+
+                    // Change button to Reset Password
+                    d.set_primary_action(
+                      __("Reset Password"),
+                      function (values) {
+                        if (!values.user_id) {
+                          frappe.msgprint(__("Please enter a new password."));
+                          return;
+                        }
+                        frappe.call({
+                          method:
+                            "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.reset_user_password",
+                          args: {
+                            email: r.message.email,
+                            new_password: values.user_id,
+                          },
+                          callback: function (res) {
+                            if (
+                              res.message &&
+                              res.message.message === "success"
+                            ) {
+                              frappe.show_alert(
+                                __(
+                                  "Password reset successfully for " +
+                                    r.message.full_name
+                                )
+                              );
+                              d.hide();
+                            } else {
+                              frappe.msgprint(
+                                __(
+                                  "Failed to reset password. Please try again."
+                                )
+                              );
+                            }
+                          },
+                        });
+                      }
+                    );
+                  } else {
+                    // If user not found
+                    d.set_value(
+                      "user_info_html",
+                      `<span style="color:red;">User not found.</span>`
+                    );
+                    d.get_field("new_password").$wrapper.hide();
+                    d.set_primary_action(__("Check"), d.primary_action);
+                  }
+                },
+              });
+            },
+          });
+
+          // Hide password field initially after dialog is rendered
+          d.on_page_show = () => {
+            d.get_field("new_password").$wrapper.hide();
+          };
+
+          // For older Frappe versions, use a timeout as fallback
+          setTimeout(() => {
+            d.get_field("new_password").$wrapper.hide();
+          }, 300);
+
+          d.show();
+        },
+        __("Actions")
+      );
+    }
   },
 
   hide_sidebar_options(frm) {
