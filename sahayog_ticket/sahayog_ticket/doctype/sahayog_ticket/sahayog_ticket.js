@@ -6,6 +6,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     frm.trigger("hide_timeline");
     frm.trigger("hide_sidebar_options");
     frm.trigger("custom_buttons");
+    frm.trigger("reset_user_password");
 
     // Check if the user is an employee and has a specific role
     if (frm.doc.status === "Closed") {
@@ -55,7 +56,6 @@ frappe.ui.form.on("Sahayog Ticket", {
           frm.trigger("assign_to_button");
           frm.trigger("resolve_button");
           frm.trigger("executive_remark");
-          frm.trigger("reset_user_password");
         }
       }
 
