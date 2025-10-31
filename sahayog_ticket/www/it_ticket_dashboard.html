@@ -134,6 +134,17 @@
       const districtChart = document.getElementById("districtChart");
       const branchChart = document.getElementById("branchChart");
       const loadingSpinner = document.getElementById("loadingSpinner");
+      // ✅ Restore selected district from previous page
+      const savedDistrict = sessionStorage.getItem("selectedDistrict");
+      if (savedDistrict) {
+        currentDistrict = savedDistrict;
+        window.addEventListener("load", () => {
+          fetchDistrictData().then(() => {
+            const district = data.find((d) => d.district === savedDistrict);
+            if (district) showBranches(savedDistrict);
+          });
+        });
+      }
 
       window.onload = () => searchInput.focus();
 
@@ -220,6 +231,7 @@
         filtered.forEach(({ name, pending }) => {
           const card = createCard(name, pending, () => {
             const url = new URL("/app/sahayog-ticket", window.location.origin);
+
             url.searchParams.set(
               "status",
               JSON.stringify(["in", ["Open", "In-Progress", null]])
@@ -229,12 +241,15 @@
               JSON.stringify(["Equals", name])
             );
             url.searchParams.set(
-              "district_name",
-              JSON.stringify(["like", `%${currentDistrict}%`])
-            );
-            url.searchParams.set("dept_name", "IT");
+              "district",
+              JSON.stringify(["Equals", currentDistrict])
+            ); // ✅ Correct field
+            url.searchParams.set("dept_name", JSON.stringify(["Equals", "IT"]));
+
+            console.log("Redirecting →", url.toString());
             window.top.location.href = url.toString();
           });
+
           branchesGrid.appendChild(card);
         });
 
@@ -244,6 +259,7 @@
       }
 
       function showBranches(districtName) {
+        sessionStorage.setItem("selectedDistrict", districtName);
         const district = data.find((d) => d.district === districtName);
         if (!district) return;
         currentDistrict = districtName;
@@ -259,6 +275,7 @@
       }
 
       function showDistricts() {
+        sessionStorage.removeItem("selectedDistrict");
         currentDistrict = null;
         branchesSection.classList.add("hidden");
         districtsSection.classList.remove("hidden");
