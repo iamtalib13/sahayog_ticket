@@ -142,7 +142,10 @@ frappe.ui.form.on("Sahayog Ticket", {
       frm.remove_custom_button("On-Hold", "Status");
       frm.remove_custom_button("In-Progress", "Status");
     }
+
+    frm.trigger("hide_additional_details_from_timeline");
   },
+  
   onload: function (frm) {
     if (!frm.is_new()) {
       frm.trigger("set_intro");
@@ -1109,4 +1112,85 @@ frappe.ui.form.on("Sahayog Ticket", {
       //$(".list-unstyled.sidebar-menu.text-muted").hide();
     }
   },
+
+  hide_additional_details_from_timeline: function (frm) {
+    const printButton = document.querySelector(
+      'button[data-original-title="Print"]'
+    );
+    if (printButton) {
+      printButton.style.display = "none";
+    }
+ 
+    // Hide the menu button
+    const menuButton = document.querySelector(
+      'button[data-original-title="Menu"]'
+    );
+    if (menuButton) {
+      menuButton.style.display = "none";
+    }
+    // Check if the user has the "System Manager" role
+    const hasSystemManagerRole = frappe.user_roles.includes("System Manager");
+ 
+    // Get all timeline items
+    let timeline_items = frm.timeline.wrapper.find(".timeline-item");
+ 
+    // Iterate through timeline items and hide entries based on conditions
+    timeline_items.each(function () {
+      let item = $(this);
+      let text = item.text();
+ 
+      // Hide entries containing 'OTP' if the user is not a System Manager
+      if (text.includes("OTP") && !hasSystemManagerRole) {
+        item.hide();
+      }
+ 
+      // Hide entries containing 'Notification sent to'
+      if (text.includes("Notification sent to") && !hasSystemManagerRole) {
+        item.hide();
+      }
+ 
+      // Hide entries containing 'New Email'
+      if (text.includes("New Email") && !hasSystemManagerRole) {
+        item.hide();
+      }
+ 
+      // Hide entries containing 'viewed this'
+      if (text.includes("viewed this") && !hasSystemManagerRole) {
+        item.hide();
+      }
+ 
+      // Hide entries containing 'viewed this'
+      if (text.includes("added rows") && !hasSystemManagerRole) {
+        item.hide();
+      }
+
+      if (text.includes("last edited this") && !hasSystemManagerRole) {
+        item.hide();
+      }
+
+      if (text.includes("created this") && !hasSystemManagerRole) {
+        item.hide();
+      }
+
+      if (text.includes("changed the value of Employee Name from") && !hasSystemManagerRole) {
+        item.hide();
+      }
+
+      if (text.includes("Notification sent") && !hasSystemManagerRole) {
+        item.hide();
+      }
+
+      if (text.includes("added rows for Status Log") && !hasSystemManagerRole) {
+        item.hide();
+      }
+
+      if (text.includes("Impersonated by ADMINISTRATOR") && !hasSystemManagerRole) {
+        item.hide();
+      }
+
+      if (text.includes("added rows for Status Log") && !hasSystemManagerRole) {
+        item.hide();
+      }
+    });
+  }
 });
