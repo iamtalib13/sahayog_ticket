@@ -143,7 +143,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       frm.remove_custom_button("In-Progress", "Status");
     }
 
-    frm.trigger("hide_otp_from_timeline");
+    frm.trigger("hide_additional_details_from_timeline");
   },
   
   onload: function (frm) {
@@ -1113,7 +1113,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
   },
 
-  hide_otp_from_timeline: function (frm) {
+  hide_additional_details_from_timeline: function (frm) {
     const printButton = document.querySelector(
       'button[data-original-title="Print"]'
     );
