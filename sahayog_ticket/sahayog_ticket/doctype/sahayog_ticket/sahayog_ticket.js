@@ -145,7 +145,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
     frm.trigger("hide_additional_details_from_timeline");
   },
-  
+
   onload: function (frm) {
     if (!frm.is_new()) {
       frm.trigger("set_intro");
@@ -1120,7 +1120,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     if (printButton) {
       printButton.style.display = "none";
     }
- 
+
     // Hide the menu button
     const menuButton = document.querySelector(
       'button[data-original-title="Menu"]'
@@ -1130,35 +1130,35 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
     // Check if the user has the "System Manager" role
     const hasSystemManagerRole = frappe.user_roles.includes("System Manager");
- 
+
     // Get all timeline items
     let timeline_items = frm.timeline.wrapper.find(".timeline-item");
- 
+
     // Iterate through timeline items and hide entries based on conditions
     timeline_items.each(function () {
       let item = $(this);
       let text = item.text();
- 
+
       // Hide entries containing 'OTP' if the user is not a System Manager
       if (text.includes("OTP") && !hasSystemManagerRole) {
         item.hide();
       }
- 
+
       // Hide entries containing 'Notification sent to'
       if (text.includes("Notification sent to") && !hasSystemManagerRole) {
         item.hide();
       }
- 
+
       // Hide entries containing 'New Email'
       if (text.includes("New Email") && !hasSystemManagerRole) {
         item.hide();
       }
- 
+
       // Hide entries containing 'viewed this'
       if (text.includes("viewed this") && !hasSystemManagerRole) {
         item.hide();
       }
- 
+
       // Hide entries containing 'viewed this'
       if (text.includes("added rows") && !hasSystemManagerRole) {
         item.hide();
@@ -1172,7 +1172,10 @@ frappe.ui.form.on("Sahayog Ticket", {
         item.hide();
       }
 
-      if (text.includes("changed the value of Employee Name from") && !hasSystemManagerRole) {
+      if (
+        text.includes("changed the value of Employee Name from") &&
+        !hasSystemManagerRole
+      ) {
         item.hide();
       }
 
@@ -1184,7 +1187,10 @@ frappe.ui.form.on("Sahayog Ticket", {
         item.hide();
       }
 
-      if (text.includes("Impersonated by ADMINISTRATOR") && !hasSystemManagerRole) {
+      if (
+        text.includes("Impersonated by ADMINISTRATOR") &&
+        !hasSystemManagerRole
+      ) {
         item.hide();
       }
 
@@ -1192,5 +1198,63 @@ frappe.ui.form.on("Sahayog Ticket", {
         item.hide();
       }
     });
-  }
+  },
+});
+
+frappe.ui.form.on("Ticket Item", {
+  get_account_details: function (frm, cdt, cdn) {
+    let row = frappe.get_doc(cdt, cdn);
+
+    if (!row.account_number) {
+      frappe.msgprint({
+        title: __("Validation Error"),
+        message: __("Please enter Account Number first."),
+        indicator: "red",
+      });
+      return;
+    }
+
+    frappe.call({
+      method:
+        "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.account_api.get_account_details",
+      args: {
+        account_number: row.account_number,
+      },
+      freeze: true,
+      freeze_message: __("Fetching Account Details..."),
+
+      callback: function (r) {
+        if (r.message) {
+          // Update only UI fields (Not DB)
+          frappe.model.set_value(cdt, cdn, "cif", r.message.cif);
+          frappe.model.set_value(
+            cdt,
+            cdn,
+            "customer_name",
+            r.message.customer_name
+          );
+          frappe.model.set_value(
+            cdt,
+            cdn,
+            "contact_number",
+            r.message.contact_number
+          );
+          frappe.model.set_value(
+            cdt,
+            cdn,
+            "account_type",
+            r.message.account_type
+          );
+          frappe.model.set_value(cdt, cdn, "email", r.message.email);
+
+          frm.refresh_field("ticket_items");
+
+          frappe.show_alert({
+            message: __("Account details fetched"),
+            indicator: "green",
+          });
+        }
+      },
+    });
+  },
 });

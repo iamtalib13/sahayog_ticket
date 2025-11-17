@@ -15,9 +15,83 @@ class SahayogTicket(Document):
         #self.set_creation_time()
         self.track_status_change()
 
-    # def validate(self):
-    #     if not self.status:
-    #         self.status = "Open"
+    def validate(self):
+        self.validate_request_detail()
+        self.check_account_validation()
+
+    
+    def check_account_validation(self):
+        import re
+
+        # Regex patterns
+        mobile_pattern = r"^[6-9]\d{9}$"                 # 10-digit Indian mobile
+        pan_pattern = r"^[A-Z]{5}[0-9]{4}[A-Z]$"         # PAN Format ABCDE1234F
+        email_pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"      # Basic email structure
+
+        for row in self.request_detail:
+
+            # -------------------------------------------
+            # 1️⃣ REQUIRED FIELD VALIDATIONS BASED ON REQUEST TYPE
+            # -------------------------------------------
+            if row.request_type == "Change of Address" and not row.new_address:
+                frappe.throw(_("Row #{0}: New Address is required").format(row.idx))
+
+            if row.request_type == "Update Contact Number" and not row.new_contact_number:
+                frappe.throw(_("Row #{0}: New Contact Number is required").format(row.idx))
+
+            if row.request_type == "Update Email Address" and not row.new_email:
+                frappe.throw(_("Row #{0}: New Email Address is required").format(row.idx))
+
+            if row.request_type == "Update KYC (Adhaar/Voter/Passport/etc)" and not row.new_kyc_no:
+                frappe.throw(_("Row #{0}: New KYC No is required").format(row.idx))
+
+            if row.request_type == "Update PAN NO" and not row.new_pan_no:
+                frappe.throw(_("Row #{0}: New PAN No is required").format(row.idx))
+
+
+            # -------------------------------------------
+            # 2️⃣ FORMAT VALIDATION (IF FIELD HAS VALUE)
+            # -------------------------------------------
+
+            # Validate new_contact_number (if present)
+            if row.new_contact_number:
+                if not re.match(mobile_pattern, row.new_contact_number):
+                    frappe.throw(
+                        _("Row #{0}: Enter valid 10-digit Indian Mobile Number").format(row.idx)
+                    )
+
+            # Validate new_pan_no (if present)
+            if row.new_pan_no:
+                if not re.match(pan_pattern, row.new_pan_no.upper()):
+                    frappe.throw(
+                        _("Row #{0}: Enter valid PAN Number (Format: ABCDE1234F)").format(row.idx)
+                    )
+
+            # Validate new_email (if present)
+            if row.new_email:
+                if not re.match(email_pattern, row.new_email):
+                    frappe.throw(
+                        _("Row #{0}: Enter valid Email Address").format(row.idx)
+                    )
+    
+    def validate_request_detail(self):
+        # Check only when ticket type is Account Service Request
+        if self.ticket_type == "Account Service Request":
+            row_count = len(self.request_detail or [])
+
+            # No rows added
+            if row_count == 0:
+                frappe.throw(
+                    "Please add one Request Detail for Account Service Request.",
+                    title="Account Detail Required"
+                )
+
+            # More than one row added
+            if row_count > 1:
+                frappe.throw(
+                    "Only one Account Request Detail is allowed for Account Service Request.",
+                    title="Multiple Request Details Not Allowed"
+                )
         
     def track_status_change(self):
         if not self._doc_before_save:
