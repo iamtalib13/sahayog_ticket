@@ -12,7 +12,7 @@
  "is_hidden": 0,
  "label": "Accounts Tickets",
  "links": [],
- "modified": "2025-07-05 18:21:15.765767",
+ "modified": "2025-11-18 00:20:26.542973",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Accounts Tickets",
@@ -35,7 +35,7 @@
    "role": "Accounts Support Manager"
   }
  ],
- "sequence_id": 17.0,
+ "sequence_id": 22.0,
  "shortcuts": [
   {
    "color": "Red",

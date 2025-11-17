@@ -11,7 +11,7 @@
  "is_hidden": 0,
  "label": "Ticket Analysis",
  "links": [],
- "modified": "2023-06-22 12:55:58.815947",
+ "modified": "2025-11-18 00:20:28.315153",
  "modified_by": "Administrator",
  "module": "Ticket Analysis",
  "name": "Ticket Analysis",
@@ -25,7 +25,7 @@
    "role": "Analytics"
   }
  ],
- "sequence_id": 40.0,
+ "sequence_id": 63.0,
  "shortcuts": [],
  "title": "Ticket Analysis"
 }

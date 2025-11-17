@@ -17,7 +17,7 @@
  "is_hidden": 0,
  "label": "HR Tickets",
  "links": [],
- "modified": "2025-07-05 18:19:51.867492",
+ "modified": "2025-11-18 00:20:26.189415",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "HR Tickets",
@@ -40,7 +40,7 @@
    "role": "HR Support Manager"
   }
  ],
- "sequence_id": 6.0,
+ "sequence_id": 10.0,
  "shortcuts": [
   {
    "color": "Red",

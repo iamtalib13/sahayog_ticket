@@ -12,7 +12,7 @@
  "is_hidden": 0,
  "label": "HR Region 3",
  "links": [],
- "modified": "2025-03-03 14:58:13.140670",
+ "modified": "2025-11-18 00:20:26.289028",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "HR Region 3",
@@ -29,7 +29,7 @@
    "role": "HR Support Manager"
   }
  ],
- "sequence_id": 9.0,
+ "sequence_id": 13.0,
  "shortcuts": [
   {
    "color": "Grey",

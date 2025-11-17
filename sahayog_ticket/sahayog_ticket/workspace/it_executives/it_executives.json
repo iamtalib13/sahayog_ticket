@@ -17,7 +17,7 @@
  "is_hidden": 0,
  "label": "IT Executives",
  "links": [],
- "modified": "2025-07-02 17:57:41.235698",
+ "modified": "2025-11-18 00:20:26.165558",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "IT Executives",
@@ -34,7 +34,7 @@
    "role": "IT Support Manager"
   }
  ],
- "sequence_id": 5.0,
+ "sequence_id": 9.0,
  "shortcuts": [],
  "title": "IT Executives"
 }
