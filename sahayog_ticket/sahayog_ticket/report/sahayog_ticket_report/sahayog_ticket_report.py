@@ -41,6 +41,9 @@ def get_columns():
         {"fieldname": "tat", "label": "TAT", "fieldtype": "Data", "width": 100},
         {"fieldname": "total_days", "label": "Ticket Age", "fieldtype": "Int", "width": 100},
         {"fieldname": "creation_formatted", "label": "Created On", "fieldtype": "Data", "width": 180},
+
+        # ➤ Added ONLY this new column
+        {"fieldname": "ticket_resolved_on_formatted", "label": "Resolved On", "fieldtype": "Data", "width": 180},
     ]
 
 
@@ -66,7 +69,8 @@ def get_data(filters):
             executive_remark,
             tat,
             total_days,
-            creation
+            creation,
+            ticket_resolved_on  -- ➤ Added ONLY this line
         FROM `tabSahayog Ticket`
         {f"WHERE {conditions}" if conditions else ""}
         ORDER BY creation DESC
@@ -77,6 +81,12 @@ def get_data(filters):
     for row in data:
         if row.get("creation"):
             row["creation_formatted"] = format_datetime(row["creation"], "dd/MM/yyyy hh:mm a")
+
+        # ➤ Added ONLY this block
+        if row.get("ticket_resolved_on"):
+            row["ticket_resolved_on_formatted"] = format_datetime(
+                row["ticket_resolved_on"], "dd/MM/yyyy hh:mm a"
+            )
 
     return data
 
