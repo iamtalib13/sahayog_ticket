@@ -91,7 +91,9 @@ after_migrate = [
 # # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
-    "Sahayog Ticket": "sahayog_ticket.permission.get_permission_query_conditions"
+    "Sahayog Ticket": "sahayog_ticket.permission.get_permission_query_conditions",
+    "Sahayog Ticket": "sahayog_ticket.permission.sahayog_ticket_permission_query",
+
 }
 
 #

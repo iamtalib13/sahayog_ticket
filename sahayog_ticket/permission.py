@@ -75,3 +75,64 @@ def has_permission(doc, ptype, user):
                    "Department Head" in frappe.get_roles(user))
 
     return False
+
+    import frappe
+
+def sahayog_ticket_permission_query(user):
+    # 1. Administrator → no restriction
+    if user == "Administrator":
+        return ""
+
+    # 2. Get user's department from Employee
+    user_department = frappe.db.get_value(
+        "Employee",
+        {"user_id": user},
+        "department"
+    )
+
+    # 3. If no Employee or no department → block all
+    if not user_department:
+        return "1 = 0"
+
+    # 4. Get roles
+    roles = frappe.get_roles(user)
+
+    # 5. Detect Manager / Executive (partial match)
+    is_manager_or_executive = any(
+        "manager" in role.lower() or "executive" in role.lower()
+        for role in roles
+    )
+
+    # Escape values
+    user_department = frappe.db.escape(user_department)
+    user = frappe.db.escape(user)
+
+    # ---------------------------------------------------
+    # 6. Manager / Executive → unchanged
+    # ---------------------------------------------------
+    if is_manager_or_executive:
+        return f"""
+            (
+                `tabSahayog Ticket`.dept_name = {user_department}
+                OR `tabSahayog Ticket`.assigned_to = {user}
+            )
+        """
+
+    # ---------------------------------------------------
+    # 7. Normal user
+    #    - Own tickets
+    #    - OR open, unassigned tickets of same department
+    # ---------------------------------------------------
+    return f"""
+        (
+            `tabSahayog Ticket`.assigned_to = {user}
+            OR (
+                `tabSahayog Ticket`.dept_name = {user_department}
+                AND (
+                    `tabSahayog Ticket`.assigned_to IS NULL
+                    OR `tabSahayog Ticket`.assigned_to = ''
+                )
+                AND `tabSahayog Ticket`.status = 'open'
+            )
+        )
+    """
