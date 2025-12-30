@@ -78,6 +78,8 @@ def has_permission(doc, ptype, user):
 
     import frappe
 
+import frappe
+
 def sahayog_ticket_permission_query(user):
     # 1. Administrator → no restriction
     if user == "Administrator":
@@ -90,49 +92,70 @@ def sahayog_ticket_permission_query(user):
         "department"
     )
 
-    # 3. If no Employee or no department → block all
     if not user_department:
         return "1 = 0"
 
-    # 4. Get roles
+    # Normalize Employee → Ticket department
+    department_map = {
+        "Information Technology": "IT"
+    }
+    ticket_department = department_map.get(user_department, user_department)
+
     roles = frappe.get_roles(user)
 
-    # 5. Detect Manager / Executive (partial match)
     is_manager_or_executive = any(
         "manager" in role.lower() or "executive" in role.lower()
         for role in roles
     )
 
-    # Escape values
-    user_department = frappe.db.escape(user_department)
     user = frappe.db.escape(user)
 
-    # ---------------------------------------------------
-    # 6. Manager / Executive → unchanged
-    # ---------------------------------------------------
-    if is_manager_or_executive:
+    # ===================================================
+    # CASE 1: USER DEPARTMENT = IT
+    # ===================================================
+    if ticket_department == "IT":
+        # Manager / Executive (IT)
+        if is_manager_or_executive:
+            return f"""
+                (
+                    `tabSahayog Ticket`.dept_name = 'IT'
+                    OR `tabSahayog Ticket`.assigned_to = {user}
+                    OR `tabSahayog Ticket`.owner = {user}
+                )
+            """
+
+        # Normal IT user
         return f"""
             (
-                `tabSahayog Ticket`.dept_name = {user_department}
-                OR `tabSahayog Ticket`.assigned_to = {user}
+                `tabSahayog Ticket`.assigned_to = {user}
+                OR `tabSahayog Ticket`.owner = {user}
+                OR (
+                    `tabSahayog Ticket`.dept_name = 'IT'
+                    AND (
+                        `tabSahayog Ticket`.assigned_to IS NULL
+                        OR `tabSahayog Ticket`.assigned_to = ''
+                    )
+                    AND `tabSahayog Ticket`.status = 'open'
+                )
             )
         """
 
-    # ---------------------------------------------------
-    # 7. Normal user
-    #    - Own tickets
-    #    - OR open, unassigned tickets of same department
-    # ---------------------------------------------------
+    # ===================================================
+    # CASE 2: USER DEPARTMENT ≠ IT
+    # ===================================================
+    # - Hide IT tickets
+    # - EXCEPT: show IT tickets created by the user
     return f"""
         (
-            `tabSahayog Ticket`.assigned_to = {user}
-            OR (
-                `tabSahayog Ticket`.dept_name = {user_department}
-                AND (
-                    `tabSahayog Ticket`.assigned_to IS NULL
-                    OR `tabSahayog Ticket`.assigned_to = ''
-                )
-                AND `tabSahayog Ticket`.status = 'open'
+            -- Non-IT tickets
+            `tabSahayog Ticket`.dept_name != 'IT'
+
+            OR
+
+            -- Exception: user's own IT tickets
+            (
+                `tabSahayog Ticket`.dept_name = 'IT'
+                AND `tabSahayog Ticket`.owner = {user}
             )
         )
     """
