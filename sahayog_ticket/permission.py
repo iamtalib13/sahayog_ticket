@@ -75,87 +75,88 @@ def has_permission(doc, ptype, user):
                    "Department Head" in frappe.get_roles(user))
 
     return False
-
-    import frappe
-
 import frappe
 
 def sahayog_ticket_permission_query(user):
-    # 1. Administrator → no restriction
+    # --------------------------------------------------
+    # Administrator → no restriction
+    # --------------------------------------------------
     if user == "Administrator":
         return ""
 
-    # 2. Get user's department from Employee
-    user_department = frappe.db.get_value(
-        "Employee",
-        {"user_id": user},
-        "department"
-    )
-
-    if not user_department:
-        return "1 = 0"
-
-    # Normalize Employee → Ticket department
-    department_map = {
-        "Information Technology": "IT"
-    }
-    ticket_department = department_map.get(user_department, user_department)
-
     roles = frappe.get_roles(user)
 
-    is_manager_or_executive = any(
-        "manager" in role.lower() or "executive" in role.lower()
-        for role in roles
-    )
+    # --------------------------------------------------
+    # DETECT DEPARTMENT & DESIGNATION FROM ROLES
+    # --------------------------------------------------
+    ticket_department = None
+    is_manager = False
+    is_executive = False
+
+    for role in roles:
+        role_l = role.lower()
+
+        # Any role starting with "it " → IT department
+        if role_l.startswith("it "):
+            ticket_department = "IT"
+
+        # Designation detection (XYZ = anything)
+        if "manager" in role_l:
+            is_manager = True
+        if "executive" in role_l:
+            is_executive = True
 
     user = frappe.db.escape(user)
 
-    # ===================================================
-    # CASE 1: USER DEPARTMENT = IT
-    # ===================================================
-    if ticket_department == "IT":
-        # Manager / Executive (IT)
-        if is_manager_or_executive:
-            return f"""
-                (
-                    `tabSahayog Ticket`.dept_name = 'IT'
-                    OR `tabSahayog Ticket`.assigned_to = {user}
-                    OR `tabSahayog Ticket`.owner = {user}
-                )
-            """
-
-        # Normal IT user
+    # --------------------------------------------------
+    # CASE 0: NORMAL EMPLOYEE
+    # (Only Employee role, no IT, no Manager, no Executive)
+    # --------------------------------------------------
+    if not ticket_department and not is_manager and not is_executive:
         return f"""
             (
-                `tabSahayog Ticket`.assigned_to = {user}
+                `tabSahayog Ticket`.owner = {user}
+                OR `tabSahayog Ticket`.assigned_to = {user}
+            )
+        """
+
+    # --------------------------------------------------
+    # CASE 1: IT MANAGER (IT * Manager)
+    # --------------------------------------------------
+    if ticket_department == "IT" and is_manager:
+        return f"""
+            (
+                `tabSahayog Ticket`.dept_name = 'IT'
                 OR `tabSahayog Ticket`.owner = {user}
+                OR `tabSahayog Ticket`.assigned_to = {user}
+            )
+        """
+
+    # --------------------------------------------------
+    # CASE 2: IT EXECUTIVE (IT * Executive)
+    # --------------------------------------------------
+    if ticket_department == "IT" and is_executive:
+        return f"""
+            (
+                `tabSahayog Ticket`.owner = {user}
+                OR `tabSahayog Ticket`.assigned_to = {user}
                 OR (
                     `tabSahayog Ticket`.dept_name = 'IT'
                     AND (
                         `tabSahayog Ticket`.assigned_to IS NULL
                         OR `tabSahayog Ticket`.assigned_to = ''
                     )
-                    AND `tabSahayog Ticket`.status = 'open'
                 )
             )
         """
 
-    # ===================================================
-    # CASE 2: USER DEPARTMENT ≠ IT
-    # ===================================================
-    # - Hide IT tickets
-    # - EXCEPT: show IT tickets created by the user
+    # --------------------------------------------------
+    # CASE 3: NON-IT MANAGER / EXECUTIVE
+    # --------------------------------------------------
     return f"""
         (
-            -- Non-IT tickets
             `tabSahayog Ticket`.dept_name != 'IT'
-
-            OR
-
-            -- Exception: user's own IT tickets
-            (
-                `tabSahayog Ticket`.dept_name = 'IT'
-                AND `tabSahayog Ticket`.owner = {user}
-            )
+            OR `tabSahayog Ticket`.owner = {user}
+            OR `tabSahayog Ticket`.assigned_to = {user}
         )
     """
