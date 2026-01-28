@@ -18,6 +18,7 @@ class SahayogTicket(Document):
     def validate(self):
         self.validate_request_detail()
         self.check_account_validation()
+        self.validate_contact_number_update()
 
     
     def check_account_validation(self):
@@ -92,7 +93,17 @@ class SahayogTicket(Document):
                     "Only one Account Request Detail is allowed for Account Service Request.",
                     title="Multiple Request Details Not Allowed"
                 )
-        
+
+    def validate_contact_number_update(self):
+                # Loop through child table rows
+        for row in self.request_detail or []:
+            if row.request_type == "Update Contact Number":
+                if row.contact_number and row.new_contact_number:
+                    if row.contact_number == row.new_contact_number:
+                        frappe.throw(
+                            f"Row {row.idx}: New Contact Number must be different from the existing Contact Number."
+                        )
+
     def track_status_change(self):
         if not self._doc_before_save:
             return
