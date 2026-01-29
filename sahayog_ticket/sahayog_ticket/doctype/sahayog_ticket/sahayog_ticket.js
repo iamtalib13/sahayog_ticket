@@ -149,6 +149,7 @@ frappe.ui.form.on("Sahayog Ticket", {
   onload: function (frm) {
     if (!frm.is_new()) {
       frm.trigger("set_intro");
+      setup_notify_branch_button(frm);
     }
   },
 
@@ -209,7 +210,7 @@ frappe.ui.form.on("Sahayog Ticket", {
             const ticket_tat = frm.doc.tat || "N/A";
 
             const is_resolved_or_closed = ["Resolved", "Closed"].includes(
-              frm.doc.status
+              frm.doc.status,
             );
             const ticket_assigned_label = is_resolved_or_closed
               ? "Resolved by:"
@@ -462,7 +463,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                 if (response.message && response.message.asset_request_id) {
                   frm.set_value(
                     "asset_request_id",
-                    response.message.asset_request_id
+                    response.message.asset_request_id,
                   );
                   frm.refresh_field("asset_request_id");
                   frm.set_value("ticket_resolved_by", user);
@@ -470,7 +471,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                   frm.refresh_field("status");
                   frm.set_value(
                     "close_remark",
-                    `Created Asset Request - ${response.message.asset_request_id}`
+                    `Created Asset Request - ${response.message.asset_request_id}`,
                   );
                   frm.save();
                   frappe.show_alert(
@@ -478,24 +479,24 @@ frappe.ui.form.on("Sahayog Ticket", {
                       message: __("Asset Request created successfully"),
                       indicator: "green",
                     },
-                    5
+                    5,
                   );
                 } else {
                   console.log(
                     "Error creating Asset Request:",
-                    response.message
+                    response.message,
                   );
                   frappe.show_alert(
                     {
                       message: __("Please Try Again"),
                       indicator: "red",
                     },
-                    5
+                    5,
                   );
                 }
               },
             });
-          }
+          },
         );
       });
     }
@@ -503,7 +504,7 @@ frappe.ui.form.on("Sahayog Ticket", {
   custom_buttons: function (frm) {
     // Check if user has any role containing "Manager"
     let hasManagerRole = frappe.user_roles.some((role) =>
-      role.includes("Manager")
+      role.includes("Manager"),
     );
 
     if (hasManagerRole) {
@@ -556,8 +557,8 @@ frappe.ui.form.on("Sahayog Ticket", {
                         <input type="radio" name="assigned_to" value="${
                           u.id
                         }" ${
-                  isAssigned ? "checked" : ""
-                } style="margin-right:15px; accent-color:#087b74; width:18px;height:18px;">
+                          isAssigned ? "checked" : ""
+                        } style="margin-right:15px; accent-color:#087b74; width:18px;height:18px;">
                         <span style="flex:1; color:#087b74; font-size:12px; font-weight:600; display:flex; align-items:center;">
                           ${u.name}
                           ${
@@ -765,7 +766,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                 } else {
                   frappe.msgprint(__("Please select a user to assign."));
                 }
-              }
+              },
             );
           } else {
             frappe.msgprint(__("No eligible users found for this department."));
@@ -803,7 +804,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
               frm.set_value(
                 "executive_remark",
-                d.fields_dict.executive_remark.get_value()
+                d.fields_dict.executive_remark.get_value(),
               );
               frm.set_value("status", "In-Progress");
               frm.refresh_field("status");
@@ -815,7 +816,7 @@ frappe.ui.form.on("Sahayog Ticket", {
           d.show();
         });
       },
-      __("Status")
+      __("Status"),
     );
   },
 
@@ -845,14 +846,14 @@ frappe.ui.form.on("Sahayog Ticket", {
 
               frm.set_value(
                 "resolved_remark",
-                d.fields_dict.resolved_remark.get_value()
+                d.fields_dict.resolved_remark.get_value(),
               );
               frm.set_value("status", "Resolved");
               frm.refresh_field("status");
               frm.set_value("ticket_resolved_by", user);
               frm.set_value(
                 "ticket_resolved_on",
-                frappe.datetime.now_datetime()
+                frappe.datetime.now_datetime(),
               );
               frm.set_value("assigned_to", user);
               frm.save();
@@ -862,7 +863,7 @@ frappe.ui.form.on("Sahayog Ticket", {
           d.show();
         });
       },
-      __("Status")
+      __("Status"),
     );
   },
 
@@ -912,7 +913,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       .add_custom_button(__("Close"), function () {
         frappe.confirm(
           __(
-            "Do you want to Close the Ticket? Once it is closed, it cannot be re-opened."
+            "Do you want to Close the Ticket? Once it is closed, it cannot be re-opened.",
           ),
           function () {
             const d = new frappe.ui.Dialog({
@@ -938,7 +939,7 @@ frappe.ui.form.on("Sahayog Ticket", {
               },
             });
             d.show();
-          }
+          },
         );
       })
       .css({
@@ -982,14 +983,14 @@ frappe.ui.form.on("Sahayog Ticket", {
 
         d.show();
       },
-      __("Actions")
+      __("Actions"),
     );
   },
   reset_user_password: function (frm) {
     let hasManagerRole = frappe.user_roles.some(
       (role) =>
         role.toLowerCase().includes("manager") ||
-        role.toLowerCase().includes("executive")
+        role.toLowerCase().includes("executive"),
     );
 
     if (hasManagerRole) {
@@ -1030,7 +1031,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                     d.set_value(
                       "user_info_html",
                       `<b>Full Name:</b> ${r.message.full_name}<br/>
-                   <b>USER ID:</b> ${r.message.email}`
+                   <b>USER ID:</b> ${r.message.email}`,
                     );
 
                     // Change button to Reset Password
@@ -1056,26 +1057,26 @@ frappe.ui.form.on("Sahayog Ticket", {
                               frappe.show_alert(
                                 __(
                                   "Password reset successfully for " +
-                                    r.message.full_name
-                                )
+                                    r.message.full_name,
+                                ),
                               );
                               d.hide();
                             } else {
                               frappe.msgprint(
                                 __(
-                                  "Failed to reset password. Please try again."
-                                )
+                                  "Failed to reset password. Please try again.",
+                                ),
                               );
                             }
                           },
                         });
-                      }
+                      },
                     );
                   } else {
                     // If user not found
                     d.set_value(
                       "user_info_html",
-                      `<span style="color:red;">User not found.</span>`
+                      `<span style="color:red;">User not found.</span>`,
                     );
                     d.get_field("new_password").$wrapper.hide();
                     d.set_primary_action(__("Check"), d.primary_action);
@@ -1097,7 +1098,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
           d.show();
         },
-        __("Actions")
+        __("Actions"),
       );
     }
   },
@@ -1115,7 +1116,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
   hide_additional_details_from_timeline: function (frm) {
     const printButton = document.querySelector(
-      'button[data-original-title="Print"]'
+      'button[data-original-title="Print"]',
     );
     if (printButton) {
       printButton.style.display = "none";
@@ -1123,7 +1124,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
     // Hide the menu button
     const menuButton = document.querySelector(
-      'button[data-original-title="Menu"]'
+      'button[data-original-title="Menu"]',
     );
     if (menuButton) {
       menuButton.style.display = "none";
@@ -1200,6 +1201,120 @@ frappe.ui.form.on("Sahayog Ticket", {
     });
   },
 });
+function setup_notify_branch_button(frm) {
+  if (frm.is_new()) return;
+  if (frm.is_disabled) return;
+
+  frm.remove_custom_button(__("Notified"), __("Actions"));
+
+  frappe.db
+    .get_value("Employee", { user_id: frm.doc.owner }, [
+      "branch",
+      "company_email",
+    ])
+    .then((r) => {
+      const emp_branch = r.message?.branch;
+      const emp_email = r.message?.company_email;
+
+      if (!emp_branch || !emp_email) {
+        frm.add_custom_button(
+          __("Notified"),
+          () => {
+            const d = new frappe.ui.Dialog({
+              title: __("Notify"),
+              fields: [
+                {
+                  fieldname: "notify_mode",
+                  fieldtype: "Select",
+                  label: __("Notify Using"),
+                  options: [
+                    { label: "Employee Email", value: "employee" },
+                    { label: "Branch Email", value: "branch" },
+                  ],
+                  reqd: 1,
+                },
+                {
+                  fieldname: "recipient_email",
+                  fieldtype: "Data",
+                  label: __("Employee Email"),
+                  hidden: 1,
+                },
+                {
+                  fieldname: "comment",
+                  fieldtype: "Small Text",
+                  label: __("Comment"),
+                  reqd: 1,
+                },
+              ],
+              primary_action_label: __("Send"),
+              async primary_action(values) {
+                if (
+                  values.notify_mode === "employee" &&
+                  !values.recipient_email
+                ) {
+                  frappe.msgprint(__("Please enter employee email"));
+                  return;
+                }
+
+                // 1️⃣ Create comment (timeline + audit)
+                await frappe.call({
+                  method: "frappe.desk.form.utils.add_comment",
+                  args: {
+                    reference_doctype: frm.doctype,
+                    reference_name: frm.docname,
+                    content: values.comment,
+                    comment_by: frappe.session.user,
+                    comment_email: frappe.session.user,
+                  },
+                });
+
+                // 2️⃣ Send manual email
+                await frappe.call({
+                  method:
+                    "sahayog.sahayog.api.comment_email.send_manual_ticket_notification",
+                  args: {
+                    reference_name: frm.docname,
+                    comment: values.comment,
+                    notify_mode: values.notify_mode, // employee | branch
+                    recipient_email:
+                      values.notify_mode === "employee"
+                        ? values.recipient_email
+                        : null,
+                  },
+                });
+
+                d.hide();
+                frappe.show_alert(
+                  {
+                    message: __("Notification sent successfully"),
+                    indicator: "green",
+                  },
+                  5,
+                );
+              },
+            });
+
+            // 🔁 Toggle email field
+            d.fields_dict.notify_mode.df.onchange = () => {
+              const mode = d.get_value("notify_mode");
+
+              if (mode === "employee") {
+                d.set_df_property("recipient_email", "hidden", 0);
+                d.set_value("recipient_email", emp_email || "");
+              } else {
+                d.set_df_property("recipient_email", "hidden", 1);
+                d.set_value("recipient_email", "");
+              }
+              d.refresh();
+            };
+
+            d.show();
+          },
+          __("Actions"),
+        );
+      }
+    });
+}
 
 frappe.ui.form.on("Ticket Item", {
   get_account_details: function (frm, cdt, cdn) {
@@ -1231,19 +1346,19 @@ frappe.ui.form.on("Ticket Item", {
             cdt,
             cdn,
             "customer_name",
-            r.message.customer_name
+            r.message.customer_name,
           );
           frappe.model.set_value(
             cdt,
             cdn,
             "contact_number",
-            r.message.contact_number
+            r.message.contact_number,
           );
           frappe.model.set_value(
             cdt,
             cdn,
             "account_type",
-            r.message.account_type
+            r.message.account_type,
           );
           frappe.model.set_value(cdt, cdn, "email", r.message.email);
 
