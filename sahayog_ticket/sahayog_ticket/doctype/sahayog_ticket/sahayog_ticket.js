@@ -1345,8 +1345,10 @@ function setup_notify_branch_button(frm) {
           d.set_value("employee_email", emp_email);
           d.set_df_property("employee_email", "read_only", 1);
         } else {
-          // ❌ No email → keep hidden until checkbox is checked
+          // ❌ No email in master
           d.set_value("use_employee", 0);
+
+          // Employee ID will be shown ONLY when checkbox is checked
           d.set_df_property("employee_id", "hidden", 1);
           d.set_df_property("employee_email", "hidden", 1);
           d.set_df_property("employee_email", "read_only", 0);
@@ -1393,8 +1395,19 @@ function setup_notify_branch_button(frm) {
         /* ================= TOGGLES ================= */
         d.fields_dict.use_employee.df.onchange = () => {
           const on = d.get_value("use_employee");
+
           d.set_df_property("employee_id", "hidden", !on);
           d.set_df_property("employee_email", "hidden", !on);
+
+          if (on) {
+            // ✅ If email exists → show Employee.name
+            // ❌ If email missing → show doc.owner
+            d.set_value("employee_id", emp_id || frm.doc.owner);
+          } else {
+            d.set_value("employee_id", "");
+            d.set_value("employee_email", "");
+          }
+
           d.refresh();
         };
 
