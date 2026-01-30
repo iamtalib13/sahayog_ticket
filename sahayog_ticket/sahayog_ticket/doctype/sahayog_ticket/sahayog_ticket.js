@@ -1205,114 +1205,196 @@ function setup_notify_branch_button(frm) {
   if (frm.is_new()) return;
   if (frm.is_disabled) return;
 
-  frm.remove_custom_button(__("Notified"), __("Actions"));
+  frm.remove_custom_button(__("Reply to Ticket"));
 
   frappe.db
     .get_value("Employee", { user_id: frm.doc.owner }, [
       "branch",
       "company_email",
+      "name",
     ])
-    .then((r) => {
-      const emp_branch = r.message?.branch;
-      const emp_email = r.message?.company_email;
+    .then(async (r) => {
+      if (!r.message) return;
 
-      if (!emp_branch || !emp_email) {
-        frm.add_custom_button(
-          __("Notified"),
-          () => {
-            const d = new frappe.ui.Dialog({
-              title: __("Notify"),
-              fields: [
-                {
-                  fieldname: "notify_mode",
-                  fieldtype: "Select",
-                  label: __("Notify Using"),
-                  options: [
-                    { label: "Employee Email", value: "employee" },
-                    { label: "Branch Email", value: "branch" },
-                  ],
-                  reqd: 1,
-                },
-                {
-                  fieldname: "recipient_email",
-                  fieldtype: "Data",
-                  label: __("Employee Email"),
-                  hidden: 1,
-                },
-                {
-                  fieldname: "comment",
-                  fieldtype: "Small Text",
-                  label: __("Comment"),
-                  reqd: 1,
-                },
-              ],
-              primary_action_label: __("Send"),
-              async primary_action(values) {
-                if (
-                  values.notify_mode === "employee" &&
-                  !values.recipient_email
-                ) {
-                  frappe.msgprint(__("Please enter employee email"));
-                  return;
-                }
+      const emp_branch = r.message.branch || "";
+      const emp_email = r.message.company_email || "";
+      const emp_id = r.message.name || "";
 
-                // 1️⃣ Create comment (timeline + audit)
-                await frappe.call({
-                  method: "frappe.desk.form.utils.add_comment",
-                  args: {
-                    reference_doctype: frm.doctype,
-                    reference_name: frm.docname,
-                    content: values.comment,
-                    comment_by: frappe.session.user,
-                    comment_email: frappe.session.user,
-                  },
-                });
+      frm.add_custom_button(__("Reply to Ticket"), async () => {
+        const d = new frappe.ui.Dialog({
+          title: __("Reply via Email"),
+          fields: [
+            {
+              fieldname: "use_employee",
+              fieldtype: "Check",
+              label: __("Send to Employee Email"),
+            },
+            {
+              fieldname: "use_branch",
+              fieldtype: "Check",
+              label: __("Send to Branch Email"),
+            },
 
-                // 2️⃣ Send manual email
-                await frappe.call({
-                  method:
-                    "sahayog.sahayog.api.comment_email.send_manual_ticket_notification",
-                  args: {
-                    reference_name: frm.docname,
-                    comment: values.comment,
-                    notify_mode: values.notify_mode, // employee | branch
-                    recipient_email:
-                      values.notify_mode === "employee"
-                        ? values.recipient_email
-                        : null,
-                  },
-                });
+            {
+              fieldname: "employee_id",
+              fieldtype: "Data",
+              label: __("Employee ID"),
+              read_only: 1,
+              hidden: 1,
+            },
+            {
+              fieldname: "employee_email",
+              fieldtype: "Data",
+              label: __("Employee Email"),
+              hidden: 1,
+            },
 
-                d.hide();
-                frappe.show_alert(
-                  {
-                    message: __("Notification sent successfully"),
-                    indicator: "green",
-                  },
-                  5,
-                );
+            {
+              fieldname: "branch_name",
+              fieldtype: "Data",
+              label: __("Branch"),
+              read_only: 1,
+              hidden: 1,
+            },
+            {
+              fieldname: "branch_email",
+              fieldtype: "Data",
+              label: __("Branch Email"),
+              hidden: 1,
+            },
+
+            {
+              fieldname: "comment",
+              fieldtype: "Small Text",
+              label: __("Comment"),
+              reqd: 1,
+            },
+          ],
+
+          primary_action_label: __("Send"),
+          async primary_action(values) {
+            if (!values.use_employee && !values.use_branch) {
+              frappe.msgprint(__("Please select at least one recipient"));
+              return;
+            }
+
+            const recipients = [];
+
+            if (values.use_employee && values.employee_email) {
+              recipients.push(values.employee_email);
+            }
+
+            if (values.use_branch && values.branch_email) {
+              recipients.push(values.branch_email);
+            }
+
+            if (!recipients.length) {
+              frappe.msgprint(__("No valid email recipients found"));
+              return;
+            }
+
+            await frappe.call({
+              method: "frappe.desk.form.utils.add_comment",
+              args: {
+                reference_doctype: frm.doctype,
+                reference_name: frm.docname,
+                content: values.comment,
+                comment_by: frappe.session.user,
+                comment_email: frappe.session.user,
               },
             });
 
-            // 🔁 Toggle email field
-            d.fields_dict.notify_mode.df.onchange = () => {
-              const mode = d.get_value("notify_mode");
+            await frappe.call({
+              method:
+                "sahayog.sahayog.api.comment_email.send_manual_ticket_notification",
+              args: {
+                reference_name: frm.docname,
+                comment: values.comment,
+                recipient_emails: recipients,
+              },
+            });
 
-              if (mode === "employee") {
-                d.set_df_property("recipient_email", "hidden", 0);
-                d.set_value("recipient_email", emp_email || "");
-              } else {
-                d.set_df_property("recipient_email", "hidden", 1);
-                d.set_value("recipient_email", "");
-              }
-              d.refresh();
-            };
-
-            d.show();
+            d.hide();
+            frappe.show_alert(
+              { message: __("Reply sent successfully"), indicator: "green" },
+              5,
+            );
           },
-          __("Actions"),
-        );
-      }
+        });
+
+        /* ================= EMPLOYEE PREFILL ================= */
+        if (emp_email) {
+          // Auto-enable if email exists
+          d.set_value("use_employee", 1);
+          d.set_df_property("employee_id", "hidden", 0);
+          d.set_df_property("employee_email", "hidden", 0);
+
+          d.set_value("employee_id", emp_id);
+          d.set_value("employee_email", emp_email);
+          d.set_df_property("employee_email", "read_only", 1);
+        } else {
+          // ❌ No email → keep hidden until checkbox is checked
+          d.set_value("use_employee", 0);
+          d.set_df_property("employee_id", "hidden", 1);
+          d.set_df_property("employee_email", "hidden", 1);
+          d.set_df_property("employee_email", "read_only", 0);
+        }
+
+        /* ================= BRANCH PREFILL ================= */
+        let branch_email = "";
+        let branch_name = "";
+
+        if (emp_branch) {
+          const key = emp_branch.toLowerCase().replace("branch", "").trim();
+
+          const res = await frappe.call({
+            method: "frappe.client.get_list",
+            args: {
+              doctype: "Sahayog Branch",
+              fields: ["branch", "email"],
+              filters: [["branch", "like", `%${key}%`]],
+              limit_page_length: 1,
+            },
+          });
+
+          if (res.message?.length) {
+            branch_name = res.message[0].branch;
+            branch_email = res.message[0].email || "";
+          }
+        }
+
+        if (branch_email) {
+          d.set_value("use_branch", 1);
+          d.set_df_property("branch_name", "hidden", 0);
+          d.set_df_property("branch_email", "hidden", 0);
+
+          d.set_value("branch_name", branch_name);
+          d.set_value("branch_email", branch_email);
+          d.set_df_property("branch_email", "read_only", 1);
+        } else {
+          d.set_value("use_branch", 0);
+          d.set_df_property("branch_name", "hidden", 1);
+          d.set_df_property("branch_email", "hidden", 1);
+          d.set_df_property("branch_email", "read_only", 0);
+        }
+
+        /* ================= TOGGLES ================= */
+        d.fields_dict.use_employee.df.onchange = () => {
+          const on = d.get_value("use_employee");
+          d.set_df_property("employee_id", "hidden", !on);
+          d.set_df_property("employee_email", "hidden", !on);
+          d.refresh();
+        };
+
+        d.fields_dict.use_branch.df.onchange = () => {
+          const on = d.get_value("use_branch");
+          d.set_df_property("branch_name", "hidden", !on);
+          d.set_df_property("branch_email", "hidden", !on);
+          d.refresh();
+        };
+
+        d.show();
+      });
     });
 }
 
