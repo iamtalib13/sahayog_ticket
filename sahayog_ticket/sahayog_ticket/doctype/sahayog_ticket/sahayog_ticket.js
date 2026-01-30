@@ -1280,10 +1280,22 @@ function setup_notify_branch_button(frm) {
 
             const recipients = [];
 
-            if (values.use_employee && values.employee_email) {
+            /**
+             * EMPLOYEE:
+             * - Send manually ONLY if employee email is NOT present in master
+             */
+            if (
+              values.use_employee &&
+              values.employee_email &&
+              !emp_email // 🔥 key condition
+            ) {
               recipients.push(values.employee_email);
             }
 
+            /**
+             * BRANCH:
+             * - Always manual (no auto hook)
+             */
             if (values.use_branch && values.branch_email) {
               recipients.push(values.branch_email);
             }
