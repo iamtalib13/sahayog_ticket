@@ -1273,38 +1273,19 @@ function setup_notify_branch_button(frm) {
 
           primary_action_label: __("Send"),
           async primary_action(values) {
-            if (!values.use_employee && !values.use_branch) {
-              frappe.msgprint(__("Please select at least one recipient"));
-              return;
-            }
-
             const recipients = [];
 
-            /**
-             * EMPLOYEE:
-             * - Send manually ONLY if employee email is NOT present in master
-             */
-            if (
-              values.use_employee &&
-              values.employee_email &&
-              !emp_email // 🔥 key condition
-            ) {
+            // 🔹 EMPLOYEE → manual ONLY if email NOT in master
+            if (values.use_employee && !emp_email && values.employee_email) {
               recipients.push(values.employee_email);
             }
 
-            /**
-             * BRANCH:
-             * - Always manual (no auto hook)
-             */
+            // 🔹 BRANCH → always manual
             if (values.use_branch && values.branch_email) {
               recipients.push(values.branch_email);
             }
 
-            if (!recipients.length) {
-              frappe.msgprint(__("No valid email recipients found"));
-              return;
-            }
-
+            // ✅ ALWAYS CREATE COMMENT
             await frappe.call({
               method: "frappe.desk.form.utils.add_comment",
               args: {
@@ -1316,19 +1297,22 @@ function setup_notify_branch_button(frm) {
               },
             });
 
-            await frappe.call({
-              method:
-                "sahayog.sahayog.api.comment_email.send_manual_ticket_notification",
-              args: {
-                reference_name: frm.docname,
-                comment: values.comment,
-                recipient_emails: recipients,
-              },
-            });
+            // ✅ SEND MANUAL EMAIL ONLY IF NEEDED
+            if (recipients.length) {
+              await frappe.call({
+                method:
+                  "sahayog.sahayog.api.comment_email.send_manual_ticket_notification",
+                args: {
+                  reference_name: frm.docname,
+                  comment: values.comment,
+                  recipient_emails: recipients,
+                },
+              });
+            }
 
             d.hide();
             frappe.show_alert(
-              { message: __("Reply sent successfully"), indicator: "green" },
+              { message: __("Reply added successfully"), indicator: "green" },
               5,
             );
           },
@@ -1336,7 +1320,6 @@ function setup_notify_branch_button(frm) {
 
         /* ================= EMPLOYEE PREFILL ================= */
         if (emp_email) {
-          // Auto-enable if email exists
           d.set_value("use_employee", 1);
           d.set_df_property("employee_id", "hidden", 0);
           d.set_df_property("employee_email", "hidden", 0);
@@ -1344,14 +1327,6 @@ function setup_notify_branch_button(frm) {
           d.set_value("employee_id", emp_id);
           d.set_value("employee_email", emp_email);
           d.set_df_property("employee_email", "read_only", 1);
-        } else {
-          // ❌ No email in master
-          d.set_value("use_employee", 0);
-
-          // Employee ID will be shown ONLY when checkbox is checked
-          d.set_df_property("employee_id", "hidden", 1);
-          d.set_df_property("employee_email", "hidden", 1);
-          d.set_df_property("employee_email", "read_only", 0);
         }
 
         /* ================= BRANCH PREFILL ================= */
@@ -1385,29 +1360,17 @@ function setup_notify_branch_button(frm) {
           d.set_value("branch_name", branch_name);
           d.set_value("branch_email", branch_email);
           d.set_df_property("branch_email", "read_only", 1);
-        } else {
-          d.set_value("use_branch", 0);
-          d.set_df_property("branch_name", "hidden", 1);
-          d.set_df_property("branch_email", "hidden", 1);
-          d.set_df_property("branch_email", "read_only", 0);
         }
 
         /* ================= TOGGLES ================= */
         d.fields_dict.use_employee.df.onchange = () => {
           const on = d.get_value("use_employee");
-
           d.set_df_property("employee_id", "hidden", !on);
           d.set_df_property("employee_email", "hidden", !on);
 
           if (on) {
-            // ✅ If email exists → show Employee.name
-            // ❌ If email missing → show doc.owner
             d.set_value("employee_id", emp_id || frm.doc.owner);
-          } else {
-            d.set_value("employee_id", "");
-            d.set_value("employee_email", "");
           }
-
           d.refresh();
         };
 
