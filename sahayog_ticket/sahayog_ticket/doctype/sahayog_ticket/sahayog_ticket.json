@@ -11,23 +11,10 @@
   "basic_details_tab",
   "asset_request_section",
   "asset_request_id",
-  "support_system_email",
-  "employee_id",
-  "employee_user_id",
-  "emp_first_name",
-  "emp_last_name",
-  "employee_name",
-  "designation",
-  "emp_department",
   "column_break_5",
-  "zone",
-  "region",
-  "district",
-  "branch_name",
-  "division",
+  "employee_id",
   "column_break_17",
-  "phone1",
-  "company_email",
+  "support_system_email",
   "ticket_details_tab",
   "last_user",
   "column_break_4",
@@ -87,13 +74,6 @@
    "read_only_depends_on": "eval:doc.status==\"Cancelled\" "
   },
   {
-   "fetch_from": "employee_id.designation",
-   "fieldname": "designation",
-   "fieldtype": "Data",
-   "label": "Designation",
-   "read_only": 1
-  },
-  {
    "fieldname": "column_break_5",
    "fieldtype": "Column Break"
   },
@@ -102,27 +82,10 @@
    "fieldtype": "Column Break"
   },
   {
-   "fetch_from": "employee_id.custom_region",
-   "fieldname": "region",
-   "fieldtype": "Link",
-   "label": "Region",
-   "options": "Region",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "employee_id.branch",
-   "fieldname": "branch_name",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Branch",
-   "options": "Branch",
-   "read_only": 1
-  },
-  {
    "fieldname": "dept_name",
    "fieldtype": "Link",
    "in_global_search": 1,
+   "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Requested Department",
    "options": "Departsection",
@@ -251,48 +214,6 @@
    "read_only_depends_on": "eval:!frappe.user.has_role('System Manager')"
   },
   {
-   "fetch_from": "employee_id.cell_number",
-   "fieldname": "phone1",
-   "fieldtype": "Data",
-   "label": "Phone",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "employee_id.custom_division",
-   "fieldname": "division",
-   "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Division",
-   "options": "Division"
-  },
-  {
-   "fetch_from": "employee_id.department",
-   "fieldname": "emp_department",
-   "fieldtype": "Data",
-   "label": "Employee Department",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "employee_id.company_email",
-   "fieldname": "company_email",
-   "fieldtype": "Data",
-   "label": "Company Email",
-   "read_only": 1
-  },
-  {
-   "fieldname": "employee_name",
-   "fieldtype": "Data",
-   "label": "Employee Name",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "employee_id.custom_district",
-   "fieldname": "district",
-   "fieldtype": "Data",
-   "label": "District",
-   "read_only": 1
-  },
-  {
    "depends_on": "eval:doc.ticket_type",
    "fieldname": "description",
    "fieldtype": "Text Editor",
@@ -313,6 +234,7 @@
    "depends_on": "eval:doc.dept_name",
    "fieldname": "ticket_type",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Ticket Type",
    "options": "Ticket Type",
    "reqd": 1,
@@ -339,18 +261,6 @@
   {
    "fieldname": "column_break_mbxv4",
    "fieldtype": "Column Break"
-  },
-  {
-   "fetch_from": "employee_id.first_name",
-   "fieldname": "emp_first_name",
-   "fieldtype": "Data",
-   "label": "Employee First Name"
-  },
-  {
-   "fetch_from": "employee_id.last_name",
-   "fieldname": "emp_last_name",
-   "fieldtype": "Data",
-   "label": "Employee Last Name"
   },
   {
    "fieldname": "creation_time",
@@ -434,12 +344,6 @@
    "label": "Ticket Details"
   },
   {
-   "fieldname": "employee_user_id",
-   "fieldtype": "Data",
-   "label": "Employee User Id",
-   "read_only": 1
-  },
-  {
    "fieldname": "asset_request_section",
    "fieldtype": "Section Break",
    "label": "Asset Request"
@@ -449,14 +353,6 @@
    "fieldname": "support_system_email",
    "fieldtype": "Data",
    "label": "Support System Email"
-  },
-  {
-   "fetch_from": "employee_id.custom_zone",
-   "fieldname": "zone",
-   "fieldtype": "Link",
-   "label": "Zone",
-   "options": "Zone",
-   "read_only": 1
   },
   {
    "depends_on": "eval:doc.ticket_type ==\"Account Service Request\"",
@@ -529,7 +425,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-28 13:35:21.690231",
+ "modified": "2026-02-05 14:45:39.701603",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
