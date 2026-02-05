@@ -27,7 +27,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       }
 
       frm.trigger("it_support_manager_fields_show");
-      frm.trigger("set_intro");
+      // frm.trigger("set_intro");
     }
 
     // Button visibility and form control logic
@@ -148,7 +148,16 @@ frappe.ui.form.on("Sahayog Ticket", {
 
   onload: function (frm) {
     if (!frm.is_new()) {
-      frm.trigger("set_intro");
+      // frm.trigger("set_intro");
+
+      delete frm.__intro_shown;
+      $("#custom-ticket-intro").remove();
+
+      if (frm.is_new() || frm.is_dirty()) return;
+
+      setTimeout(() => {
+        render_safe_intro_always_visible(frm);
+      }, 100);
       setup_notify_branch_button(frm);
     }
   },
@@ -179,190 +188,6 @@ frappe.ui.form.on("Sahayog Ticket", {
           }
         },
       });
-    }
-  },
-
-  set_intro: function (frm) {
-    // Refresh-specific logic moved here from second handler
-    if (!frm.is_new() && !frm.__intro_shown) {
-      frm.__intro_shown = true; // ✅ Set flag to prevent showing again
-      frm.call({
-        method: "get_employee_info",
-        args: {
-          employee_number: frm.doc.employee_id,
-        },
-        callback: function (r) {
-          if (r.message) {
-            let data = r.message;
-            console.log("Employee Data:", data);
-            const emp_id = frm.doc.employee_id;
-            const full_name = data.employee_name;
-            const emp_designation = data.designation || "Not specified";
-            const emp_branch = data.branch || "Not specified";
-            const emp_department = data.department || "Not specified";
-            const emp_phone = data.cell_number || "Not available";
-            const emp_division = data.custom_division || "Not available";
-            const emp_profile_picture =
-              "/assets/sahayog_ticket/images/profile.png";
-
-            const ticket_department = frm.doc.dept_name || "Not specified";
-            const ticket_type = frm.doc.ticket_type || "Not specified";
-            const ticket_tat = frm.doc.tat || "N/A";
-
-            const is_resolved_or_closed = ["Resolved", "Closed"].includes(
-              frm.doc.status,
-            );
-            const ticket_assigned_label = is_resolved_or_closed
-              ? "Resolved by:"
-              : "Assigned to:";
-            let ticket_assigned_to = is_resolved_or_closed
-              ? frm.doc.ticket_resolved_user
-              : frm.doc.assigned_to_name;
-
-            // ✅ Show fallback message if not assigned
-            if (!ticket_assigned_to || ticket_assigned_to.trim() === "") {
-              ticket_assigned_to = "Executive will be assigned shortly.";
-            }
-
-            const intro_owner = `
-        <div class="ticket-employee-card">
-          <div class="ticket-employee-photo">
-            <img class="ticket-profile-image" src="${emp_profile_picture}" alt="Profile Image" />
-          </div>
-          <div class="ticket-employee-details">
-            <div class="ticket-employee-name-id"><strong>${full_name}</strong> - ${emp_id}</div>
-            <div class="ticket-employee-meta">
-              ${emp_designation}, ${emp_department}, ${emp_branch}, ${emp_division}<br>
-              Phone : ${emp_phone}
-            </div>
-          </div>
-        </div>
-
-        <div class="ticket-terminal">
-          <div class="ticket-terminal-info">
-            <div class="ticket-info-pair"><strong>Request To:</strong> ${ticket_department}</div>
-            <div class="ticket-info-pair"><strong>Issue:</strong> ${ticket_type}</div>
-            <div class="ticket-info-pair"><strong>TAT:</strong> ${ticket_tat}</div>
-          </div>
-          <div class="ticket-terminal-end">
-            <span class="ticket-terminal-prompt">${ticket_assigned_label}</span>
-            <span class="ticket-terminal-command">${ticket_assigned_to}</span>
-          </div>
-        </div>
-
-        <style>
-          .ticket-employee-card {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            background-color: #ededed;
-            border-radius: 8px;
-            font-family: Arial, sans-serif;
-            color: #006767;
-          }
-
-          .ticket-employee-photo {
-            margin-right: 15px;
-          }
-
-          .ticket-profile-image {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            object-fit: cover;
-          }
-
-          .ticket-employee-details {
-            display: flex;
-            flex-direction: column;
-          }
-
-          .ticket-employee-name-id {
-            font-size: 16px;
-            margin-bottom: 4px;
-            font-weight: bold;
-            color: #006767;
-            margin-bottom: -4px;
-          }
-
-          .ticket-employee-meta {
-            font-size: 13px;
-            color: #006767;
-          }
-
-          .ticket-terminal {
-            border: 1px solid #d3d3d3;
-            background-color: #ededed;
-            color: #006767;
-            padding: 10px;
-            border-radius: 6px;
-            font-family: 'Courier New', monospace;
-            margin-top: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-          }
-
-          .ticket-terminal-info {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            font-family: Arial, sans-serif;
-            font-size: 13px;
-            color: #006767;
-            margin-bottom: 6px;
-          }
-
-          .ticket-info-pair {
-            display: flex;
-            gap: 4px;
-            align-items: center;
-          }
-
-          .ticket-terminal-prompt {
-            color: #006767;
-            margin-right: 8px;
-            font-weight: bold;
-          }
-
-          .ticket-terminal-command {
-            color: #006767;
-          }
-
-          @media (max-width: 768px) {
-            .ticket-employee-card {
-              flex-direction: column;
-              text-align: center;
-            }
-
-            .ticket-terminal {
-              font-size: 13px;
-            }
-
-            .ticket-terminal-info {
-              flex-direction: column;
-              gap: 4px;
-            }
-          }
-        </style>
-      `;
-
-            frm.set_intro(intro_owner);
-
-            var formMessage = document.querySelector(".form-message.blue");
-            if (formMessage) {
-              formMessage.style.background = "#ededed";
-              formMessage.style.padding = "0";
-              formMessage.style.color = "#006767";
-            }
-          } else {
-            frm.set_intro("Employee information not available", "red");
-            console.error("[ERROR] No employee data found");
-          }
-        },
-      });
-    } else {
-      frm.__intro_shown = false;
     }
   },
 
@@ -501,6 +326,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       });
     }
   },
+  //  custom buttons for assign to with search and bar chart representation[assign to the executive with least tickets pending]
   custom_buttons: function (frm) {
     // Check if user has any role containing "Manager"
     let hasManagerRole = frappe.user_roles.some((role) =>
@@ -728,6 +554,7 @@ frappe.ui.form.on("Sahayog Ticket", {
   //   }
   // },
 
+  // assign to button with user fetch from server side based on department & roles
   assign_to_button: function (frm) {
     frm.add_custom_button(__("Assign to"), async function () {
       if (!frm.doc.dept_name) {
@@ -776,6 +603,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     });
   },
 
+  // in progress button with remark dialog box :it will set the status to in progress with executive remark
   In_Progress_button: function (frm) {
     frm.add_custom_button(
       __("In-Progress"),
@@ -820,6 +648,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     );
   },
 
+  // below function is for resolve button with remark dialog box : it will set the status to resolved with resolved remark
   resolve_button: function (frm) {
     frm.add_custom_button(
       __("Resolve"),
@@ -867,6 +696,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     );
   },
 
+  // below function is for reopen button with remark dialog box : it will set the status to open with reopen remark
   reopen_button: function (frm) {
     frm
       .add_custom_button(__("Re-Open"), function () {
@@ -908,6 +738,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       });
   },
 
+  // below function is for close button with remark dialog box : it will set the status to closed with close remark
   close_button: function (frm) {
     frm
       .add_custom_button(__("Close"), function () {
@@ -949,6 +780,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       });
   },
 
+  // below function is for executive remark button with remark dialog box : it will set the executive remark field
   executive_remark: function (frm) {
     frm.add_custom_button(
       __("Set Executive Remark"),
@@ -986,6 +818,9 @@ frappe.ui.form.on("Sahayog Ticket", {
       __("Actions"),
     );
   },
+
+  // below function is for reset user password button with dialog box : it will allow manager or executive to reset password of any user
+  // by entering user id usiing server side method
   reset_user_password: function (frm) {
     let hasManagerRole = frappe.user_roles.some(
       (role) =>
@@ -1103,6 +938,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
   },
 
+  // hide sidebar options for non system manager users
   hide_sidebar_options(frm) {
     if (!frappe.user.has_role("System Manager")) {
       $(".form-assignments").hide();
@@ -1114,6 +950,8 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
   },
 
+  // function to hide additional details from timeline for non system manager users hide details like OTP ,
+  // email notification , viewed this etc
   hide_additional_details_from_timeline: function (frm) {
     const printButton = document.querySelector(
       'button[data-original-title="Print"]',
@@ -1201,6 +1039,8 @@ frappe.ui.form.on("Sahayog Ticket", {
     });
   },
 });
+
+//  iniate Notify Branch Button[send email to branch and employee get email data from employee doctype & sahayog branch doctype]
 function setup_notify_branch_button(frm) {
   if (frm.is_new()) return;
   if (frm.is_disabled) return;
@@ -1386,6 +1226,214 @@ function setup_notify_branch_button(frm) {
     });
 }
 
+// SAHAYOG TICKET INTRO RENDERING
+function render_safe_intro_always_visible(frm) {
+  if (!frm || !frm.doc || frm.__intro_shown || !frm.doc.employee_id) {
+    console.log("❌ Skipped - no employee_id or already shown");
+    return;
+  }
+
+  frm.__intro_shown = true;
+
+  // ✅ REST API - Direct Employee Doctype query (WORKS EVERYWHERE)
+  frappe.call({
+    method: "frappe.client.get",
+    args: {
+      doctype: "Employee",
+      filters: { employee_number: frm.doc.employee_id }, // Standard Employee field
+    },
+    freeze: false,
+    callback: function (r) {
+      if (r.message) {
+        let data = r.message;
+        console.log("✅ Employee REST API Data:", data);
+
+        // ✅ REAL EMPLOYEE FIELDS (standard Employee doctype)
+        const emp_id = frm.doc.employee_id || "N/A";
+        const full_name = data.employee_name || "Not specified";
+        const emp_designation = data.designation || "Not specified";
+        const emp_branch = data.branch || "Not specified";
+        const emp_department = data.department || "Not specified";
+        const emp_phone = data.cell_number || data.phone || "Not available";
+        const emp_division = data.custom_division || "Not available";
+        const emp_email = data.company_email || "Not available";
+
+        // ✅ TICKET DATA (unchanged)
+        const ticket_department = frm.doc.dept_name || "Not specified";
+        const ticket_type = frm.doc.ticket_type || "Not specified";
+        const ticket_tat = frm.doc.tat || "N/A";
+        const is_resolved_or_closed = ["Resolved", "Closed"].includes(
+          frm.doc.status || "",
+        );
+        const ticket_assigned_label = is_resolved_or_closed
+          ? "Resolved by:"
+          : "Assigned to:";
+        let ticket_assigned_to = is_resolved_or_closed
+          ? frm.doc.ticket_resolved_user || ""
+          : frm.doc.assigned_to_name || "";
+
+        if (!ticket_assigned_to) {
+          ticket_assigned_to = "Executive will be assigned shortly.";
+        }
+
+        // ✅ YOUR EXACT SAME DESIGN
+        const intro_html = `
+          <div id="custom-ticket-intro" style="margin:20px 0">
+            <div style="display:flex;align-items:center;padding:15px;background:#ededed;border-radius:8px;color:#006767">
+              <img src="/assets/sahayog_ticket/images/profile.png"
+                  style="width:60px;height:60px;border-radius:50%;margin-right:15px" />
+              <div>
+                <div style="font-size:16px;font-weight:bold">
+                  ${full_name} - ${emp_id}
+                </div>
+                <div style="font-size:13px">
+                  ${emp_designation}, ${emp_department}, ${emp_branch}, ${emp_division}<br>
+                  Phone : ${emp_phone}, Email : ${emp_email}
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:1px;border:1px solid #d3d3d3;padding:10px;border-radius:6px;background:#ededed;font-family:Courier New">
+              <div style="display:flex;flex-wrap:wrap;gap:20px;font-size:13px">
+                <div><strong>Request To:</strong> ${ticket_department}</div>
+                <div><strong>Issue:</strong> ${ticket_type}</div>
+                <div><strong>TAT:</strong> ${ticket_tat}</div>
+              </div>
+              <div style="margin-top:8px">
+                <strong>${ticket_assigned_label}</strong> 
+                <span style="background:rgba(0,103,103,0.1);padding:4px 8px;border-radius:4px">${ticket_assigned_to}</span>
+              </div>
+            </div>
+          </div>
+        `;
+
+        insert_intro_perfectly(intro_html);
+        console.log("✅ REST API EMPLOYEE INTRO SHOWN 🎉");
+      } else {
+        console.log("❌ No employee found - using form fallback");
+        render_safe_intro_fallback(frm);
+      }
+    },
+    error: function () {
+      console.log("❌ REST API failed - form fallback");
+      render_safe_intro_fallback(frm);
+    },
+  });
+}
+// ✅ YOUR ORIGINAL FALLBACK (form data)
+function render_safe_intro_fallback(frm) {
+  const emp_id = frm.doc.employee_id || "N/A";
+  const full_name =
+    [frm.doc.emp_first_name, frm.doc.emp_last_name].filter(Boolean).join(" ") ||
+    "Not specified";
+  const emp_designation = frm.doc.designation || "Not specified";
+  const emp_branch = frm.doc.branch_name || "Not specified";
+  const emp_department = frm.doc.emp_department || "Not specified";
+  const emp_phone = frm.doc.phone1 || "Not available";
+  const emp_division = frm.doc.division || "Not available";
+  const emp_email = frm.doc.company_email || "Not available";
+
+  const ticket_department = frm.doc.dept_name || "Not specified";
+  const ticket_type = frm.doc.ticket_type || "Not specified";
+  const ticket_tat = frm.doc.tat || "N/A";
+  const is_resolved_or_closed = ["Resolved", "Closed"].includes(
+    frm.doc.status || "",
+  );
+  const ticket_assigned_label = is_resolved_or_closed
+    ? "Resolved by:"
+    : "Assigned to:";
+  let ticket_assigned_to = is_resolved_or_closed
+    ? frm.doc.ticket_resolved_user || ""
+    : frm.doc.assigned_to_name || "";
+
+  if (!ticket_assigned_to) {
+    ticket_assigned_to = "Executive will be assigned shortly.";
+  }
+
+  const intro_html = `
+    <div id="custom-ticket-intro" style="margin:20px 0">
+      <div style="display:flex;align-items:center;padding:15px;background:#ededed;border-radius:8px;color:#006767">
+        <img src="/assets/sahayog_ticket/images/profile.png"
+            style="width:60px;height:60px;border-radius:50%;margin-right:15px" />
+        <div>
+          <div style="font-size:16px;font-weight:bold">
+            ${full_name} - ${emp_id}
+          </div>
+          <div style="font-size:13px">
+            ${emp_designation}, ${emp_department}, ${emp_branch}, ${emp_division}<br>
+            Phone : ${emp_phone}, Email : ${emp_email}
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:1px;border:1px solid #d3d3d3;padding:10px;border-radius:6px;background:#ededed;font-family:Courier New">
+        <div style="display:flex;flex-wrap:wrap;gap:20px;font-size:13px">
+          <div><strong>Request To:</strong> ${ticket_department}</div>
+          <div><strong>Issue:</strong> ${ticket_type}</div>
+          <div><strong>TAT:</strong> ${ticket_tat}</div>
+        </div>
+        <div style="margin-top:8px">
+          <strong>${ticket_assigned_label}</strong> 
+          <span style="background:rgba(0,103,103,0.1);padding:4px 8px;border-radius:4px">${ticket_assigned_to}</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  insert_intro_perfectly(intro_html);
+  console.log("✅ FALLBACK INTRO SHOWN");
+}
+
+function insert_intro_perfectly(html) {
+  // ✅ CLEAN FIRST
+  $("#custom-ticket-intro").remove();
+
+  // ✅ MOST RELIABLE TARGETS
+  const targets = [
+    $(".form-wrapper").first(),
+    $(".layout-wrapper").first(),
+    $(".form-body").first(),
+    $(".form-layout").first(),
+    $(".page-content").first(),
+    $("form").first(),
+  ];
+
+  let inserted = false;
+  for (let target of targets) {
+    if (target.length) {
+      target.prepend(html);
+      inserted = true;
+      break;
+    }
+  }
+
+  if (!inserted) {
+    $("body").prepend(html);
+  }
+
+  // ✅ FORCE VISIBILITY
+  setTimeout(() => {
+    const intro = $("#custom-ticket-intro");
+    if (intro.length) {
+      intro
+        .css({
+          display: "block !important",
+          visibility: "visible !important",
+          opacity: "1 !important",
+          position: "relative !important",
+          "z-index": "9999 !important",
+        })
+        .show();
+      console.log("✅ INTRO VISIBLE - SUCCESS");
+    } else {
+      console.log("❌ INTRO NOT FOUND");
+    }
+  }, 200);
+}
+// introZ
+
+// --- end of sahayog_ticket.js ---
+
+// start of ticket_item.js we are adding a button to fetch account details from external API
 frappe.ui.form.on("Ticket Item", {
   get_account_details: function (frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
