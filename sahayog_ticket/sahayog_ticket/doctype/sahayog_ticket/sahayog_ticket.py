@@ -87,7 +87,6 @@ class SahayogTicket(Document):
                         message=message,
                         now=True
                     )
-                    frappe.msgprint(_("Status update sent to branch email: {0}").format(branch_email))
 
     def after_insert(self):
         if self.ticket_type == "Account Service Request" and self.status == "Open":
