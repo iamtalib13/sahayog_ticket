@@ -25,68 +25,88 @@ class SahayogTicket(Document):
         self.notify_branch_on_resolution()
 
     def notify_branch_on_resolution(self):
-        if not self._doc_before_save:
+        # 1. Ensure we have an employee_id to work with
+        emp_id = self.employee_id
+        if not emp_id and self.owner:
+            emp_id = frappe.db.get_value("Employee", {"user_id": self.owner}, "employee_number")
+
+        if not emp_id:
+            frappe.log_error(f"Notify Branch Failed: No employee_id found for ticket {self.name}", "Sahayog Ticket Debug")
             return
 
-        # Check if status changed to Resolved or Closed
-        if self.status in ["Resolved", "Closed"] and self._doc_before_save.status != self.status:
-            # 1. Get Employee SOL ID
-            sol_id = frappe.db.get_value("Employee", {"employee_number": self.employee_id}, "sol_id")
-            
-            if sol_id:
-                # 2. Find Branch Email using SOL ID
+        # 2. Check if status is Resolved or Closed
+        if self.status in ["Resolved", "Closed"]:
+            # Trigger if new record or if status has changed
+            is_status_changed = False
+            if not self._doc_before_save:
+                is_status_changed = True
+            elif self._doc_before_save.status != self.status:
+                is_status_changed = True
+
+            if is_status_changed:
+                # 3. Get Employee's SOL ID
+                sol_id = frappe.db.get_value("Employee", {"employee_number": emp_id}, "sol_id")
+                
+                if not sol_id:
+                    frappe.log_error(f"Notify Branch Failed: No sol_id found for Employee {emp_id} (Ticket {self.name})", "Sahayog Ticket Debug")
+                    return
+
+                # 4. Find Branch Email using SOL ID
                 branch_email = frappe.db.get_value("Sahayog Branch", {"sol_id": sol_id}, "email")
                 
-                if branch_email:
-                    subject = _("Ticket {0} has been {1}").format(self.name, self.status)
-                    
-                    # Reuse the refined card layout for consistency
-                    # Fetch employee info for the card
-                    emp_info = frappe.get_value(
-                        "Employee",
-                        {"employee_number": self.employee_id},
-                        ["employee_name", "designation", "branch", "department"],
-                        as_dict=True
-                    ) or {}
+                if not branch_email:
+                    frappe.log_error(f"Notify Branch Failed: No email found for Sahayog Branch with SOL ID {sol_id} (Ticket {self.name})", "Sahayog Ticket Debug")
+                    return
 
-                    message = f"""
-                        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #444; max-width: 800px; margin: auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-                            <div style="background-color: {'#28a745' if self.status == 'Resolved' else '#006767'}; color: #ffffff; padding: 20px; text-align: center;">
-                                <h2 style="margin: 0; font-size: 24px;">Ticket {self.status}</h2>
-                                <p style="margin: 5px 0 0; opacity: 0.9;">Ticket ID: {self.name}</p>
+                subject = _("Ticket {0} has been {1}").format(self.name, self.status)
+                
+                # Fetch employee info for the card
+                emp_info = frappe.get_value(
+                    "Employee",
+                    {"employee_number": emp_id},
+                    ["employee_name", "designation", "branch", "department"],
+                    as_dict=True
+                ) or {}
+
+                message = f"""
+                    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #444; max-width: 800px; margin: auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                        <div style="background-color: {'#28a745' if self.status == 'Resolved' else '#006767'}; color: #ffffff; padding: 20px; text-align: center;">
+                            <h2 style="margin: 0; font-size: 24px;">Ticket {self.status}</h2>
+                            <p style="margin: 5px 0 0; opacity: 0.9;">Ticket ID: {self.name}</p>
+                        </div>
+                        
+                        <div style="padding: 25px; background-color: #ffffff;">
+                            <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 5px solid #087b74;">
+                                <p style="margin: 0; font-size: 16px;">The ticket submitted by <b>{emp_info.get('employee_name', 'Employee')}</b> has been marked as <b>{self.status}</b>.</p>
+                                {f'<p style="margin: 10px 0 0;"><b>Resolution Remark:</b> {self.resolved_remark}</p>' if self.status == "Resolved" and self.resolved_remark else ''}
+                                {f'<p style="margin: 10px 0 0;"><b>Closing Remark:</b> {self.close_remark}</p>' if self.status == "Closed" and self.close_remark else ''}
                             </div>
-                            
-                            <div style="padding: 25px; background-color: #ffffff;">
-                                <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 5px solid #087b74;">
-                                    <p style="margin: 0; font-size: 16px;">The ticket submitted by <b>{emp_info.get('employee_name', 'Employee')}</b> has been marked as <b>{self.status}</b>.</p>
-                                    {f'<p style="margin: 10px 0 0;"><b>Resolution Remark:</b> {self.resolved_remark}</p>' if self.status == "Resolved" and self.resolved_remark else ''}
-                                    {f'<p style="margin: 10px 0 0;"><b>Closing Remark:</b> {self.close_remark}</p>' if self.status == "Closed" and self.close_remark else ''}
-                                </div>
 
-                                <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
-                                    <div style="flex: 1; min-width: 300px; background: #f8fbfb; padding: 20px; border-radius: 10px; border: 1px solid #d1e8e8;">
-                                        <h4 style="color: #006767; margin-top: 0; border-bottom: 2px solid #006767; padding-bottom: 8px; display: inline-block;">Ticket Summary</h4>
-                                        <table style="width: 100%; font-size: 14px; border-collapse: collapse; margin-top: 10px;">
-                                            <tr><td style="padding: 5px 0; color: #666;"><b>Issue Type:</b></td><td style="padding: 5px 0;">{self.ticket_type}</td></tr>
-                                            <tr><td style="padding: 5px 0; color: #666;"><b>Department:</b></td><td style="padding: 5px 0;">{self.dept_name}</td></tr>
-                                            <tr><td style="padding: 5px 0; color: #666;"><b>Branch:</b></td><td style="padding: 5px 0;">{emp_info.get('branch', 'Not specified')}</td></tr>
-                                        </table>
-                                    </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
+                                <div style="flex: 1; min-width: 300px; background: #f8fbfb; padding: 20px; border-radius: 10px; border: 1px solid #d1e8e8;">
+                                    <h4 style="color: #006767; margin-top: 0; border-bottom: 2px solid #006767; padding-bottom: 8px; display: inline-block;">Ticket Summary</h4>
+                                    <table style="width: 100%; font-size: 14px; border-collapse: collapse; margin-top: 10px;">
+                                        <tr><td style="padding: 5px 0; color: #666;"><b>Issue Type:</b></td><td style="padding: 5px 0;">{self.ticket_type}</td></tr>
+                                        <tr><td style="padding: 5px 0; color: #666;"><b>Department:</b></td><td style="padding: 5px 0;">{self.dept_name}</td></tr>
+                                        <tr><td style="padding: 5px 0; color: #666;"><b>Branch:</b></td><td style="padding: 5px 0;">{emp_info.get('branch', 'Not specified')}</td></tr>
+                                    </table>
                                 </div>
+                            </div>
 
-                                <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #ddd; text-align: center; font-size: 12px; color: #888;">
-                                    <p>This is an automated status update from Sahayog Ticket System.</p>
-                                </div>
+                            <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #ddd; text-align: center; font-size: 12px; color: #888;">
+                                <p>This is an automated status update from Sahayog Ticket System.</p>
                             </div>
                         </div>
-                    """
+                    </div>
+                """
 
-                    frappe.sendmail(
-                        recipients=[branch_email],
-                        subject=subject,
-                        message=message,
-                        now=True
-                    )
+                frappe.sendmail(
+                    recipients=[branch_email],
+                    subject=subject,
+                    message=message,
+                    now=True
+                )
+                frappe.log_error(f"Notify Branch Success: Email sent to {branch_email} for ticket {self.name}", "Sahayog Ticket Debug")
 
     def after_insert(self):
         if self.ticket_type == "Account Service Request" and self.status == "Open":
