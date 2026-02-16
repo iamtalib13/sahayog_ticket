@@ -48,7 +48,7 @@ class SahayogTicket(Document):
         subject = _("New Account Service Request: {0}").format(self.name)
         
         # Get Assigned To User Name
-        assigned_to_name = self.assigned_to_name or "Executive will be assigned shortly."
+        assigned_to_name = self.assigned_to_name or "NO Executive assigned."
         
         # Construct HTML message with a two-column card layout
         intro_details = f"""
