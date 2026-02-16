@@ -23,6 +23,85 @@ class SahayogTicket(Document):
         self.track_status_change()
         self.set_employee_id()
 
+    def after_insert(self):
+        if self.ticket_type == "Account Service Request" and self.status == "Open":
+            self.send_account_service_request_email()
+
+    def send_account_service_request_email(self):
+        # Fetch employee details for the intro section
+        emp_info = frappe.get_value(
+            "Employee",
+            {"employee_number": self.employee_id},
+            ["employee_name", "designation", "branch", "department", "custom_division", "cell_number", "company_email"],
+            as_dict=True
+        )
+
+        if not emp_info and self.owner:
+            # Fallback to fetching by user_id if employee_number didn't match
+            emp_info = frappe.get_value(
+                "Employee",
+                {"user_id": self.owner},
+                ["employee_name", "designation", "branch", "department", "custom_division", "cell_number", "company_email"],
+                as_dict=True
+            ) or {}
+
+        subject = _("New Account Service Request: {0}").format(self.name)
+        
+        # Get Assigned To User Name
+        assigned_to_name = self.assigned_to_name or "Executive will be assigned shortly."
+        
+        # Construct HTML message with a two-column card layout
+        intro_details = f"""
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #444; max-width: 800px; margin: auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                <div style="background-color: #006767; color: #ffffff; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0; font-size: 24px;">Account Service Request</h2>
+                    <p style="margin: 5px 0 0; opacity: 0.9;">Ticket ID: {self.name}</p>
+                </div>
+                
+                <div style="padding: 25px; background-color: #ffffff;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
+                        
+                        <!-- Employee Info Card -->
+                        <div style="flex: 1; min-width: 300px; background: #f8fbfb; padding: 20px; border-radius: 10px; border: 1px solid #d1e8e8;">
+                            <h4 style="color: #006767; margin-top: 0; border-bottom: 2px solid #006767; padding-bottom: 8px; display: inline-block;">Employee Details</h4>
+                            <table style="width: 100%; font-size: 14px; border-collapse: collapse; margin-top: 10px;">
+                                <tr><td style="padding: 5px 0; color: #666;"><b>Name:</b></td><td style="padding: 5px 0;">{emp_info.get('employee_name', 'Not specified')}</td></tr>
+                                <tr><td style="padding: 5px 0; color: #666;"><b>ID:</b></td><td style="padding: 5px 0;">{self.employee_id or 'N/A'}</td></tr>
+                                <tr><td style="padding: 5px 0; color: #666;"><b>Designation:</b></td><td style="padding: 5px 0;">{emp_info.get('designation', 'Not specified')}</td></tr>
+                                <tr><td style="padding: 5px 0; color: #666;"><b>Branch:</b></td><td style="padding: 5px 0;">{emp_info.get('branch', 'Not specified')}</td></tr>
+                                <tr><td style="padding: 5px 0; color: #666;"><b>Division:</b></td><td style="padding: 5px 0;">{emp_info.get('custom_division', 'Not specified')}</td></tr>
+                                <tr><td style="padding: 5px 0; color: #666;"><b>Phone:</b></td><td style="padding: 5px 0;">{emp_info.get('cell_number', 'Not available')}</td></tr>
+                            </table>
+                        </div>
+
+                        <!-- Ticket Info Card -->
+                        <div style="flex: 1; min-width: 300px; background: #fff9f2; padding: 20px; border-radius: 10px; border: 1px solid #ffe8cc;">
+                            <h4 style="color: #d97706; margin-top: 0; border-bottom: 2px solid #d97706; padding-bottom: 8px; display: inline-block;">Ticket Summary</h4>
+                            <table style="width: 100%; font-size: 14px; border-collapse: collapse; margin-top: 10px;">
+                                <tr><td style="padding: 5px 0; color: #666;"><b>Department:</b></td><td style="padding: 5px 0;">{self.dept_name}</td></tr>
+                                <tr><td style="padding: 5px 0; color: #666;"><b>Issue Type:</b></td><td style="padding: 5px 0;">{self.ticket_type}</td></tr>
+                                <tr><td style="padding: 5px 0; color: #666;"><b>TAT:</b></td><td style="padding: 5px 0;">{self.tat or 'N/A'}</td></tr>
+                                <tr><td style="padding: 5px 0; color: #666;"><b>Status:</b></td><td style="padding: 5px 0;"><span style="background: #006767; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">{self.status}</span></td></tr>
+                                <tr><td style="padding: 5px 0; vertical-align: top; color: #666;"><b>Description:</b></td><td style="padding: 5px 0; font-size: 13px;">{self.description}</td></tr>
+                                <tr><td style="padding: 5px 0; color: #666;"><b>Assigned To:</b></td><td style="padding: 5px 0;">{assigned_to_name}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #ddd; text-align: center; font-size: 12px; color: #888;">
+                        <p>This is an automated request notification from Sahayog Multi-state. Please do not reply to this email.</p>
+                    </div>
+                </div>
+            </div>
+        """
+
+        frappe.sendmail(
+            recipients=["iamfaijankq@gmail.com"],
+            subject=subject,
+            message=intro_details,
+            now=True
+        )
+
     def set_employee_id(self):
         if self.owner and not self.employee_id:
             emp_info = frappe.db.get_value("Employee", {"user_id": self.owner}, ["employee_number"], as_dict=True)
