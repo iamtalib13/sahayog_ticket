@@ -24,6 +24,8 @@ class SahayogTicket(Document):
         self.set_employee_id()
         self.notify_branch_on_resolution()
 
+# sends email notification to branch when ticket is marked as Resolved or Closed
+# with fallback logic to find branch email by sol_id or branch name.
     def notify_branch_on_resolution(self):
         # 1. Ensure we have an employee_id to work with
         emp_id = self.employee_id
@@ -33,8 +35,8 @@ class SahayogTicket(Document):
         if not emp_id:
             return
 
-        # 2. Check if status is Resolved or Closed
-        if self.status in ["Resolved", "Closed"]:
+        # 2. Check if status is Resolved or Closed and ticket type is Account Service Request
+        if self.status in ["Resolved", "Closed"] and self.ticket_type == "Account Service Request":
             is_status_changed = False
             if not self._doc_before_save:
                 is_status_changed = True
@@ -108,7 +110,8 @@ class SahayogTicket(Document):
     def after_insert(self):
         if self.ticket_type == "Account Service Request" and self.status == "Open":
             self.send_account_service_request_email()
-
+# This method sends a detailed email notification when a new Account Service Request ticket is created, 
+# including employee details and ticket summary in a visually appealing format.
     def send_account_service_request_email(self):
         # Fetch employee details for the intro section
         emp_info = frappe.get_value(
@@ -178,7 +181,7 @@ class SahayogTicket(Document):
         """
 
         frappe.sendmail(
-            recipients=["iamfaijankq@gmail.com"],
+            recipients=["Accountservicing@sahayogmultistate.com"],
             subject=subject,
             message=intro_details,
             now=True
