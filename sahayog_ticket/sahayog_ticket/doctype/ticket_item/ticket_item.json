@@ -20,10 +20,15 @@
   "customer_name",
   "contact_number",
   "new_information_section",
-  "new_address",
   "new_email",
+  "existing_branch",
+  "updated_dob",
+  "new_address",
   "column_break_bmex",
   "new_contact_number",
+  "new_branch",
+  "new_name",
+  "nomination_opration",
   "new_kyc_no",
   "new_pan_no"
  ],
@@ -34,7 +39,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Request Type",
-   "options": "\nChange of Address\nUpdate Contact Number\nUpdate Email Address\nUpdate KYC (Adhaar/Voter/Passport/etc)\nUpdate PAN NO\nUpdate Signature",
+   "options": "\nChange of Address\nUpdate Contact Number\nUpdate Email Address\nUpdate KYC (Adhaar/Voter/Passport/etc)\nUpdate PAN NO\nUpdate Signature\nName Change\nActivation of Dormant account\nSMS Alert Registration\nNomination Addition/ Deletion/ Modification\nAccount Transfer\nDOB Updation",
    "reqd": 1
   },
   {
@@ -102,19 +107,25 @@
    "fieldtype": "Column Break"
   },
   {
+   "depends_on": "eval: doc.request_type == \"Update Contact Number\" || doc.request_type == \"SMS Alert Registration\"\n",
    "fieldname": "new_contact_number",
    "fieldtype": "Data",
-   "label": "New Contact Number"
+   "label": "New Contact Number",
+   "mandatory_depends_on": "eval: doc.request_type == \"Update Contact Number\" || doc.request_type == \"SMS Alert Registration\"\n"
   },
   {
+   "depends_on": "eval:doc.request_type ==\"Update KYC (Adhaar/Voter/Passport/etc)\"",
    "fieldname": "new_kyc_no",
    "fieldtype": "Data",
-   "label": "New KYC No"
+   "label": "New KYC No",
+   "mandatory_depends_on": "eval:doc.request_type ==\"Update KYC (Adhaar/Voter/Passport/etc)\""
   },
   {
+   "depends_on": "eval:doc.request_type ==\"Update PAN NO\"",
    "fieldname": "new_pan_no",
    "fieldtype": "Data",
-   "label": "New PAN No"
+   "label": "New PAN No",
+   "mandatory_depends_on": "eval:doc.request_type ==\"Update PAN NO\""
   },
   {
    "fieldname": "get_account_details",
@@ -127,9 +138,11 @@
    "label": "Email"
   },
   {
+   "depends_on": "eval:doc.request_type ==\"Update Email Address\"",
    "fieldname": "new_email",
    "fieldtype": "Data",
-   "label": "New Email"
+   "label": "New Email",
+   "mandatory_depends_on": "eval:doc.request_type ==\"Update Email Address\""
   },
   {
    "fieldname": "column_break_hsfh",
@@ -141,13 +154,48 @@
    "in_list_view": 1,
    "label": "Response Pending",
    "options": "Pending Operations\nPending Branch\nResolved"
+  },
+  {
+   "depends_on": "eval:doc.request_type ==\"Name Change\"",
+   "fieldname": "new_name",
+   "fieldtype": "Data",
+   "label": "Enter New Name",
+   "mandatory_depends_on": "eval:doc.request_type ==\"Name Change\""
+  },
+  {
+   "depends_on": "eval:doc.request_type ==\"Nomination Addition/ Deletion/ Modification\"",
+   "fieldname": "nomination_opration",
+   "fieldtype": "Select",
+   "label": "Nomination Opration",
+   "mandatory_depends_on": "eval:doc.request_type ==\"Nomination Addition/ Deletion/ Modification\"",
+   "options": "\nAddition\nDeletion\nModification"
+  },
+  {
+   "depends_on": "eval:doc.request_type ==\"Account Transfer\"",
+   "fieldname": "existing_branch",
+   "fieldtype": "Data",
+   "label": "Existing Branch",
+   "mandatory_depends_on": "eval:doc.request_type ==\"Account Transfer\""
+  },
+  {
+   "depends_on": "eval:doc.request_type ==\"Account Transfer\"",
+   "fieldname": "new_branch",
+   "fieldtype": "Data",
+   "label": "New Branch",
+   "mandatory_depends_on": "eval:doc.request_type ==\"Account Transfer\""
+  },
+  {
+   "depends_on": "eval:doc.request_type ==\"DOB Updation\"",
+   "fieldname": "updated_dob",
+   "fieldtype": "Date",
+   "label": "Updated DOB"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-01-31 11:53:37.469644",
+ "modified": "2026-02-20 11:06:05.358571",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Ticket Item",
