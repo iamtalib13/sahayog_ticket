@@ -274,15 +274,7 @@ frappe.ui.form.on("Sahayog Ticket", {
               args: {
                 ticket_id: frm.doc.name,
                 employee_id: frm.doc.employee_id,
-                emp_name: frm.doc.employee_name,
-                designation: frm.doc.designation,
-                department: frm.doc.emp_department,
-                region: frm.doc.region,
-                district: frm.doc.district,
-                branch: frm.doc.branch_name,
                 request_to: request_department,
-                phone: frm.doc.phone1,
-                division: frm.doc.division,
               },
               callback: function (response) {
                 if (response.message && response.message.asset_request_id) {
