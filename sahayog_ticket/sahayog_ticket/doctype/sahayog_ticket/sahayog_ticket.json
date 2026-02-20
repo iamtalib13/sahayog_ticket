@@ -427,12 +427,13 @@
    "fetch_from": "employee_id.branch",
    "fieldname": "branch",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Branch"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-20 12:23:26.562408",
+ "modified": "2026-02-20 14:24:53.692865",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
