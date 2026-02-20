@@ -13,6 +13,7 @@
   "asset_request_id",
   "column_break_5",
   "employee_id",
+  "branch",
   "column_break_17",
   "support_system_email",
   "ticket_details_tab",
@@ -421,15 +422,21 @@
    "fieldtype": "Data",
    "label": "Assigned User Name",
    "read_only": 1
+  },
+  {
+   "fetch_from": "employee_id.branch",
+   "fieldname": "branch",
+   "fieldtype": "Data",
+   "label": "Branch"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-05 14:45:39.701603",
+ "modified": "2026-02-20 12:23:26.562408",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
- "naming_rule": "Expression",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
