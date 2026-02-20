@@ -408,7 +408,7 @@ def get_counts(employee_id):
 
     return counts
 @frappe.whitelist()
-def create_asset_request(ticket_id, employee_id, request_to):
+def create_asset_request(ticket_id, employee_id, request_to, **kwargs):
     try:
         # Get employee info - ONLY EXISTING COLUMNS
         emp_info = frappe.db.get_value(

@@ -14,6 +14,7 @@
   "column_break_5",
   "employee_id",
   "branch",
+  "district",
   "column_break_17",
   "support_system_email",
   "ticket_details_tab",
@@ -429,11 +430,18 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Branch"
+  },
+  {
+   "fetch_from": "employee_id.custom_district",
+   "fieldname": "district",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "District"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-20 14:24:53.692865",
+ "modified": "2026-02-20 15:07:54.226350",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
