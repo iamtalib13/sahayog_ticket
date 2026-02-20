@@ -428,7 +428,9 @@
    "fetch_from": "employee_id.branch",
    "fieldname": "branch",
    "fieldtype": "Data",
+   "in_global_search": 1,
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Branch"
   },
   {
@@ -441,7 +443,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-20 15:07:54.226350",
+ "modified": "2026-02-20 15:48:06.467430",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
