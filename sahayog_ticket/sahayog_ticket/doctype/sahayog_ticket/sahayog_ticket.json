@@ -109,7 +109,7 @@
   {
    "depends_on": "eval:doc.cancel_ticket==\"Cancel Ticket\"",
    "fieldname": "ticket_cancellation_reason",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "label": "Ticket Cancellation Reason",
    "mandatory_depends_on": "eval:doc.cancel_ticket==\"Cancel Ticket\"",
    "permlevel": 6,
@@ -127,13 +127,13 @@
   {
    "depends_on": "eval:doc.status==\"Open\"",
    "fieldname": "flag",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "hidden": 1,
    "label": "flag"
   },
   {
    "fieldname": "inprogress_flag",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "hidden": 1,
    "label": "inprogress flag"
   },
@@ -182,7 +182,7 @@
   {
    "default": "false",
    "fieldname": "message_displayed",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "hidden": 1,
    "label": "message_displayed"
   },
@@ -428,7 +428,7 @@
   {
    "fetch_from": "employee_id.branch",
    "fieldname": "branch",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "in_global_search": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
@@ -437,14 +437,14 @@
   {
    "fetch_from": "employee_id.custom_district",
    "fieldname": "district",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "in_standard_filter": 1,
    "label": "District"
   },
   {
    "fetch_from": "employee_id.sol_id",
    "fieldname": "sol_id",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "in_standard_filter": 1,
    "label": "SOL ID",
    "read_only": 1
