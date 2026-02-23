@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Helpdesk Administrator</title>
     <script src="https://unpkg.com/petite-vue"></script>
+    <script>
+      // Inject CSRF token for REST API calls
+      window.csrf_token = "{{ frappe.session.csrf_token }}";
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
       :root {
@@ -300,26 +304,54 @@
         setTab(tab) { this.activeTab = tab; this.selectedItem = null; this.searchQuery = ''; },
         selectItem(name) { this.selectedItem = name; },
 
+        getCsrfToken() {
+            return window.csrf_token || (window.top.frappe ? window.top.frappe.csrf_token : "");
+        },
+
         async updateTicketStatus(ticketName, newStatus) {
+            const ticketInList = this.rawData.find(t => t.name === ticketName);
+            const oldStatus = ticketInList ? ticketInList.status : this.activeTicket.status;
+            
+            if (oldStatus === newStatus) return;
+
+            if (!confirm(`Are you sure you want to change the status from ${oldStatus} to ${newStatus}?`)) {
+                if (this.activeTicket.name === ticketName) {
+                    this.activeTicket.status = "";
+                    setTimeout(() => this.activeTicket.status = oldStatus, 10);
+                }
+                return;
+            }
+
             try {
-                const res = await fetch("/api/resource/Sahayog Ticket/" + encodeURIComponent(ticketName), {
-                    method: "PUT",
+                const res = await fetch("/api/method/frappe.client.set_value", {
+                    method: "POST",
                     headers: { 
                         "Content-Type": "application/json",
-                        "X-Frappe-CSRF-Token": window.top.frappe ? window.top.frappe.csrf_token : ""
+                        "Accept": "application/json",
+                        "X-Frappe-CSRF-Token": this.getCsrfToken()
                     },
-                    body: JSON.stringify({ status: newStatus })
+                    body: JSON.stringify({
+                        doctype: "Sahayog Ticket",
+                        name: ticketName,
+                        fieldname: "status",
+                        value: newStatus
+                    })
                 });
+                
                 if (res.ok) {
-                    // Update local list data
-                    const ticket = this.rawData.find(t => t.name === ticketName);
-                    if (ticket) ticket.status = newStatus;
-                    // Update modal state if open
-                    if (this.activeTicket && this.activeTicket.name === ticketName) {
+                    if (ticketInList) ticketInList.status = newStatus;
+                    if (this.activeTicket.name === ticketName) {
                         this.activeTicket.status = newStatus;
                     }
+                } else {
+                    const errorResponse = await res.json();
+                    alert("Error: " + (errorResponse.message || "Could not update status"));
+                    this.activeTicket.status = oldStatus;
                 }
-            } catch (e) { console.error("Status update failed:", e); }
+            } catch (e) { 
+                console.error("Status update failed:", e); 
+                this.activeTicket.status = oldStatus;
+            }
         },
 
         async viewTicketDetails(ticket) {
@@ -346,7 +378,8 @@
                     method: "POST",
                     headers: { 
                         "Content-Type": "application/json",
-                        "X-Frappe-CSRF-Token": window.top.frappe ? window.top.frappe.csrf_token : ""
+                        "Accept": "application/json",
+                        "X-Frappe-CSRF-Token": this.getCsrfToken()
                     },
                     body: JSON.stringify({ reference_doctype: "Sahayog Ticket", reference_name: this.activeTicket.name, content: this.newComment, comment_type: "Comment" })
                 });
@@ -361,7 +394,7 @@
             this.postingComment = false;
         },
 
-        getStatusColor(s) { const c = { Open: "#ef4444", Resolved: "#10b981", "In-Progress": "#7c3aed", Closed: "#6b7280" }; return c[s] || "#9ca3af"; },
+        getStatusColor(s) { const c = { "Open": "#ef4444", "Resolved": "#10b981", "In-Progress": "#7c3aed", "Closed": "#6b7280" }; return c[s] || "#9ca3af"; },
         getPriorityClass(p) { return p === "Urgent" ? "fulfilled" : p === "High" ? "paused" : ""; },
         formatDate(d) { return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }); },
         getAge(d) { return Math.floor(Math.abs(new Date() - new Date(d)) / (1000 * 60 * 60 * 24)); },
