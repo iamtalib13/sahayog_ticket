@@ -168,35 +168,38 @@
       <!-- Modal -->
       <div v-if="showModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 1000;" @click.self="showModal = false">
         <div style="background: white; width: 95%; height: 90vh; max-width: 1200px; border-radius: 16px; overflow: hidden; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: 70px repeat(4, 1fr);">
-          <!-- Header -->
-          <div style="grid-area: 1 / 1 / 2 / 6; border-bottom: 1px solid var(--border-color); background: #fdfdfd; display: flex; align-items: center; padding: 0 24px; gap: 40px;">
-              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ID</label><div style="font-weight: 800; font-size: 16px; color: var(--primary-purple);">[[ activeTicket.name ]]</div></div>
-              
-              <div style="display: flex; flex-direction: column;">
-                <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">STATUS</label>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <span class="status-dot" :style="{ backgroundColor: getStatusColor(activeTicket.status) }"></span>
-                    <select 
-                        @change="updateTicketStatus(activeTicket.name, $event.target.value)"
-                        :value="activeTicket.status"
-                        style="font-size: 11px; font-weight: 700; border: 1px solid #ddd; border-radius: 6px; padding: 4px 8px; outline: none; cursor: pointer; text-transform: uppercase; background: white;"
-                    >
-                        <option value="Open">Open</option>
-                        <option value="In-Progress">In-Progress</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="Closed">Closed</option>
-                    </select>
-                </div>
-              </div>
-
-              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">PRIORITY</label><div><span :class="['badge', getPriorityClass(activeTicket.priority)]">[[ activeTicket.priority ]]</span></div></div>
-              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">CREATED</label><div style="font-size: 13px; font-weight: 600;">[[ formatDate(activeTicket.creation) ]]</div></div>
-              <div style="height: 32px; width: 1px; background: var(--border-color); margin: 0 -8px;"></div>
-              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">REQUEST TO</label><div style="font-size: 13px; font-weight: 600;">[[ activeTicket.dept_name || 'IT' ]]</div></div>
-              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ISSUE</label><div style="font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;" :title="activeTicket.ticket_type">[[ activeTicket.ticket_type || '-' ]]</div></div>
-              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">TAT</label><div style="font-size: 13px; font-weight: 600;">[[ activeTicket.tat || 'N/A' ]]</div></div>
-              <button @click="showModal = false" style="margin-left: auto; background: none; border: none; font-size: 28px; cursor: pointer; color: #ccc;">&times;</button>
-          </div>
+                    <!-- Header -->
+                    <div style="grid-area: 1 / 1 / 2 / 6; border-bottom: 1px solid var(--border-color); background: #fdfdfd; display: flex; align-items: center; padding: 0 24px; gap: 40px;">
+                        <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ID</label><div style="font-weight: 800; font-size: 16px; color: var(--primary-purple);">[[ activeTicket.name ]]</div></div>
+                        
+                        <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">PRIORITY</label><div><span :class="['badge', getPriorityClass(activeTicket.priority)]">[[ activeTicket.priority ]]</span></div></div>
+                        <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">CREATED</label><div style="font-size: 13px; font-weight: 600;">[[ formatDate(activeTicket.creation) ]]</div></div>
+                        
+                        <div style="height: 32px; width: 1px; background: var(--border-color); margin: 0 -8px;"></div>
+          
+                        <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">REQUEST TO</label><div style="font-size: 13px; font-weight: 600;">[[ activeTicket.dept_name || 'IT' ]]</div></div>
+                        <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ISSUE</label><div style="font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;" :title="activeTicket.ticket_type">[[ activeTicket.ticket_type || '-' ]]</div></div>
+                        <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">TAT</label><div style="font-size: 13px; font-weight: 600;">[[ activeTicket.tat || 'N/A' ]]</div></div>
+          
+                        <div style="display: flex; flex-direction: column; margin-left: auto;">
+                          <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">STATUS</label>
+                          <div style="display: flex; align-items: center; gap: 6px;">
+                              <span class="status-dot" :style="{ backgroundColor: getStatusColor(activeTicket.status) }"></span>
+                              <select 
+                                  @change="updateTicketStatus(activeTicket.name, $event.target.value)"
+                                  :value="activeTicket.status"
+                                  style="font-size: 11px; font-weight: 700; border: 1px solid #ddd; border-radius: 6px; padding: 4px 8px; outline: none; cursor: pointer; text-transform: uppercase; background: white;"
+                              >
+                                  <option value="Open">Open</option>
+                                  <option value="In-Progress">In-Progress</option>
+                                  <option value="Resolved">Resolved</option>
+                                  <option value="Closed">Closed</option>
+                              </select>
+                          </div>
+                        </div>
+          
+                        <button @click="showModal = false" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #ccc;">&times;</button>
+                    </div>
           <!-- Left Col -->
           <div style="grid-area: 2 / 1 / 6 / 2; border-right: 1px solid var(--border-color); padding: 20px; background: #fafafa; overflow-y: auto;">
               <div style="background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
