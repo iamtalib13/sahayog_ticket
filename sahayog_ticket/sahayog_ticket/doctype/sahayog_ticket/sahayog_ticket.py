@@ -520,6 +520,7 @@ def get_it_tickets():
             t.tat,
             e.employee_name,
             e.cell_number,
+            e.designation,
             COALESCE(b.state, 'Unknown State') as state,
             COALESCE(b.zone, 'Unknown Zone') as zone,
             COALESCE(b.region, 'Unknown Region') as region

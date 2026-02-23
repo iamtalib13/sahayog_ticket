@@ -184,6 +184,7 @@
               <div style="background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                   <label style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Raised By</label>
                   <div style="font-size: 14px; font-weight: 700; margin-top: 6px;">[[ activeTicket.employee_name ]]</div>
+                  <div v-if="activeTicket.designation" style="font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 1px;">[[ activeTicket.designation ]]</div>
                   <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">[[ activeTicket.owner ]]</div>
                   <div v-if="activeTicket.cell_number" style="font-size: 12px; font-weight: 600; margin-top: 8px; color: var(--primary-purple);"><i class="fas fa-phone-alt mr-2"></i>[[ activeTicket.cell_number ]]</div>
                   <div style="border-top: 1px dashed #eee; padding-top: 12px; margin-top: 12px; display: grid; gap: 8px;">
