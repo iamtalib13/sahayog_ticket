@@ -15,6 +15,7 @@
   "employee_id",
   "branch",
   "district",
+  "sol_id",
   "column_break_17",
   "support_system_email",
   "ticket_details_tab",
@@ -439,6 +440,14 @@
    "fieldtype": "Data",
    "in_standard_filter": 1,
    "label": "District"
+  },
+  {
+   "fetch_from": "employee_id.sol_id",
+   "fieldname": "sol_id",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "SOL ID",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
