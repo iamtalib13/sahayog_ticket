@@ -501,18 +501,18 @@ def get_employee_info(employee_number):
 @frappe.whitelist()
 def get_it_tickets():
     data = frappe.db.sql("""
-        SELECT district, branch_name, COUNT(*) AS pending
+        SELECT district, branch, COUNT(*) AS pending
         FROM `tabSahayog Ticket`
         WHERE status IN ('Open', 'In-Progress') AND dept_name = 'IT'
-        GROUP BY district, branch_name
-        ORDER BY district, branch_name
+        GROUP BY district, branch
+        ORDER BY district, branch
     """, as_dict=True)
 
     result = {}
     for row in data:
         district = row["district"]
         result.setdefault(district, {"district": district, "pending": 0, "branches": []})
-        result[district]["branches"].append({"name": row["branch_name"], "pending": row["pending"]})
+        result[district]["branches"].append({"name": row["branch"], "pending": row["pending"]})
         result[district]["pending"] += row["pending"]
 
     return list(result.values())
