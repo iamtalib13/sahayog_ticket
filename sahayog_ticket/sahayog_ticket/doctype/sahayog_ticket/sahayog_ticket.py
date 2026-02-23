@@ -516,6 +516,8 @@ def get_it_tickets():
             t.assigned_to,
             t.assigned_to_name,
             t.ticket_type,
+            t.dept_name,
+            t.tat,
             e.employee_name,
             e.cell_number,
             COALESCE(b.state, 'Unknown State') as state,

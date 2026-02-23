@@ -170,6 +170,13 @@
               <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">STATUS</label><div><span class="status-dot" :style="{ backgroundColor: getStatusColor(activeTicket.status) }"></span><span style="font-size: 13px; font-weight: 700;">[[ activeTicket.status ]]</span></div></div>
               <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">PRIORITY</label><div><span :class="['badge', getPriorityClass(activeTicket.priority)]">[[ activeTicket.priority ]]</span></div></div>
               <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">CREATED</label><div style="font-size: 13px; font-weight: 600;">[[ formatDate(activeTicket.creation) ]]</div></div>
+              
+              <div style="height: 32px; width: 1px; background: var(--border-color); margin: 0 -8px;"></div>
+
+              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">REQUEST TO</label><div style="font-size: 13px; font-weight: 600;">[[ activeTicket.dept_name || 'IT' ]]</div></div>
+              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ISSUE</label><div style="font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;" :title="activeTicket.ticket_type">[[ activeTicket.ticket_type || '-' ]]</div></div>
+              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">TAT</label><div style="font-size: 13px; font-weight: 600;">[[ activeTicket.tat || 'N/A' ]]</div></div>
+
               <button @click="showModal = false" style="margin-left: auto; background: none; border: none; font-size: 28px; cursor: pointer; color: #ccc;">&times;</button>
           </div>
           <!-- Left Col -->
@@ -294,9 +301,19 @@
             if (!this.newComment.trim() || this.postingComment) return;
             this.postingComment = true;
             try {
-                const res = await fetch("/api/method/frappe.desk.form.utils.add_comment", {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ reference_doctype: "Sahayog Ticket", reference_name: this.activeTicket.name, content: this.newComment, comment_email: window.top.frappe ? window.top.frappe.session.user : "Administrator", comment_by: window.top.frappe ? window.top.frappe.session.user_fullname : "Administrator" })
+                const res = await fetch("/api/resource/Comment", {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "X-Frappe-CSRF-Token": window.top.frappe ? window.top.frappe.csrf_token : ""
+                    },
+                    body: JSON.stringify({
+                        reference_doctype: "Sahayog Ticket",
+                        reference_name: this.activeTicket.name,
+                        content: this.newComment,
+                        comment_type: "Comment"
+                    })
                 });
                 if (res.ok) {
                     this.newComment = '';
