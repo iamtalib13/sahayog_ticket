@@ -499,23 +499,36 @@ def get_employee_info(employee_number):
     return employee
 
 @frappe.whitelist()
+@frappe.whitelist()
+@frappe.whitelist()
 def get_it_tickets():
+    # Fetch all IT tickets with geographic info and employee details
     data = frappe.db.sql("""
-        SELECT district, branch, COUNT(*) AS pending
-        FROM `tabSahayog Ticket`
-        WHERE status IN ('Open', 'In-Progress') AND dept_name = 'IT'
-        GROUP BY district, branch
-        ORDER BY district, branch
+        SELECT 
+            t.name,
+            t.district, 
+            t.branch, 
+            t.sol_id,
+            t.status,
+            t.priority,
+            t.creation,
+            t.owner,
+            t.assigned_to,
+            t.assigned_to_name,
+            t.ticket_type,
+            e.employee_name,
+            e.cell_number,
+            COALESCE(b.state, 'Unknown State') as state,
+            COALESCE(b.zone, 'Unknown Zone') as zone,
+            COALESCE(b.region, 'Unknown Region') as region
+        FROM `tabSahayog Ticket` t
+        LEFT JOIN `tabEmployee` e ON t.employee_id = e.name
+        LEFT JOIN `tabSahayog Branch` b ON t.sol_id = b.sol_id
+        WHERE t.status IN ('Open', 'In-Progress') AND t.dept_name = 'IT'
+        ORDER BY t.creation DESC
     """, as_dict=True)
 
-    result = {}
-    for row in data:
-        district = row["district"]
-        result.setdefault(district, {"district": district, "pending": 0, "branches": []})
-        result[district]["branches"].append({"name": row["branch"], "pending": row["pending"]})
-        result[district]["pending"] += row["pending"]
-
-    return list(result.values())
+    return data
 
 # This function retrieves the zone-wise ticket counts for specific CBS-related ticket types.
 

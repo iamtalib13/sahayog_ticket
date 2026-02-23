@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Helpdesk Administrator</title>
+    <script src="https://unpkg.com/petite-vue"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+      :root {
+        --sidebar-bg: #f9f9fb;
+        --active-bg: #ececf1;
+        --border-color: #e5e7eb;
+        --text-main: #111827;
+        --text-muted: #6b7280;
+        --primary-purple: #097c80;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: #ffffff;
+        color: var(--text-main);
+        overflow: hidden;
+      }
+
+      .flex { display: flex; }
+      .h-screen { height: 100vh; }
+
+      .sidebar {
+        width: 260px;
+        background: var(--sidebar-bg);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      .sidebar-header { padding: 24px 16px; display: flex; align-items: center; gap: 10px; }
+      .logo-box { width: 32px; height: 32px; background: var(--primary-purple); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+      
+      .nav-container { flex: 1; overflow-y: auto; padding: 8px 0; }
+      .nav-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 14px;
+        color: var(--text-muted);
+        transition: 0.2s;
+        border-radius: 8px;
+        margin: 2px 12px;
+        background: transparent;
+      }
+
+      .nav-item:hover { background: var(--active-bg); color: var(--text-main); }
+      .nav-item.active { background: black !important; color: white !important; }
+
+      .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100vh; background: white; }
+      .top-bar { padding: 16px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+      .table-container { flex: 1; overflow-y: auto; padding: 0 24px; }
+      
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      th { text-align: left; padding: 16px 8px; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; background: white; z-index: 10; text-transform: uppercase; font-size: 11px; }
+      td { padding: 14px 8px; border-bottom: 1px solid var(--border-color); color: var(--text-main); }
+
+      .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+      .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+      .fulfilled { background: #f0fdf4; color: #16a34a; }
+      .paused { background: #eff6ff; color: #2563eb; }
+      .btn-create { background: black; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 500; font-size: 12px; }
+
+      [v-cloak] { display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="app" v-scope class="flex h-screen" @vue:mounted="init()">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="logo-box">H</div>
+          <div>
+            <div style="font-weight: 700; font-size: 15px">Helpdesk</div>
+            <div style="font-size: 11px; color: var(--text-muted)">IT Administrator</div>
+          </div>
+        </div>
+
+        <!-- Category Tabs -->
+        <div style="padding: 0 16px 16px; display: flex; align-items: center; gap: 12px; font-size: 11px; font-weight: bold; color: var(--text-muted); border-bottom: 1px solid var(--border-color); margin-bottom: 8px; text-transform: uppercase;">
+          <span @click="setTab('district')" :style="{ cursor: 'pointer', color: activeTab === 'district' ? 'black' : 'inherit', borderBottom: activeTab === 'district' ? '2px solid black' : 'none', paddingBottom: '4px' }">District</span>
+          <span @click="setTab('zone')" :style="{ cursor: 'pointer', color: activeTab === 'zone' ? 'black' : 'inherit', borderBottom: activeTab === 'zone' ? '2px solid black' : 'none', paddingBottom: '4px' }">Zone</span>
+          <span @click="setTab('state')" :style="{ cursor: 'pointer', color: activeTab === 'state' ? 'black' : 'inherit', borderBottom: activeTab === 'state' ? '2px solid black' : 'none', paddingBottom: '4px' }">State</span>
+          <span @click="setTab('executive')" :style="{ cursor: 'pointer', color: activeTab === 'executive' ? 'black' : 'inherit', borderBottom: activeTab === 'executive' ? '2px solid black' : 'none', paddingBottom: '4px' }">Exec</span>
+
+          <div style="margin-left: auto; display: flex; align-items: center; gap: 6px;">
+            <input v-if="showSearch" v-model="searchQuery" type="text" placeholder="Filter..." 
+              style="width: 70px; border: none; background: #eee; font-size: 10px; outline: none; border-radius: 4px; padding: 2px 6px;" />
+            <i class="fas fa-search" style="font-size: 12px; cursor: pointer;" @click="showSearch = !showSearch"></i>
+          </div>
+        </div>
+
+        <nav class="nav-container">
+          <div v-for="group in sidebarGroups" :key="group.name" 
+               @click="selectItem(group.name)" 
+               :class="['nav-item', selectedItem === group.name ? 'active' : '']">
+            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">[[ group.name ]]</span>
+            <span style="font-size: 10px; font-weight: bold; opacity: 0.6;">[[ group.pending ]]</span>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <header class="top-bar">
+          <div style="font-size: 13px; font-weight: 500; color: var(--text-muted);">
+            Workspace / <span style="color: black; font-weight: 700;">[[ selectedItem || 'Overview' ]]</span>
+          </div>
+          <button class="btn-create" @click="openListView()">Full List View</button>
+        </header>
+
+        <div class="table-container">
+          <table v-if="selectedItem">
+            <thead>
+              <tr>
+                <th width="120">Ticket ID</th>
+                <th>Branch</th>
+                <th>Raised By</th>
+                <th>Assigned To</th>
+                <th width="100">Status</th>
+                <th width="100">Priority</th>
+                <th width="120">Created</th>
+                <th width="40"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="ticket in tickets" :key="ticket.name">
+                <td style="font-weight: 700;">
+                  <a @click="openTicket(ticket.name)" style="cursor: pointer; color: var(--primary-purple); text-decoration: underline;">[[ ticket.name ]]</a>
+                </td>
+                <td style="font-weight: 500;">[[ ticket.branch || '-' ]]</td>
+                <td>[[ ticket.employee_name || ticket.owner ]]</td>
+                <td style="font-weight: 500;">[[ ticket.assigned_to_name || ticket.assigned_to || 'Unassigned' ]]</td>
+                <td>
+                  <span class="status-dot" :style="{ backgroundColor: getStatusColor(ticket.status) }"></span>
+                  [[ ticket.status ]]
+                </td>
+                <td><span :class="['badge', getPriorityClass(ticket.priority)]">[[ ticket.priority ]]</span></td>
+                <td style="color: var(--text-muted); font-size: 12px;">[[ formatDate(ticket.creation) ]] ([[ getAge(ticket.creation) ]]d)</td>
+                <td>
+                  <button @click="viewTicketDetails(ticket)" style="border: none; background: transparent; cursor: pointer; font-size: 16px;">📋</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div v-else style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted);">
+              <i class="fas fa-arrow-left mb-4" style="font-size: 24px; opacity: 0.3;"></i>
+              <p>Select an item from the sidebar to view tickets</p>
+          </div>
+        </div>
+      </main>
+
+      <!-- Modal -->
+      <div v-if="showModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 1000;" @click.self="showModal = false">
+        <div style="background: white; width: 95%; height: 90vh; max-width: 1200px; border-radius: 16px; overflow: hidden; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: 70px repeat(4, 1fr);">
+          <!-- Header -->
+          <div style="grid-area: 1 / 1 / 2 / 6; border-bottom: 1px solid var(--border-color); background: #fdfdfd; display: flex; align-items: center; padding: 0 24px; gap: 40px;">
+              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ID</label><div style="font-weight: 800; font-size: 16px; color: var(--primary-purple);">[[ activeTicket.name ]]</div></div>
+              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">STATUS</label><div><span class="status-dot" :style="{ backgroundColor: getStatusColor(activeTicket.status) }"></span><span style="font-size: 13px; font-weight: 700;">[[ activeTicket.status ]]</span></div></div>
+              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">PRIORITY</label><div><span :class="['badge', getPriorityClass(activeTicket.priority)]">[[ activeTicket.priority ]]</span></div></div>
+              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">CREATED</label><div style="font-size: 13px; font-weight: 600;">[[ formatDate(activeTicket.creation) ]]</div></div>
+              <button @click="showModal = false" style="margin-left: auto; background: none; border: none; font-size: 28px; cursor: pointer; color: #ccc;">&times;</button>
+          </div>
+          <!-- Left Col -->
+          <div style="grid-area: 2 / 1 / 6 / 2; border-right: 1px solid var(--border-color); padding: 20px; background: #fafafa; overflow-y: auto;">
+              <div style="background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                  <label style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Raised By</label>
+                  <div style="font-size: 14px; font-weight: 700; margin-top: 6px;">[[ activeTicket.employee_name ]]</div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">[[ activeTicket.owner ]]</div>
+                  <div v-if="activeTicket.cell_number" style="font-size: 12px; font-weight: 600; margin-top: 8px; color: var(--primary-purple);"><i class="fas fa-phone-alt mr-2"></i>[[ activeTicket.cell_number ]]</div>
+                  <div style="border-top: 1px dashed #eee; padding-top: 12px; margin-top: 12px; display: grid; gap: 8px;">
+                      <div style="display: flex; justify-content: space-between;"><span style="font-size: 9px; font-weight: 700; color: var(--text-muted);">BRANCH</span><span style="font-size: 11px; font-weight: 700;">[[ activeTicket.branch || '-' ]]</span></div>
+                      <div style="display: flex; justify-content: space-between;"><span style="font-size: 9px; font-weight: 700; color: var(--text-muted);">DISTRICT</span><span style="font-size: 11px; font-weight: 700;">[[ activeTicket.district || '-' ]]</span></div>
+                  </div>
+              </div>
+              <div style="background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                  <label style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Assigned To</label>
+                  <div style="font-size: 13px; font-weight: 700; margin-top: 6px;">[[ activeTicket.assigned_to_name || activeTicket.assigned_to || 'Unassigned' ]]</div>
+              </div>
+              <button @click="openTicket(activeTicket.name)" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; background: white; font-size: 11px; font-weight: 800; cursor: pointer; text-transform: uppercase;">Full Record</button>
+          </div>
+          <!-- Mid Col -->
+          <div style="grid-area: 2 / 2 / 6 / 4; padding: 24px; overflow-y: auto; border-right: 1px solid var(--border-color);">
+              <h4 style="margin: 0 0 20px; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Issue Description</h4>
+              <div v-if="loadingDetail" style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin fa-2x" style="color: #ddd;"></i></div>
+              <div v-else style="font-size: 15px; line-height: 1.7; color: #222;" v-html="activeTicket.description || 'No description provided.'"></div>
+          </div>
+          <!-- Right Col -->
+          <div style="grid-area: 2 / 4 / 6 / 6; display: flex; flex-direction: column; background: #fdfdfd;">
+              <div style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); background: white;"><h4 style="margin: 0; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Communication Log</h4></div>
+              <div style="flex: 1; overflow-y: auto; padding: 20px;" id="commentList">
+                  <div v-for="c in comments" :key="c.name" style="margin-bottom: 20px;">
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;"><span style="font-size: 11px; font-weight: 800; color: #444;">[[ c.comment_by || c.comment_email ]]</span><span style="font-size: 10px; color: #aaa; font-weight: 600;">[[ formatDate(c.creation) ]]</span></div>
+                      <div style="background: white; border: 1px solid #edf0f2; padding: 12px; border-radius: 12px; font-size: 13px; line-height: 1.5; color: #444; box-shadow: 0 1px 2px rgba(0,0,0,0.02);" v-html="c.content"></div>
+                  </div>
+              </div>
+              <div style="padding: 20px; border-top: 1px solid var(--border-color); background: white;">
+                  <div style="display: flex; gap: 10px;">
+                      <textarea v-model="newComment" placeholder="Type a message..." style="flex: 1; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; font-size: 13px; height: 44px; resize: none; outline: none; transition: border-color 0.2s;" @keypress.enter.prevent="addComment"></textarea>
+                      <button @click="addComment" style="background: black; color: white; border: none; border-radius: 10px; padding: 0 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;" :disabled="postingComment">[[ postingComment ? '...' : 'Send' ]]</button>
+                  </div>
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const { createApp } = PetiteVue;
+      createApp({
+        $delimiters: ["[[", "]]"],
+        rawData: [],
+        activeTab: "district",
+        selectedItem: null,
+        loading: false,
+        searchQuery: "",
+        showSearch: false,
+        showModal: false,
+        activeTicket: {},
+        comments: [],
+        newComment: '',
+        loadingDetail: false,
+        postingComment: false,
+
+        async init() {
+          console.log("Initializing Helpdesk Dashboard...");
+          this.loading = true;
+          try {
+            const res = await fetch("/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_tickets");
+            const data = await res.json();
+            this.rawData = data.message || [];
+            console.log("Successfully loaded", this.rawData.length, "tickets.");
+          } catch (e) { console.error("Init failed:", e); }
+          this.loading = false;
+        },
+
+        get sidebarGroups() {
+          const groups = {};
+          this.rawData.forEach((t) => {
+            let key = this.activeTab === "executive" ? (t.assigned_to_name || t.assigned_to || "Unassigned") : (t[this.activeTab] || "Unknown");
+            if (!groups[key]) groups[key] = { name: key, pending: 0 };
+            groups[key].pending += 1;
+          });
+          let result = Object.values(groups).sort((a, b) => b.pending - a.pending);
+          if (this.searchQuery) {
+            const q = this.searchQuery.toLowerCase();
+            result = result.filter(g => g.name.toLowerCase().includes(q));
+          }
+          return result;
+        },
+
+        get tickets() {
+          if (!this.selectedItem) return [];
+          const queryValue = String(this.selectedItem).toLowerCase();
+          return this.rawData.filter((t) => {
+            let key = this.activeTab === "executive" ? (t.assigned_to_name || t.assigned_to || "Unassigned") : (t[this.activeTab] || "Unknown");
+            return String(key).toLowerCase() === queryValue;
+          });
+        },
+
+        setTab(tab) { this.activeTab = tab; this.selectedItem = null; this.searchQuery = ''; },
+        selectItem(name) { this.selectedItem = name; console.log("Selected:", name); },
+
+        async viewTicketDetails(ticket) {
+          console.log("Opening details for:", ticket.name);
+          this.activeTicket = ticket;
+          this.showModal = true;
+          this.loadingDetail = true;
+          this.comments = [];
+          try {
+            const res = await fetch("/api/resource/Sahayog Ticket/" + encodeURIComponent(ticket.name));
+            const data = await res.json();
+            this.activeTicket = { ...ticket, ...data.data };
+            
+            const cRes = await fetch("/api/resource/Comment?filters=" + encodeURIComponent(JSON.stringify([["reference_doctype","=","Sahayog Ticket"],["reference_name","=","" + ticket.name],["comment_type","=","Comment"]])) + "&fields=" + encodeURIComponent(JSON.stringify(["name","content","comment_by","comment_email","creation"])) + "&order_by=creation asc");
+            const cData = await cRes.json();
+            this.comments = cData.data || [];
+          } catch (e) { console.error("Detail fetch failed:", e); }
+          this.loadingDetail = false;
+        },
+
+        async addComment() {
+            if (!this.newComment.trim() || this.postingComment) return;
+            this.postingComment = true;
+            try {
+                const res = await fetch("/api/method/frappe.desk.form.utils.add_comment", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ reference_doctype: "Sahayog Ticket", reference_name: this.activeTicket.name, content: this.newComment, comment_email: window.top.frappe ? window.top.frappe.session.user : "Administrator", comment_by: window.top.frappe ? window.top.frappe.session.user_fullname : "Administrator" })
+                });
+                if (res.ok) {
+                    this.newComment = '';
+                    const cRes = await fetch("/api/resource/Comment?filters=" + encodeURIComponent(JSON.stringify([["reference_doctype","=","Sahayog Ticket"],["reference_name","=","" + this.activeTicket.name],["comment_type","=","Comment"]])) + "&fields=" + encodeURIComponent(JSON.stringify(["name","content","comment_by","comment_email","creation"])) + "&order_by=creation asc");
+                    const cData = await cRes.json();
+                    this.comments = cData.data || [];
+                    setTimeout(() => { const el = document.getElementById('commentList'); if(el) el.scrollTop = el.scrollHeight; }, 100);
+                }
+            } catch (e) { console.error("Comment failed:", e); }
+            this.postingComment = false;
+        },
+
+        getStatusColor(s) { const c = { Open: "#ef4444", Resolved: "#10b981", "In-Progress": "#7c3aed" }; return c[s] || "#9ca3af"; },
+        getPriorityClass(p) { return p === "Urgent" ? "fulfilled" : p === "High" ? "paused" : ""; },
+        formatDate(d) { return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }); },
+        getAge(d) { return Math.floor(Math.abs(new Date() - new Date(d)) / (1000 * 60 * 60 * 24)); },
+        openTicket(n) { if (window.top.frappe) window.top.frappe.set_route("Form", "Sahayog Ticket", n); else window.top.location.href = "/app/sahayog-ticket/" + n; },
+        openListView() { if (window.top.frappe && this.selectedItem) { const f = { status: ["in", ["Open", "In-Progress", null]], dept_name: "IT" }; f[this.activeTab] = this.selectedItem; window.top.frappe.set_route("List", "Sahayog Ticket", f); } }
+      }).mount("#app");
+    </script>
+  </body>
+</html>
