@@ -228,10 +228,30 @@
           <!-- Right Col -->
           <div style="grid-area: 2 / 4 / 6 / 6; display: flex; flex-direction: column; background: #fdfdfd;">
               <div style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); background: white;"><h4 style="margin: 0; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Communication Log</h4></div>
-              <div style="flex: 1; overflow-y: auto; padding: 20px;" id="commentList">
-                  <div v-for="c in comments" :key="c.name" style="margin-bottom: 20px;">
-                      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;"><span style="font-size: 11px; font-weight: 800; color: #444;">[[ c.comment_by || c.comment_email ]]</span><span style="font-size: 10px; color: #aaa; font-weight: 600;">[[ formatDate(c.creation) ]]</span></div>
-                      <div style="background: white; border: 1px solid #edf0f2; padding: 12px; border-radius: 12px; font-size: 13px; line-height: 1.5; color: #444; box-shadow: 0 1px 2px rgba(0,0,0,0.02);" v-html="c.content"></div>
+              <div style="flex: 1; overflow-y: auto; padding: 20px; background: #f0f2f5;" id="commentList">
+                  <div v-for="c in comments" :key="c.name" 
+                       :style="{ display: 'flex', flexDirection: 'column', marginBottom: '16px', alignItems: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? 'flex-end' : 'flex-start' }">
+                      
+                      <div style="max-width: 85%; display: flex; flex-direction: column;" :style="{ alignItems: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? 'flex-end' : 'flex-start' }">
+                          <span style="font-size: 10px; font-weight: 800; color: #888; margin-bottom: 4px; padding: 0 4px;">
+                              [[ (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? 'You' : (c.comment_by || c.comment_email) ]]
+                          </span>
+                          
+                          <div :style="{ 
+                                background: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? '#dcf8c6' : 'white', 
+                                border: '1px solid #edf0f2', 
+                                padding: '10px 14px', 
+                                borderRadius: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? '16px 2px 16px 16px' : '2px 16px 16px 16px', 
+                                fontSize: '13px', 
+                                lineHeight: '1.5', 
+                                color: '#333', 
+                                boxShadow: '0 1px 1px rgba(0,0,0,0.05)',
+                                position: 'relative'
+                               }" v-html="c.content">
+                          </div>
+                          
+                          <span style="font-size: 9px; color: #aaa; margin-top: 4px; padding: 0 4px;">[[ formatDate(c.creation) ]]</span>
+                      </div>
                   </div>
               </div>
               <div style="padding: 20px; border-top: 1px solid var(--border-color); background: white;">
@@ -372,8 +392,10 @@
                     updateData.assigned_to = window.current_user;
                 }
 
-                // If moving to Resolved, set the resolved_remark
-                if (this.pendingStatus === 'Resolved') {
+                // Map remark to correct field based on status
+                if (this.pendingStatus === 'In-Progress') {
+                    updateData.executive_remark = this.statusRemark;
+                } else if (this.pendingStatus === 'Resolved') {
                     updateData.resolved_remark = this.statusRemark;
                     updateData.ticket_resolved_by = window.current_user;
                     
@@ -381,6 +403,10 @@
                     const pad = (n) => n.toString().padStart(2, '0');
                     const formatted = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
                     updateData.ticket_resolved_on = formatted;
+                } else if (this.pendingStatus === 'Closed') {
+                    updateData.close_remark = this.statusRemark;
+                } else if (this.pendingStatus === 'Open' && (this.activeTicket.status === 'Resolved' || this.activeTicket.status === 'Closed')) {
+                    updateData.reopen_remark = this.statusRemark;
                 }
 
                 const res = await fetch("/api/method/frappe.client.set_value", {
@@ -392,10 +418,18 @@
                     })
                 });
                 if (res.ok) {
-                    await fetch("/api/resource/Comment", {
+                    // Post the status change remark as a comment
+                    await fetch("/api/method/frappe.desk.form.utils.add_comment", {
                         method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
-                        body: JSON.stringify({ reference_doctype: "Sahayog Ticket", reference_name: this.pendingTicketName, content: `<b>Status changed to ${this.pendingStatus}</b><br>${this.statusRemark}`, comment_type: "Comment" })
+                        body: JSON.stringify({ 
+                            reference_doctype: "Sahayog Ticket", 
+                            reference_name: this.pendingTicketName, 
+                            content: `<b>Status changed to ${this.pendingStatus}</b><br>${this.statusRemark}`, 
+                            comment_email: window.current_user,
+                            comment_by: window.current_user
+                        })
                     });
+
                     const ticketInList = this.rawData.find(t => t.name === this.pendingTicketName);
                     if (ticketInList) {
                         ticketInList.status = this.pendingStatus;
@@ -422,35 +456,63 @@
         },
 
         async viewTicketDetails(ticket) {
-          this.activeTicket = ticket;
+          if (!ticket || !ticket.name) return;
+          this.activeTicket = { ...ticket };
           this.showModal = true;
           this.loadingDetail = true;
           this.comments = [];
+          
           try {
-            const res = await fetch("/api/resource/Sahayog Ticket/" + encodeURIComponent(ticket.name));
-            const data = await res.json();
-            this.activeTicket = { ...ticket, ...data.data };
-            const cRes = await fetch("/api/resource/Comment?filters=" + encodeURIComponent(JSON.stringify([["reference_doctype","=","Sahayog Ticket"],["reference_name","=","" + ticket.name],["comment_type","=","Comment"]])) + "&fields=" + encodeURIComponent(JSON.stringify(["name","content","comment_by","comment_email","creation"])) + "&order_by=creation asc");
-            const cData = await cRes.json();
-            this.comments = cData.data || [];
-          } catch (e) { console.error(e); }
+            // Fetch Full Ticket Details
+            const res = await fetch("/api/method/frappe.client.get", {
+                method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+                body: JSON.stringify({ doctype: "Sahayog Ticket", name: ticket.name })
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.message) this.activeTicket = { ...this.activeTicket, ...data.message };
+            }
+            
+            // Fetch Comments using custom whitelisted method
+            const cRes = await fetch("/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_ticket_comments", {
+                method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+                body: JSON.stringify({ ticket_name: ticket.name })
+            });
+            if (cRes.ok) {
+              const cData = await cRes.json();
+              this.comments = cData.message || [];
+            }
+          } catch (e) { console.error("Detail fetch failed:", e); }
           this.loadingDetail = false;
+          setTimeout(() => { const el = document.getElementById('commentList'); if(el) el.scrollTop = el.scrollHeight; }, 300);
         },
 
         async addComment() {
-            if (!this.newComment.trim() || this.postingComment) return;
+            const commentText = this.newComment.trim();
+            if (!commentText || this.postingComment || !this.activeTicket.name) return;
             this.postingComment = true;
             try {
-                const res = await fetch("/api/resource/Comment", {
+                const res = await fetch("/api/method/frappe.desk.form.utils.add_comment", {
                     method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
-                    body: JSON.stringify({ reference_doctype: "Sahayog Ticket", reference_name: this.activeTicket.name, content: this.newComment, comment_type: "Comment" })
+                    body: JSON.stringify({ 
+                        reference_doctype: "Sahayog Ticket", 
+                        reference_name: this.activeTicket.name, 
+                        content: commentText, 
+                        comment_email: window.current_user,
+                        comment_by: window.current_user
+                    })
                 });
                 if (res.ok) {
                     this.newComment = '';
-                    const cRes = await fetch("/api/resource/Comment?filters=" + encodeURIComponent(JSON.stringify([["reference_doctype","=","Sahayog Ticket"],["reference_name","=","" + this.activeTicket.name],["comment_type","=","Comment"]])) + "&fields=" + encodeURIComponent(JSON.stringify(["name","content","comment_by","comment_email","creation"])) + "&order_by=creation asc");
-                    const cData = await cRes.json();
-                    this.comments = cData.data || [];
-                    setTimeout(() => { const el = document.getElementById('commentList'); if(el) el.scrollTop = el.scrollHeight; }, 100);
+                    const cRes = await fetch("/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_ticket_comments", {
+                        method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+                        body: JSON.stringify({ ticket_name: this.activeTicket.name })
+                    });
+                    if (cRes.ok) {
+                      const cData = await cRes.json();
+                      this.comments = cData.message || [];
+                      setTimeout(() => { const el = document.getElementById('commentList'); if(el) el.scrollTop = el.scrollHeight; }, 100);
+                    }
                 }
             } catch (e) { console.error(e); }
             this.postingComment = false;
