@@ -499,39 +499,69 @@ def get_employee_info(employee_number):
     return employee
 
 @frappe.whitelist()
-@frappe.whitelist()
-@frappe.whitelist()
-def get_it_tickets():
-    # Fetch all IT tickets with geographic info and employee details
-    data = frappe.db.sql("""
+def get_it_tickets(status_group="active", page=0, page_size=20, filter_key=None, filter_value=None):
+    # Calculate offset
+    offset = int(page) * int(page_size)
+    
+    # Define status group filter
+    status_filter = "t.status IN ('Open', 'In-Progress')"
+    if status_group == "completed":
+        status_filter = "t.status IN ('Resolved', 'Closed')"
+
+    # 1. Fetch Summary Counts for all categories
+    # We join with branch info to get Zone/State/Region counts accurately
+    summary_query = f"""
         SELECT 
-            t.name,
             t.district, 
-            t.branch, 
-            t.sol_id,
-            t.status,
-            t.priority,
-            t.creation,
-            t.owner,
-            t.assigned_to,
-            t.assigned_to_name,
-            t.ticket_type,
-            t.dept_name,
-            t.tat,
-            e.employee_name,
-            e.cell_number,
-            e.designation,
+            COALESCE(b.zone, 'Unknown Zone') as zone,
+            COALESCE(b.state, 'Unknown State') as state,
+            t.assigned_to_name as executive
+        FROM `tabSahayog Ticket` t
+        LEFT JOIN `tabSahayog Branch` b ON t.sol_id = b.sol_id
+        WHERE {status_filter} AND t.dept_name = 'IT'
+    """
+    raw_summary = frappe.db.sql(summary_query, as_dict=True)
+    
+    # 2. Build the paginated ticket query with optional filter
+    where_clause = f"{status_filter} AND t.dept_name = 'IT'"
+    if filter_key and filter_value:
+        # Map frontend tab names to SQL columns
+        col_map = {
+            "district": "t.district",
+            "zone": "b.zone",
+            "state": "b.state",
+            "executive": "t.assigned_to_name"
+        }
+        sql_col = col_map.get(filter_key)
+        if sql_col:
+            where_clause += f" AND {sql_col} = %s"
+
+    ticket_query = f"""
+        SELECT 
+            t.name, t.district, t.branch, t.sol_id, t.status, t.priority,
+            t.creation, t.owner, t.assigned_to, t.assigned_to_name,
+            t.ticket_type, t.dept_name, t.tat, t.asset_request_id,
+            e.employee_name, e.cell_number, e.designation,
             COALESCE(b.state, 'Unknown State') as state,
             COALESCE(b.zone, 'Unknown Zone') as zone,
             COALESCE(b.region, 'Unknown Region') as region
         FROM `tabSahayog Ticket` t
         LEFT JOIN `tabEmployee` e ON t.employee_id = e.name
         LEFT JOIN `tabSahayog Branch` b ON t.sol_id = b.sol_id
-        WHERE t.status IN ('Open', 'In-Progress') AND t.dept_name = 'IT'
+        WHERE {where_clause}
         ORDER BY t.creation DESC
-    """, as_dict=True)
+        LIMIT %s OFFSET %s
+    """
+    
+    params = [filter_value] if (filter_key and filter_value and filter_key in ["district", "zone", "state", "executive"]) else []
+    params.extend([int(page_size), offset])
+    
+    tickets = frappe.db.sql(ticket_query, tuple(params), as_dict=True)
 
-    return data
+    return {
+        "tickets": tickets,
+        "summary": raw_summary
+    }
 
 # This function retrieves the zone-wise ticket counts for specific CBS-related ticket types.
 

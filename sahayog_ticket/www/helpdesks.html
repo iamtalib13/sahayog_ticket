@@ -283,17 +283,28 @@
       <!-- Main Content -->
       <main class="main-content">
         <header class="top-bar">
-          <div
-            style="font-size: 13px; font-weight: 500; color: var(--text-muted)"
-          >
+          <div style="font-size: 13px; font-weight: 500; color: var(--text-muted)">
             Workspace /
             <span style="color: black; font-weight: 700"
               >[[ selectedItem || 'Overview' ]]</span
             >
           </div>
-          <button class="btn-create" @click="openListView()">
-            Full List View
-          </button>
+          <div style="display: flex; align-items: center; gap: 16px">
+            <!-- Status Toggle -->
+            <div style="display: flex; background: #f3f4f6; border-radius: 8px; padding: 2px; font-size: 10px; font-weight: 800; text-transform: uppercase; width: 180px; border: 1px solid var(--border-color);">
+              <div @click="init('active', 0)" 
+                   :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'active' ? 'black' : 'transparent', color: statusToggle === 'active' ? 'white' : '#888', transition: '0.2s' }">
+                Active
+              </div>
+              <div @click="init('completed', 0)" 
+                   :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'completed' ? 'black' : 'transparent', color: statusToggle === 'completed' ? 'white' : '#888', transition: '0.2s' }">
+                Completed
+              </div>
+            </div>
+            <button class="btn-create" @click="openListView()">
+              Full List View
+            </button>
+          </div>
         </header>
 
         <div class="table-container">
@@ -370,17 +381,22 @@
             </tbody>
           </table>
 
-          <div
-            v-else
-            style="
-              height: 100%;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              color: var(--text-muted);
-            "
-          >
+          <!-- Pagination Controls -->
+          <div v-if="currentPage > 0 || hasNextPage" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 8px; border-top: 1px solid var(--border-color); background: white;">
+            <button @click="init(statusToggle, currentPage - 1)" :disabled="currentPage === 0" 
+                    style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; background: white; font-size: 11px; font-weight: 700; cursor: pointer; opacity: currentPage === 0 ? 0.5 : 1;">
+              <i class="fas fa-chevron-left mr-1"></i> Previous
+            </button>
+            <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
+              Page [[ currentPage + 1 ]]
+            </span>
+            <button @click="init(statusToggle, currentPage + 1)" :disabled="!hasNextPage" 
+                    style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; background: white; font-size: 11px; font-weight: 700; cursor: pointer; opacity: !hasNextPage ? 0.5 : 1;">
+              Next <i class="fas fa-chevron-right mr-1"></i>
+            </button>
+          </div>
+          
+          <div v-else-if="!selectedItem" style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted);">
             <i
               class="fas fa-arrow-left mb-4"
               style="font-size: 24px; opacity: 0.3"
@@ -1146,10 +1162,55 @@
         showAssignModal: false,
         assignableUsers: [],
         loadingAssign: false,
+        statusToggle: "active",
+        currentPage: 0,
+        pageSize: 20,
+        summaryData: [],
 
         get maxAssignCount() {
           if (!this.assignableUsers.length) return 1;
-          return Math.max(...this.assignableUsers.map(u => u.count)) || 1;
+          return Math.max(...this.assignableUsers.map((u) => u.count)) || 1;
+        },
+
+        get sidebarGroups() {
+          const groups = {};
+          this.summaryData.forEach((t) => {
+            let key =
+              this.activeTab === "executive"
+                ? t.executive || "Unassigned"
+                : t[this.activeTab] || "Unknown";
+            if (!groups[key]) groups[key] = { name: key, pending: 0 };
+            groups[key].pending += 1;
+          });
+          let result = Object.values(groups).sort(
+            (a, b) => b.pending - a.pending,
+          );
+          if (this.searchQuery) {
+            const q = this.searchQuery.toLowerCase();
+            result = result.filter((g) => g.name.toLowerCase().includes(q));
+          }
+          return result;
+        },
+
+        get filteredTickets() {
+          if (!this.selectedItem) return [];
+          const queryValue = String(this.selectedItem).toLowerCase();
+          return this.rawData.filter((t) => {
+            let key =
+              this.activeTab === "executive"
+                ? t.assigned_to_name || t.assigned_to || "Unassigned"
+                : t[this.activeTab] || "Unknown";
+            return String(key).toLowerCase() === queryValue;
+          });
+        },
+
+        get tickets() {
+          const start = this.currentPage * this.pageSize;
+          return this.filteredTickets.slice(start, start + this.pageSize);
+        },
+
+        get totalPages() {
+          return Math.ceil(this.filteredTickets.length / this.pageSize);
         },
 
         async openAssignDialog() {
@@ -1325,41 +1386,46 @@
           this.loadingStatus = false;
         },
 
-        async init() {
+        async init(group = "active", page = 0, filterKey = null, filterValue = null) {
           this.loading = true;
-          try {
-            const res = await fetch("/api/method/sahayog_ticket.api.helpdesks.get_it_tickets");
-            const data = await res.json();
-            this.rawData = data.message || [];
+          this.statusToggle = group;
+          this.currentPage = page;
+          
+          const fk = filterKey || (this.selectedItem ? this.activeTab : null);
+          const fv = filterValue || this.selectedItem;
 
-            // Fetch current user roles using whitelisted method
-            const rolesRes = await fetch(
-              "/api/method/sahayog_ticket.api.helpdesks.get_current_user_roles",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Accept: "application/json",
-                  "X-Frappe-CSRF-Token": this.getCsrfToken(),
-                },
-              },
-            );
-            if (rolesRes.ok) {
-              const rolesData = await rolesRes.json();
-              this.user_roles = rolesData.message || [];
+          try {
+            let url = `/api/method/sahayog_ticket.api.helpdesks.get_it_tickets?status_group=${group}&page=${page}&page_size=${this.pageSize}`;
+            if (fk && fv) url += `&filter_key=${fk}&filter_value=${encodeURIComponent(fv)}`;
+
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if (data.message) {
+                this.rawData = data.message.tickets || [];
+                this.summaryData = data.message.summary || [];
             }
-          } catch (e) {
-            console.error("Init failed:", e);
-          }
+
+            if (this.user_roles.length === 0) {
+              const rolesRes = await fetch(
+                "/api/method/sahayog_ticket.api.helpdesks.get_current_user_roles",
+                { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() } }
+              );
+              if (rolesRes.ok) {
+                const rolesData = await rolesRes.json();
+                this.user_roles = rolesData.message || [];
+              }
+            }
+          } catch (e) { console.error("Init failed:", e); }
           this.loading = false;
         },
 
         get sidebarGroups() {
           const groups = {};
-          this.rawData.forEach((t) => {
+          this.summaryData.forEach((t) => {
             let key =
               this.activeTab === "executive"
-                ? t.assigned_to_name || t.assigned_to || "Unassigned"
+                ? t.executive || "Unassigned"
                 : t[this.activeTab] || "Unknown";
             if (!groups[key]) groups[key] = { name: key, pending: 0 };
             groups[key].pending += 1;
@@ -1375,24 +1441,22 @@
         },
 
         get tickets() {
-          if (!this.selectedItem) return [];
-          const queryValue = String(this.selectedItem).toLowerCase();
-          return this.rawData.filter((t) => {
-            let key =
-              this.activeTab === "executive"
-                ? t.assigned_to_name || t.assigned_to || "Unassigned"
-                : t[this.activeTab] || "Unknown";
-            return String(key).toLowerCase() === queryValue;
-          });
+          return this.rawData;
+        },
+
+        get hasNextPage() {
+          return this.rawData.length >= this.pageSize;
         },
 
         setTab(tab) {
           this.activeTab = tab;
           this.selectedItem = null;
           this.searchQuery = "";
+          this.init(this.statusToggle, 0);
         },
         selectItem(name) {
           this.selectedItem = name;
+          this.init(this.statusToggle, 0, this.activeTab, name);
         },
 
         getCsrfToken() {
