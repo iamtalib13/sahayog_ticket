@@ -1208,6 +1208,18 @@
           return this.user_roles && this.user_roles.includes(role);
         },
 
+        get isManager() {
+          return this.user_roles && this.user_roles.some(r => r.toLowerCase().includes('manager'));
+        },
+
+        canOpenTicket(ticket) {
+          if (!ticket) return false;
+          if (this.isManager) return true;
+          const isAssignedToMe = (ticket.assigned_to === window.current_user);
+          const isOpen = (ticket.status === "Open");
+          return isOpen || isAssignedToMe;
+        },
+
         canCreateMaterialRequest() {
           if (this.activeTicket.asset_request_id) return false;
           const s = this.activeTicket.status;
@@ -1514,6 +1526,13 @@
 
         async viewTicketDetails(ticket) {
           if (!ticket || !ticket.name) return;
+
+          // Validation for access
+          if (!this.canOpenTicket(ticket)) {
+            alert("You only have permission to open 'Open' tickets or those assigned to you.");
+            return;
+          }
+
           this.activeTicket = { ...ticket };
           this.showModal = true;
           this.loadingDetail = true;
@@ -1643,6 +1662,11 @@
           );
         },
         openTicket(n) {
+          const ticket = this.rawData.find(t => t.name === n);
+          if (!this.canOpenTicket(ticket)) {
+            alert("You only have permission to open 'Open' tickets or those assigned to you.");
+            return;
+          }
           if (window.top.frappe)
             window.top.frappe.set_route("Form", "Sahayog Ticket", n);
           else window.top.location.href = "/app/sahayog-ticket/" + n;
