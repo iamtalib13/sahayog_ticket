@@ -8,6 +8,7 @@
     <script>
       // Inject CSRF token for REST API calls
       window.csrf_token = "{{ frappe.session.csrf_token }}";
+      window.current_user = "{{ frappe.session.user }}";
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
@@ -22,8 +23,7 @@
 
       body {
         margin: 0;
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         background-color: #ffffff;
         color: var(--text-main);
         overflow: hidden;
@@ -33,7 +33,7 @@
       .h-screen { height: 100vh; }
 
       .sidebar {
-        width: 260px;
+        width: 240px;
         background: var(--sidebar-bg);
         border-right: 1px solid var(--border-color);
         display: flex;
@@ -80,7 +80,7 @@
     </style>
   </head>
   <body>
-    <div id="app" v-scope class="flex h-screen" @vue:mounted="init()">
+    <div id="app" v-scope v-cloak class="flex h-screen" @vue:mounted="init()">
       <!-- Sidebar -->
       <aside class="sidebar">
         <div class="sidebar-header">
@@ -135,7 +135,7 @@
                 <th width="100">Status</th>
                 <th width="100">Priority</th>
                 <th width="120">Created</th>
-                <th width="120"></th>
+                <th width="40"></th>
               </tr>
             </thead>
             <tbody>
@@ -169,41 +169,37 @@
         </div>
       </main>
 
-      <!-- Modal -->
+      <!-- Detailed Ticket Modal -->
       <div v-if="showModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 1000;" @click.self="showModal = false">
         <div style="background: white; width: 95%; height: 90vh; max-width: 1200px; border-radius: 16px; overflow: hidden; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: 70px repeat(4, 1fr);">
-                    <!-- Header -->
-                    <div style="grid-area: 1 / 1 / 2 / 6; border-bottom: 1px solid var(--border-color); background: #fdfdfd; display: flex; align-items: center; padding: 0 24px; gap: 40px;">
-                        <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ID</label><div style="font-weight: 800; font-size: 16px; color: var(--primary-purple);">[[ activeTicket.name ]]</div></div>
-                        
-                        <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">PRIORITY</label><div><span :class="['badge', getPriorityClass(activeTicket.priority)]">[[ activeTicket.priority ]]</span></div></div>
-                        <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">CREATED</label><div style="font-size: 13px; font-weight: 600;">[[ formatDate(activeTicket.creation) ]]</div></div>
-                        
-                        <div style="height: 32px; width: 1px; background: var(--border-color); margin: 0 -8px;"></div>
-          
-                        <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">REQUEST TO</label><div style="font-size: 13px; font-weight: 600;">[[ activeTicket.dept_name || 'IT' ]]</div></div>
-                        <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ISSUE</label><div style="font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;" :title="activeTicket.ticket_type">[[ activeTicket.ticket_type || '-' ]]</div></div>
-                        <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">TAT</label><div style="font-size: 13px; font-weight: 600;">[[ activeTicket.tat || 'N/A' ]]</div></div>
-          
-                        <div style="display: flex; flex-direction: column; margin-left: auto;">
-                          <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">STATUS</label>
-                          <div style="display: flex; align-items: center; gap: 6px;">
-                              <span class="status-dot" :style="{ backgroundColor: getStatusColor(activeTicket.status) }"></span>
-                              <select 
-                                  @change="updateTicketStatus(activeTicket.name, $event.target.value)"
-                                  :value="activeTicket.status"
-                                  style="font-size: 11px; font-weight: 700; border: 1px solid #ddd; border-radius: 6px; padding: 4px 8px; outline: none; cursor: pointer; text-transform: uppercase; background: white;"
-                              >
-                                  <option value="Open">Open</option>
-                                  <option value="In-Progress">In-Progress</option>
-                                  <option value="Resolved">Resolved</option>
-                                  <option value="Closed">Closed</option>
-                              </select>
-                          </div>
-                        </div>
-          
-                        <button @click="showModal = false" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #ccc;">&times;</button>
-                    </div>
+          <!-- Header -->
+          <div style="grid-area: 1 / 1 / 2 / 6; border-bottom: 1px solid var(--border-color); background: #fdfdfd; display: flex; align-items: center; padding: 0 24px; gap: 40px;">
+              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ID</label><div style="font-weight: 800; font-size: 16px; color: var(--primary-purple);">[[ activeTicket.name ]]</div></div>
+              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">PRIORITY</label><div><span :class="['badge', getPriorityClass(activeTicket.priority)]">[[ activeTicket.priority ]]</span></div></div>
+              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">CREATED</label><div style="font-size: 13px; font-weight: 600;">[[ formatDate(activeTicket.creation) ]]</div></div>
+              <div style="height: 32px; width: 1px; background: var(--border-color); margin: 0 -8px;"></div>
+              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">REQUEST TO</label><div style="font-size: 13px; font-weight: 600;">[[ activeTicket.dept_name || 'IT' ]]</div></div>
+              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ISSUE</label><div style="font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;" :title="activeTicket.ticket_type">[[ activeTicket.ticket_type || '-' ]]</div></div>
+              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">TAT</label><div style="font-size: 13px; font-weight: 600;">[[ activeTicket.tat || 'N/A' ]]</div></div>
+              
+              <div style="display: flex; flex-direction: column; margin-left: auto;">
+                <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">STATUS</label>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="status-dot" :style="{ backgroundColor: getStatusColor(activeTicket.status) }"></span>
+                    <select 
+                        @change="updateTicketStatus(activeTicket.name, $event.target.value)"
+                        :value="activeTicket.status"
+                        style="font-size: 11px; font-weight: 700; border: 1px solid #ddd; border-radius: 6px; padding: 4px 8px; outline: none; cursor: pointer; text-transform: uppercase; background: white;"
+                    >
+                        <option value="Open">Open</option>
+                        <option value="In-Progress">In-Progress</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </div>
+              </div>
+              <button @click="showModal = false" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #ccc;">&times;</button>
+          </div>
           <!-- Left Col -->
           <div style="grid-area: 2 / 1 / 6 / 2; border-right: 1px solid var(--border-color); padding: 20px; background: #fafafa; overflow-y: auto;">
               <div style="background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
@@ -247,7 +243,39 @@
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- Status Update Modal -->
+      <div v-if="showStatusModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1100;" @click.self="cancelStatusChange">
+        <div style="background: white; width: 440px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 32px; animation: slide-up 0.2s ease-out;">
+            <h3 style="margin: 0 0 4px; font-size: 18px; font-weight: 800; color: var(--text-main);">Change Status</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Confirming status transition for [[ pendingTicketName ]]</p>
+            
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding: 12px; background: var(--sidebar-bg); border-radius: 8px;">
+                <div style="flex: 1; text-align: center;">
+                    <div style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">From</div>
+                    <div style="font-size: 12px; font-weight: 700; margin-top: 2px;">[[ activeTicket.status ]]</div>
+                </div>
+                <i class="fas fa-arrow-right" style="color: #ccc; font-size: 12px;"></i>
+                <div style="flex: 1; text-align: center;">
+                    <div style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">To</div>
+                    <div style="font-size: 12px; font-weight: 700; margin-top: 2px; color: var(--primary-purple);">[[ pendingStatus ]]</div>
+                </div>
+            </div>
+
+            <label style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Status Update Remark</label>
+            <textarea 
+                v-model="statusRemark" 
+                placeholder="Explain the reason for this status change..." 
+                style="width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; font-size: 13px; outline: none; resize: none; height: 100px; margin-top: 8px; display: block; line-height: 1.5; transition: border-color 0.2s;"
+            ></textarea>
+
+            <div style="margin-top: 32px; display: flex; justify-content: flex-end; gap: 12px;">
+                <button @click="cancelStatusChange" style="padding: 10px 20px; border-radius: 10px; border: 1px solid #e2e8f0; background: white; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--text-muted);">Cancel</button>
+                <button @click="submitStatusChange" style="padding: 10px 24px; border-radius: 10px; border: none; background: black; color: white; font-size: 13px; font-weight: 700; cursor: pointer;" :disabled="!statusRemark.trim() || loadingStatus">[[ loadingStatus ? 'Saving...' : 'Confirm Change' ]]</button>
+            </div>
+        </div>
+      </div>
+    </div> <!-- END #app -->
 
     <script>
       const { createApp } = PetiteVue;
@@ -266,6 +294,11 @@
         newComment: '',
         loadingDetail: false,
         postingComment: false,
+        showStatusModal: false,
+        pendingStatus: '',
+        pendingTicketName: '',
+        statusRemark: '',
+        loadingStatus: false,
 
         async init() {
           this.loading = true;
@@ -304,54 +337,74 @@
         setTab(tab) { this.activeTab = tab; this.selectedItem = null; this.searchQuery = ''; },
         selectItem(name) { this.selectedItem = name; },
 
-        getCsrfToken() {
-            return window.csrf_token || (window.top.frappe ? window.top.frappe.csrf_token : "");
-        },
+        getCsrfToken() { return window.csrf_token || (window.top.frappe ? window.top.frappe.csrf_token : ""); },
 
         async updateTicketStatus(ticketName, newStatus) {
             const ticketInList = this.rawData.find(t => t.name === ticketName);
             const oldStatus = ticketInList ? ticketInList.status : this.activeTicket.status;
-            
             if (oldStatus === newStatus) return;
+            this.pendingTicketName = ticketName;
+            this.pendingStatus = newStatus;
+            this.statusRemark = '';
+            this.showStatusModal = true;
+        },
 
-            if (!confirm(`Are you sure you want to change the status from ${oldStatus} to ${newStatus}?`)) {
-                if (this.activeTicket.name === ticketName) {
+        cancelStatusChange() {
+            this.showStatusModal = false;
+            const ticketInList = this.rawData.find(t => t.name === this.pendingTicketName);
+            if (ticketInList) {
+                const old = ticketInList.status;
+                if (this.activeTicket.name === this.pendingTicketName) {
                     this.activeTicket.status = "";
-                    setTimeout(() => this.activeTicket.status = oldStatus, 10);
+                    setTimeout(() => this.activeTicket.status = old, 10);
                 }
-                return;
             }
+        },
 
+        async submitStatusChange() {
+            if (!this.statusRemark.trim() || this.loadingStatus) return;
+            this.loadingStatus = true;
             try {
+                const updateData = { status: this.pendingStatus };
+                
+                // If transitioning from Open to In-Progress, assign to current user
+                if (this.activeTicket.status === 'Open' && this.pendingStatus === 'In-Progress') {
+                    updateData.assigned_to = window.current_user;
+                }
+
                 const res = await fetch("/api/method/frappe.client.set_value", {
-                    method: "POST",
-                    headers: { 
-                        "Content-Type": "application/json",
-                        "Accept": "application/json",
-                        "X-Frappe-CSRF-Token": this.getCsrfToken()
-                    },
-                    body: JSON.stringify({
-                        doctype: "Sahayog Ticket",
-                        name: ticketName,
-                        fieldname: "status",
-                        value: newStatus
+                    method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+                    body: JSON.stringify({ 
+                        doctype: "Sahayog Ticket", 
+                        name: this.pendingTicketName, 
+                        fieldname: updateData 
                     })
                 });
-                
                 if (res.ok) {
-                    if (ticketInList) ticketInList.status = newStatus;
-                    if (this.activeTicket.name === ticketName) {
-                        this.activeTicket.status = newStatus;
+                    await fetch("/api/resource/Comment", {
+                        method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+                        body: JSON.stringify({ reference_doctype: "Sahayog Ticket", reference_name: this.pendingTicketName, content: `<b>Status changed to ${this.pendingStatus}</b><br>${this.statusRemark}`, comment_type: "Comment" })
+                    });
+                    const ticketInList = this.rawData.find(t => t.name === this.pendingTicketName);
+                    if (ticketInList) {
+                        ticketInList.status = this.pendingStatus;
+                        if (updateData.assigned_to) {
+                            ticketInList.assigned_to = updateData.assigned_to;
+                            ticketInList.assigned_to_name = window.current_user; // Minimal placeholder for UI
+                        }
                     }
-                } else {
-                    const errorResponse = await res.json();
-                    alert("Error: " + (errorResponse.message || "Could not update status"));
-                    this.activeTicket.status = oldStatus;
+                    if (this.activeTicket.name === this.pendingTicketName) { 
+                        this.activeTicket.status = this.pendingStatus; 
+                        if (updateData.assigned_to) {
+                            this.activeTicket.assigned_to = updateData.assigned_to;
+                            this.activeTicket.assigned_to_name = window.current_user;
+                        }
+                        this.viewTicketDetails(this.activeTicket); 
+                    }
+                    this.showStatusModal = false;
                 }
-            } catch (e) { 
-                console.error("Status update failed:", e); 
-                this.activeTicket.status = oldStatus;
-            }
+            } catch (e) { console.error(e); }
+            this.loadingStatus = false;
         },
 
         async viewTicketDetails(ticket) {
@@ -366,7 +419,7 @@
             const cRes = await fetch("/api/resource/Comment?filters=" + encodeURIComponent(JSON.stringify([["reference_doctype","=","Sahayog Ticket"],["reference_name","=","" + ticket.name],["comment_type","=","Comment"]])) + "&fields=" + encodeURIComponent(JSON.stringify(["name","content","comment_by","comment_email","creation"])) + "&order_by=creation asc");
             const cData = await cRes.json();
             this.comments = cData.data || [];
-          } catch (e) { console.error("Detail fetch failed:", e); }
+          } catch (e) { console.error(e); }
           this.loadingDetail = false;
         },
 
@@ -375,12 +428,7 @@
             this.postingComment = true;
             try {
                 const res = await fetch("/api/resource/Comment", {
-                    method: "POST",
-                    headers: { 
-                        "Content-Type": "application/json",
-                        "Accept": "application/json",
-                        "X-Frappe-CSRF-Token": this.getCsrfToken()
-                    },
+                    method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
                     body: JSON.stringify({ reference_doctype: "Sahayog Ticket", reference_name: this.activeTicket.name, content: this.newComment, comment_type: "Comment" })
                 });
                 if (res.ok) {
@@ -390,7 +438,7 @@
                     this.comments = cData.data || [];
                     setTimeout(() => { const el = document.getElementById('commentList'); if(el) el.scrollTop = el.scrollHeight; }, 100);
                 }
-            } catch (e) { console.error("Comment failed:", e); }
+            } catch (e) { console.error(e); }
             this.postingComment = false;
         },
 
