@@ -372,6 +372,11 @@
                     updateData.assigned_to = window.current_user;
                 }
 
+                // If moving to Resolved, set the resolved_remark
+                if (this.pendingStatus === 'Resolved') {
+                    updateData.resolved_remark = this.statusRemark;
+                }
+
                 const res = await fetch("/api/method/frappe.client.set_value", {
                     method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
                     body: JSON.stringify({ 
@@ -398,6 +403,9 @@
                         if (updateData.assigned_to) {
                             this.activeTicket.assigned_to = updateData.assigned_to;
                             this.activeTicket.assigned_to_name = window.current_user;
+                        }
+                        if (updateData.resolved_remark) {
+                            this.activeTicket.resolved_remark = updateData.resolved_remark;
                         }
                         this.viewTicketDetails(this.activeTicket); 
                     }
