@@ -718,3 +718,17 @@ def get_recent_ticket_comments(limit=10):
         ORDER BY c.creation DESC
         LIMIT %s
     """, (user, limit), as_dict=True)
+
+@frappe.whitelist()
+def get_ticket_comments(ticket_name):
+    if not ticket_name:
+        return []
+    
+    return frappe.db.sql("""
+        SELECT 
+            name, content, comment_by, comment_email, creation
+        FROM `tabComment`
+        WHERE reference_doctype = 'Sahayog Ticket'
+        AND reference_name = %s
+        ORDER BY creation ASC
+    """, (ticket_name,), as_dict=True)
