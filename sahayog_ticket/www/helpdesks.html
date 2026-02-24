@@ -10,7 +10,10 @@
       window.csrf_token = "{{ frappe.session.csrf_token }}";
       window.current_user = "{{ frappe.session.user }}";
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
       :root {
         --sidebar-bg: #f9f9fb;
@@ -23,14 +26,19 @@
 
       body {
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         background-color: #ffffff;
         color: var(--text-main);
         overflow: hidden;
       }
 
-      .flex { display: flex; }
-      .h-screen { height: 100vh; }
+      .flex {
+        display: flex;
+      }
+      .h-screen {
+        height: 100vh;
+      }
 
       .sidebar {
         width: 240px;
@@ -41,10 +49,29 @@
         height: 100vh;
       }
 
-      .sidebar-header { padding: 24px 16px; display: flex; align-items: center; gap: 10px; }
-      .logo-box { width: 32px; height: 32px; background: var(--primary-purple); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
-      
-      .nav-container { flex: 1; overflow-y: auto; padding: 8px 0; }
+      .sidebar-header {
+        padding: 24px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .logo-box {
+        width: 32px;
+        height: 32px;
+        background: var(--primary-purple);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+
+      .nav-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 0;
+      }
       .nav-item {
         padding: 12px 16px;
         cursor: pointer;
@@ -59,24 +86,94 @@
         background: transparent;
       }
 
-      .nav-item:hover { background: var(--active-bg); color: var(--text-main); }
-      .nav-item.active { background: black !important; color: white !important; }
+      .nav-item:hover {
+        background: var(--active-bg);
+        color: var(--text-main);
+      }
+      .nav-item.active {
+        background: black !important;
+        color: white !important;
+      }
 
-      .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100vh; background: white; }
-      .top-bar { padding: 16px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-      .table-container { flex: 1; overflow-y: auto; padding: 0 24px; }
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        height: 100vh;
+        background: white;
+      }
+      .top-bar {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .table-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 24px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th {
+        text-align: left;
+        padding: 16px 8px;
+        color: var(--text-muted);
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+        text-transform: uppercase;
+        font-size: 11px;
+      }
+      td {
+        padding: 14px 8px;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+      }
+
+      .status-dot {
+        height: 8px;
+        width: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+      }
+      .badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+      }
+            .fulfilled { background: #f0fdf4; color: #16a34a; }
+            .paused { background: #eff6ff; color: #2563eb; }
+            .btn-create { background: black; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 500; font-size: 12px; }
       
-      table { width: 100%; border-collapse: collapse; font-size: 13px; }
-      th { text-align: left; padding: 16px 8px; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; background: white; z-index: 10; text-transform: uppercase; font-size: 11px; }
-      td { padding: 14px 8px; border-bottom: 1px solid var(--border-color); color: var(--text-main); }
+            @keyframes pencil-pulse {
+              0% { transform: scale(1); opacity: 0.6; }
+              50% { transform: scale(1.2); opacity: 1; }
+              100% { transform: scale(1); opacity: 0.6; }
+            }
+            .assign-pencil {
+              font-size: 10px;
+              color: #f59e0b;
+              margin-left: 8px;
+              animation: pencil-pulse 1.5s infinite ease-in-out;
+              vertical-align: middle;
+            }
 
-      .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-      .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; }
-      .fulfilled { background: #f0fdf4; color: #16a34a; }
-      .paused { background: #eff6ff; color: #2563eb; }
-      .btn-create { background: black; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 500; font-size: 12px; }
-
-      [v-cloak] { display: none; }
+            .exec-bar-container { height: 6px; background: #eee; border-radius: 3px; flex: 1; margin: 0 12px; overflow: hidden; }
+            .exec-bar-fill { height: 100%; background: var(--primary-purple); transition: width 0.3s; }
+      
+            [v-cloak] { display: none; }
     </style>
   </head>
   <body>
@@ -87,30 +184,98 @@
           <div class="logo-box">H</div>
           <div>
             <div style="font-weight: 700; font-size: 15px">Helpdesk</div>
-            <div style="font-size: 11px; color: var(--text-muted)">IT Administrator</div>
+            <div style="font-size: 11px; color: var(--text-muted)">
+              IT Administrator
+            </div>
           </div>
         </div>
 
         <!-- Category Tabs -->
-        <div style="padding: 0 16px 16px; display: flex; align-items: center; gap: 12px; font-size: 11px; font-weight: bold; color: var(--text-muted); border-bottom: 1px solid var(--border-color); margin-bottom: 8px; text-transform: uppercase;">
-          <span @click="setTab('district')" :style="{ cursor: 'pointer', color: activeTab === 'district' ? 'black' : 'inherit', borderBottom: activeTab === 'district' ? '2px solid black' : 'none', paddingBottom: '4px' }">District</span>
-          <span @click="setTab('zone')" :style="{ cursor: 'pointer', color: activeTab === 'zone' ? 'black' : 'inherit', borderBottom: activeTab === 'zone' ? '2px solid black' : 'none', paddingBottom: '4px' }">Zone</span>
-          <span @click="setTab('state')" :style="{ cursor: 'pointer', color: activeTab === 'state' ? 'black' : 'inherit', borderBottom: activeTab === 'state' ? '2px solid black' : 'none', paddingBottom: '4px' }">State</span>
-          <span @click="setTab('executive')" :style="{ cursor: 'pointer', color: activeTab === 'executive' ? 'black' : 'inherit', borderBottom: activeTab === 'executive' ? '2px solid black' : 'none', paddingBottom: '4px' }">Exec</span>
+        <div
+          style="
+            padding: 0 16px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+          "
+        >
+          <span
+            @click="setTab('district')"
+            :style="{ cursor: 'pointer', color: activeTab === 'district' ? 'black' : 'inherit', borderBottom: activeTab === 'district' ? '2px solid black' : 'none', paddingBottom: '4px' }"
+            >District</span
+          >
+          <span
+            @click="setTab('zone')"
+            :style="{ cursor: 'pointer', color: activeTab === 'zone' ? 'black' : 'inherit', borderBottom: activeTab === 'zone' ? '2px solid black' : 'none', paddingBottom: '4px' }"
+            >Zone</span
+          >
+          <span
+            @click="setTab('state')"
+            :style="{ cursor: 'pointer', color: activeTab === 'state' ? 'black' : 'inherit', borderBottom: activeTab === 'state' ? '2px solid black' : 'none', paddingBottom: '4px' }"
+            >State</span
+          >
+          <span
+            @click="setTab('executive')"
+            :style="{ cursor: 'pointer', color: activeTab === 'executive' ? 'black' : 'inherit', borderBottom: activeTab === 'executive' ? '2px solid black' : 'none', paddingBottom: '4px' }"
+            >Exec</span
+          >
 
-          <div style="margin-left: auto; display: flex; align-items: center; gap: 6px;">
-            <input v-if="showSearch" v-model="searchQuery" type="text" placeholder="Filter..." 
-              style="width: 70px; border: none; background: #eee; font-size: 10px; outline: none; border-radius: 4px; padding: 2px 6px;" />
-            <i class="fas fa-search" style="font-size: 12px; cursor: pointer;" @click="showSearch = !showSearch"></i>
+          <div
+            style="
+              margin-left: auto;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            "
+          >
+            <input
+              v-if="showSearch"
+              v-model="searchQuery"
+              type="text"
+              placeholder="Filter..."
+              style="
+                width: 70px;
+                border: none;
+                background: #eee;
+                font-size: 10px;
+                outline: none;
+                border-radius: 4px;
+                padding: 2px 6px;
+              "
+            />
+            <i
+              class="fas fa-search"
+              style="font-size: 12px; cursor: pointer"
+              @click="showSearch = !showSearch"
+            ></i>
           </div>
         </div>
 
         <nav class="nav-container">
-          <div v-for="group in sidebarGroups" :key="group.name" 
-               @click="selectItem(group.name)" 
-               :class="['nav-item', selectedItem === group.name ? 'active' : '']">
-            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">[[ group.name ]]</span>
-            <span style="font-size: 10px; font-weight: bold; opacity: 0.6;">[[ group.pending ]]</span>
+          <div
+            v-for="group in sidebarGroups"
+            :key="group.name"
+            @click="selectItem(group.name)"
+            :class="['nav-item', selectedItem === group.name ? 'active' : '']"
+          >
+            <span
+              style="
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              "
+              >[[ group.name ]]
+              <i v-if="group.name === 'Unassigned'" class="fas fa-pencil-alt assign-pencil"></i>
+            </span>
+            <span style="font-size: 10px; font-weight: bold; opacity: 0.6"
+              >[[ group.pending ]]</span
+            >
           </div>
         </nav>
       </aside>
@@ -118,10 +283,28 @@
       <!-- Main Content -->
       <main class="main-content">
         <header class="top-bar">
-          <div style="font-size: 13px; font-weight: 500; color: var(--text-muted);">
-            Workspace / <span style="color: black; font-weight: 700;">[[ selectedItem || 'Overview' ]]</span>
+          <div style="font-size: 13px; font-weight: 500; color: var(--text-muted)">
+            Workspace /
+            <span style="color: black; font-weight: 700"
+              >[[ selectedItem || 'Overview' ]]</span
+            >
           </div>
-          <button class="btn-create" @click="openListView()">Full List View</button>
+          <div style="display: flex; align-items: center; gap: 16px">
+            <!-- Status Toggle -->
+            <div style="display: flex; background: #f3f4f6; border-radius: 8px; padding: 2px; font-size: 10px; font-weight: 800; text-transform: uppercase; width: 180px; border: 1px solid var(--border-color);">
+              <div @click="init('active', 0)" 
+                   :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'active' ? 'black' : 'transparent', color: statusToggle === 'active' ? 'white' : '#888', transition: '0.2s' }">
+                Active
+              </div>
+              <div @click="init('completed', 0)" 
+                   :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'completed' ? 'black' : 'transparent', color: statusToggle === 'completed' ? 'white' : '#888', transition: '0.2s' }">
+                Completed
+              </div>
+            </div>
+            <button class="btn-create" @click="openListView()">
+              Full List View
+            </button>
+          </div>
         </header>
 
         <div class="table-container">
@@ -140,113 +323,543 @@
             </thead>
             <tbody>
               <tr v-for="ticket in tickets" :key="ticket.name">
-                <td style="font-weight: 700;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <a @click="openTicket(ticket.name)" style="cursor: pointer; color: var(--primary-purple); text-decoration: underline;">[[ ticket.name ]]</a>
-                    <span class="status-dot" :style="{ backgroundColor: getStatusColor(ticket.status) }" :title="ticket.status"></span>
+                <td style="font-weight: 700">
+                  <div style="display: flex; align-items: center; gap: 8px">
+                    <a
+                      @click="openTicket(ticket.name)"
+                      style="
+                        cursor: pointer;
+                        color: var(--primary-purple);
+                        text-decoration: underline;
+                      "
+                      >[[ ticket.name ]]</a
+                    >
+                    <span
+                      class="status-dot"
+                      :style="{ backgroundColor: getStatusColor(ticket.status) }"
+                      :title="ticket.status"
+                    ></span>
                   </div>
                 </td>
-                <td style="font-weight: 500;">[[ ticket.branch || '-' ]]</td>
+                <td style="font-weight: 500">[[ ticket.branch || '-' ]]</td>
                 <td>[[ ticket.employee_name || ticket.owner ]]</td>
-                <td style="font-weight: 500;">[[ ticket.assigned_to_name || ticket.assigned_to || 'Unassigned' ]]</td>
+                <td style="font-weight: 500">
+                  [[ ticket.assigned_to_name || ticket.assigned_to ||
+                  'Unassigned' ]]
+                  <i v-if="!(ticket.assigned_to_name || ticket.assigned_to)" class="fas fa-pencil-alt assign-pencil"></i>
+                </td>
                 <td>
-                  <span class="status-dot" :style="{ backgroundColor: getStatusColor(ticket.status) }"></span>
+                  <span
+                    class="status-dot"
+                    :style="{ backgroundColor: getStatusColor(ticket.status) }"
+                  ></span>
                   [[ ticket.status ]]
                 </td>
-                <td><span :class="['badge', getPriorityClass(ticket.priority)]">[[ ticket.priority ]]</span></td>
-                <td style="color: var(--text-muted); font-size: 12px;">[[ formatDate(ticket.creation) ]] ([[ getAge(ticket.creation) ]]d)</td>
                 <td>
-                  <button @click="viewTicketDetails(ticket)" style="border: none; background: transparent; cursor: pointer; font-size: 16px;">📋</button>
+                  <span :class="['badge', getPriorityClass(ticket.priority)]"
+                    >[[ ticket.priority ]]</span
+                  >
+                </td>
+                <td style="color: var(--text-muted); font-size: 12px">
+                  [[ formatDate(ticket.creation) ]] ([[ getAge(ticket.creation)
+                  ]]d)
+                </td>
+                <td>
+                  <button
+                    @click="viewTicketDetails(ticket)"
+                    style="
+                      border: none;
+                      background: transparent;
+                      cursor: pointer;
+                      font-size: 16px;
+                    "
+                  >
+                    📋
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
+
+          <!-- Pagination Controls -->
+          <div v-if="currentPage > 0 || hasNextPage" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 8px; border-top: 1px solid var(--border-color); background: white;">
+            <button @click="init(statusToggle, currentPage - 1)" :disabled="currentPage === 0" 
+                    style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; background: white; font-size: 11px; font-weight: 700; cursor: pointer; opacity: currentPage === 0 ? 0.5 : 1;">
+              <i class="fas fa-chevron-left mr-1"></i> Previous
+            </button>
+            <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
+              Page [[ currentPage + 1 ]]
+            </span>
+            <button @click="init(statusToggle, currentPage + 1)" :disabled="!hasNextPage" 
+                    style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; background: white; font-size: 11px; font-weight: 700; cursor: pointer; opacity: !hasNextPage ? 0.5 : 1;">
+              Next <i class="fas fa-chevron-right mr-1"></i>
+            </button>
+          </div>
           
-          <div v-else style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted);">
-              <i class="fas fa-arrow-left mb-4" style="font-size: 24px; opacity: 0.3;"></i>
-              <p>Select an item from the sidebar to view tickets</p>
+          <div v-else-if="!selectedItem" style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted);">
+            <i
+              class="fas fa-arrow-left mb-4"
+              style="font-size: 24px; opacity: 0.3"
+            ></i>
+            <p>Select an item from the sidebar to view tickets</p>
           </div>
         </div>
       </main>
 
       <!-- Detailed Ticket Modal -->
-      <div v-if="showModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 1000;" @click.self="showModal = false">
-        <div style="background: white; width: 95%; height: 90vh; max-width: 1200px; border-radius: 16px; overflow: hidden; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: 70px repeat(4, 1fr);">
+      <div
+        v-if="showModal"
+        style="
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+        "
+        @click.self="showModal = false"
+      >
+        <div
+          style="
+            background: white;
+            width: 95%;
+            height: 90vh;
+            max-width: 1200px;
+            border-radius: 16px;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: 70px repeat(4, 1fr);
+          "
+        >
           <!-- Header -->
-          <div style="grid-area: 1 / 1 / 2 / 6; border-bottom: 1px solid var(--border-color); background: #fdfdfd; display: flex; align-items: center; padding: 0 24px; gap: 40px;">
-              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ID</label><div style="font-weight: 800; font-size: 16px; color: var(--primary-purple);">[[ activeTicket.name ]]</div></div>
-              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">PRIORITY</label><div><span :class="['badge', getPriorityClass(activeTicket.priority)]">[[ activeTicket.priority ]]</span></div></div>
-              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">CREATED</label><div style="font-size: 13px; font-weight: 600;">[[ formatDate(activeTicket.creation) ]]</div></div>
-              <div style="height: 32px; width: 1px; background: var(--border-color); margin: 0 -8px;"></div>
-              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">REQUEST TO</label><div style="font-size: 13px; font-weight: 600;">[[ activeTicket.dept_name || 'IT' ]]</div></div>
-              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ISSUE</label><div style="font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;" :title="activeTicket.ticket_type">[[ activeTicket.ticket_type || '-' ]]</div></div>
-              <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">TAT</label><div style="font-size: 13px; font-weight: 600;">[[ activeTicket.tat || 'N/A' ]]</div></div>
-              
-              <div v-if="canCreateMaterialRequest()" style="display: flex; flex-direction: column;">
-                <label style="font-size: 9px; font-weight: 800; color: #d97706;">ACTION</label>
-                <button @click="createMaterialRequest" style="background: #fff9f2; color: #d97706; border: 1px solid #ffe8cc; border-radius: 6px; padding: 4px 12px; font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; white-space: nowrap;">Create Material Request</button>
+          <div
+            style="
+              grid-area: 1 / 1 / 2 / 6;
+              border-bottom: 1px solid var(--border-color);
+              background: #fdfdfd;
+              display: flex;
+              align-items: center;
+              padding: 0 24px;
+              gap: 40px;
+            "
+          >
+            <div style="display: flex; flex-direction: column">
+              <label
+                style="
+                  font-size: 9px;
+                  font-weight: 800;
+                  color: var(--text-muted);
+                "
+                >ID</label
+              >
+              <div
+                style="
+                  font-weight: 800;
+                  font-size: 16px;
+                  color: var(--primary-purple);
+                "
+              >
+                [[ activeTicket.name ]]
               </div>
-              <div v-else-if="activeTicket.asset_request_id" style="display: flex; flex-direction: column;">
-                <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ASSET REQUEST</label>
-                <div style="font-size: 13px; font-weight: 600; color: #d97706;">[[ activeTicket.asset_request_id ]]</div>
+            </div>
+            <div style="display: flex; flex-direction: column">
+              <label
+                style="
+                  font-size: 9px;
+                  font-weight: 800;
+                  color: var(--text-muted);
+                "
+                >PRIORITY</label
+              >
+              <div>
+                <span
+                  :class="['badge', getPriorityClass(activeTicket.priority)]"
+                  >[[ activeTicket.priority ]]</span
+                >
               </div>
+            </div>
+            <div style="display: flex; flex-direction: column">
+              <label
+                style="
+                  font-size: 9px;
+                  font-weight: 800;
+                  color: var(--text-muted);
+                "
+                >CREATED</label
+              >
+              <div style="font-size: 13px; font-weight: 600">
+                [[ formatDate(activeTicket.creation) ]]
+              </div>
+            </div>
+            <div
+              style="
+                height: 32px;
+                width: 1px;
+                background: var(--border-color);
+                margin: 0 -8px;
+              "
+            ></div>
+            <div style="display: flex; flex-direction: column">
+              <label
+                style="
+                  font-size: 9px;
+                  font-weight: 800;
+                  color: var(--text-muted);
+                "
+                >REQUEST TO</label
+              >
+              <div style="font-size: 13px; font-weight: 600">
+                [[ activeTicket.dept_name || 'IT' ]]
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column">
+              <label
+                style="
+                  font-size: 9px;
+                  font-weight: 800;
+                  color: var(--text-muted);
+                "
+                >ISSUE</label
+              >
+              <div
+                style="
+                  font-size: 13px;
+                  font-weight: 600;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                  max-width: 150px;
+                "
+                :title="activeTicket.ticket_type"
+              >
+                [[ activeTicket.ticket_type || '-' ]]
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column">
+              <label
+                style="
+                  font-size: 9px;
+                  font-weight: 800;
+                  color: var(--text-muted);
+                "
+                >TAT</label
+              >
+              <div style="font-size: 13px; font-weight: 600">
+                [[ activeTicket.tat || 'N/A' ]]
+              </div>
+            </div>
 
-              <div style="display: flex; flex-direction: column; margin-left: auto;">
-                <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">STATUS</label>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <span class="status-dot" :style="{ backgroundColor: getStatusColor(activeTicket.status) }"></span>
-                    <select 
-                        @change="updateTicketStatus(activeTicket.name, $event.target.value)"
-                        :value="activeTicket.status"
-                        style="font-size: 11px; font-weight: 700; border: 1px solid #ddd; border-radius: 6px; padding: 4px 8px; outline: none; cursor: pointer; text-transform: uppercase; background: white;"
-                    >
-                        <option value="Open">Open</option>
-                        <option value="In-Progress">In-Progress</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="Closed">Closed</option>
-                    </select>
-                </div>
+            <div
+              v-if="canCreateMaterialRequest()"
+              style="display: flex; flex-direction: column"
+            >
+              <label style="font-size: 9px; font-weight: 800; color: #d97706"
+                >ACTION</label
+              >
+              <button
+                @click="createMaterialRequest"
+                style="
+                  background: #fff9f2;
+                  color: #d97706;
+                  border: 1px solid #ffe8cc;
+                  border-radius: 6px;
+                  padding: 4px 12px;
+                  font-size: 10px;
+                  font-weight: 800;
+                  cursor: pointer;
+                  text-transform: uppercase;
+                  white-space: nowrap;
+                "
+              >
+                Create Material Request
+              </button>
+            </div>
+
+            <div
+              style="display: flex; flex-direction: column; margin-left: auto"
+            >
+              <label
+                style="
+                  font-size: 9px;
+                  font-weight: 800;
+                  color: var(--text-muted);
+                "
+                >STATUS</label
+              >
+              <div style="display: flex; align-items: center; gap: 6px">
+                <span
+                  class="status-dot"
+                  :style="{ backgroundColor: getStatusColor(activeTicket.status) }"
+                ></span>
+                <select
+                  @change="updateTicketStatus(activeTicket.name, $event.target.value)"
+                  :value="activeTicket.status"
+                  style="
+                    font-size: 11px;
+                    font-weight: 700;
+                    border: 1px solid #ddd;
+                    border-radius: 6px;
+                    padding: 4px 8px;
+                    outline: none;
+                    cursor: pointer;
+                    text-transform: uppercase;
+                    background: white;
+                  "
+                >
+                  <option value="Open">Open</option>
+                  <option value="In-Progress">In-Progress</option>
+                  <option value="Resolved">Resolved</option>
+                  <option value="Closed">Closed</option>
+                </select>
               </div>
-              <button @click="showModal = false" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #ccc;">&times;</button>
+            </div>
+            <button
+              @click="showModal = false"
+              style="
+                background: none;
+                border: none;
+                font-size: 28px;
+                cursor: pointer;
+                color: #ccc;
+              "
+            >
+              &times;
+            </button>
           </div>
           <!-- Left Col -->
-          <div style="grid-area: 2 / 1 / 6 / 2; border-right: 1px solid var(--border-color); padding: 20px; background: #fafafa; overflow-y: auto;">
-              <div style="background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                  <label style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Raised By</label>
-                  <div style="font-size: 14px; font-weight: 700; margin-top: 6px;">[[ activeTicket.employee_name ]]</div>
-                  <div v-if="activeTicket.designation" style="font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 1px;">[[ activeTicket.designation ]]</div>
-                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">[[ activeTicket.owner ]]</div>
-                  <div v-if="activeTicket.cell_number" style="font-size: 12px; font-weight: 600; margin-top: 8px; color: var(--primary-purple);"><i class="fas fa-phone-alt mr-2"></i>[[ activeTicket.cell_number ]]</div>
-                  <div style="border-top: 1px dashed #eee; padding-top: 12px; margin-top: 12px; display: grid; gap: 8px;">
-                      <div style="display: flex; justify-content: space-between;"><span style="font-size: 9px; font-weight: 700; color: var(--text-muted);">BRANCH</span><span style="font-size: 11px; font-weight: 700;">[[ activeTicket.branch || '-' ]]</span></div>
-                      <div style="display: flex; justify-content: space-between;"><span style="font-size: 9px; font-weight: 700; color: var(--text-muted);">DISTRICT</span><span style="font-size: 11px; font-weight: 700;">[[ activeTicket.district || '-' ]]</span></div>
-                  </div>
+          <div
+            style="
+              grid-area: 2 / 1 / 6 / 2;
+              border-right: 1px solid var(--border-color);
+              padding: 20px;
+              background: #fafafa;
+              overflow-y: auto;
+            "
+          >
+            <div
+              style="
+                background: white;
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 12px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+              "
+            >
+              <label
+                style="
+                  font-size: 9px;
+                  font-weight: 800;
+                  color: var(--text-muted);
+                  text-transform: uppercase;
+                "
+                >Raised By</label
+              >
+              <div style="font-size: 14px; font-weight: 700; margin-top: 6px">
+                [[ activeTicket.employee_name ]]
               </div>
-              <div style="background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                  <label style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Assigned To</label>
-                  <div style="font-size: 13px; font-weight: 700; margin-top: 6px;">[[ activeTicket.assigned_to_name || activeTicket.assigned_to || 'Unassigned' ]]</div>
+              <div
+                v-if="activeTicket.designation"
+                style="
+                  font-size: 10px;
+                  color: var(--text-muted);
+                  font-weight: 600;
+                  margin-top: 1px;
+                "
+              >
+                [[ activeTicket.designation ]]
               </div>
-              <button @click="openTicket(activeTicket.name)" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; background: white; font-size: 11px; font-weight: 800; cursor: pointer; text-transform: uppercase;">Full Record</button>
+              <div
+                style="
+                  font-size: 11px;
+                  color: var(--text-muted);
+                  margin-top: 2px;
+                "
+              >
+                [[ activeTicket.owner ]]
+              </div>
+              <div
+                v-if="activeTicket.cell_number"
+                style="
+                  font-size: 12px;
+                  font-weight: 600;
+                  margin-top: 8px;
+                  color: var(--primary-purple);
+                "
+              >
+                <i class="fas fa-phone-alt mr-2"></i>[[ activeTicket.cell_number
+                ]]
+              </div>
+              <div
+                style="
+                  border-top: 1px dashed #eee;
+                  padding-top: 12px;
+                  margin-top: 12px;
+                  display: grid;
+                  gap: 8px;
+                "
+              >
+                <div style="display: flex; justify-content: space-between">
+                  <span
+                    style="
+                      font-size: 9px;
+                      font-weight: 700;
+                      color: var(--text-muted);
+                    "
+                    >BRANCH</span
+                  ><span style="font-size: 11px; font-weight: 700"
+                    >[[ activeTicket.branch || '-' ]]</span
+                  >
+                </div>
+                <div style="display: flex; justify-content: space-between">
+                  <span
+                    style="
+                      font-size: 9px;
+                      font-weight: 700;
+                      color: var(--text-muted);
+                    "
+                    >DISTRICT</span
+                  ><span style="font-size: 11px; font-weight: 700"
+                    >[[ activeTicket.district || '-' ]]</span
+                  >
+                </div>
+              </div>
+            </div>
+                                      <div
+                                        @click="openAssignDialog"
+                                        style="
+                                          background: white;
+                                          border: 1px solid var(--border-color);
+                                          border-radius: 12px;
+                                          padding: 16px;
+                                          margin-bottom: 24px;
+                                          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+                                          cursor: pointer;
+                                        "
+                                      >                            <label
+                              style="
+                                font-size: 9px;
+                                font-weight: 800;
+                                color: var(--text-muted);
+                                text-transform: uppercase;
+                              "
+                              >Assigned To</label
+                            >
+                                                            <div style="font-size: 13px; font-weight: 700; margin-top: 6px">
+                                                              [[ activeTicket.assigned_to_name || activeTicket.assigned_to ||
+                                                              'Unassigned' ]]
+                                                              <i v-if="!(activeTicket.assigned_to_name || activeTicket.assigned_to)" class="fas fa-pencil-alt assign-pencil"></i>
+                                                            </div>                          </div>            <button
+              @click="openTicket(activeTicket.name)"
+              style="
+                width: 100%;
+                padding: 12px;
+                border-radius: 10px;
+                border: 1px solid #ddd;
+                background: white;
+                font-size: 11px;
+                font-weight: 800;
+                cursor: pointer;
+                text-transform: uppercase;
+              "
+            >
+              Full Record
+            </button>
           </div>
           <!-- Mid Col -->
-          <div style="grid-area: 2 / 2 / 6 / 4; padding: 24px; overflow-y: auto; border-right: 1px solid var(--border-color);">
-              <h4 style="margin: 0 0 20px; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Issue Description</h4>
-              <div v-if="loadingDetail" style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin fa-2x" style="color: #ddd;"></i></div>
-              <div v-else style="font-size: 15px; line-height: 1.7; color: #222;" v-html="activeTicket.description || 'No description provided.'"></div>
+          <div
+            style="
+              grid-area: 2 / 2 / 6 / 4;
+              padding: 24px;
+              overflow-y: auto;
+              border-right: 1px solid var(--border-color);
+            "
+          >
+            <h4
+              style="
+                margin: 0 0 20px;
+                font-size: 11px;
+                font-weight: 800;
+                color: var(--text-muted);
+                text-transform: uppercase;
+              "
+            >
+              Issue Description
+            </h4>
+            <div v-if="loadingDetail" style="padding: 40px; text-align: center">
+              <i class="fas fa-spinner fa-spin fa-2x" style="color: #ddd"></i>
+            </div>
+            <div
+              v-else
+              style="font-size: 15px; line-height: 1.7; color: #222"
+              v-html="activeTicket.description || 'No description provided.'"
+            ></div>
           </div>
           <!-- Right Col -->
-          <div style="grid-area: 2 / 4 / 6 / 6; display: flex; flex-direction: column; background: #fdfdfd;">
-              <div style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); background: white;"><h4 style="margin: 0; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Communication Log</h4></div>
-              <div style="flex: 1; overflow-y: auto; padding: 20px; background: #f0f2f5;" id="commentList">
-                  <div v-for="c in comments" :key="c.name" 
-                       :style="{ display: 'flex', flexDirection: 'column', marginBottom: '16px', alignItems: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? 'flex-end' : 'flex-start' }">
-                      
-                      <div style="max-width: 85%; display: flex; flex-direction: column;" :style="{ alignItems: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? 'flex-end' : 'flex-start' }">
-                          <span style="font-size: 10px; font-weight: 800; color: #888; margin-bottom: 4px; padding: 0 4px;">
-                              [[ (c.sender_name || c.comment_by || c.comment_email) ]]
-                          </span>
-                          
-                          <div :style="{ 
+          <div
+            style="
+              grid-area: 2 / 4 / 6 / 6;
+              display: flex;
+              flex-direction: column;
+              background: #fdfdfd;
+            "
+          >
+            <div
+              style="
+                padding: 16px 24px;
+                border-bottom: 1px solid var(--border-color);
+                background: white;
+              "
+            >
+              <h4
+                style="
+                  margin: 0;
+                  font-size: 11px;
+                  font-weight: 800;
+                  color: var(--text-muted);
+                  text-transform: uppercase;
+                "
+              >
+                Communication Log
+              </h4>
+            </div>
+            <div
+              style="
+                flex: 1;
+                overflow-y: auto;
+                padding: 20px;
+                background: #f0f2f5;
+              "
+              id="commentList"
+            >
+              <div
+                v-for="c in comments"
+                :key="c.name"
+                :style="{ display: 'flex', flexDirection: 'column', marginBottom: '16px', alignItems: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? 'flex-end' : 'flex-start' }"
+              >
+                <div
+                  style="max-width: 85%; display: flex; flex-direction: column"
+                  :style="{ alignItems: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? 'flex-end' : 'flex-start' }"
+                >
+                  <span
+                    style="
+                      font-size: 10px;
+                      font-weight: 800;
+                      color: #888;
+                      margin-bottom: 4px;
+                      padding: 0 4px;
+                    "
+                  >
+                    [[ (c.sender_name || c.comment_by || c.comment_email) ]]
+                  </span>
+
+                  <div
+                    :style="{ 
                                 background: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? '#dcf8c6' : 'white', 
                                 border: '1px solid #edf0f2', 
                                 padding: '10px 14px', 
@@ -256,55 +869,272 @@
                                 color: '#333', 
                                 boxShadow: '0 1px 1px rgba(0,0,0,0.05)',
                                 position: 'relative'
-                               }" v-html="c.content">
-                          </div>
-                          
-                          <span style="font-size: 9px; color: #aaa; margin-top: 4px; padding: 0 4px;">[[ formatDate(c.creation) ]]</span>
-                      </div>
-                  </div>
+                               }"
+                    v-html="c.content"
+                  ></div>
+
+                  <span
+                    style="
+                      font-size: 9px;
+                      color: #aaa;
+                      margin-top: 4px;
+                      padding: 0 4px;
+                    "
+                    >[[ formatDate(c.creation) ]]</span
+                  >
+                </div>
               </div>
-              <div style="padding: 20px; border-top: 1px solid var(--border-color); background: white;">
-                  <div style="display: flex; gap: 10px;">
-                      <textarea v-model="newComment" placeholder="Type a message..." style="flex: 1; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; font-size: 13px; height: 44px; resize: none; outline: none; transition: border-color 0.2s;" @keypress.enter.prevent="addComment"></textarea>
-                      <button @click="addComment" style="background: black; color: white; border: none; border-radius: 10px; padding: 0 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;" :disabled="postingComment">[[ postingComment ? '...' : 'Send' ]]</button>
-                  </div>
+            </div>
+            <div
+              style="
+                padding: 20px;
+                border-top: 1px solid var(--border-color);
+                background: white;
+              "
+            >
+              <div style="display: flex; gap: 10px">
+                <textarea
+                  v-model="newComment"
+                  placeholder="Type a message..."
+                  style="
+                    flex: 1;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 10px;
+                    padding: 10px;
+                    font-size: 13px;
+                    height: 44px;
+                    resize: none;
+                    outline: none;
+                    transition: border-color 0.2s;
+                  "
+                  @keypress.enter.prevent="addComment"
+                ></textarea>
+                <button
+                  @click="addComment"
+                  style="
+                    background: black;
+                    color: white;
+                    border: none;
+                    border-radius: 10px;
+                    padding: 0 20px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: opacity 0.2s;
+                  "
+                  :disabled="postingComment"
+                >
+                  [[ postingComment ? '...' : 'Send' ]]
+                </button>
               </div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Status Update Modal -->
-      <div v-if="showStatusModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1100;" @click.self="cancelStatusChange">
-        <div style="background: white; width: 440px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 32px; animation: slide-up 0.2s ease-out;">
-            <h3 style="margin: 0 0 4px; font-size: 18px; font-weight: 800; color: var(--text-main);">Change Status</h3>
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Confirming status transition for [[ pendingTicketName ]]</p>
-            
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding: 12px; background: var(--sidebar-bg); border-radius: 8px;">
-                <div style="flex: 1; text-align: center;">
-                    <div style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">From</div>
-                    <div style="font-size: 12px; font-weight: 700; margin-top: 2px;">[[ activeTicket.status ]]</div>
-                </div>
-                <i class="fas fa-arrow-right" style="color: #ccc; font-size: 12px;"></i>
-                <div style="flex: 1; text-align: center;">
-                    <div style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">To</div>
-                    <div style="font-size: 12px; font-weight: 700; margin-top: 2px; color: var(--primary-purple);">[[ pendingStatus ]]</div>
-                </div>
+      <div
+        v-if="showStatusModal"
+        style="
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1100;
+        "
+        @click.self="cancelStatusChange"
+      >
+        <div
+          style="
+            background: white;
+            width: 440px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 32px;
+            animation: slide-up 0.2s ease-out;
+          "
+        >
+          <h3
+            style="
+              margin: 0 0 4px;
+              font-size: 18px;
+              font-weight: 800;
+              color: var(--text-main);
+            "
+          >
+            Change Status
+          </h3>
+          <p
+            style="
+              font-size: 13px;
+              color: var(--text-muted);
+              margin-bottom: 24px;
+            "
+          >
+            Confirming status transition for [[ pendingTicketName ]]
+          </p>
+
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              margin-bottom: 24px;
+              padding: 12px;
+              background: var(--sidebar-bg);
+              border-radius: 8px;
+            "
+          >
+            <div style="flex: 1; text-align: center">
+              <div
+                style="
+                  font-size: 9px;
+                  font-weight: 800;
+                  color: var(--text-muted);
+                  text-transform: uppercase;
+                "
+              >
+                From
+              </div>
+              <div style="font-size: 12px; font-weight: 700; margin-top: 2px">
+                [[ activeTicket.status ]]
+              </div>
             </div>
+            <i
+              class="fas fa-arrow-right"
+              style="color: #ccc; font-size: 12px"
+            ></i>
+            <div style="flex: 1; text-align: center">
+              <div
+                style="
+                  font-size: 9px;
+                  font-weight: 800;
+                  color: var(--text-muted);
+                  text-transform: uppercase;
+                "
+              >
+                To
+              </div>
+              <div
+                style="
+                  font-size: 12px;
+                  font-weight: 700;
+                  margin-top: 2px;
+                  color: var(--primary-purple);
+                "
+              >
+                [[ pendingStatus ]]
+              </div>
+            </div>
+          </div>
 
-            <label style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Status Update Remark</label>
-            <textarea 
-                v-model="statusRemark" 
-                placeholder="Explain the reason for this status change..." 
-                style="width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; font-size: 13px; outline: none; resize: none; height: 100px; margin-top: 8px; display: block; line-height: 1.5; transition: border-color 0.2s;"
-            ></textarea>
+          <label
+            style="
+              font-size: 10px;
+              font-weight: 800;
+              color: var(--text-muted);
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+            "
+            >Status Update Remark</label
+          >
+          <textarea
+            v-model="statusRemark"
+            placeholder="Explain the reason for this status change..."
+            style="
+              width: 100%;
+              border: 1px solid #e2e8f0;
+              border-radius: 10px;
+              padding: 12px;
+              font-size: 13px;
+              outline: none;
+              resize: none;
+              height: 100px;
+              margin-top: 8px;
+              display: block;
+              line-height: 1.5;
+              transition: border-color 0.2s;
+            "
+          ></textarea>
 
-            <div style="margin-top: 32px; display: flex; justify-content: flex-end; gap: 12px;">
-                <button @click="cancelStatusChange" style="padding: 10px 20px; border-radius: 10px; border: 1px solid #e2e8f0; background: white; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--text-muted);">Cancel</button>
-                <button @click="submitStatusChange" style="padding: 10px 24px; border-radius: 10px; border: none; background: black; color: white; font-size: 13px; font-weight: 700; cursor: pointer;" :disabled="!statusRemark.trim() || loadingStatus">[[ loadingStatus ? 'Saving...' : 'Confirm Change' ]]</button>
+          <div
+            style="
+              margin-top: 32px;
+              display: flex;
+              justify-content: flex-end;
+              gap: 12px;
+            "
+          >
+            <button
+              @click="cancelStatusChange"
+              style="
+                padding: 10px 20px;
+                border-radius: 10px;
+                border: 1px solid #e2e8f0;
+                background: white;
+                font-size: 13px;
+                font-weight: 700;
+                cursor: pointer;
+                color: var(--text-muted);
+              "
+            >
+              Cancel
+            </button>
+            <button
+              @click="submitStatusChange"
+              style="
+                padding: 10px 24px;
+                border-radius: 10px;
+                border: none;
+                background: black;
+                color: white;
+                font-size: 13px;
+                font-weight: 700;
+                cursor: pointer;
+              "
+              :disabled="!statusRemark.trim() || loadingStatus"
+            >
+              [[ loadingStatus ? 'Saving...' : 'Confirm Change' ]]
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assignment Modal -->
+      <div v-if="showAssignModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1200;" @click.self="showAssignModal = false">
+        <div style="background: white; width: 480px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: var(--text-main);">Assign Ticket</h3>
+                <button @click="showAssignModal = false" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #ccc;">&times;</button>
+            </div>
+            
+            <div v-if="loadingAssign" style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin fa-2x" style="color: #ddd;"></i></div>
+            <div v-else style="max-height: 400px; overflow-y: auto; padding-right: 8px;">
+                <div v-for="exec in assignableUsers" :key="exec.id" 
+                     @click="submitAssignment(exec.id)"
+                     style="display: flex; align-items: center; padding: 14px; border: 1px solid #eee; border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;"
+                     onmouseover="this.style.borderColor='#097c80'; this.style.background='#f0f9f9'" 
+                     onmouseout="this.style.borderColor='#eee'; this.style.background='white'">
+                    <div style="flex: 1;">
+                        <div style="font-size: 13px; font-weight: 700; color: var(--text-main);">[[ exec.name ]]</div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">[[ exec.id ]]</div>
+                    </div>
+                    <div style="width: 140px; display: flex; align-items: center;">
+                        <div class="exec-bar-container"><div class="exec-bar-fill" :style="{ width: (exec.count / maxAssignCount * 100) + '%' }"></div></div>
+                        <span style="font-size: 11px; font-weight: 800; color: var(--primary-purple); min-width: 20px; text-align: right;">[[ exec.count ]]</span>
+                    </div>
+                </div>
             </div>
         </div>
       </div>
-    </div> <!-- END #app -->
+    </div>
+    <!-- END #app -->
 
     <script>
       const { createApp } = PetiteVue;
@@ -320,97 +1150,271 @@
         showModal: false,
         activeTicket: {},
         comments: [],
-        newComment: '',
+        newComment: "",
         loadingDetail: false,
         postingComment: false,
         showStatusModal: false,
-        pendingStatus: '',
-        pendingTicketName: '',
-        statusRemark: '',
+        pendingStatus: "",
+        pendingTicketName: "",
+        statusRemark: "",
         loadingStatus: false,
         user_roles: [],
+        showAssignModal: false,
+        assignableUsers: [],
+        loadingAssign: false,
+        statusToggle: "active",
+        currentPage: 0,
+        pageSize: 20,
+        summaryData: [],
 
-        hasRole(role) { return this.user_roles && this.user_roles.includes(role); },
+        get maxAssignCount() {
+          if (!this.assignableUsers.length) return 1;
+          return Math.max(...this.assignableUsers.map((u) => u.count)) || 1;
+        },
+
+        get sidebarGroups() {
+          const groups = {};
+          this.summaryData.forEach((t) => {
+            let key =
+              this.activeTab === "executive"
+                ? t.executive || "Unassigned"
+                : t[this.activeTab] || "Unknown";
+            if (!groups[key]) groups[key] = { name: key, pending: 0 };
+            groups[key].pending += 1;
+          });
+          let result = Object.values(groups).sort(
+            (a, b) => b.pending - a.pending,
+          );
+          if (this.searchQuery) {
+            const q = this.searchQuery.toLowerCase();
+            result = result.filter((g) => g.name.toLowerCase().includes(q));
+          }
+          return result;
+        },
+
+        get filteredTickets() {
+          if (!this.selectedItem) return [];
+          const queryValue = String(this.selectedItem).toLowerCase();
+          return this.rawData.filter((t) => {
+            let key =
+              this.activeTab === "executive"
+                ? t.assigned_to_name || t.assigned_to || "Unassigned"
+                : t[this.activeTab] || "Unknown";
+            return String(key).toLowerCase() === queryValue;
+          });
+        },
+
+        get tickets() {
+          const start = this.currentPage * this.pageSize;
+          return this.filteredTickets.slice(start, start + this.pageSize);
+        },
+
+        get totalPages() {
+          return Math.ceil(this.filteredTickets.length / this.pageSize);
+        },
+
+        async openAssignDialog() {
+          if (!this.activeTicket.dept_name) return;
+          this.showAssignModal = true;
+          this.loadingAssign = true;
+          this.assignableUsers = [];
+          try {
+            const res = await fetch("/api/method/sahayog_ticket.api.helpdesks.get_it_support_executives", {
+              method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+              body: JSON.stringify({ filters: JSON.stringify({ dept_name: this.activeTicket.dept_name }) })
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.message) {
+                this.assignableUsers = data.message.map(u => {
+                  const match = u[1].match(/^(.*) \((\d+) tickets assigned\)$/);
+                  return { id: u[0], name: match ? match[1].trim() : u[1], count: match ? parseInt(match[2], 10) : 0 };
+                }).sort((a, b) => a.count - b.count);
+              }
+            }
+          } catch (e) { console.error(e); }
+          this.loadingAssign = false;
+        },
+
+        async submitAssignment(userEmail) {
+          if (this.loadingAssign) return;
+          this.loadingAssign = true;
+          try {
+            const res = await fetch("/api/method/frappe.client.set_value", {
+              method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+              body: JSON.stringify({ doctype: "Sahayog Ticket", name: this.activeTicket.name, fieldname: "assigned_to", value: userEmail })
+            });
+            if (res.ok) {
+              await fetch("/api/method/frappe.desk.form.utils.add_comment", {
+                  method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+                  body: JSON.stringify({ 
+                      reference_doctype: "Sahayog Ticket", reference_name: this.activeTicket.name, 
+                      content: `<b>Ticket assigned to ${userEmail}</b>`, 
+                      comment_email: window.current_user, comment_by: window.current_user
+                  })
+              });
+              
+              const ticketInList = this.rawData.find(t => t.name === this.activeTicket.name);
+              if (ticketInList) { ticketInList.assigned_to = userEmail; ticketInList.assigned_to_name = userEmail; }
+              this.activeTicket.assigned_to = userEmail;
+              this.activeTicket.assigned_to_name = userEmail;
+              this.showAssignModal = false;
+              this.viewTicketDetails(this.activeTicket);
+            }
+          } catch (e) { console.error(e); }
+          this.loadingAssign = false;
+        },
+
+        hasRole(role) {
+          return this.user_roles && this.user_roles.includes(role);
+        },
+
+        get isManager() {
+          return this.user_roles && this.user_roles.some(r => r.toLowerCase().includes('manager'));
+        },
+
+        canOpenTicket(ticket) {
+          if (!ticket) return false;
+          if (this.isManager) return true;
+          const isAssignedToMe = (ticket.assigned_to === window.current_user);
+          const isOpen = (ticket.status === "Open");
+          return isOpen || isAssignedToMe;
+        },
 
         canCreateMaterialRequest() {
           if (this.activeTicket.asset_request_id) return false;
           const s = this.activeTicket.status;
-          const canRoles = ["IT Support Executive", "Admin Support Executive", "Stationery Store & Support Manager"];
-          const userHasRole = canRoles.some(r => this.hasRole(r));
+          const canRoles = [
+            "IT Support Executive",
+            "Admin Support Executive",
+            "Stationery Store & Support Manager",
+          ];
+          const userHasRole = canRoles.some((r) => this.hasRole(r));
           if (s === "On-Hold" || s === "In-Progress") return userHasRole;
           if (s === "Open") return userHasRole;
           return false;
         },
 
         async createMaterialRequest() {
-          if (!confirm("Are you sure you want to create Asset Request?")) return;
-          
+          if (!confirm("Are you sure you want to create Asset Request?"))
+            return;
+
           let request_department = "";
           if (this.hasRole("IT Support Executive")) request_department = "IT";
-          else if (this.hasRole("Admin Support Executive")) request_department = "Admin";
-          else if (this.hasRole("Stationery Store & Support Manager")) request_department = "Stationery";
+          else if (this.hasRole("Admin Support Executive"))
+            request_department = "Admin";
+          else if (this.hasRole("Stationery Store & Support Manager"))
+            request_department = "Stationery";
 
           if (!request_department) return;
 
           this.loadingStatus = true;
           try {
-            const res = await fetch("/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.create_asset_request", {
-              method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
-              body: JSON.stringify({
-                ticket_id: this.activeTicket.name,
-                employee_id: this.activeTicket.employee_id,
-                request_to: request_department
-              })
-            });
+            const res = await fetch(
+              "/api/method/sahayog_ticket.api.helpdesks.create_asset_request",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                  "X-Frappe-CSRF-Token": this.getCsrfToken(),
+                },
+                body: JSON.stringify({
+                  ticket_id: this.activeTicket.name,
+                  employee_id: this.activeTicket.employee_id,
+                  request_to: request_department,
+                }),
+              },
+            );
             const data = await res.json();
             if (data.message && data.message.asset_request_id) {
               const assetId = data.message.asset_request_id;
               const remark = `Created Asset Request - ${assetId}`;
-              
+
               // Standard behavior: Close ticket with remark
               await fetch("/api/method/frappe.client.set_value", {
-                method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
-                body: JSON.stringify({ 
-                    doctype: "Sahayog Ticket", name: this.activeTicket.name, 
-                    fieldname: { status: "Closed", close_remark: remark, asset_request_id: assetId } 
-                })
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                  "X-Frappe-CSRF-Token": this.getCsrfToken(),
+                },
+                body: JSON.stringify({
+                  doctype: "Sahayog Ticket",
+                  name: this.activeTicket.name,
+                  fieldname: {
+                    status: "Closed",
+                    close_remark: remark,
+                    asset_request_id: assetId,
+                  },
+                }),
               });
 
               // Post comment
               await fetch("/api/method/frappe.desk.form.utils.add_comment", {
-                  method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
-                  body: JSON.stringify({ 
-                      reference_doctype: "Sahayog Ticket", reference_name: this.activeTicket.name, 
-                      content: `<b>Material Request Created</b><br>${remark}`, 
-                      comment_email: window.current_user, comment_by: window.current_user
-                  })
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                  "X-Frappe-CSRF-Token": this.getCsrfToken(),
+                },
+                body: JSON.stringify({
+                  reference_doctype: "Sahayog Ticket",
+                  reference_name: this.activeTicket.name,
+                  content: `<b>Material Request Created</b><br>${remark}`,
+                  comment_email: window.current_user,
+                  comment_by: window.current_user,
+                }),
               });
 
               alert("Asset Request created successfully: " + assetId);
-              const ticketInList = this.rawData.find(t => t.name === this.activeTicket.name);
-              if (ticketInList) { ticketInList.status = "Closed"; ticketInList.asset_request_id = assetId; }
+              const ticketInList = this.rawData.find(
+                (t) => t.name === this.activeTicket.name,
+              );
+              if (ticketInList) {
+                ticketInList.status = "Closed";
+                ticketInList.asset_request_id = assetId;
+              }
               this.activeTicket.status = "Closed";
               this.activeTicket.asset_request_id = assetId;
               this.viewTicketDetails(this.activeTicket);
             }
-          } catch (e) { console.error(e); alert("Failed to create Material Request"); }
+          } catch (e) {
+            console.error(e);
+            alert("Failed to create Material Request");
+          }
           this.loadingStatus = false;
         },
 
-        async init() {
+        async init(group = "active", page = 0, filterKey = null, filterValue = null) {
           this.loading = true;
-          try {
-            const res = await fetch("/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_tickets");
-            const data = await res.json();
-            this.rawData = data.message || [];
+          this.statusToggle = group;
+          this.currentPage = page;
+          
+          const fk = filterKey || (this.selectedItem ? this.activeTab : null);
+          const fv = filterValue || this.selectedItem;
 
-            // Fetch current user roles using whitelisted method
-            const rolesRes = await fetch("/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_current_user_roles", {
-                method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() }
-            });
-            if (rolesRes.ok) {
-              const rolesData = await rolesRes.json();
-              this.user_roles = rolesData.message || [];
+          try {
+            let url = `/api/method/sahayog_ticket.api.helpdesks.get_it_tickets?status_group=${group}&page=${page}&page_size=${this.pageSize}`;
+            if (fk && fv) url += `&filter_key=${fk}&filter_value=${encodeURIComponent(fv)}`;
+
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if (data.message) {
+                this.rawData = data.message.tickets || [];
+                this.summaryData = data.message.summary || [];
+            }
+
+            if (this.user_roles.length === 0) {
+              const rolesRes = await fetch(
+                "/api/method/sahayog_ticket.api.helpdesks.get_current_user_roles",
+                { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() } }
+              );
+              if (rolesRes.ok) {
+                const rolesData = await rolesRes.json();
+                this.user_roles = rolesData.message || [];
+              }
             }
           } catch (e) { console.error("Init failed:", e); }
           this.loading = false;
@@ -418,198 +1422,329 @@
 
         get sidebarGroups() {
           const groups = {};
-          this.rawData.forEach((t) => {
-            let key = this.activeTab === "executive" ? (t.assigned_to_name || t.assigned_to || "Unassigned") : (t[this.activeTab] || "Unknown");
+          this.summaryData.forEach((t) => {
+            let key =
+              this.activeTab === "executive"
+                ? t.executive || "Unassigned"
+                : t[this.activeTab] || "Unknown";
             if (!groups[key]) groups[key] = { name: key, pending: 0 };
             groups[key].pending += 1;
           });
-          let result = Object.values(groups).sort((a, b) => b.pending - a.pending);
+          let result = Object.values(groups).sort(
+            (a, b) => b.pending - a.pending,
+          );
           if (this.searchQuery) {
             const q = this.searchQuery.toLowerCase();
-            result = result.filter(g => g.name.toLowerCase().includes(q));
+            result = result.filter((g) => g.name.toLowerCase().includes(q));
           }
           return result;
         },
 
         get tickets() {
-          if (!this.selectedItem) return [];
-          const queryValue = String(this.selectedItem).toLowerCase();
-          return this.rawData.filter((t) => {
-            let key = this.activeTab === "executive" ? (t.assigned_to_name || t.assigned_to || "Unassigned") : (t[this.activeTab] || "Unknown");
-            return String(key).toLowerCase() === queryValue;
-          });
+          return this.rawData;
         },
 
-        setTab(tab) { this.activeTab = tab; this.selectedItem = null; this.searchQuery = ''; },
-        selectItem(name) { this.selectedItem = name; },
+        get hasNextPage() {
+          return this.rawData.length >= this.pageSize;
+        },
 
-        getCsrfToken() { return window.csrf_token || (window.top.frappe ? window.top.frappe.csrf_token : ""); },
+        setTab(tab) {
+          this.activeTab = tab;
+          this.selectedItem = null;
+          this.searchQuery = "";
+          this.init(this.statusToggle, 0);
+        },
+        selectItem(name) {
+          this.selectedItem = name;
+          this.init(this.statusToggle, 0, this.activeTab, name);
+        },
+
+        getCsrfToken() {
+          return (
+            window.csrf_token ||
+            (window.top.frappe ? window.top.frappe.csrf_token : "")
+          );
+        },
 
         async updateTicketStatus(ticketName, newStatus) {
-            const ticketInList = this.rawData.find(t => t.name === ticketName);
-            const oldStatus = ticketInList ? ticketInList.status : this.activeTicket.status;
-            if (oldStatus === newStatus) return;
-            this.pendingTicketName = ticketName;
-            this.pendingStatus = newStatus;
-            this.statusRemark = '';
-            this.showStatusModal = true;
+          const ticketInList = this.rawData.find((t) => t.name === ticketName);
+          const oldStatus = ticketInList
+            ? ticketInList.status
+            : this.activeTicket.status;
+          if (oldStatus === newStatus) return;
+          this.pendingTicketName = ticketName;
+          this.pendingStatus = newStatus;
+          this.statusRemark = "";
+          this.showStatusModal = true;
         },
 
         cancelStatusChange() {
-            this.showStatusModal = false;
-            const ticketInList = this.rawData.find(t => t.name === this.pendingTicketName);
-            if (ticketInList) {
-                const old = ticketInList.status;
-                if (this.activeTicket.name === this.pendingTicketName) {
-                    this.activeTicket.status = "";
-                    setTimeout(() => this.activeTicket.status = old, 10);
-                }
+          this.showStatusModal = false;
+          const ticketInList = this.rawData.find(
+            (t) => t.name === this.pendingTicketName,
+          );
+          if (ticketInList) {
+            const old = ticketInList.status;
+            if (this.activeTicket.name === this.pendingTicketName) {
+              this.activeTicket.status = "";
+              setTimeout(() => (this.activeTicket.status = old), 10);
             }
+          }
         },
 
         async submitStatusChange() {
-            if (!this.statusRemark.trim() || this.loadingStatus) return;
-            this.loadingStatus = true;
-            try {
-                const updateData = { status: this.pendingStatus };
-                
-                // If transitioning from Open to In-Progress, assign to current user
-                if (this.activeTicket.status === 'Open' && this.pendingStatus === 'In-Progress') {
-                    updateData.assigned_to = window.current_user;
-                }
+          if (!this.statusRemark.trim() || this.loadingStatus) return;
+          this.loadingStatus = true;
+          try {
+            const updateData = { status: this.pendingStatus };
 
-                // Map remark to correct field based on status
-                if (this.pendingStatus === 'In-Progress') {
-                    updateData.executive_remark = this.statusRemark;
-                } else if (this.pendingStatus === 'Resolved') {
-                    updateData.resolved_remark = this.statusRemark;
-                    updateData.ticket_resolved_by = window.current_user;
-                    
-                    const now = new Date();
-                    const pad = (n) => n.toString().padStart(2, '0');
-                    const formatted = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-                    updateData.ticket_resolved_on = formatted;
-                } else if (this.pendingStatus === 'Closed') {
-                    updateData.close_remark = this.statusRemark;
-                } else if (this.pendingStatus === 'Open' && (this.activeTicket.status === 'Resolved' || this.activeTicket.status === 'Closed')) {
-                    updateData.reopen_remark = this.statusRemark;
-                }
+            // If transitioning from Open to In-Progress, assign to current user
+            if (
+              this.activeTicket.status === "Open" &&
+              this.pendingStatus === "In-Progress"
+            ) {
+              updateData.assigned_to = window.current_user;
+            }
 
-                const res = await fetch("/api/method/frappe.client.set_value", {
-                    method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
-                    body: JSON.stringify({ 
-                        doctype: "Sahayog Ticket", 
-                        name: this.pendingTicketName, 
-                        fieldname: updateData 
-                    })
-                });
-                if (res.ok) {
-                    // Post the status change remark as a comment
-                    await fetch("/api/method/frappe.desk.form.utils.add_comment", {
-                        method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
-                        body: JSON.stringify({ 
-                            reference_doctype: "Sahayog Ticket", 
-                            reference_name: this.pendingTicketName, 
-                            content: `<b>Status changed to ${this.pendingStatus}</b><br>${this.statusRemark}`, 
-                            comment_email: window.current_user,
-                            comment_by: window.current_user
-                        })
-                    });
+            // Map remark to correct field based on status
+            if (this.pendingStatus === "In-Progress") {
+              updateData.executive_remark = this.statusRemark;
+            } else if (this.pendingStatus === "Resolved") {
+              updateData.resolved_remark = this.statusRemark;
+              updateData.ticket_resolved_by = window.current_user;
 
-                    const ticketInList = this.rawData.find(t => t.name === this.pendingTicketName);
-                    if (ticketInList) {
-                        ticketInList.status = this.pendingStatus;
-                        if (updateData.assigned_to) {
-                            ticketInList.assigned_to = updateData.assigned_to;
-                            ticketInList.assigned_to_name = window.current_user; // Minimal placeholder for UI
-                        }
-                    }
-                    if (this.activeTicket.name === this.pendingTicketName) { 
-                        this.activeTicket.status = this.pendingStatus; 
-                        if (updateData.assigned_to) {
-                            this.activeTicket.assigned_to = updateData.assigned_to;
-                            this.activeTicket.assigned_to_name = window.current_user;
-                        }
-                        if (updateData.resolved_remark) {
-                            this.activeTicket.resolved_remark = updateData.resolved_remark;
-                        }
-                        this.viewTicketDetails(this.activeTicket); 
-                    }
-                    this.showStatusModal = false;
+              const now = new Date();
+              const pad = (n) => n.toString().padStart(2, "0");
+              const formatted = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+              updateData.ticket_resolved_on = formatted;
+            } else if (this.pendingStatus === "Closed") {
+              updateData.close_remark = this.statusRemark;
+            } else if (
+              this.pendingStatus === "Open" &&
+              (this.activeTicket.status === "Resolved" ||
+                this.activeTicket.status === "Closed")
+            ) {
+              updateData.reopen_remark = this.statusRemark;
+            }
+
+            const res = await fetch("/api/method/frappe.client.set_value", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                "X-Frappe-CSRF-Token": this.getCsrfToken(),
+              },
+              body: JSON.stringify({
+                doctype: "Sahayog Ticket",
+                name: this.pendingTicketName,
+                fieldname: updateData,
+              }),
+            });
+            if (res.ok) {
+              // Post the status change remark as a comment
+              await fetch("/api/method/frappe.desk.form.utils.add_comment", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                  "X-Frappe-CSRF-Token": this.getCsrfToken(),
+                },
+                body: JSON.stringify({
+                  reference_doctype: "Sahayog Ticket",
+                  reference_name: this.pendingTicketName,
+                  content: `<b>Status changed to ${this.pendingStatus}</b><br>${this.statusRemark}`,
+                  comment_email: window.current_user,
+                  comment_by: window.current_user,
+                }),
+              });
+
+              const ticketInList = this.rawData.find(
+                (t) => t.name === this.pendingTicketName,
+              );
+              if (ticketInList) {
+                ticketInList.status = this.pendingStatus;
+                if (updateData.assigned_to) {
+                  ticketInList.assigned_to = updateData.assigned_to;
+                  ticketInList.assigned_to_name = window.current_user; // Minimal placeholder for UI
                 }
-            } catch (e) { console.error(e); }
-            this.loadingStatus = false;
+              }
+              if (this.activeTicket.name === this.pendingTicketName) {
+                this.activeTicket.status = this.pendingStatus;
+                if (updateData.assigned_to) {
+                  this.activeTicket.assigned_to = updateData.assigned_to;
+                  this.activeTicket.assigned_to_name = window.current_user;
+                }
+                if (updateData.resolved_remark) {
+                  this.activeTicket.resolved_remark =
+                    updateData.resolved_remark;
+                }
+                this.viewTicketDetails(this.activeTicket);
+              }
+              this.showStatusModal = false;
+            }
+          } catch (e) {
+            console.error(e);
+          }
+          this.loadingStatus = false;
         },
 
         async viewTicketDetails(ticket) {
           if (!ticket || !ticket.name) return;
+
+          // Validation for access
+          if (!this.canOpenTicket(ticket)) {
+            alert("You only have permission to open 'Open' tickets or those assigned to you.");
+            return;
+          }
+
           this.activeTicket = { ...ticket };
           this.showModal = true;
           this.loadingDetail = true;
           this.comments = [];
-          
+
           try {
             // Fetch Full Ticket Details
             const res = await fetch("/api/method/frappe.client.get", {
-                method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
-                body: JSON.stringify({ doctype: "Sahayog Ticket", name: ticket.name })
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                "X-Frappe-CSRF-Token": this.getCsrfToken(),
+              },
+              body: JSON.stringify({
+                doctype: "Sahayog Ticket",
+                name: ticket.name,
+              }),
             });
             if (res.ok) {
               const data = await res.json();
-              if (data.message) this.activeTicket = { ...this.activeTicket, ...data.message };
+              if (data.message)
+                this.activeTicket = { ...this.activeTicket, ...data.message };
             }
-            
+
             // Fetch Comments using custom whitelisted method
-            const cRes = await fetch("/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_ticket_comments", {
-                method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
-                body: JSON.stringify({ ticket_name: ticket.name })
-            });
+            const cRes = await fetch(
+              "/api/method/sahayog_ticket.api.helpdesks.get_ticket_comments",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                  "X-Frappe-CSRF-Token": this.getCsrfToken(),
+                },
+                body: JSON.stringify({ ticket_name: ticket.name }),
+              },
+            );
             if (cRes.ok) {
               const cData = await cRes.json();
               this.comments = cData.message || [];
             }
-          } catch (e) { console.error("Detail fetch failed:", e); }
+          } catch (e) {
+            console.error("Detail fetch failed:", e);
+          }
           this.loadingDetail = false;
-          setTimeout(() => { const el = document.getElementById('commentList'); if(el) el.scrollTop = el.scrollHeight; }, 300);
+          setTimeout(() => {
+            const el = document.getElementById("commentList");
+            if (el) el.scrollTop = el.scrollHeight;
+          }, 300);
         },
 
         async addComment() {
-            const commentText = this.newComment.trim();
-            if (!commentText || this.postingComment || !this.activeTicket.name) return;
-            this.postingComment = true;
-            try {
-                const res = await fetch("/api/method/frappe.desk.form.utils.add_comment", {
-                    method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
-                    body: JSON.stringify({ 
-                        reference_doctype: "Sahayog Ticket", 
-                        reference_name: this.activeTicket.name, 
-                        content: commentText, 
-                        comment_email: window.current_user,
-                        comment_by: window.current_user
-                    })
-                });
-                if (res.ok) {
-                    this.newComment = '';
-                    const cRes = await fetch("/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_ticket_comments", {
-                        method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
-                        body: JSON.stringify({ ticket_name: this.activeTicket.name })
-                    });
-                    if (cRes.ok) {
-                      const cData = await cRes.json();
-                      this.comments = cData.message || [];
-                      setTimeout(() => { const el = document.getElementById('commentList'); if(el) el.scrollTop = el.scrollHeight; }, 100);
-                    }
-                }
-            } catch (e) { console.error(e); }
-            this.postingComment = false;
+          const commentText = this.newComment.trim();
+          if (!commentText || this.postingComment || !this.activeTicket.name)
+            return;
+          this.postingComment = true;
+          try {
+            const res = await fetch(
+              "/api/method/frappe.desk.form.utils.add_comment",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                  "X-Frappe-CSRF-Token": this.getCsrfToken(),
+                },
+                body: JSON.stringify({
+                  reference_doctype: "Sahayog Ticket",
+                  reference_name: this.activeTicket.name,
+                  content: commentText,
+                  comment_email: window.current_user,
+                  comment_by: window.current_user,
+                }),
+              },
+            );
+            if (res.ok) {
+              this.newComment = "";
+              const cRes = await fetch(
+                "/api/method/sahayog_ticket.api.helpdesks.get_ticket_comments",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-Frappe-CSRF-Token": this.getCsrfToken(),
+                  },
+                  body: JSON.stringify({ ticket_name: this.activeTicket.name }),
+                },
+              );
+              if (cRes.ok) {
+                const cData = await cRes.json();
+                this.comments = cData.message || [];
+                setTimeout(() => {
+                  const el = document.getElementById("commentList");
+                  if (el) el.scrollTop = el.scrollHeight;
+                }, 100);
+              }
+            }
+          } catch (e) {
+            console.error(e);
+          }
+          this.postingComment = false;
         },
 
-        getStatusColor(s) { const c = { "Open": "#ef4444", "Resolved": "#10b981", "In-Progress": "#7c3aed", "Closed": "#6b7280" }; return c[s] || "#9ca3af"; },
-        getPriorityClass(p) { return p === "Urgent" ? "fulfilled" : p === "High" ? "paused" : ""; },
-        formatDate(d) { return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }); },
-        getAge(d) { return Math.floor(Math.abs(new Date() - new Date(d)) / (1000 * 60 * 60 * 24)); },
-        openTicket(n) { if (window.top.frappe) window.top.frappe.set_route("Form", "Sahayog Ticket", n); else window.top.location.href = "/app/sahayog-ticket/" + n; },
-        openListView() { if (window.top.frappe && this.selectedItem) { const f = { status: ["in", ["Open", "In-Progress", null]], dept_name: "IT" }; f[this.activeTab] = this.selectedItem; window.top.frappe.set_route("List", "Sahayog Ticket", f); } }
+        getStatusColor(s) {
+          const c = {
+            Open: "#ef4444",
+            Resolved: "#10b981",
+            "In-Progress": "#7c3aed",
+            Closed: "#6b7280",
+          };
+          return c[s] || "#9ca3af";
+        },
+        getPriorityClass(p) {
+          return p === "Urgent" ? "fulfilled" : p === "High" ? "paused" : "";
+        },
+        formatDate(d) {
+          return new Date(d).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+          });
+        },
+        getAge(d) {
+          return Math.floor(
+            Math.abs(new Date() - new Date(d)) / (1000 * 60 * 60 * 24),
+          );
+        },
+        openTicket(n) {
+          const ticket = this.rawData.find(t => t.name === n);
+          if (!this.canOpenTicket(ticket)) {
+            alert("You only have permission to open 'Open' tickets or those assigned to you.");
+            return;
+          }
+          if (window.top.frappe)
+            window.top.frappe.set_route("Form", "Sahayog Ticket", n);
+          else window.top.location.href = "/app/sahayog-ticket/" + n;
+        },
+        openListView() {
+          if (window.top.frappe && this.selectedItem) {
+            const f = {
+              status: ["in", ["Open", "In-Progress", null]],
+              dept_name: "IT",
+            };
+            f[this.activeTab] = this.selectedItem;
+            window.top.frappe.set_route("List", "Sahayog Ticket", f);
+          }
+        },
       }).mount("#app");
     </script>
   </body>
