@@ -182,6 +182,11 @@
               <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ISSUE</label><div style="font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;" :title="activeTicket.ticket_type">[[ activeTicket.ticket_type || '-' ]]</div></div>
               <div style="display: flex; flex-direction: column;"><label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">TAT</label><div style="font-size: 13px; font-weight: 600;">[[ activeTicket.tat || 'N/A' ]]</div></div>
               
+              <div v-if="canCreateMaterialRequest()" style="display: flex; flex-direction: column;">
+                <label style="font-size: 9px; font-weight: 800; color: #d97706;">ACTION</label>
+                <button @click="createMaterialRequest" style="background: #fff9f2; color: #d97706; border: 1px solid #ffe8cc; border-radius: 6px; padding: 4px 12px; font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; white-space: nowrap;">Create Material Request</button>
+              </div>
+
               <div style="display: flex; flex-direction: column; margin-left: auto;">
                 <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">STATUS</label>
                 <div style="display: flex; align-items: center; gap: 6px;">
@@ -319,6 +324,74 @@
         pendingTicketName: '',
         statusRemark: '',
         loadingStatus: false,
+        user_roles: [],
+
+        hasRole(role) { return this.user_roles && this.user_roles.includes(role); },
+
+        canCreateMaterialRequest() {
+          if (this.activeTicket.asset_request_id) return false;
+          const s = this.activeTicket.status;
+          const canRoles = ["IT Support Executive", "Admin Support Executive", "Stationery Store & Support Manager"];
+          const userHasRole = canRoles.some(r => this.hasRole(r));
+          if (s === "On-Hold" || s === "In-Progress") return userHasRole;
+          if (s === "Open") return userHasRole;
+          return false;
+        },
+
+        async createMaterialRequest() {
+          if (!confirm("Are you sure you want to create Asset Request?")) return;
+          
+          let request_department = "";
+          if (this.hasRole("IT Support Executive")) request_department = "IT";
+          else if (this.hasRole("Admin Support Executive")) request_department = "Admin";
+          else if (this.hasRole("Stationery Store & Support Manager")) request_department = "Stationery";
+
+          if (!request_department) return;
+
+          this.loadingStatus = true;
+          try {
+            const res = await fetch("/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.create_asset_request", {
+              method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+              body: JSON.stringify({
+                ticket_id: this.activeTicket.name,
+                employee_id: this.activeTicket.employee_id,
+                request_to: request_department
+              })
+            });
+            const data = await res.json();
+            if (data.message && data.message.asset_request_id) {
+              const assetId = data.message.asset_request_id;
+              const remark = `Created Asset Request - ${assetId}`;
+              
+              // Standard behavior: Close ticket with remark
+              await fetch("/api/method/frappe.client.set_value", {
+                method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+                body: JSON.stringify({ 
+                    doctype: "Sahayog Ticket", name: this.activeTicket.name, 
+                    fieldname: { status: "Closed", close_remark: remark, asset_request_id: assetId } 
+                })
+              });
+
+              // Post comment
+              await fetch("/api/method/frappe.desk.form.utils.add_comment", {
+                  method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+                  body: JSON.stringify({ 
+                      reference_doctype: "Sahayog Ticket", reference_name: this.activeTicket.name, 
+                      content: `<b>Material Request Created</b><br>${remark}`, 
+                      comment_email: window.current_user, comment_by: window.current_user
+                  })
+              });
+
+              alert("Asset Request created successfully: " + assetId);
+              const ticketInList = this.rawData.find(t => t.name === this.activeTicket.name);
+              if (ticketInList) { ticketInList.status = "Closed"; ticketInList.asset_request_id = assetId; }
+              this.activeTicket.status = "Closed";
+              this.activeTicket.asset_request_id = assetId;
+              this.viewTicketDetails(this.activeTicket);
+            }
+          } catch (e) { console.error(e); alert("Failed to create Material Request"); }
+          this.loadingStatus = false;
+        },
 
         async init() {
           this.loading = true;
@@ -326,6 +399,15 @@
             const res = await fetch("/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_tickets");
             const data = await res.json();
             this.rawData = data.message || [];
+
+            // Fetch current user roles using whitelisted method
+            const rolesRes = await fetch("/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_current_user_roles", {
+                method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() }
+            });
+            if (rolesRes.ok) {
+              const rolesData = await rolesRes.json();
+              this.user_roles = rolesData.message || [];
+            }
           } catch (e) { console.error("Init failed:", e); }
           this.loading = false;
         },

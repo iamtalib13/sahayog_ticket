@@ -726,9 +726,15 @@ def get_ticket_comments(ticket_name):
     
     return frappe.db.sql("""
         SELECT 
-            name, content, comment_by, comment_email, creation
-        FROM `tabComment`
-        WHERE reference_doctype = 'Sahayog Ticket'
-        AND reference_name = %s
-        ORDER BY creation ASC
+            c.name, c.content, c.comment_by, c.comment_email, c.creation,
+            e.employee_name as sender_name
+        FROM `tabComment` c
+        LEFT JOIN `tabEmployee` e ON (c.comment_email = e.user_id OR c.comment_by = e.user_id)
+        WHERE c.reference_doctype = 'Sahayog Ticket'
+        AND c.reference_name = %s
+        ORDER BY c.creation ASC
     """, (ticket_name,), as_dict=True)
+
+@frappe.whitelist()
+def get_current_user_roles():
+    return frappe.get_roles()
