@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
@@ -152,7 +152,7 @@
         try {
           loadingSpinner.classList.remove("hidden");
           const res = await fetch(
-            "/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_tickets"
+            "/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_tickets",
           );
           const result = await res.json();
           data = result.message || [];
@@ -191,7 +191,7 @@
         const filtered = data.filter(
           (d) =>
             d.district &&
-            d.district.toLowerCase().includes(filter.toLowerCase())
+            d.district.toLowerCase().includes(filter.toLowerCase()),
         );
 
         if (filtered.length === 0) {
@@ -203,7 +203,7 @@
 
         filtered.forEach(({ district, pending }) => {
           const card = createCard(district, pending, () =>
-            showBranches(district)
+            showBranches(district),
           );
           districtsSection.appendChild(card);
         });
@@ -217,7 +217,8 @@
         branchesGrid.innerHTML = "";
         const filtered = branches
           .filter(
-            (b) => b.name && b.name.toLowerCase().includes(filter.toLowerCase())
+            (b) =>
+              b.name && b.name.toLowerCase().includes(filter.toLowerCase()),
           )
           .sort((a, b) => b.pending - a.pending);
 
@@ -234,15 +235,12 @@
 
             url.searchParams.set(
               "status",
-              JSON.stringify(["in", ["Open", "In-Progress", null]])
+              JSON.stringify(["in", ["Open", "In-Progress", null]]),
             );
-            url.searchParams.set(
-              "branch",
-              JSON.stringify(["Equals", name])
-            );
+            url.searchParams.set("branch", JSON.stringify(["Equals", name]));
             url.searchParams.set(
               "district",
-              JSON.stringify(["Equals", currentDistrict])
+              JSON.stringify(["Equals", currentDistrict]),
             ); // ✅ Correct field
             url.searchParams.set("dept_name", JSON.stringify(["Equals", "IT"]));
 

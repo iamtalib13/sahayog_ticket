@@ -499,39 +499,23 @@ def get_employee_info(employee_number):
     return employee
 
 @frappe.whitelist()
-@frappe.whitelist()
-@frappe.whitelist()
 def get_it_tickets():
-    # Fetch all IT tickets with geographic info and employee details
     data = frappe.db.sql("""
-        SELECT 
-            t.name,
-            t.district, 
-            t.branch, 
-            t.sol_id,
-            t.status,
-            t.priority,
-            t.creation,
-            t.owner,
-            t.assigned_to,
-            t.assigned_to_name,
-            t.ticket_type,
-            t.dept_name,
-            t.tat,
-            e.employee_name,
-            e.cell_number,
-            e.designation,
-            COALESCE(b.state, 'Unknown State') as state,
-            COALESCE(b.zone, 'Unknown Zone') as zone,
-            COALESCE(b.region, 'Unknown Region') as region
-        FROM `tabSahayog Ticket` t
-        LEFT JOIN `tabEmployee` e ON t.employee_id = e.name
-        LEFT JOIN `tabSahayog Branch` b ON t.sol_id = b.sol_id
-        WHERE t.status IN ('Open', 'In-Progress') AND t.dept_name = 'IT'
-        ORDER BY t.creation DESC
+        SELECT district, branch, COUNT(*) AS pending
+        FROM `tabSahayog Ticket`
+        WHERE status IN ('Open', 'In-Progress') AND dept_name = 'IT'
+        GROUP BY district, branch
+        ORDER BY district, branch
     """, as_dict=True)
 
-    return data
+    result = {}
+    for row in data:
+        district = row["district"]
+        result.setdefault(district, {"district": district, "pending": 0, "branches": []})
+        result[district]["branches"].append({"name": row["branch"], "pending": row["pending"]})
+        result[district]["pending"] += row["pending"]
+
+    return list(result.values())
 
 # This function retrieves the zone-wise ticket counts for specific CBS-related ticket types.
 
@@ -718,23 +702,3 @@ def get_recent_ticket_comments(limit=10):
         ORDER BY c.creation DESC
         LIMIT %s
     """, (user, limit), as_dict=True)
-
-@frappe.whitelist()
-def get_ticket_comments(ticket_name):
-    if not ticket_name:
-        return []
-    
-    return frappe.db.sql("""
-        SELECT 
-            c.name, c.content, c.comment_by, c.comment_email, c.creation,
-            e.employee_name as sender_name
-        FROM `tabComment` c
-        LEFT JOIN `tabEmployee` e ON (c.comment_email = e.user_id OR c.comment_by = e.user_id)
-        WHERE c.reference_doctype = 'Sahayog Ticket'
-        AND c.reference_name = %s
-        ORDER BY c.creation ASC
-    """, (ticket_name,), as_dict=True)
-
-@frappe.whitelist()
-def get_current_user_roles():
-    return frappe.get_roles()
