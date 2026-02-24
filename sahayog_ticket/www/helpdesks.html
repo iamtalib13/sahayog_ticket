@@ -1158,7 +1158,7 @@
           this.loadingAssign = true;
           this.assignableUsers = [];
           try {
-            const res = await fetch("/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_support_executives", {
+            const res = await fetch("/api/method/sahayog_ticket.api.sahayog_ticket.get_it_support_executives", {
               method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
               body: JSON.stringify({ filters: JSON.stringify({ dept_name: this.activeTicket.dept_name }) })
             });
@@ -1238,7 +1238,7 @@
           this.loadingStatus = true;
           try {
             const res = await fetch(
-              "/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.create_asset_request",
+              "/api/method/sahayog_ticket.api.sahayog_ticket.create_asset_request",
               {
                 method: "POST",
                 headers: {
@@ -1316,15 +1316,13 @@
         async init() {
           this.loading = true;
           try {
-            const res = await fetch(
-              "/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_tickets",
-            );
+            const res = await fetch("/api/method/sahayog_ticket.api.sahayog_ticket.get_it_tickets");
             const data = await res.json();
             this.rawData = data.message || [];
 
             // Fetch current user roles using whitelisted method
             const rolesRes = await fetch(
-              "/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_current_user_roles",
+              "/api/method/sahayog_ticket.api.sahayog_ticket.get_current_user_roles",
               {
                 method: "POST",
                 headers: {
@@ -1543,7 +1541,7 @@
 
             // Fetch Comments using custom whitelisted method
             const cRes = await fetch(
-              "/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_ticket_comments",
+              "/api/method/sahayog_ticket.api.sahayog_ticket.get_ticket_comments",
               {
                 method: "POST",
                 headers: {
@@ -1595,7 +1593,7 @@
             if (res.ok) {
               this.newComment = "";
               const cRes = await fetch(
-                "/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_ticket_comments",
+                "/api/method/sahayog_ticket.api.sahayog_ticket.get_ticket_comments",
                 {
                   method: "POST",
                   headers: {
