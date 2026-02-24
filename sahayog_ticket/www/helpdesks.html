@@ -186,6 +186,10 @@
                 <label style="font-size: 9px; font-weight: 800; color: #d97706;">ACTION</label>
                 <button @click="createMaterialRequest" style="background: #fff9f2; color: #d97706; border: 1px solid #ffe8cc; border-radius: 6px; padding: 4px 12px; font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; white-space: nowrap;">Create Material Request</button>
               </div>
+              <div v-else-if="activeTicket.asset_request_id" style="display: flex; flex-direction: column;">
+                <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ASSET REQUEST</label>
+                <div style="font-size: 13px; font-weight: 600; color: #d97706;">[[ activeTicket.asset_request_id ]]</div>
+              </div>
 
               <div style="display: flex; flex-direction: column; margin-left: auto;">
                 <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">STATUS</label>
