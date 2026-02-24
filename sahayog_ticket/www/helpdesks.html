@@ -169,6 +169,9 @@
               animation: pencil-pulse 1.5s infinite ease-in-out;
               vertical-align: middle;
             }
+
+            .exec-bar-container { height: 6px; background: #eee; border-radius: 3px; flex: 1; margin: 0 12px; overflow: hidden; }
+            .exec-bar-fill { height: 100%; background: var(--primary-purple); transition: width 0.3s; }
       
             [v-cloak] { display: none; }
     </style>
@@ -711,17 +714,18 @@
                 </div>
               </div>
             </div>
-                          <div
-                            style="
-                              background: white;
-                              border: 1px solid var(--border-color);
-                              border-radius: 12px;
-                              padding: 16px;
-                              margin-bottom: 24px;
-                              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-                            "
-                          >
-                            <label
+                                      <div
+                                        @click="openAssignDialog"
+                                        style="
+                                          background: white;
+                                          border: 1px solid var(--border-color);
+                                          border-radius: 12px;
+                                          padding: 16px;
+                                          margin-bottom: 24px;
+                                          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+                                          cursor: pointer;
+                                        "
+                                      >                            <label
                               style="
                                 font-size: 9px;
                                 font-weight: 800;
@@ -1085,6 +1089,34 @@
           </div>
         </div>
       </div>
+
+      <!-- Assignment Modal -->
+      <div v-if="showAssignModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1200;" @click.self="showAssignModal = false">
+        <div style="background: white; width: 480px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: var(--text-main);">Assign Ticket</h3>
+                <button @click="showAssignModal = false" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #ccc;">&times;</button>
+            </div>
+            
+            <div v-if="loadingAssign" style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin fa-2x" style="color: #ddd;"></i></div>
+            <div v-else style="max-height: 400px; overflow-y: auto; padding-right: 8px;">
+                <div v-for="exec in assignableUsers" :key="exec.id" 
+                     @click="submitAssignment(exec.id)"
+                     style="display: flex; align-items: center; padding: 14px; border: 1px solid #eee; border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;"
+                     onmouseover="this.style.borderColor='#097c80'; this.style.background='#f0f9f9'" 
+                     onmouseout="this.style.borderColor='#eee'; this.style.background='white'">
+                    <div style="flex: 1;">
+                        <div style="font-size: 13px; font-weight: 700; color: var(--text-main);">[[ exec.name ]]</div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">[[ exec.id ]]</div>
+                    </div>
+                    <div style="width: 140px; display: flex; align-items: center;">
+                        <div class="exec-bar-container"><div class="exec-bar-fill" :style="{ width: (exec.count / maxAssignCount * 100) + '%' }"></div></div>
+                        <span style="font-size: 11px; font-weight: 800; color: var(--primary-purple); min-width: 20px; text-align: right;">[[ exec.count ]]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
     </div>
     <!-- END #app -->
 
@@ -1111,6 +1143,66 @@
         statusRemark: "",
         loadingStatus: false,
         user_roles: [],
+        showAssignModal: false,
+        assignableUsers: [],
+        loadingAssign: false,
+
+        get maxAssignCount() {
+          if (!this.assignableUsers.length) return 1;
+          return Math.max(...this.assignableUsers.map(u => u.count)) || 1;
+        },
+
+        async openAssignDialog() {
+          if (!this.activeTicket.dept_name) return;
+          this.showAssignModal = true;
+          this.loadingAssign = true;
+          this.assignableUsers = [];
+          try {
+            const res = await fetch("/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_support_executives", {
+              method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+              body: JSON.stringify({ filters: JSON.stringify({ dept_name: this.activeTicket.dept_name }) })
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.message) {
+                this.assignableUsers = data.message.map(u => {
+                  const match = u[1].match(/^(.*) \((\d+) tickets assigned\)$/);
+                  return { id: u[0], name: match ? match[1].trim() : u[1], count: match ? parseInt(match[2], 10) : 0 };
+                }).sort((a, b) => a.count - b.count);
+              }
+            }
+          } catch (e) { console.error(e); }
+          this.loadingAssign = false;
+        },
+
+        async submitAssignment(userEmail) {
+          if (this.loadingAssign) return;
+          this.loadingAssign = true;
+          try {
+            const res = await fetch("/api/method/frappe.client.set_value", {
+              method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+              body: JSON.stringify({ doctype: "Sahayog Ticket", name: this.activeTicket.name, fieldname: "assigned_to", value: userEmail })
+            });
+            if (res.ok) {
+              await fetch("/api/method/frappe.desk.form.utils.add_comment", {
+                  method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+                  body: JSON.stringify({ 
+                      reference_doctype: "Sahayog Ticket", reference_name: this.activeTicket.name, 
+                      content: `<b>Ticket assigned to ${userEmail}</b>`, 
+                      comment_email: window.current_user, comment_by: window.current_user
+                  })
+              });
+              
+              const ticketInList = this.rawData.find(t => t.name === this.activeTicket.name);
+              if (ticketInList) { ticketInList.assigned_to = userEmail; ticketInList.assigned_to_name = userEmail; }
+              this.activeTicket.assigned_to = userEmail;
+              this.activeTicket.assigned_to_name = userEmail;
+              this.showAssignModal = false;
+              this.viewTicketDetails(this.activeTicket);
+            }
+          } catch (e) { console.error(e); }
+          this.loadingAssign = false;
+        },
 
         hasRole(role) {
           return this.user_roles && this.user_roles.includes(role);
