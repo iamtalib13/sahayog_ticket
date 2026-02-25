@@ -724,7 +724,13 @@
       
                   <!-- Mid Col (Description) -->
                   <div style="grid-area: 2 / 2 / 3 / 3; padding: 24px; overflow-y: auto; border-right: 1px solid var(--border-color);">
-                    <h4 style="margin: 0 0 20px; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Issue Description</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                      <h4 style="margin: 0; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Issue Description</h4>
+                      <button v-if="activeTicket.status === 'Open' && activeTicket.owner === window.current_user && !isEditingDescription" @click="startEditDescription" style="border: none; background: transparent; cursor: pointer; color: var(--primary-purple); font-size: 14px;" title="Edit Description">
+                        <i class="fas fa-pencil-alt"></i>
+                      </button>
+                    </div>
+                    
                     <div v-if="loadingDetail" style="padding: 40px; text-align: center"><i class="fas fa-spinner fa-spin fa-2x" style="color: #ddd"></i></div>
                     <div v-else>
                       <!-- Specialized Account Details View -->
@@ -749,7 +755,15 @@
                           </div>
                         </div>
                       </div>
-                      <div style="font-size: 15px; line-height: 1.7; color: #222" v-html="activeTicket.description || 'No description provided.'"></div>
+                      
+                      <div v-if="!isEditingDescription" style="font-size: 15px; line-height: 1.7; color: #222" v-html="activeTicket.description || 'No description provided.'"></div>
+                      <div v-else>
+                        <div id="edit-description-editor" style="height: 250px; background: white; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 12px;"></div>
+                        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                          <button @click="isEditingDescription = false" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; background: white; font-size: 11px; font-weight: 700; cursor: pointer;">Cancel</button>
+                          <button @click="saveDescription" style="padding: 6px 16px; border-radius: 6px; border: none; background: var(--primary-purple); color: white; font-size: 11px; font-weight: 700; cursor: pointer;">Save Changes</button>
+                        </div>
+                      </div>
                     </div>
                   </div>
       
@@ -1423,9 +1437,54 @@
         pageSize: 8,
         summaryData: [],
         viewMode: "list", // 'list' or 'detail'
+        isEditingDescription: false,
+        editDescriptionQuill: null,
         backToList() {
           this.viewMode = "list";
           this.activeTicket = {};
+          this.isEditingDescription = false;
+        },
+        async startEditDescription() {
+          this.isEditingDescription = true;
+          setTimeout(() => {
+            if (!this.editDescriptionQuill) {
+              this.editDescriptionQuill = new Quill('#edit-description-editor', {
+                theme: 'snow',
+                modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link', 'image']] }
+              });
+            }
+            this.editDescriptionQuill.root.innerHTML = this.activeTicket.description || '';
+          }, 100);
+        },
+        async saveDescription() {
+          const newDescription = this.editDescriptionQuill.root.innerHTML;
+          if (newDescription === this.activeTicket.description) {
+            this.isEditingDescription = false;
+            return;
+          }
+          try {
+            const res = await fetch("/api/method/frappe.client.set_value", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+              body: JSON.stringify({
+                doctype: "Sahayog Ticket",
+                name: this.activeTicket.name,
+                fieldname: "description",
+                value: newDescription
+              })
+            });
+            if (res.ok) {
+              this.activeTicket.description = newDescription;
+              this.isEditingDescription = false;
+              this.showAlert("Success", "Description updated successfully.");
+            } else {
+              const data = await res.json();
+              this.showAlert("Error", data.exception || "Failed to update description.");
+            }
+          } catch (e) {
+            console.error(e);
+            this.showAlert("Error", "An unexpected error occurred.");
+          }
         },
         showAlertModal: false,
         alertTitle: "",
