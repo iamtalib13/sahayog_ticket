@@ -228,69 +228,80 @@
         </div>
 
         <!-- Category Tabs -->
-        <div
-          style="
-            padding: 0 16px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 11px;
-            font-weight: bold;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-          "
-        >
-          <span
-            @click="setTab('district')"
-            :style="{ cursor: 'pointer', color: activeTab === 'district' ? 'var(--primary-purple)' : 'inherit', borderBottom: activeTab === 'district' ? '2px solid var(--primary-purple)' : 'none', paddingBottom: '4px' }"
-            >District</span
+        <div style="padding: 0 16px 16px">
+          <div
+            style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px"
           >
-          <span
-            @click="setTab('zone')"
-            :style="{ cursor: 'pointer', color: activeTab === 'zone' ? 'var(--primary-purple)' : 'inherit', borderBottom: activeTab === 'zone' ? '2px solid var(--primary-purple)' : 'none', paddingBottom: '4px' }"
-            >Zone</span
-          >
-          <span
-            @click="setTab('state')"
-            :style="{ cursor: 'pointer', color: activeTab === 'state' ? 'var(--primary-purple)' : 'inherit', borderBottom: activeTab === 'state' ? '2px solid var(--primary-purple)' : 'none', paddingBottom: '4px' }"
-            >State</span
-          >
-          <span
-            @click="setTab('executive')"
-            :style="{ cursor: 'pointer', color: activeTab === 'executive' ? 'var(--primary-purple)' : 'inherit', borderBottom: activeTab === 'executive' ? '2px solid var(--primary-purple)' : 'none', paddingBottom: '4px' }"
-            >Exec</span
-          >
+            <span
+              v-for="tab in ['district', 'zone', 'state', 'executive', 'type']"
+              :key="tab"
+              @click="setTab(tab)"
+              :style="{ 
+                    cursor: 'pointer', 
+                    padding: '4px 10px', 
+                    borderRadius: '20px', 
+                    fontSize: '10px', 
+                    fontWeight: '700', 
+                    textTransform: 'uppercase',
+                    border: '1px solid',
+                    borderColor: activeTab === tab ? 'var(--primary-purple)' : '#eee',
+                    background: activeTab === tab ? 'var(--primary-purple)' : '#f9f9fb',
+                    color: activeTab === tab ? 'white' : '#888',
+                    transition: '0.2s'
+                  }"
+            >
+              [[ tab === 'executive' ? 'Executive' : (tab === 'type' ? 'Type' : tab) ]]
+            </span>
+          </div>
 
           <div
             style="
-              margin-left: auto;
               display: flex;
               align-items: center;
-              gap: 6px;
+              border-top: 1px solid var(--border-color);
+              padding-top: 8px;
             "
           >
-            <input
-              v-if="showSearch"
-              v-model="searchQuery"
-              type="text"
-              placeholder="Filter..."
-              style="
-                width: 70px;
-                border: none;
-                background: #eee;
-                font-size: 10px;
-                outline: none;
-                border-radius: 4px;
-                padding: 2px 6px;
-              "
-            />
-            <i
-              class="fas fa-search"
-              style="font-size: 12px; cursor: pointer"
-              @click="showSearch = !showSearch"
-            ></i>
+            <div
+              style="display: flex; align-items: center; gap: 6px; width: 100%"
+            >
+              <i
+                class="fas fa-search"
+                style="
+                  font-size: 11px;
+                  color: var(--text-muted);
+                  cursor: pointer;
+                "
+                @click="showSearch = !showSearch"
+              ></i>
+              <input
+                v-if="showSearch"
+                v-model="searchQuery"
+                type="text"
+                placeholder="Filter list..."
+                style="
+                  flex: 1;
+                  border: none;
+                  background: #f3f4f6;
+                  font-size: 10px;
+                  outline: none;
+                  border-radius: 4px;
+                  padding: 4px 8px;
+                "
+              />
+              <div
+                v-else
+                style="
+                  font-size: 9px;
+                  font-weight: 800;
+                  color: var(--text-muted);
+                  text-transform: uppercase;
+                  letter-spacing: 0.05em;
+                "
+              >
+                Quick Filter
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1745,8 +1756,12 @@
                   >Priority</label
                 >
                 <div style="display: flex; gap: 10px">
-                                    <button v-for="p in ['Normal', 'Medium', 'High', 'Urgent']" :key="p" @click="newTicket.priority = p" 
-                                            :style="{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid', borderColor: newTicket.priority === p ? 'var(--primary-purple)' : '#ddd', background: newTicket.priority === p ? 'var(--primary-purple)' : 'white', color: newTicket.priority === p ? 'white' : '#666', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: '0.2s' }">
+                  <button
+                    v-for="p in ['Normal', 'Medium', 'High', 'Urgent']"
+                    :key="p"
+                    @click="newTicket.priority = p"
+                    :style="{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid', borderColor: newTicket.priority === p ? 'var(--primary-purple)' : '#ddd', background: newTicket.priority === p ? 'var(--primary-purple)' : 'white', color: newTicket.priority === p ? 'white' : '#666', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: '0.2s' }"
+                  >
                     [[ p ]]
                   </button>
                 </div>
@@ -2283,15 +2298,16 @@
           >
             [[ alertMessage ]]
           </p>
-                      <button
-                        @click="showAlertModal = false"
-                        style="
-                          width: 100%;
-                          padding: 12px;
-                          border-radius: 10px;
-                          border: none;
-                          background: var(--primary-purple);
-                          color: white;              font-size: 14px;
+          <button
+            @click="showAlertModal = false"
+            style="
+              width: 100%;
+              padding: 12px;
+              border-radius: 10px;
+              border: none;
+              background: var(--primary-purple);
+              color: white;
+              font-size: 14px;
               font-weight: 700;
               cursor: pointer;
               transition: opacity 0.2s;
@@ -2600,10 +2616,15 @@
         get sidebarGroups() {
           const groups = {};
           this.summaryData.forEach((t) => {
-            let key =
-              this.activeTab === "executive"
-                ? t.executive || "Unassigned"
-                : t[this.activeTab] || "Unknown";
+            let key = "Unknown";
+            if (this.activeTab === "executive") {
+              key = t.executive || "Unassigned";
+            } else if (this.activeTab === "type") {
+              key = t.ticket_type || "Unknown";
+            } else {
+              key = t[this.activeTab] || "Unknown";
+            }
+
             if (!groups[key]) groups[key] = { name: key, pending: 0 };
             groups[key].pending += 1;
           });
@@ -2621,10 +2642,14 @@
           if (!this.selectedItem) return [];
           const queryValue = String(this.selectedItem).toLowerCase();
           return this.rawData.filter((t) => {
-            let key =
-              this.activeTab === "executive"
-                ? t.assigned_to_name || t.assigned_to || "Unassigned"
-                : t[this.activeTab] || "Unknown";
+            let key = "Unknown";
+            if (this.activeTab === "executive") {
+              key = t.assigned_to_name || t.assigned_to || "Unassigned";
+            } else if (this.activeTab === "type") {
+              key = t.ticket_type || "Unknown";
+            } else {
+              key = t[this.activeTab] || "Unknown";
+            }
             return String(key).toLowerCase() === queryValue;
           });
         },
@@ -2933,10 +2958,15 @@
         get sidebarGroups() {
           const groups = {};
           this.summaryData.forEach((t) => {
-            let key =
-              this.activeTab === "executive"
-                ? t.executive || "Unassigned"
-                : t[this.activeTab] || "Unknown";
+            let key = "Unknown";
+            if (this.activeTab === "executive") {
+              key = t.executive || "Unassigned";
+            } else if (this.activeTab === "type") {
+              key = t.ticket_type || "Unknown";
+            } else {
+              key = t[this.activeTab] || "Unknown";
+            }
+
             if (!groups[key]) groups[key] = { name: key, pending: 0 };
             groups[key].pending += 1;
           });
