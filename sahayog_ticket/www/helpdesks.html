@@ -335,7 +335,7 @@
               "
               >[[ group.name ]]
               <i
-                v-if="group.name === 'Unassigned'"
+                v-if="group.name === 'Unassigned' && canAssign"
                 class="fas fa-pencil-alt assign-pencil"
               ></i>
             </span>
@@ -391,7 +391,7 @@
                       class="btn-create"
                       @click="showCreateModal = true; initEditor()"
                     >
-                      <i class="fas fa-plus mr-2"></i>Create Ticket
+                      <i class="fas fa-plus mr-2"></i> Create Ticket
                     </button>
                   </div>
                 </header>
@@ -436,7 +436,7 @@
                           [[ ticket.assigned_to_name || ticket.assigned_to ||
                           'Unassigned' ]]
                           <i
-                            v-if="!(ticket.assigned_to_name || ticket.assigned_to)"
+                            v-if="!(ticket.assigned_to_name || ticket.assigned_to) && canAssign"
                             class="fas fa-pencil-alt assign-pencil"
                           ></i>
                         </td>
@@ -649,16 +649,15 @@
                     </div>
                     <div style="display: flex; flex-direction: column; margin-left: auto">
                       <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">STATUS</label>
-                      <div style="display: flex; align-items: center; gap: 6px">
-                        <span class="status-dot" :style="{ backgroundColor: getStatusColor(activeTicket.status) }"></span>
-                        <select @change="updateTicketStatus(activeTicket.name, $event.target.value)" :value="activeTicket.status" style="font-size: 11px; font-weight: 700; border: 1px solid #ddd; border-radius: 6px; padding: 4px 8px; outline: none; cursor: pointer; text-transform: uppercase; background: white;">
-                          <option value="Open">Open</option>
-                          <option value="In-Progress">In-Progress</option>
-                          <option value="Resolved">Resolved</option>
-                          <option value="Closed">Closed</option>
-                        </select>
-                      </div>
-                    </div>
+                                      <div style="display: flex; align-items: center; gap: 6px">
+                                        <span class="status-dot" :style="{ backgroundColor: getStatusColor(activeTicket.status) }"></span>
+                                        <select @change="updateTicketStatus(activeTicket.name, $event.target.value)" :value="activeTicket.status" :disabled="!canChangeStatus" style="font-size: 11px; font-weight: 700; border: 1px solid #ddd; border-radius: 6px; padding: 4px 8px; outline: none; cursor: pointer; text-transform: uppercase; background: white;" :style="{ opacity: canChangeStatus ? 1 : 0.6, cursor: canChangeStatus ? 'pointer' : 'not-allowed' }">
+                                          <option value="Open">Open</option>
+                                          <option value="In-Progress">In-Progress</option>
+                                          <option value="Resolved">Resolved</option>
+                                          <option value="Closed">Closed</option>
+                                        </select>
+                                      </div>                    </div>
                   </div>
       
                   <!-- Body Grid -->
@@ -675,10 +674,36 @@
                         <div style="display: flex; justify-content: space-between"><span style="font-size: 9px; font-weight: 700; color: var(--text-muted);">DISTRICT</span><span style="font-size: 11px; font-weight: 700">[[ activeTicket.district || '-' ]]</span></div>
                       </div>
                     </div>
-                    <div @click="openAssignDialog" style="background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); cursor: pointer;">
-                      <label style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Assigned To</label>
-                      <div style="font-size: 13px; font-weight: 700; margin-top: 6px">[[ activeTicket.assigned_to_name || activeTicket.assigned_to || 'Unassigned' ]] <i v-if="!(activeTicket.assigned_to_name || activeTicket.assigned_to)" class="fas fa-pencil-alt assign-pencil"></i></div>
-                    </div>
+                                  <div
+                                    @click="canAssign && openAssignDialog()"
+                                    style="
+                                      background: white;
+                                      border: 1px solid var(--border-color);
+                                      border-radius: 12px;
+                                      padding: 16px;
+                                      margin-bottom: 24px;
+                                      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+                                    "
+                                    :style="{ cursor: canAssign ? 'pointer' : 'default' }"
+                                  >
+                                    <label
+                                      style="
+                                        font-size: 9px;
+                                        font-weight: 800;
+                                        color: var(--text-muted);
+                                        text-transform: uppercase;
+                                      "
+                                      >Assigned To</label
+                                    >
+                                    <div style="font-size: 13px; font-weight: 700; margin-top: 6px">
+                                      [[ activeTicket.assigned_to_name || activeTicket.assigned_to ||
+                                      'Unassigned' ]]
+                                      <i
+                                        v-if="!(activeTicket.assigned_to_name || activeTicket.assigned_to) && canAssign"
+                                        class="fas fa-pencil-alt assign-pencil"
+                                      ></i>
+                                    </div>
+                                  </div>
                                   <button
                                     @click="window.top.frappe ? window.top.frappe.set_route('Form', 'Sahayog Ticket', activeTicket.name) : window.top.location.href = '/app/sahayog-ticket/' + activeTicket.name"
                                     style="
@@ -1113,18 +1138,25 @@
             >
               Create New Ticket
             </h3>
-            <button
-              @click="showCreateModal = false; init(statusToggle, currentPage)"
-              style="
-                background: none;
-                border: none;
-                font-size: 24px;
-                cursor: pointer;
-                color: #ccc;
-              "
-            >
-              &times;
-            </button>
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <button @click="submitTicket" :disabled="submittingTicket" style="padding: 8px 16px; border-radius: 8px; border: none; background: var(--primary-purple); color: white; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; display: flex; align-items: center; gap: 8px;">
+                <i v-if="submittingTicket" class="fas fa-spinner fa-spin"></i>
+                [[ submittingTicket ? 'Creating...' : 'Create Ticket' ]]
+              </button>
+              <button
+                @click="showCreateModal = false; init(statusToggle, currentPage)"
+                style="
+                  background: none;
+                  border: none;
+                  font-size: 24px;
+                  cursor: pointer;
+                  color: #ccc;
+                  line-height: 1;
+                "
+              >
+                &times;
+              </button>
+            </div>
           </div>
           <div style="flex: 1; padding: 16px 24px; overflow-y: auto;">
             <div style="max-width: 100%; margin: 0 auto;">
@@ -1277,11 +1309,6 @@
               </div>
               <p style="font-size: 10px; color: #94a3b8; margin-top: 4px;">Support: Images (will show inline), PDF, and Documents (as links).</p>
             </div>
-
-            <button @click="submitTicket" :disabled="submittingTicket" style="width: 100%; padding: 12px; border-radius: 8px; border: none; background: var(--primary-purple); color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;">
-              <i v-if="submittingTicket" class="fas fa-spinner fa-spin"></i>
-              [[ submittingTicket ? 'Creating Ticket...' : 'Create Ticket' ]]
-            </button>
           </div>
         </div>
       </div>
@@ -1685,12 +1712,22 @@
             });
             if (res.ok) {
               const data = await res.json();
-              this.showAlert(
-                "Success",
-                `Ticket created successfully: ${data.message.name}`,
-              );
+              
+              // High-Safety Quill Reset
+              try {
+                if (this.quill && this.quill.root) {
+                  this.quill.blur();
+                  this.quill.setSelection(null);
+                  this.quill.setContents([]);
+                }
+              } catch (e) {
+                console.warn("Quill reset skipped:", e);
+              }
+
               this.showCreateModal = false;
               this.newTicket = {
+                employee_id: "",
+                employee_name: "",
                 dept_name: "",
                 ticket_type: "",
                 priority: "Normal",
@@ -1698,6 +1735,13 @@
                 tat: "",
                 request_detail: [],
               };
+              this.employeeSearchQuery = "";
+              
+              // Direct navigation to the new ticket in full-screen mode
+              if (data.message) {
+                this.viewTicketDetails(data.message);
+              }
+              
               this.init(this.statusToggle, 0);
             } else {
               const data = await res.json();
@@ -1892,6 +1936,29 @@
             this.user_roles &&
             this.user_roles.some((r) => r.toLowerCase().includes("manager"))
           );
+        },
+
+        get canChangeStatus() {
+          const allowed = [
+            "IT Support Executive",
+            "IT Support Manager",
+            "Administrator",
+            "System Manager",
+          ];
+          return allowed.some((r) => this.hasRole(r));
+        },
+
+        get canAssign() {
+          if (this.hasRole("Administrator") || this.hasRole("System Manager"))
+            return true;
+          const roles = this.user_roles || [];
+          const isManager = roles.some((r) =>
+            r.toLowerCase().includes("manager"),
+          );
+          const isExecutive = roles.some((r) =>
+            r.toLowerCase().includes("executive"),
+          );
+          return isManager && !isExecutive;
         },
 
         canOpenTicket(ticket) {
