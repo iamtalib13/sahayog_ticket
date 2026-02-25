@@ -91,7 +91,7 @@
         color: var(--text-main);
       }
       .nav-item.active {
-        background: black !important;
+        background: var(--primary-purple) !important;
         color: white !important;
       }
 
@@ -162,7 +162,7 @@
         color: #2563eb;
       }
       .btn-create {
-        background: black;
+        background: var(--primary-purple);
         color: white;
         padding: 8px 16px;
         border-radius: 6px;
@@ -244,22 +244,22 @@
         >
           <span
             @click="setTab('district')"
-            :style="{ cursor: 'pointer', color: activeTab === 'district' ? 'black' : 'inherit', borderBottom: activeTab === 'district' ? '2px solid black' : 'none', paddingBottom: '4px' }"
+            :style="{ cursor: 'pointer', color: activeTab === 'district' ? 'var(--primary-purple)' : 'inherit', borderBottom: activeTab === 'district' ? '2px solid var(--primary-purple)' : 'none', paddingBottom: '4px' }"
             >District</span
           >
           <span
             @click="setTab('zone')"
-            :style="{ cursor: 'pointer', color: activeTab === 'zone' ? 'black' : 'inherit', borderBottom: activeTab === 'zone' ? '2px solid black' : 'none', paddingBottom: '4px' }"
+            :style="{ cursor: 'pointer', color: activeTab === 'zone' ? 'var(--primary-purple)' : 'inherit', borderBottom: activeTab === 'zone' ? '2px solid var(--primary-purple)' : 'none', paddingBottom: '4px' }"
             >Zone</span
           >
           <span
             @click="setTab('state')"
-            :style="{ cursor: 'pointer', color: activeTab === 'state' ? 'black' : 'inherit', borderBottom: activeTab === 'state' ? '2px solid black' : 'none', paddingBottom: '4px' }"
+            :style="{ cursor: 'pointer', color: activeTab === 'state' ? 'var(--primary-purple)' : 'inherit', borderBottom: activeTab === 'state' ? '2px solid var(--primary-purple)' : 'none', paddingBottom: '4px' }"
             >State</span
           >
           <span
             @click="setTab('executive')"
-            :style="{ cursor: 'pointer', color: activeTab === 'executive' ? 'black' : 'inherit', borderBottom: activeTab === 'executive' ? '2px solid black' : 'none', paddingBottom: '4px' }"
+            :style="{ cursor: 'pointer', color: activeTab === 'executive' ? 'var(--primary-purple)' : 'inherit', borderBottom: activeTab === 'executive' ? '2px solid var(--primary-purple)' : 'none', paddingBottom: '4px' }"
             >Exec</span
           >
 
@@ -348,13 +348,13 @@
             >
               <div
                 @click="init('active', 0)"
-                :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'active' ? 'black' : 'transparent', color: statusToggle === 'active' ? 'white' : '#888', transition: '0.2s' }"
+                :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'active' ? 'var(--primary-purple)' : 'transparent', color: statusToggle === 'active' ? 'white' : '#888', transition: '0.2s' }"
               >
                 Pending
               </div>
               <div
                 @click="init('completed', 0)"
-                :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'completed' ? 'black' : 'transparent', color: statusToggle === 'completed' ? 'white' : '#888', transition: '0.2s' }"
+                :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'completed' ? 'var(--primary-purple)' : 'transparent', color: statusToggle === 'completed' ? 'white' : '#888', transition: '0.2s' }"
               >
                 Closed
               </div>
@@ -1177,7 +1177,7 @@
                 <button
                   @click="addComment"
                   style="
-                    background: black;
+                    background: var(--primary-purple);
                     color: white;
                     border: none;
                     border-radius: 10px;
@@ -1357,7 +1357,7 @@
                 padding: 10px 24px;
                 border-radius: 10px;
                 border: none;
-                background: black;
+                background: var(--primary-purple);
                 color: white;
                 font-size: 13px;
                 font-weight: 700;
@@ -1745,12 +1745,8 @@
                   >Priority</label
                 >
                 <div style="display: flex; gap: 10px">
-                  <button
-                    v-for="p in ['Normal', 'Medium', 'High', 'Urgent']"
-                    :key="p"
-                    @click="newTicket.priority = p"
-                    :style="{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid', borderColor: newTicket.priority === p ? 'black' : '#ddd', background: newTicket.priority === p ? 'black' : 'white', color: newTicket.priority === p ? 'white' : '#666', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: '0.2s' }"
-                  >
+                                    <button v-for="p in ['Normal', 'Medium', 'High', 'Urgent']" :key="p" @click="newTicket.priority = p" 
+                                            :style="{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid', borderColor: newTicket.priority === p ? 'var(--primary-purple)' : '#ddd', background: newTicket.priority === p ? 'var(--primary-purple)' : 'white', color: newTicket.priority === p ? 'white' : '#666', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: '0.2s' }">
                     [[ p ]]
                   </button>
                 </div>
@@ -2213,7 +2209,7 @@
                   padding: 14px;
                   border-radius: 8px;
                   border: none;
-                  background: black;
+                  background: var(--primary-purple);
                   color: white;
                   font-size: 14px;
                   font-weight: 700;
@@ -2287,16 +2283,15 @@
           >
             [[ alertMessage ]]
           </p>
-          <button
-            @click="showAlertModal = false"
-            style="
-              width: 100%;
-              padding: 12px;
-              border-radius: 10px;
-              border: none;
-              background: black;
-              color: white;
-              font-size: 14px;
+                      <button
+                        @click="showAlertModal = false"
+                        style="
+                          width: 100%;
+                          padding: 12px;
+                          border-radius: 10px;
+                          border: none;
+                          background: var(--primary-purple);
+                          color: white;              font-size: 14px;
               font-weight: 700;
               cursor: pointer;
               transition: opacity 0.2s;
