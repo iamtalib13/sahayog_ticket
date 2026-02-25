@@ -515,6 +515,7 @@ def get_it_tickets(status_group="active", page=0, page_size=20, filter_key=None,
     summary_query = f"""
         SELECT 
             t.district, 
+            t.ticket_type,
             COALESCE(b.zone, 'Unknown Zone') as zone,
             COALESCE(b.state, 'Unknown State') as state,
             t.assigned_to_name as executive
@@ -532,7 +533,8 @@ def get_it_tickets(status_group="active", page=0, page_size=20, filter_key=None,
             "district": "t.district",
             "zone": "b.zone",
             "state": "b.state",
-            "executive": "t.assigned_to_name"
+            "executive": "t.assigned_to_name",
+            "type": "t.ticket_type"
         }
         sql_col = col_map.get(filter_key)
         if sql_col:
@@ -555,7 +557,7 @@ def get_it_tickets(status_group="active", page=0, page_size=20, filter_key=None,
         LIMIT %s OFFSET %s
     """
     
-    params = [filter_value] if (filter_key and filter_value and filter_key in ["district", "zone", "state", "executive"]) else []
+    params = [filter_value] if (filter_key and filter_value and filter_key in ["district", "zone", "state", "executive", "type"]) else []
     params.extend([int(page_size), offset])
     
     tickets = frappe.db.sql(ticket_query, tuple(params), as_dict=True)
