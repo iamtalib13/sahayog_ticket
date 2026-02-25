@@ -1514,7 +1514,6 @@
         </div>
       </div>
 
-      <!-- Create Ticket Modal -->
       <div
         v-if="showCreateModal"
         style="
@@ -1533,9 +1532,9 @@
         <div
           style="
             background: white;
-            width: 90%;
+            width: 95%;
             height: 90vh;
-            max-width: 1000px;
+            max-width: 750px;
             border-radius: 16px;
             overflow: hidden;
             display: flex;
@@ -1576,670 +1575,138 @@
               &times;
             </button>
           </div>
-          <div
-            style="
-              flex: 1;
-              padding: 32px;
-              overflow-y: auto;
-              background: #f9fafb;
-            "
-          >
-            <div
-              style="
-                max-width: 600px;
-                margin: 0 auto;
-                background: white;
-                padding: 32px;
-                border-radius: 12px;
-                border: 1px solid var(--border-color);
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-              "
-            >
-              <div style="margin-bottom: 24px; position: relative">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    font-weight: 800;
-                    color: var(--text-muted);
-                    text-transform: uppercase;
-                    margin-bottom: 8px;
-                  "
-                  >Raise For Employee <span style="color: red">*</span></label
-                >
+          <div style="flex: 1; padding: 24px; overflow-y: auto;">
+            <div style="max-width: 100%; margin: 0 auto;">
+              <!-- Admin Only: Raise For Employee -->
+              <div v-if="hasRole('Administrator')" style="margin-bottom: 24px; position: relative">
+                <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Raise For Employee <span style="color: red">*</span></label>
                 <div style="position: relative">
-                  <input
-                    v-model="employeeSearchQuery"
-                    @input="searchEmployees"
-                    @focus="showEmployeeDropdown = true; searchEmployees()"
-                    placeholder="Search by name or ID..."
-                    style="
-                      width: 100%;
-                      padding: 10px;
-                      border-radius: 8px;
-                      border: 1px solid #ddd;
-                      outline: none;
-                      font-size: 13px;
-                    "
-                  />
-                  <div
-                    v-if="showEmployeeDropdown && employeeResults.length"
-                    style="
-                      position: absolute;
-                      top: 100%;
-                      left: 0;
-                      right: 0;
-                      background: white;
-                      border: 1px solid #ddd;
-                      border-radius: 8px;
-                      margin-top: 4px;
-                      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-                      z-index: 100;
-                      max-height: 200px;
-                      overflow-y: auto;
-                    "
-                  >
-                    <div
-                      v-for="emp in employeeResults"
-                      :key="emp.name"
-                      @click="selectEmployee(emp)"
-                      style="
-                        padding: 10px 12px;
-                        cursor: pointer;
-                        border-bottom: 1px solid #f3f4f6;
-                      "
-                      onmouseover="this.style.background = '#f9fafb'"
-                      onmouseout="this.style.background = 'white'"
-                    >
-                      <div
-                        style="
-                          font-size: 13px;
-                          font-weight: 700;
-                          color: var(--text-main);
-                        "
-                      >
-                        [[ emp.employee_name ]]
-                      </div>
-                      <div style="font-size: 11px; color: var(--text-muted)">
-                        [[ emp.name ]] | [[ emp.branch ]]
-                      </div>
+                  <input v-model="employeeSearchQuery" @input="searchEmployees" @focus="showEmployeeDropdown = true; searchEmployees()" placeholder="Search by name or ID..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-size: 13px;" />
+                  <div v-if="showEmployeeDropdown && employeeResults.length" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; margin-top: 4px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); z-index: 100; max-height: 200px; overflow-y: auto;">
+                    <div v-for="emp in employeeResults" :key="emp.name" @click="selectEmployee(emp)" style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.background = '#f9fafb'" onmouseout="this.style.background = 'white'">
+                      <div style="font-size: 13px; font-weight: 700; color: var(--text-main);">[[ emp.employee_name ]]</div>
+                      <div style="font-size: 11px; color: var(--text-muted);">[[ emp.name ]] | [[ emp.branch ]]</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div style="margin-bottom: 24px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    font-weight: 800;
-                    color: var(--text-muted);
-                    text-transform: uppercase;
-                    margin-bottom: 8px;
-                  "
-                  >Department <span style="color: red">*</span></label
-                >
-                <select
-                  v-model="newTicket.dept_name"
-                  @change="onDeptChange"
-                  style="
-                    width: 100%;
-                    padding: 10px;
-                    border-radius: 8px;
-                    border: 1px solid #ddd;
-                    outline: none;
-                    font-size: 13px;
-                  "
-                >
-                  <option value="">Select Department</option>
-                  <option
-                    v-for="dept in departments"
-                    :key="dept.name"
-                    :value="dept.name"
-                  >
-                    [[ dept.name ]]
-                  </option>
-                </select>
-              </div>
-
-              <div style="margin-bottom: 24px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    font-weight: 800;
-                    color: var(--text-muted);
-                    text-transform: uppercase;
-                    margin-bottom: 8px;
-                  "
-                  >Issue Type <span style="color: red">*</span></label
-                >
-                <select
-                  v-model="newTicket.ticket_type"
-                  @change="onTicketTypeChange"
-                  :disabled="!newTicket.dept_name"
-                  style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-size: 13px; background: !newTicket.dept_name ? '#f3f4f6' : 'white';"
-                >
-                  <option value="">Select Issue Type</option>
-                  <option
-                    v-for="type in ticketTypes"
-                    :key="type.name"
-                    :value="type.name"
-                  >
-                    [[ type.name ]]
-                  </option>
-                </select>
-                <div
-                  v-if="newTicket.tat"
-                  style="
-                    margin-top: 6px;
-                    font-size: 11px;
-                    color: var(--primary-purple);
-                    font-weight: 600;
-                  "
-                >
-                  Standard TAT: [[ newTicket.tat ]]
-                </div>
-              </div>
-
-              <div style="margin-bottom: 24px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    font-weight: 800;
-                    color: var(--text-muted);
-                    text-transform: uppercase;
-                    margin-bottom: 8px;
-                  "
-                  >Priority</label
-                >
-                <div style="display: flex; gap: 10px">
-                  <button
-                    v-for="p in ['Normal', 'Medium', 'High', 'Urgent']"
-                    :key="p"
-                    @click="newTicket.priority = p"
-                    :style="{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid', borderColor: newTicket.priority === p ? 'var(--primary-purple)' : '#ddd', background: newTicket.priority === p ? 'var(--primary-purple)' : 'white', color: newTicket.priority === p ? 'white' : '#666', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: '0.2s' }"
-                  >
-                    [[ p ]]
-                  </button>
-                </div>
-              </div>
-
-              <!-- Account Service Request Specific Fields -->
-              <div
-                v-if="newTicket.ticket_type === 'Account Service Request'"
-                style="
-                  margin-bottom: 24px;
-                  padding: 20px;
-                  background: #f8fafc;
-                  border: 1px dashed #cbd5e1;
-                  border-radius: 12px;
-                "
-              >
-                <h4
-                  style="
-                    margin: 0 0 16px;
-                    font-size: 12px;
-                    font-weight: 800;
-                    color: #334155;
-                    text-transform: uppercase;
-                  "
-                >
-                  Request Detail
-                </h4>
-
-                <div style="margin-bottom: 16px">
-                  <label
-                    style="
-                      display: block;
-                      font-size: 11px;
-                      font-weight: 700;
-                      color: #64748b;
-                      margin-bottom: 6px;
-                    "
-                    >Request Type *</label
-                  >
-                  <select
-                    v-model="newTicket.request_detail[0].request_type"
-                    style="
-                      width: 100%;
-                      padding: 8px;
-                      border-radius: 6px;
-                      border: 1px solid #ddd;
-                      font-size: 13px;
-                    "
-                  >
-                    <option value="">Select Request Type</option>
-                    <option
-                      v-for="opt in ['Change of Address', 'Update Contact Number', 'Update Email Address', 'Update KYC (Adhaar/Voter/Passport/etc)', 'Update PAN NO', 'Update Signature', 'Name Change', 'Activation of Dormant account', 'SMS Alert Registration', 'Nomination Addition/ Deletion/ Modification', 'Account Transfer', 'DOB Updation']"
-                      :value="opt"
-                    >
-                      [[ opt ]]
-                    </option>
+              <!-- Row 1: Dept, Type, and Priority -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr 120px; gap: 20px; margin-bottom: 24px;">
+                <div>
+                  <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Department <span style="color: red">*</span></label>
+                  <select v-model="newTicket.dept_name" @change="onDeptChange" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-size: 13px;">
+                    <option value="">Select Department</option>
+                    <option v-for="dept in departments" :key="dept.name" :value="dept.name">[[ dept.name ]]</option>
                   </select>
                 </div>
-
-                <div style="display: flex; gap: 10px; margin-bottom: 16px">
-                  <div style="flex: 1">
-                    <label
-                      style="
-                        display: block;
-                        font-size: 11px;
-                        font-weight: 700;
-                        color: #64748b;
-                        margin-bottom: 6px;
-                      "
-                      >Account Number *</label
-                    >
-                    <div style="display: flex; gap: 4px">
-                      <input
-                        v-model="newTicket.request_detail[0].account_number"
-                        type="text"
-                        style="
-                          flex: 1;
-                          padding: 8px;
-                          border-radius: 6px;
-                          border: 1px solid #ddd;
-                          font-size: 13px;
-                        "
-                      />
-                      <button
-                        @click="getAccountDetails"
-                        :disabled="fetchingAccount"
-                        style="
-                          background: #097c80;
-                          color: white;
-                          border: none;
-                          padding: 0 12px;
-                          border-radius: 6px;
-                          cursor: pointer;
-                          font-size: 11px;
-                          font-weight: 700;
-                        "
-                      >
-                        [[ fetchingAccount ? '...' : 'Fetch' ]]
-                      </button>
-                    </div>
-                  </div>
+                <div>
+                  <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Issue Type <span style="color: red">*</span></label>
+                  <select v-model="newTicket.ticket_type" @change="onTicketTypeChange" :disabled="!newTicket.dept_name" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-size: 13px; background: !newTicket.dept_name ? '#f3f4f6' : 'white';">
+                    <option value="">Select Issue Type</option>
+                    <option v-for="type in ticketTypes" :key="type.name" :value="type.name">[[ type.name ]]</option>
+                  </select>
+                  <div v-if="newTicket.tat" style="margin-top: 6px; font-size: 11px; color: var(--primary-purple); font-weight: 600;">Standard TAT: [[ newTicket.tat ]]</div>
                 </div>
-
-                <div
-                  v-if="newTicket.request_detail[0].customer_name"
-                  style="
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 10px;
-                    margin-bottom: 16px;
-                    padding: 12px;
-                    background: white;
-                    border-radius: 8px;
-                    border: 1px solid #e2e8f0;
-                  "
-                >
-                  <div>
-                    <div
-                      style="
-                        font-size: 10px;
-                        color: #94a3b8;
-                        font-weight: 700;
-                        text-transform: uppercase;
-                      "
-                    >
-                      Customer
-                    </div>
-                    <div style="font-size: 12px; font-weight: 700">
-                      [[ newTicket.request_detail[0].customer_name ]]
-                    </div>
-                  </div>
-                  <div>
-                    <div
-                      style="
-                        font-size: 10px;
-                        color: #94a3b8;
-                        font-weight: 700;
-                        text-transform: uppercase;
-                      "
-                    >
-                      ID (CIF)
-                    </div>
-                    <div style="font-size: 12px; font-weight: 700">
-                      [[ newTicket.request_detail[0].cif ]]
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Conditional Request Fields -->
-                <div
-                  style="
-                    border-top: 1px solid #e2e8f0;
-                    padding-top: 16px;
-                    margin-top: 16px;
-                  "
-                >
-                  <div
-                    v-if="newTicket.request_detail[0].request_type === 'Change of Address'"
-                  >
-                    <label
-                      style="
-                        display: block;
-                        font-size: 11px;
-                        font-weight: 700;
-                        color: #64748b;
-                        margin-bottom: 6px;
-                      "
-                      >New Address *</label
-                    >
-                    <textarea
-                      v-model="newTicket.request_detail[0].new_address"
-                      style="
-                        width: 100%;
-                        height: 60px;
-                        padding: 8px;
-                        border-radius: 6px;
-                        border: 1px solid #ddd;
-                        font-size: 12px;
-                      "
-                    ></textarea>
-                  </div>
-
-                  <div
-                    v-if="['Update Contact Number', 'SMS Alert Registration'].includes(newTicket.request_detail[0].request_type)"
-                  >
-                    <label
-                      style="
-                        display: block;
-                        font-size: 11px;
-                        font-weight: 700;
-                        color: #64748b;
-                        margin-bottom: 6px;
-                      "
-                      >New Contact Number *</label
-                    >
-                    <input
-                      v-model="newTicket.request_detail[0].new_contact_number"
-                      type="text"
-                      style="
-                        width: 100%;
-                        padding: 8px;
-                        border-radius: 6px;
-                        border: 1px solid #ddd;
-                        font-size: 13px;
-                      "
-                    />
-                  </div>
-
-                  <div
-                    v-if="newTicket.request_detail[0].request_type === 'Update Email Address'"
-                  >
-                    <label
-                      style="
-                        display: block;
-                        font-size: 11px;
-                        font-weight: 700;
-                        color: #64748b;
-                        margin-bottom: 6px;
-                      "
-                      >New Email Address *</label
-                    >
-                    <input
-                      v-model="newTicket.request_detail[0].new_email"
-                      type="email"
-                      style="
-                        width: 100%;
-                        padding: 8px;
-                        border-radius: 6px;
-                        border: 1px solid #ddd;
-                        font-size: 13px;
-                      "
-                    />
-                  </div>
-
-                  <div
-                    v-if="newTicket.request_detail[0].request_type === 'Update KYC (Adhaar/Voter/Passport/etc)'"
-                  >
-                    <label
-                      style="
-                        display: block;
-                        font-size: 11px;
-                        font-weight: 700;
-                        color: #64748b;
-                        margin-bottom: 6px;
-                      "
-                      >New KYC No *</label
-                    >
-                    <input
-                      v-model="newTicket.request_detail[0].new_kyc_no"
-                      type="text"
-                      style="
-                        width: 100%;
-                        padding: 8px;
-                        border-radius: 6px;
-                        border: 1px solid #ddd;
-                        font-size: 13px;
-                      "
-                    />
-                  </div>
-
-                  <div
-                    v-if="newTicket.request_detail[0].request_type === 'Update PAN NO'"
-                  >
-                    <label
-                      style="
-                        display: block;
-                        font-size: 11px;
-                        font-weight: 700;
-                        color: #64748b;
-                        margin-bottom: 6px;
-                      "
-                      >New PAN No *</label
-                    >
-                    <input
-                      v-model="newTicket.request_detail[0].new_pan_no"
-                      type="text"
-                      style="
-                        width: 100%;
-                        padding: 8px;
-                        border-radius: 6px;
-                        border: 1px solid #ddd;
-                        font-size: 13px;
-                      "
-                    />
-                  </div>
-
-                  <div
-                    v-if="newTicket.request_detail[0].request_type === 'Name Change'"
-                  >
-                    <label
-                      style="
-                        display: block;
-                        font-size: 11px;
-                        font-weight: 700;
-                        color: #64748b;
-                        margin-bottom: 6px;
-                      "
-                      >New Name *</label
-                    >
-                    <input
-                      v-model="newTicket.request_detail[0].new_name"
-                      type="text"
-                      style="
-                        width: 100%;
-                        padding: 8px;
-                        border-radius: 6px;
-                        border: 1px solid #ddd;
-                        font-size: 13px;
-                      "
-                    />
-                  </div>
-
-                  <div
-                    v-if="newTicket.request_detail[0].request_type === 'Nomination Addition/ Deletion/ Modification'"
-                  >
-                    <label
-                      style="
-                        display: block;
-                        font-size: 11px;
-                        font-weight: 700;
-                        color: #64748b;
-                        margin-bottom: 6px;
-                      "
-                      >Nomination Operation *</label
-                    >
-                    <select
-                      v-model="newTicket.request_detail[0].nomination_opration"
-                      style="
-                        width: 100%;
-                        padding: 8px;
-                        border-radius: 6px;
-                        border: 1px solid #ddd;
-                        font-size: 13px;
-                      "
-                    >
-                      <option value="Addition">Addition</option>
-                      <option value="Deletion">Deletion</option>
-                      <option value="Modification">Modification</option>
-                    </select>
-                  </div>
-
-                  <div
-                    v-if="newTicket.request_detail[0].request_type === 'Account Transfer'"
-                    style="
-                      display: grid;
-                      grid-template-columns: 1fr 1fr;
-                      gap: 10px;
-                    "
-                  >
-                    <div>
-                      <label
-                        style="
-                          display: block;
-                          font-size: 11px;
-                          font-weight: 700;
-                          color: #64748b;
-                          margin-bottom: 6px;
-                        "
-                        >Existing Branch *</label
-                      >
-                      <input
-                        v-model="newTicket.request_detail[0].existing_branch"
-                        type="text"
-                        style="
-                          width: 100%;
-                          padding: 8px;
-                          border-radius: 6px;
-                          border: 1px solid #ddd;
-                          font-size: 13px;
-                        "
-                      />
-                    </div>
-                    <div>
-                      <label
-                        style="
-                          display: block;
-                          font-size: 11px;
-                          font-weight: 700;
-                          color: #64748b;
-                          margin-bottom: 6px;
-                        "
-                        >New Branch *</label
-                      >
-                      <input
-                        v-model="newTicket.request_detail[0].new_branch"
-                        type="text"
-                        style="
-                          width: 100%;
-                          padding: 8px;
-                          border-radius: 6px;
-                          border: 1px solid #ddd;
-                          font-size: 13px;
-                        "
-                      />
-                    </div>
-                  </div>
-
-                  <div
-                    v-if="newTicket.request_detail[0].request_type === 'DOB Updation'"
-                  >
-                    <label
-                      style="
-                        display: block;
-                        font-size: 11px;
-                        font-weight: 700;
-                        color: #64748b;
-                        margin-bottom: 6px;
-                      "
-                      >Updated DOB *</label
-                    >
-                    <input
-                      v-model="newTicket.request_detail[0].updated_dob"
-                      type="date"
-                      style="
-                        width: 100%;
-                        padding: 8px;
-                        border-radius: 6px;
-                        border: 1px solid #ddd;
-                        font-size: 13px;
-                      "
-                    />
-                  </div>
+                <div>
+                  <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Priority</label>
+                  <select v-model="newTicket.priority" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-size: 13px;">
+                    <option v-for="p in ['Normal', 'Medium', 'High', 'Urgent']" :key="p" :value="p">[[ p ]]</option>
+                  </select>
                 </div>
               </div>
 
-              <div style="margin-bottom: 32px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    font-weight: 800;
-                    color: var(--text-muted);
-                    text-transform: uppercase;
-                    margin-bottom: 8px;
-                  "
-                  >Description <span style="color: red">*</span></label
-                >
-                <textarea
-                  v-model="newTicket.description"
-                  placeholder="Describe the issue in detail..."
-                  style="
-                    width: 100%;
-                    height: 120px;
-                    padding: 12px;
-                    border-radius: 8px;
-                    border: 1px solid #ddd;
-                    outline: none;
-                    font-size: 13px;
-                    resize: none;
-                    line-height: 1.5;
-                  "
-                ></textarea>
+              <!-- Account Service Request Specific Fields (Full Width) -->
+            <div v-if="newTicket.ticket_type === 'Account Service Request'" style="margin-bottom: 24px; padding: 20px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <h4 style="grid-column: span 2; margin: 0; font-size: 12px; font-weight: 800; color: #334155; text-transform: uppercase;">Account Service Details</h4>
+              
+              <div>
+                <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">Request Type *</label>
+                <select v-model="newTicket.request_detail[0].request_type" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;">
+                  <option value="">Select Request Type</option>
+                  <option v-for="opt in ['Change of Address', 'Update Contact Number', 'Update Email Address', 'Update KYC (Adhaar/Voter/Passport/etc)', 'Update PAN NO', 'Update Signature', 'Name Change', 'Activation of Dormant account', 'SMS Alert Registration', 'Nomination Addition/ Deletion/ Modification', 'Account Transfer', 'DOB Updation']" :value="opt">[[ opt ]]</option>
+                </select>
               </div>
 
-              <button
-                @click="submitTicket"
-                :disabled="submittingTicket"
-                style="
-                  width: 100%;
-                  padding: 14px;
-                  border-radius: 8px;
-                  border: none;
-                  background: var(--primary-purple);
-                  color: white;
-                  font-size: 14px;
-                  font-weight: 700;
-                  cursor: pointer;
-                  transition: opacity 0.2s;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  gap: 10px;
-                "
-              >
-                <i v-if="submittingTicket" class="fas fa-spinner fa-spin"></i>
-                [[ submittingTicket ? 'Creating Ticket...' : 'Create Ticket' ]]
-              </button>
+              <div>
+                <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">Account Number *</label>
+                <div style="display: flex; gap: 4px">
+                  <input v-model="newTicket.request_detail[0].account_number" type="text" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
+                  <button @click="getAccountDetails" :disabled="fetchingAccount" style="background: var(--primary-purple); color: white; border: none; padding: 0 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700;">[[ fetchingAccount ? '...' : 'Fetch' ]]</button>
+                </div>
+              </div>
+
+              <div v-if="newTicket.request_detail[0].customer_name" style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; background: white; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div>
+                  <div style="font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Customer</div>
+                  <div style="font-size: 12px; font-weight: 700;">[[ newTicket.request_detail[0].customer_name ]]</div>
+                </div>
+                <div>
+                  <div style="font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">ID (CIF)</div>
+                  <div style="font-size: 12px; font-weight: 700;">[[ newTicket.request_detail[0].cif ]]</div>
+                </div>
+              </div>
+
+              <div style="grid-column: span 2; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                <div v-if="newTicket.request_detail[0].request_type === 'Change of Address'">
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New Address *</label>
+                  <textarea v-model="newTicket.request_detail[0].new_address" style="width: 100%; height: 60px; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 12px;"></textarea>
+                </div>
+                <div v-if="['Update Contact Number', 'SMS Alert Registration'].includes(newTicket.request_detail[0].request_type)">
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New Contact Number *</label>
+                  <input v-model="newTicket.request_detail[0].new_contact_number" type="text" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
+                </div>
+                <div v-if="newTicket.request_detail[0].request_type === 'Update Email Address'">
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New Email Address *</label>
+                  <input v-model="newTicket.request_detail[0].new_email" type="email" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
+                </div>
+                <div v-if="newTicket.request_detail[0].request_type === 'Update KYC (Adhaar/Voter/Passport/etc)'">
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New KYC No *</label>
+                  <input v-model="newTicket.request_detail[0].new_kyc_no" type="text" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
+                </div>
+                <div v-if="newTicket.request_detail[0].request_type === 'Update PAN NO'">
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New PAN No *</label>
+                  <input v-model="newTicket.request_detail[0].new_pan_no" type="text" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
+                </div>
+                <div v-if="newTicket.request_detail[0].request_type === 'Name Change'">
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New Name *</label>
+                  <input v-model="newTicket.request_detail[0].new_name" type="text" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
+                </div>
+                <div v-if="newTicket.request_detail[0].request_type === 'Nomination Addition/ Deletion/ Modification'">
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">Nomination Operation *</label>
+                  <select v-model="newTicket.request_detail[0].nomination_opration" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;">
+                    <option value="Addition">Addition</option>
+                    <option value="Deletion">Deletion</option>
+                    <option value="Modification">Modification</option>
+                  </select>
+                </div>
+                <div v-if="newTicket.request_detail[0].request_type === 'Account Transfer'" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                  <div>
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">Existing Branch *</label>
+                    <input v-model="newTicket.request_detail[0].existing_branch" type="text" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New Branch *</label>
+                    <input v-model="newTicket.request_detail[0].new_branch" type="text" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
+                  </div>
+                </div>
+                <div v-if="newTicket.request_detail[0].request_type === 'DOB Updation'">
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">Updated DOB *</label>
+                  <input v-model="newTicket.request_detail[0].updated_dob" type="date" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
+                </div>
+              </div>
             </div>
+
+            <!-- Description (Full Width) -->
+            <div style="margin-bottom: 32px">
+              <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Description <span style="color: red">*</span></label>
+              <textarea v-model="newTicket.description" placeholder="Describe the issue in detail..." style="width: 100%; height: 120px; padding: 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-size: 13px; resize: none; line-height: 1.5;"></textarea>
+            </div>
+
+            <button @click="submitTicket" :disabled="submittingTicket" style="width: 100%; padding: 14px; border-radius: 8px; border: none; background: var(--primary-purple); color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;">
+              <i v-if="submittingTicket" class="fas fa-spinner fa-spin"></i>
+              [[ submittingTicket ? 'Creating Ticket...' : 'Create Ticket' ]]
+            </button>
           </div>
         </div>
       </div>
