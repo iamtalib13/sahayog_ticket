@@ -350,17 +350,17 @@
                 @click="init('active', 0)"
                 :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'active' ? 'black' : 'transparent', color: statusToggle === 'active' ? 'white' : '#888', transition: '0.2s' }"
               >
-                Active
+                Pending
               </div>
               <div
                 @click="init('completed', 0)"
                 :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'completed' ? 'black' : 'transparent', color: statusToggle === 'completed' ? 'white' : '#888', transition: '0.2s' }"
               >
-                Completed
+                Closed
               </div>
             </div>
             <button class="btn-create" @click="showCreateModal = true">
-              <i class="fas fa-plus mr-2"></i>Create Ticket
+              <i class="fas fa-plus mr-2"></i> Create Ticket
             </button>
           </div>
         </header>
@@ -895,11 +895,175 @@
             <div v-if="loadingDetail" style="padding: 40px; text-align: center">
               <i class="fas fa-spinner fa-spin fa-2x" style="color: #ddd"></i>
             </div>
-            <div
-              v-else
-              style="font-size: 15px; line-height: 1.7; color: #222"
-              v-html="activeTicket.description || 'No description provided.'"
-            ></div>
+            <div v-else>
+              <!-- Specialized Account Details View -->
+              <div
+                v-if="activeTicket.ticket_type === 'Account Service Request' && activeTicket.request_detail && activeTicket.request_detail.length"
+                style="
+                  margin-bottom: 24px;
+                  padding: 20px;
+                  background: #f0fdf4;
+                  border: 1px solid #bbf7d0;
+                  border-radius: 12px;
+                "
+              >
+                <h5
+                  style="
+                    margin: 0 0 12px;
+                    font-size: 11px;
+                    font-weight: 800;
+                    color: #166534;
+                    text-transform: uppercase;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                  "
+                >
+                  <i class="fas fa-user-check"></i> Account Service Details
+                </h5>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 16px;
+                  "
+                >
+                  <div>
+                    <div
+                      style="
+                        font-size: 9px;
+                        font-weight: 800;
+                        color: #166534;
+                        text-transform: uppercase;
+                        opacity: 0.6;
+                      "
+                    >
+                      Request Type
+                    </div>
+                    <div
+                      style="font-size: 13px; font-weight: 700; color: #14532d"
+                    >
+                      [[ activeTicket.request_detail[0].request_type ]]
+                    </div>
+                  </div>
+                  <div>
+                    <div
+                      style="
+                        font-size: 9px;
+                        font-weight: 800;
+                        color: #166534;
+                        text-transform: uppercase;
+                        opacity: 0.6;
+                      "
+                    >
+                      Account Number
+                    </div>
+                    <div
+                      style="font-size: 13px; font-weight: 700; color: #14532d"
+                    >
+                      [[ activeTicket.request_detail[0].account_number ]]
+                    </div>
+                  </div>
+                  <div v-if="activeTicket.request_detail[0].customer_name">
+                    <div
+                      style="
+                        font-size: 9px;
+                        font-weight: 800;
+                        color: #166534;
+                        text-transform: uppercase;
+                        opacity: 0.6;
+                      "
+                    >
+                      Customer Name
+                    </div>
+                    <div
+                      style="font-size: 13px; font-weight: 700; color: #14532d"
+                    >
+                      [[ activeTicket.request_detail[0].customer_name ]]
+                    </div>
+                  </div>
+                  <div v-if="activeTicket.request_detail[0].cif">
+                    <div
+                      style="
+                        font-size: 9px;
+                        font-weight: 800;
+                        color: #166534;
+                        text-transform: uppercase;
+                        opacity: 0.6;
+                      "
+                    >
+                      CIF (Customer ID)
+                    </div>
+                    <div
+                      style="font-size: 13px; font-weight: 700; color: #14532d"
+                    >
+                      [[ activeTicket.request_detail[0].cif ]]
+                    </div>
+                  </div>
+                </div>
+
+                <!-- New Info Section (Conditional) -->
+                <div
+                  v-if="activeTicket.request_detail[0].new_address || activeTicket.request_detail[0].new_contact_number || activeTicket.request_detail[0].new_email || activeTicket.request_detail[0].new_pan_no || activeTicket.request_detail[0].new_kyc_no"
+                  style="
+                    margin-top: 16px;
+                    padding-top: 16px;
+                    border-top: 1px dashed #bbf7d0;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 9px;
+                      font-weight: 800;
+                      color: #166534;
+                      text-transform: uppercase;
+                      margin-bottom: 8px;
+                    "
+                  >
+                    Update Requested To:
+                  </div>
+                  <div
+                    style="
+                      font-size: 13px;
+                      font-weight: 700;
+                      color: #166534;
+                      background: white;
+                      padding: 10px;
+                      border-radius: 8px;
+                      border: 1px solid #dcfce7;
+                    "
+                  >
+                    <span v-if="activeTicket.request_detail[0].new_address"
+                      >[[ activeTicket.request_detail[0].new_address ]]</span
+                    >
+                    <span
+                      v-if="activeTicket.request_detail[0].new_contact_number"
+                      >[[ activeTicket.request_detail[0].new_contact_number
+                      ]]</span
+                    >
+                    <span v-if="activeTicket.request_detail[0].new_email"
+                      >[[ activeTicket.request_detail[0].new_email ]]</span
+                    >
+                    <span v-if="activeTicket.request_detail[0].new_pan_no"
+                      >PAN: [[ activeTicket.request_detail[0].new_pan_no
+                      ]]</span
+                    >
+                    <span v-if="activeTicket.request_detail[0].new_kyc_no"
+                      >KYC: [[ activeTicket.request_detail[0].new_kyc_no
+                      ]]</span
+                    >
+                    <span v-if="activeTicket.request_detail[0].new_name"
+                      >Name: [[ activeTicket.request_detail[0].new_name ]]</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style="font-size: 15px; line-height: 1.7; color: #222"
+                v-html="activeTicket.description || 'No description provided.'"
+              ></div>
+            </div>
           </div>
           <!-- Right Col -->
           <div
@@ -1401,10 +1565,671 @@
               &times;
             </button>
           </div>
-          <iframe
-            src="/app/sahayog-ticket/new"
-            style="flex: 1; border: none; width: 100%; background: #f4f5f7"
-          ></iframe>
+          <div
+            style="
+              flex: 1;
+              padding: 32px;
+              overflow-y: auto;
+              background: #f9fafb;
+            "
+          >
+            <div
+              style="
+                max-width: 600px;
+                margin: 0 auto;
+                background: white;
+                padding: 32px;
+                border-radius: 12px;
+                border: 1px solid var(--border-color);
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+              "
+            >
+              <div style="margin-bottom: 24px; position: relative">
+                <label
+                  style="
+                    display: block;
+                    font-size: 11px;
+                    font-weight: 800;
+                    color: var(--text-muted);
+                    text-transform: uppercase;
+                    margin-bottom: 8px;
+                  "
+                  >Raise For Employee <span style="color: red">*</span></label
+                >
+                <div style="position: relative">
+                  <input
+                    v-model="employeeSearchQuery"
+                    @input="searchEmployees"
+                    @focus="showEmployeeDropdown = true; searchEmployees()"
+                    placeholder="Search by name or ID..."
+                    style="
+                      width: 100%;
+                      padding: 10px;
+                      border-radius: 8px;
+                      border: 1px solid #ddd;
+                      outline: none;
+                      font-size: 13px;
+                    "
+                  />
+                  <div
+                    v-if="showEmployeeDropdown && employeeResults.length"
+                    style="
+                      position: absolute;
+                      top: 100%;
+                      left: 0;
+                      right: 0;
+                      background: white;
+                      border: 1px solid #ddd;
+                      border-radius: 8px;
+                      margin-top: 4px;
+                      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                      z-index: 100;
+                      max-height: 200px;
+                      overflow-y: auto;
+                    "
+                  >
+                    <div
+                      v-for="emp in employeeResults"
+                      :key="emp.name"
+                      @click="selectEmployee(emp)"
+                      style="
+                        padding: 10px 12px;
+                        cursor: pointer;
+                        border-bottom: 1px solid #f3f4f6;
+                      "
+                      onmouseover="this.style.background = '#f9fafb'"
+                      onmouseout="this.style.background = 'white'"
+                    >
+                      <div
+                        style="
+                          font-size: 13px;
+                          font-weight: 700;
+                          color: var(--text-main);
+                        "
+                      >
+                        [[ emp.employee_name ]]
+                      </div>
+                      <div style="font-size: 11px; color: var(--text-muted)">
+                        [[ emp.name ]] | [[ emp.branch ]]
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 24px">
+                <label
+                  style="
+                    display: block;
+                    font-size: 11px;
+                    font-weight: 800;
+                    color: var(--text-muted);
+                    text-transform: uppercase;
+                    margin-bottom: 8px;
+                  "
+                  >Department <span style="color: red">*</span></label
+                >
+                <select
+                  v-model="newTicket.dept_name"
+                  @change="onDeptChange"
+                  style="
+                    width: 100%;
+                    padding: 10px;
+                    border-radius: 8px;
+                    border: 1px solid #ddd;
+                    outline: none;
+                    font-size: 13px;
+                  "
+                >
+                  <option value="">Select Department</option>
+                  <option
+                    v-for="dept in departments"
+                    :key="dept.name"
+                    :value="dept.name"
+                  >
+                    [[ dept.name ]]
+                  </option>
+                </select>
+              </div>
+
+              <div style="margin-bottom: 24px">
+                <label
+                  style="
+                    display: block;
+                    font-size: 11px;
+                    font-weight: 800;
+                    color: var(--text-muted);
+                    text-transform: uppercase;
+                    margin-bottom: 8px;
+                  "
+                  >Issue Type <span style="color: red">*</span></label
+                >
+                <select
+                  v-model="newTicket.ticket_type"
+                  @change="onTicketTypeChange"
+                  :disabled="!newTicket.dept_name"
+                  style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-size: 13px; background: !newTicket.dept_name ? '#f3f4f6' : 'white';"
+                >
+                  <option value="">Select Issue Type</option>
+                  <option
+                    v-for="type in ticketTypes"
+                    :key="type.name"
+                    :value="type.name"
+                  >
+                    [[ type.name ]]
+                  </option>
+                </select>
+                <div
+                  v-if="newTicket.tat"
+                  style="
+                    margin-top: 6px;
+                    font-size: 11px;
+                    color: var(--primary-purple);
+                    font-weight: 600;
+                  "
+                >
+                  Standard TAT: [[ newTicket.tat ]]
+                </div>
+              </div>
+
+              <div style="margin-bottom: 24px">
+                <label
+                  style="
+                    display: block;
+                    font-size: 11px;
+                    font-weight: 800;
+                    color: var(--text-muted);
+                    text-transform: uppercase;
+                    margin-bottom: 8px;
+                  "
+                  >Priority</label
+                >
+                <div style="display: flex; gap: 10px">
+                  <button
+                    v-for="p in ['Normal', 'Medium', 'High', 'Urgent']"
+                    :key="p"
+                    @click="newTicket.priority = p"
+                    :style="{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid', borderColor: newTicket.priority === p ? 'black' : '#ddd', background: newTicket.priority === p ? 'black' : 'white', color: newTicket.priority === p ? 'white' : '#666', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: '0.2s' }"
+                  >
+                    [[ p ]]
+                  </button>
+                </div>
+              </div>
+
+              <!-- Account Service Request Specific Fields -->
+              <div
+                v-if="newTicket.ticket_type === 'Account Service Request'"
+                style="
+                  margin-bottom: 24px;
+                  padding: 20px;
+                  background: #f8fafc;
+                  border: 1px dashed #cbd5e1;
+                  border-radius: 12px;
+                "
+              >
+                <h4
+                  style="
+                    margin: 0 0 16px;
+                    font-size: 12px;
+                    font-weight: 800;
+                    color: #334155;
+                    text-transform: uppercase;
+                  "
+                >
+                  Request Detail
+                </h4>
+
+                <div style="margin-bottom: 16px">
+                  <label
+                    style="
+                      display: block;
+                      font-size: 11px;
+                      font-weight: 700;
+                      color: #64748b;
+                      margin-bottom: 6px;
+                    "
+                    >Request Type *</label
+                  >
+                  <select
+                    v-model="newTicket.request_detail[0].request_type"
+                    style="
+                      width: 100%;
+                      padding: 8px;
+                      border-radius: 6px;
+                      border: 1px solid #ddd;
+                      font-size: 13px;
+                    "
+                  >
+                    <option value="">Select Request Type</option>
+                    <option
+                      v-for="opt in ['Change of Address', 'Update Contact Number', 'Update Email Address', 'Update KYC (Adhaar/Voter/Passport/etc)', 'Update PAN NO', 'Update Signature', 'Name Change', 'Activation of Dormant account', 'SMS Alert Registration', 'Nomination Addition/ Deletion/ Modification', 'Account Transfer', 'DOB Updation']"
+                      :value="opt"
+                    >
+                      [[ opt ]]
+                    </option>
+                  </select>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 16px">
+                  <div style="flex: 1">
+                    <label
+                      style="
+                        display: block;
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: #64748b;
+                        margin-bottom: 6px;
+                      "
+                      >Account Number *</label
+                    >
+                    <div style="display: flex; gap: 4px">
+                      <input
+                        v-model="newTicket.request_detail[0].account_number"
+                        type="text"
+                        style="
+                          flex: 1;
+                          padding: 8px;
+                          border-radius: 6px;
+                          border: 1px solid #ddd;
+                          font-size: 13px;
+                        "
+                      />
+                      <button
+                        @click="getAccountDetails"
+                        :disabled="fetchingAccount"
+                        style="
+                          background: #097c80;
+                          color: white;
+                          border: none;
+                          padding: 0 12px;
+                          border-radius: 6px;
+                          cursor: pointer;
+                          font-size: 11px;
+                          font-weight: 700;
+                        "
+                      >
+                        [[ fetchingAccount ? '...' : 'Fetch' ]]
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  v-if="newTicket.request_detail[0].customer_name"
+                  style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 10px;
+                    margin-bottom: 16px;
+                    padding: 12px;
+                    background: white;
+                    border-radius: 8px;
+                    border: 1px solid #e2e8f0;
+                  "
+                >
+                  <div>
+                    <div
+                      style="
+                        font-size: 10px;
+                        color: #94a3b8;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                      "
+                    >
+                      Customer
+                    </div>
+                    <div style="font-size: 12px; font-weight: 700">
+                      [[ newTicket.request_detail[0].customer_name ]]
+                    </div>
+                  </div>
+                  <div>
+                    <div
+                      style="
+                        font-size: 10px;
+                        color: #94a3b8;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                      "
+                    >
+                      ID (CIF)
+                    </div>
+                    <div style="font-size: 12px; font-weight: 700">
+                      [[ newTicket.request_detail[0].cif ]]
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Conditional Request Fields -->
+                <div
+                  style="
+                    border-top: 1px solid #e2e8f0;
+                    padding-top: 16px;
+                    margin-top: 16px;
+                  "
+                >
+                  <div
+                    v-if="newTicket.request_detail[0].request_type === 'Change of Address'"
+                  >
+                    <label
+                      style="
+                        display: block;
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: #64748b;
+                        margin-bottom: 6px;
+                      "
+                      >New Address *</label
+                    >
+                    <textarea
+                      v-model="newTicket.request_detail[0].new_address"
+                      style="
+                        width: 100%;
+                        height: 60px;
+                        padding: 8px;
+                        border-radius: 6px;
+                        border: 1px solid #ddd;
+                        font-size: 12px;
+                      "
+                    ></textarea>
+                  </div>
+
+                  <div
+                    v-if="['Update Contact Number', 'SMS Alert Registration'].includes(newTicket.request_detail[0].request_type)"
+                  >
+                    <label
+                      style="
+                        display: block;
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: #64748b;
+                        margin-bottom: 6px;
+                      "
+                      >New Contact Number *</label
+                    >
+                    <input
+                      v-model="newTicket.request_detail[0].new_contact_number"
+                      type="text"
+                      style="
+                        width: 100%;
+                        padding: 8px;
+                        border-radius: 6px;
+                        border: 1px solid #ddd;
+                        font-size: 13px;
+                      "
+                    />
+                  </div>
+
+                  <div
+                    v-if="newTicket.request_detail[0].request_type === 'Update Email Address'"
+                  >
+                    <label
+                      style="
+                        display: block;
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: #64748b;
+                        margin-bottom: 6px;
+                      "
+                      >New Email Address *</label
+                    >
+                    <input
+                      v-model="newTicket.request_detail[0].new_email"
+                      type="email"
+                      style="
+                        width: 100%;
+                        padding: 8px;
+                        border-radius: 6px;
+                        border: 1px solid #ddd;
+                        font-size: 13px;
+                      "
+                    />
+                  </div>
+
+                  <div
+                    v-if="newTicket.request_detail[0].request_type === 'Update KYC (Adhaar/Voter/Passport/etc)'"
+                  >
+                    <label
+                      style="
+                        display: block;
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: #64748b;
+                        margin-bottom: 6px;
+                      "
+                      >New KYC No *</label
+                    >
+                    <input
+                      v-model="newTicket.request_detail[0].new_kyc_no"
+                      type="text"
+                      style="
+                        width: 100%;
+                        padding: 8px;
+                        border-radius: 6px;
+                        border: 1px solid #ddd;
+                        font-size: 13px;
+                      "
+                    />
+                  </div>
+
+                  <div
+                    v-if="newTicket.request_detail[0].request_type === 'Update PAN NO'"
+                  >
+                    <label
+                      style="
+                        display: block;
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: #64748b;
+                        margin-bottom: 6px;
+                      "
+                      >New PAN No *</label
+                    >
+                    <input
+                      v-model="newTicket.request_detail[0].new_pan_no"
+                      type="text"
+                      style="
+                        width: 100%;
+                        padding: 8px;
+                        border-radius: 6px;
+                        border: 1px solid #ddd;
+                        font-size: 13px;
+                      "
+                    />
+                  </div>
+
+                  <div
+                    v-if="newTicket.request_detail[0].request_type === 'Name Change'"
+                  >
+                    <label
+                      style="
+                        display: block;
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: #64748b;
+                        margin-bottom: 6px;
+                      "
+                      >New Name *</label
+                    >
+                    <input
+                      v-model="newTicket.request_detail[0].new_name"
+                      type="text"
+                      style="
+                        width: 100%;
+                        padding: 8px;
+                        border-radius: 6px;
+                        border: 1px solid #ddd;
+                        font-size: 13px;
+                      "
+                    />
+                  </div>
+
+                  <div
+                    v-if="newTicket.request_detail[0].request_type === 'Nomination Addition/ Deletion/ Modification'"
+                  >
+                    <label
+                      style="
+                        display: block;
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: #64748b;
+                        margin-bottom: 6px;
+                      "
+                      >Nomination Operation *</label
+                    >
+                    <select
+                      v-model="newTicket.request_detail[0].nomination_opration"
+                      style="
+                        width: 100%;
+                        padding: 8px;
+                        border-radius: 6px;
+                        border: 1px solid #ddd;
+                        font-size: 13px;
+                      "
+                    >
+                      <option value="Addition">Addition</option>
+                      <option value="Deletion">Deletion</option>
+                      <option value="Modification">Modification</option>
+                    </select>
+                  </div>
+
+                  <div
+                    v-if="newTicket.request_detail[0].request_type === 'Account Transfer'"
+                    style="
+                      display: grid;
+                      grid-template-columns: 1fr 1fr;
+                      gap: 10px;
+                    "
+                  >
+                    <div>
+                      <label
+                        style="
+                          display: block;
+                          font-size: 11px;
+                          font-weight: 700;
+                          color: #64748b;
+                          margin-bottom: 6px;
+                        "
+                        >Existing Branch *</label
+                      >
+                      <input
+                        v-model="newTicket.request_detail[0].existing_branch"
+                        type="text"
+                        style="
+                          width: 100%;
+                          padding: 8px;
+                          border-radius: 6px;
+                          border: 1px solid #ddd;
+                          font-size: 13px;
+                        "
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style="
+                          display: block;
+                          font-size: 11px;
+                          font-weight: 700;
+                          color: #64748b;
+                          margin-bottom: 6px;
+                        "
+                        >New Branch *</label
+                      >
+                      <input
+                        v-model="newTicket.request_detail[0].new_branch"
+                        type="text"
+                        style="
+                          width: 100%;
+                          padding: 8px;
+                          border-radius: 6px;
+                          border: 1px solid #ddd;
+                          font-size: 13px;
+                        "
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="newTicket.request_detail[0].request_type === 'DOB Updation'"
+                  >
+                    <label
+                      style="
+                        display: block;
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: #64748b;
+                        margin-bottom: 6px;
+                      "
+                      >Updated DOB *</label
+                    >
+                    <input
+                      v-model="newTicket.request_detail[0].updated_dob"
+                      type="date"
+                      style="
+                        width: 100%;
+                        padding: 8px;
+                        border-radius: 6px;
+                        border: 1px solid #ddd;
+                        font-size: 13px;
+                      "
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 32px">
+                <label
+                  style="
+                    display: block;
+                    font-size: 11px;
+                    font-weight: 800;
+                    color: var(--text-muted);
+                    text-transform: uppercase;
+                    margin-bottom: 8px;
+                  "
+                  >Description <span style="color: red">*</span></label
+                >
+                <textarea
+                  v-model="newTicket.description"
+                  placeholder="Describe the issue in detail..."
+                  style="
+                    width: 100%;
+                    height: 120px;
+                    padding: 12px;
+                    border-radius: 8px;
+                    border: 1px solid #ddd;
+                    outline: none;
+                    font-size: 13px;
+                    resize: none;
+                    line-height: 1.5;
+                  "
+                ></textarea>
+              </div>
+
+              <button
+                @click="submitTicket"
+                :disabled="submittingTicket"
+                style="
+                  width: 100%;
+                  padding: 14px;
+                  border-radius: 8px;
+                  border: none;
+                  background: black;
+                  color: white;
+                  font-size: 14px;
+                  font-weight: 700;
+                  cursor: pointer;
+                  transition: opacity 0.2s;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 10px;
+                "
+              >
+                <i v-if="submittingTicket" class="fas fa-spinner fa-spin"></i>
+                [[ submittingTicket ? 'Creating Ticket...' : 'Create Ticket' ]]
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1518,6 +2343,246 @@
         showAlertModal: false,
         alertTitle: "",
         alertMessage: "",
+        departments: [],
+        ticketTypes: [],
+        newTicket: {
+          employee_id: "",
+          employee_name: "",
+          dept_name: "",
+          ticket_type: "",
+          priority: "Normal",
+          description: "",
+          tat: "",
+          request_detail: [
+            {
+              request_type: "",
+              account_number: "",
+              cif: "",
+              customer_name: "",
+              contact_number: "",
+              account_type: "",
+              email: "",
+              new_address: "",
+              new_contact_number: "",
+              new_email: "",
+              new_kyc_no: "",
+              new_pan_no: "",
+              new_name: "",
+              nomination_opration: "",
+              existing_branch: "",
+              new_branch: "",
+              updated_dob: "",
+            },
+          ],
+        },
+        submittingTicket: false,
+        fetchingAccount: false,
+        employeeSearchQuery: "",
+        employeeResults: [],
+        showEmployeeDropdown: false,
+
+        async searchEmployees() {
+          let url = "/api/method/sahayog_ticket.api.helpdesks.search_employees";
+          if (
+            this.employeeSearchQuery &&
+            this.employeeSearchQuery.length >= 3 &&
+            !this.employeeSearchQuery.includes("(")
+          ) {
+            url += `?txt=${encodeURIComponent(this.employeeSearchQuery)}`;
+          } else if (
+            this.employeeSearchQuery &&
+            this.employeeSearchQuery.includes("(")
+          ) {
+            // Already selected, don't re-search unless they clear it
+            return;
+          }
+
+          try {
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.message) {
+              this.employeeResults = data.message;
+              this.showEmployeeDropdown = true;
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        },
+
+        selectEmployee(emp) {
+          this.newTicket.employee_id = emp.name;
+          this.newTicket.employee_name = emp.employee_name;
+          this.employeeSearchQuery = `${emp.employee_name} (${emp.name})`;
+          this.showEmployeeDropdown = false;
+        },
+
+        async fetchDepartments() {
+          try {
+            const res = await fetch(
+              "/api/method/sahayog_ticket.api.helpdesks.get_departments",
+            );
+            const data = await res.json();
+            if (data.message) this.departments = data.message;
+          } catch (e) {
+            console.error(e);
+          }
+        },
+
+        async onDeptChange() {
+          this.newTicket.ticket_type = "";
+          this.newTicket.tat = "";
+          this.resetRequestDetail();
+          if (!this.newTicket.dept_name) {
+            this.ticketTypes = [];
+            return;
+          }
+          try {
+            const res = await fetch(
+              `/api/method/sahayog_ticket.api.helpdesks.get_ticket_types?department=${encodeURIComponent(this.newTicket.dept_name)}`,
+            );
+            const data = await res.json();
+            if (data.message) this.ticketTypes = data.message;
+          } catch (e) {
+            console.error(e);
+          }
+        },
+
+        resetRequestDetail() {
+          this.newTicket.request_detail = [
+            {
+              request_type: "",
+              account_number: "",
+              cif: "",
+              customer_name: "",
+              contact_number: "",
+              account_type: "",
+              email: "",
+              new_address: "",
+              new_contact_number: "",
+              new_email: "",
+              new_kyc_no: "",
+              new_pan_no: "",
+              new_name: "",
+              nomination_opration: "",
+              existing_branch: "",
+              new_branch: "",
+              updated_dob: "",
+            },
+          ];
+        },
+
+        onTicketTypeChange() {
+          const type = this.ticketTypes.find(
+            (t) => t.name === this.newTicket.ticket_type,
+          );
+          this.newTicket.tat = type ? type.tat_days : "";
+
+          this.resetRequestDetail();
+        },
+
+        async getAccountDetails() {
+          const row = this.newTicket.request_detail[0];
+          if (!row.account_number) {
+            this.showAlert("Error", "Please enter Account Number first.");
+            return;
+          }
+          this.fetchingAccount = true;
+          try {
+            const res = await fetch(
+              `/api/method/sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.account_api.get_account_details?account_number=${row.account_number}`,
+            );
+            const data = await res.json();
+            if (data.message) {
+              row.cif = data.message.cif || "";
+              row.customer_name = data.message.customer_name || "";
+              row.contact_number = data.message.contact_number || "";
+              row.account_type = data.message.account_type || "";
+              row.email = data.message.email || "";
+            }
+          } catch (e) {
+            console.error(e);
+          }
+          this.fetchingAccount = false;
+        },
+
+        async submitTicket() {
+          if (
+            !this.newTicket.dept_name ||
+            !this.newTicket.ticket_type ||
+            !this.newTicket.description
+          ) {
+            this.showAlert(
+              "Validation Error",
+              "Please fill in all required fields.",
+            );
+            return;
+          }
+
+          if (this.newTicket.ticket_type === "Account Service Request") {
+            const row = this.newTicket.request_detail[0];
+            if (!row.request_type || !row.account_number) {
+              this.showAlert(
+                "Validation Error",
+                "Account Number and Request Type are mandatory for Account Service Requests.",
+              );
+              return;
+            }
+          }
+
+          this.submittingTicket = true;
+          try {
+            const docData = {
+              doctype: "Sahayog Ticket",
+              employee_id: this.newTicket.employee_id,
+              dept_name: this.newTicket.dept_name,
+              ticket_type: this.newTicket.ticket_type,
+              priority: this.newTicket.priority,
+              description: this.newTicket.description,
+              status: "Open",
+            };
+
+            if (this.newTicket.ticket_type === "Account Service Request") {
+              docData.request_detail = this.newTicket.request_detail;
+            }
+
+            const res = await fetch("/api/method/frappe.client.insert", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                "X-Frappe-CSRF-Token": this.getCsrfToken(),
+              },
+              body: JSON.stringify({ doc: docData }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              this.showAlert(
+                "Success",
+                `Ticket created successfully: ${data.message.name}`,
+              );
+              this.showCreateModal = false;
+              this.newTicket = {
+                dept_name: "",
+                ticket_type: "",
+                priority: "Normal",
+                description: "",
+                tat: "",
+                request_detail: [],
+              };
+              this.init(this.statusToggle, 0);
+            } else {
+              const data = await res.json();
+              this.showAlert(
+                "Error",
+                data.exception || "Failed to create ticket.",
+              );
+            }
+          } catch (e) {
+            console.error(e);
+            this.showAlert("Error", "An unexpected error occurred.");
+          }
+          this.submittingTicket = false;
+        },
 
         get userRoleDisplay() {
           if (this.hasRole("Administrator")) return "Administrator";
@@ -1812,6 +2877,24 @@
           this.loading = true;
           this.statusToggle = group;
           this.currentPage = page;
+
+          if (this.departments.length === 0) this.fetchDepartments();
+
+          if (!this.newTicket.employee_id) {
+            try {
+              const res = await fetch(
+                `/api/method/sahayog_ticket.api.helpdesks.get_employee_info?employee_number=${window.current_user}`,
+              );
+              const data = await res.json();
+              if (data.message && data.message.employee_name) {
+                this.newTicket.employee_id = data.message.name;
+                this.newTicket.employee_name = data.message.employee_name;
+                this.employeeSearchQuery = `${data.message.employee_name} (${data.message.name})`;
+              }
+            } catch (e) {
+              console.error("Employee fetch failed:", e);
+            }
+          }
 
           const fk = filterKey || (this.selectedItem ? this.activeTab : null);
           const fv = filterValue || this.selectedItem;
