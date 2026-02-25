@@ -679,7 +679,22 @@
                       <label style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Assigned To</label>
                       <div style="font-size: 13px; font-weight: 700; margin-top: 6px">[[ activeTicket.assigned_to_name || activeTicket.assigned_to || 'Unassigned' ]] <i v-if="!(activeTicket.assigned_to_name || activeTicket.assigned_to)" class="fas fa-pencil-alt assign-pencil"></i></div>
                     </div>
-                    <button @click="openTicket(activeTicket.name)" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; background: white; font-size: 11px; font-weight: 800; cursor: pointer; text-transform: uppercase;">Full Record</button>
+                                  <button
+                                    @click="window.top.frappe ? window.top.frappe.set_route('Form', 'Sahayog Ticket', activeTicket.name) : window.top.location.href = '/app/sahayog-ticket/' + activeTicket.name"
+                                    style="
+                                      width: 100%;
+                                      padding: 12px;
+                                      border-radius: 10px;
+                                      border: 1px solid #ddd;
+                                      background: white;
+                                      font-size: 11px;
+                                      font-weight: 800;
+                                      cursor: pointer;
+                                      text-transform: uppercase;
+                                    "
+                                  >
+                                    Full Record
+                                  </button>
                   </div>
       
                   <!-- Mid Col (Description) -->
