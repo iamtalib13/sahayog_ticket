@@ -477,26 +477,28 @@ def create_asset_request(ticket_id, employee_id, request_to, emp_name=None, desi
         frappe.throw(f"Error: {str(e)}")
 
 @frappe.whitelist()
+@frappe.whitelist()
 def get_employee_info(employee_number):
+    # Try by employee_number (ID) first, then by user_id (Email)
+    filters = {"employee_number": employee_number}
+    if "@" in employee_number:
+        filters = {"user_id": employee_number}
+
     employee = frappe.get_value(
         "Employee",
-        {"employee_number": employee_number},
+        filters,
         [
+            "name",
             "employee_name",
-            "designation",
             "branch",
             "cell_number",
             "department",
             "custom_district",
             "custom_division",
-            
         ],
         as_dict=True,
     )
-    if not employee:
-        return {}
-
-    return employee
+    return employee or {}
 
 @frappe.whitelist()
 def get_it_tickets(status_group="active", page=0, page_size=20, filter_key=None, filter_value=None):
@@ -768,3 +770,37 @@ def get_ticket_comments(ticket_name):
 @frappe.whitelist()
 def get_current_user_roles():
     return frappe.get_roles()
+
+@frappe.whitelist()
+def get_departments():
+    return frappe.get_all("Departsection", fields=["name"])
+
+@frappe.whitelist()
+def get_ticket_types(department):
+    if not department:
+        return []
+    return frappe.get_all("Ticket Type", 
+        filters={"department": department, "enable": 1}, 
+        fields=["name", "tat_days"]
+    )
+
+@frappe.whitelist()
+def search_employees(txt=None):
+    if not txt:
+        return frappe.get_all("Employee",
+            filters={"status": "Active"},
+            fields=["name", "employee_name", "branch"],
+            limit=20,
+            order_by="employee_name asc"
+        )
+    
+    # Use SQL for robust OR filtering on multiple fields
+    search_txt = f"%{txt}%"
+    return frappe.db.sql("""
+        SELECT name, employee_name, branch
+        FROM `tabEmployee`
+        WHERE status = 'Active'
+        AND (employee_name LIKE %s OR name LIKE %s)
+        ORDER BY employee_name ASC
+        LIMIT 20
+    """, (search_txt, search_txt), as_dict=True)
