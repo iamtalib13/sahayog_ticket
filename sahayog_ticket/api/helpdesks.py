@@ -477,7 +477,6 @@ def create_asset_request(ticket_id, employee_id, request_to, emp_name=None, desi
         frappe.throw(f"Error: {str(e)}")
 
 @frappe.whitelist()
-@frappe.whitelist()
 def get_employee_info(employee_number):
     # Try by employee_number (ID) first, then by user_id (Email)
     filters = {"employee_number": employee_number}
