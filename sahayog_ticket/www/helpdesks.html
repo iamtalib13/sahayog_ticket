@@ -27,6 +27,130 @@
         --primary-purple: #097c80;
       }
 
+      body.dark-mode {
+        --sidebar-bg: #111827;
+        --active-bg: #1f2937;
+        --border-color: #374151;
+        --text-main: #f3f4f6;
+        --text-muted: #9ca3af;
+        background-color: #030712;
+      }
+
+      body.dark-mode .main-content,
+      body.dark-mode .top-bar,
+      body.dark-mode .table-container,
+      body.dark-mode th,
+      body.dark-mode table,
+      body.dark-mode .top-bar select,
+      body.dark-mode .top-bar div[style*="background: #f3f4f6"] {
+        background-color: #030712 !important;
+        color: var(--text-main) !important;
+      }
+      
+      body.dark-mode .nav-item:not(.active) {
+        color: var(--text-muted);
+      }
+      
+      body.dark-mode .nav-item:not(.active):hover {
+        background: var(--active-bg);
+        color: var(--text-main);
+      }
+
+      /* Dark Mode Modal & Form Styles */
+      body.dark-mode .main-content div[style*="background: white"],
+      body.dark-mode .main-content div[style*="background: #fff"],
+      body.dark-mode .main-content div[style*="background: #fdfdfd"],
+      body.dark-mode .main-content div[style*="background: #fafafa"],
+      body.dark-mode div[style*="background: white"],
+      body.dark-mode div[style*="background: #fff"] {
+        background-color: #111827 !important;
+        color: var(--text-main) !important;
+      }
+
+      body.dark-mode input,
+      body.dark-mode select,
+      body.dark-mode textarea {
+        background-color: #1f2937 !important;
+        color: var(--text-main) !important;
+        border-color: #374151 !important;
+      }
+
+      body.dark-mode label,
+      body.dark-mode .text-muted,
+      body.dark-mode div[style*="color: var(--text-muted)"] {
+        color: var(--text-muted) !important;
+      }
+
+      body.dark-mode div[style*="border: 1px solid #ddd"],
+      body.dark-mode div[style*="border: 1px solid #eee"],
+      body.dark-mode div[style*="border-bottom: 1px solid #eee"],
+      body.dark-mode div[style*="border-top: 1px solid #eee"] {
+        border-color: #374151 !important;
+      }
+
+      body.dark-mode .ql-toolbar,
+      body.dark-mode .ql-container {
+        border-color: #374151 !important;
+        background-color: #1f2937 !important;
+        color: var(--text-main) !important;
+      }
+
+      body.dark-mode .ql-editor.ql-blank::before {
+        color: #6b7280 !important;
+      }
+
+      /* Quill Toolbar Dark Mode Fixes */
+      body.dark-mode .ql-toolbar .ql-stroke {
+        stroke: #f3f4f6 !important;
+      }
+      body.dark-mode .ql-toolbar .ql-fill {
+        fill: #f3f4f6 !important;
+      }
+      body.dark-mode .ql-toolbar .ql-picker {
+        color: #f3f4f6 !important;
+      }
+      body.dark-mode .ql-toolbar .ql-picker-options {
+        background-color: #1f2937 !important;
+        border-color: #374151 !important;
+      }
+      body.dark-mode .ql-toolbar .ql-picker-item:hover,
+      body.dark-mode .ql-toolbar .ql-picker-label:hover {
+        color: var(--primary-purple) !important;
+      }
+      body.dark-mode .ql-toolbar .ql-picker-item:hover .ql-stroke,
+      body.dark-mode .ql-toolbar .ql-picker-label:hover .ql-stroke {
+        stroke: var(--primary-purple) !important;
+      }
+
+      /* Communication Log Dark Mode Overrides */
+      body.dark-mode #commentList {
+        background-color: #030712 !important;
+      }
+      body.dark-mode #commentList div[style*="background: white"],
+      body.dark-mode #commentList div[style*="background: #fff"] {
+        background-color: #1f2937 !important;
+        color: #f3f4f6 !important;
+        border-color: #374151 !important;
+      }
+      body.dark-mode #commentList div[style*="background: #dcf8c6"] {
+        background-color: #064e3b !important;
+        color: #ecfdf5 !important;
+        border-color: #065f46 !important;
+      }
+      body.dark-mode #commentList span {
+        color: var(--text-muted) !important;
+      }
+
+      /* Issue Description Visibility in Dark Mode */
+      body.dark-mode div[style*="color: #222"],
+      body.dark-mode div[style*="color: #222"] * {
+        color: #f3f4f6 !important;
+      }
+      body.dark-mode div[style*="color: #222"] strong,
+      body.dark-mode div[style*="color: #222"] b {
+        color: #ffffff !important;
+      }
+
       body {
         margin: 0;
         font-family:
@@ -232,14 +356,19 @@
     <div id="app" v-scope v-cloak class="flex h-screen" @vue:mounted="init()">
       <!-- Sidebar -->
       <aside class="sidebar">
-        <div class="sidebar-header">
-          <div class="logo-box">H</div>
-          <div>
-            <div style="font-weight: 700; font-size: 15px">Helpdesk</div>
-            <div style="font-size: 11px; color: var(--text-muted)">
-              [[ userRoleDisplay ]]
+        <div class="sidebar-header" style="justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="logo-box">H</div>
+            <div>
+              <div style="font-weight: 700; font-size: 15px">Helpdesk</div>
+              <div style="font-size: 11px; color: var(--text-muted)">
+                [[ userRoleDisplay ]]
+              </div>
             </div>
           </div>
+          <button @click="toggleTheme" style="background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 5px;">
+            <i :class="theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'"></i>
+          </button>
         </div>
 
         <!-- Category Tabs -->
@@ -437,7 +566,9 @@
                           'Unassigned' ]]
                           <i
                             v-if="!(ticket.assigned_to_name || ticket.assigned_to) && canAssign"
+                            @click.stop="openAssignDialog(ticket)"
                             class="fas fa-pencil-alt assign-pencil"
+                            style="cursor: pointer;"
                           ></i>
                         </td>
                         <td>
@@ -1437,8 +1568,24 @@
         pageSize: 8,
         summaryData: [],
         viewMode: "list", // 'list' or 'detail'
+        theme: localStorage.getItem('helpdesk_theme') || 'light',
         isEditingDescription: false,
         editDescriptionQuill: null,
+        
+        toggleTheme() {
+          this.theme = this.theme === 'light' ? 'dark' : 'light';
+          localStorage.setItem('helpdesk_theme', this.theme);
+          this.applyTheme();
+        },
+        
+        applyTheme() {
+          if (this.theme === 'dark') {
+            document.body.classList.add('dark-mode');
+          } else {
+            document.body.classList.remove('dark-mode');
+          }
+        },
+
         backToList() {
           this.viewMode = "list";
           this.activeTicket = {};
@@ -1884,7 +2031,8 @@
           return Math.ceil(this.filteredTickets.length / this.pageSize);
         },
 
-        async openAssignDialog() {
+        async openAssignDialog(ticket) {
+          if (ticket) this.activeTicket = ticket;
           if (!this.activeTicket.dept_name) return;
           this.showAssignModal = true;
           this.loadingAssign = true;
@@ -2008,15 +2156,13 @@
         },
 
         get canAssign() {
-          if (this.hasRole("Administrator") || this.hasRole("System Manager"))
+          const roles = (this.user_roles || []).map(r => r.toLowerCase());
+          if (roles.includes("administrator") || roles.includes("system manager"))
             return true;
-          const roles = this.user_roles || [];
-          const isManager = roles.some((r) =>
-            r.toLowerCase().includes("manager"),
-          );
-          const isExecutive = roles.some((r) =>
-            r.toLowerCase().includes("executive"),
-          );
+          
+          const isManager = roles.some(r => r.includes("manager"));
+          const isExecutive = roles.some(r => r.includes("executive"));
+          
           return isManager && !isExecutive;
         },
 
@@ -2142,6 +2288,7 @@
           filterKey = null,
           filterValue = null,
         ) {
+          this.applyTheme();
           this.loading = true;
           this.statusToggle = group;
           this.currentPage = page;
