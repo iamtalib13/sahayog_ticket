@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"-D6bTo-XRw\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"IT Dashboard\",\"col\":12}}]",
+ "content": "[{\"id\":\"AJklhzxFvg\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Ticket Dashboard\",\"col\":3}},{\"id\":\"PqeNRBXsPm\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"IT Dashboard\",\"col\":12}}]",
  "creation": "2022-12-22 14:13:19.148126",
  "custom_blocks": [
   {
@@ -17,7 +17,7 @@
  "is_hidden": 0,
  "label": "IT Executives",
  "links": [],
- "modified": "2025-11-18 00:20:26.165558",
+ "modified": "2026-02-26 13:05:05.456549",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "IT Executives",
@@ -35,6 +35,14 @@
   }
  ],
  "sequence_id": 9.0,
- "shortcuts": [],
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Ticket Dashboard",
+   "type": "URL",
+   "url": "/helpdesks"
+  }
+ ],
  "title": "IT Executives"
 }
