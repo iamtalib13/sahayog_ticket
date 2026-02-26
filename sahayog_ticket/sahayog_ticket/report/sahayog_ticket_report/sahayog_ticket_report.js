@@ -5,7 +5,7 @@ frappe.query_reports["Sahayog Ticket Report"] = {
       fieldname: "status",
       label: "Status",
       fieldtype: "Select",
-      options: "\nOpen\nIn-Progress\nResolved\nClosed\nCancelled",
+      options: "\nOpen\nIn-Progress\nResolved\nClosed",
       default: "",
     },
     {
