@@ -477,7 +477,6 @@ def create_asset_request(ticket_id, employee_id, request_to, emp_name=None, desi
         frappe.throw(f"Error: {str(e)}")
 
 @frappe.whitelist()
-@frappe.whitelist()
 def get_employee_info(employee_number):
     # Try by employee_number (ID) first, then by user_id (Email)
     filters = {"employee_number": employee_number}
@@ -670,12 +669,16 @@ def get_it_support_executives(doctype=None, txt=None, searchfield=None, filters=
     if roles:
         user_ids = [ur.parent for ur in frappe.get_all("Has Role", filters={"role": ["in", roles]}, fields=["parent"])]
         if user_ids:
-            user_records = frappe.get_all(
-                "User",
-                filters={"email": ["in", user_ids], "name": ["!=", "Administrator"],"enabled": 1},
-                fields=["name", "full_name",],
-                limit_page_length=0,
-            )
+            # Join with Employee to get first_name
+            user_records = frappe.db.sql("""
+                SELECT u.name, u.full_name, e.first_name
+                FROM `tabUser` u
+                LEFT JOIN `tabEmployee` e ON u.name = e.user_id
+                WHERE u.email IN %(user_ids)s 
+                AND u.name != 'Administrator' 
+                AND u.enabled = 1
+            """, {"user_ids": tuple(user_ids)}, as_dict=True)
+
             txt = (txt or "").lower()
 
             assigned_counts = frappe.get_all(
@@ -694,7 +697,7 @@ def get_it_support_executives(doctype=None, txt=None, searchfield=None, filters=
                 if txt in user.name.lower() or (user.full_name and txt in user.full_name.lower()):
                     count = counts_map.get(user.name, 0)
                     label = f"{user.full_name or user.name} ({count} tickets assigned)"
-                    user_list.append((user.name, label))
+                    user_list.append((user.name, label, user.first_name or user.full_name or user.name))
 
     return user_list
 

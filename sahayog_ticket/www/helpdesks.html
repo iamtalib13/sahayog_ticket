@@ -14,6 +14,9 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <!-- Quill Rich Text Editor -->
+    <link href="/assets/sahayog_ticket/css/quill.snow.css" rel="stylesheet">
+    <script src="/assets/sahayog_ticket/js/quill.js"></script>
     <style>
       :root {
         --sidebar-bg: #f9f9fb;
@@ -22,6 +25,130 @@
         --text-main: #111827;
         --text-muted: #6b7280;
         --primary-purple: #097c80;
+      }
+
+      body.dark-mode {
+        --sidebar-bg: #111827;
+        --active-bg: #1f2937;
+        --border-color: #374151;
+        --text-main: #f3f4f6;
+        --text-muted: #9ca3af;
+        background-color: #030712;
+      }
+
+      body.dark-mode .main-content,
+      body.dark-mode .top-bar,
+      body.dark-mode .table-container,
+      body.dark-mode th,
+      body.dark-mode table,
+      body.dark-mode .top-bar select,
+      body.dark-mode .top-bar div[style*="background: #f3f4f6"] {
+        background-color: #030712 !important;
+        color: var(--text-main) !important;
+      }
+      
+      body.dark-mode .nav-item:not(.active) {
+        color: var(--text-muted);
+      }
+      
+      body.dark-mode .nav-item:not(.active):hover {
+        background: var(--active-bg);
+        color: var(--text-main);
+      }
+
+      /* Dark Mode Modal & Form Styles */
+      body.dark-mode .main-content div[style*="background: white"],
+      body.dark-mode .main-content div[style*="background: #fff"],
+      body.dark-mode .main-content div[style*="background: #fdfdfd"],
+      body.dark-mode .main-content div[style*="background: #fafafa"],
+      body.dark-mode div[style*="background: white"],
+      body.dark-mode div[style*="background: #fff"] {
+        background-color: #111827 !important;
+        color: var(--text-main) !important;
+      }
+
+      body.dark-mode input,
+      body.dark-mode select,
+      body.dark-mode textarea {
+        background-color: #1f2937 !important;
+        color: var(--text-main) !important;
+        border-color: #374151 !important;
+      }
+
+      body.dark-mode label,
+      body.dark-mode .text-muted,
+      body.dark-mode div[style*="color: var(--text-muted)"] {
+        color: var(--text-muted) !important;
+      }
+
+      body.dark-mode div[style*="border: 1px solid #ddd"],
+      body.dark-mode div[style*="border: 1px solid #eee"],
+      body.dark-mode div[style*="border-bottom: 1px solid #eee"],
+      body.dark-mode div[style*="border-top: 1px solid #eee"] {
+        border-color: #374151 !important;
+      }
+
+      body.dark-mode .ql-toolbar,
+      body.dark-mode .ql-container {
+        border-color: #374151 !important;
+        background-color: #1f2937 !important;
+        color: var(--text-main) !important;
+      }
+
+      body.dark-mode .ql-editor.ql-blank::before {
+        color: #6b7280 !important;
+      }
+
+      /* Quill Toolbar Dark Mode Fixes */
+      body.dark-mode .ql-toolbar .ql-stroke {
+        stroke: #f3f4f6 !important;
+      }
+      body.dark-mode .ql-toolbar .ql-fill {
+        fill: #f3f4f6 !important;
+      }
+      body.dark-mode .ql-toolbar .ql-picker {
+        color: #f3f4f6 !important;
+      }
+      body.dark-mode .ql-toolbar .ql-picker-options {
+        background-color: #1f2937 !important;
+        border-color: #374151 !important;
+      }
+      body.dark-mode .ql-toolbar .ql-picker-item:hover,
+      body.dark-mode .ql-toolbar .ql-picker-label:hover {
+        color: var(--primary-purple) !important;
+      }
+      body.dark-mode .ql-toolbar .ql-picker-item:hover .ql-stroke,
+      body.dark-mode .ql-toolbar .ql-picker-label:hover .ql-stroke {
+        stroke: var(--primary-purple) !important;
+      }
+
+      /* Communication Log Dark Mode Overrides */
+      body.dark-mode #commentList {
+        background-color: #030712 !important;
+      }
+      body.dark-mode #commentList div[style*="background: white"],
+      body.dark-mode #commentList div[style*="background: #fff"] {
+        background-color: #1f2937 !important;
+        color: #f3f4f6 !important;
+        border-color: #374151 !important;
+      }
+      body.dark-mode #commentList div[style*="background: #dcf8c6"] {
+        background-color: #064e3b !important;
+        color: #ecfdf5 !important;
+        border-color: #065f46 !important;
+      }
+      body.dark-mode #commentList span {
+        color: var(--text-muted) !important;
+      }
+
+      /* Issue Description Visibility in Dark Mode */
+      body.dark-mode div[style*="color: #222"],
+      body.dark-mode div[style*="color: #222"] * {
+        color: #f3f4f6 !important;
+      }
+      body.dark-mode div[style*="color: #222"] strong,
+      body.dark-mode div[style*="color: #222"] b {
+        color: #ffffff !important;
       }
 
       body {
@@ -73,16 +200,16 @@
         padding: 8px 0;
       }
       .nav-item {
-        padding: 12px 16px;
+        padding: 8px 12px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        font-size: 14px;
+        font-size: 12px;
         color: var(--text-muted);
         transition: 0.2s;
-        border-radius: 8px;
-        margin: 2px 12px;
+        border-radius: 6px;
+        margin: 1px 10px;
         background: transparent;
       }
 
@@ -208,27 +335,44 @@
         transition: width 0.3s;
       }
 
-      [v-cloak] {
-        display: none;
-      }
-    </style>
+                  [v-cloak] { display: none; }
+      
+                  /* Quill Table Styling */
+                  .ql-editor table {
+                    border-collapse: collapse;
+                    table-layout: fixed;
+                    width: 100%;
+                    margin: 0;
+                    padding: 0;
+                  }
+                  .ql-editor td {
+                    border: 1px solid #ccc;
+                    padding: 2px 5px;
+                    vertical-align: top;
+                  }
+          </style>
   </head>
   <body>
     <div id="app" v-scope v-cloak class="flex h-screen" @vue:mounted="init()">
       <!-- Sidebar -->
       <aside class="sidebar">
-        <div class="sidebar-header">
-          <div class="logo-box">H</div>
-          <div>
-            <div style="font-weight: 700; font-size: 15px">Helpdesk</div>
-            <div style="font-size: 11px; color: var(--text-muted)">
-              [[ userRoleDisplay ]]
+        <div class="sidebar-header" style="justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="logo-box">H</div>
+            <div>
+              <div style="font-weight: 700; font-size: 15px">Helpdesk</div>
+              <div style="font-size: 11px; color: var(--text-muted)">
+                [[ userRoleDisplay ]]
+              </div>
             </div>
           </div>
+          <button @click="toggleTheme" style="background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 5px;">
+            <i :class="theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'"></i>
+          </button>
         </div>
 
         <!-- Category Tabs -->
-        <div style="padding: 0 16px 16px">
+        <div style="padding: 0 16px 0px">
           <div
             style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px"
           >
@@ -320,7 +464,7 @@
               "
               >[[ group.name ]]
               <i
-                v-if="group.name === 'Unassigned'"
+                v-if="group.name === 'Unassigned' && canAssign"
                 class="fas fa-pencil-alt assign-pencil"
               ></i>
             </span>
@@ -331,900 +475,472 @@
         </nav>
       </aside>
 
-      <!-- Main Content -->
-      <main class="main-content">
-        <header class="top-bar">
-          <div
-            style="font-size: 13px; font-weight: 500; color: var(--text-muted)"
-          >
-            Workspace /
-            <span style="color: black; font-weight: 700"
-              >[[ selectedItem || 'Overview' ]]</span
-            >
-          </div>
-          <div style="display: flex; align-items: center; gap: 16px">
-            <!-- Status Toggle -->
-            <div
-              style="
-                display: flex;
-                background: #f3f4f6;
-                border-radius: 8px;
-                padding: 2px;
-                font-size: 10px;
-                font-weight: 800;
-                text-transform: uppercase;
-                width: 180px;
-                border: 1px solid var(--border-color);
-              "
-            >
-              <div
-                @click="init('active', 0)"
-                :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'active' ? 'var(--primary-purple)' : 'transparent', color: statusToggle === 'active' ? 'white' : '#888', transition: '0.2s' }"
-              >
-                Pending
-              </div>
-              <div
-                @click="init('completed', 0)"
-                :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'completed' ? 'var(--primary-purple)' : 'transparent', color: statusToggle === 'completed' ? 'white' : '#888', transition: '0.2s' }"
-              >
-                Closed
-              </div>
-            </div>
-            <button class="btn-create" @click="showCreateModal = true">
-              <i class="fas fa-plus mr-2"></i> Create Ticket
-            </button>
-          </div>
-        </header>
-
-        <div class="table-container">
-          <table v-if="selectedItem">
-            <thead>
-              <tr>
-                <th width="140">Ticket ID</th>
-                <th>Branch</th>
-                <th>Raised By</th>
-                <th>Assigned To</th>
-                <th width="100">Status</th>
-                <th width="100">Priority</th>
-                <th width="120">Created</th>
-                <th width="40"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="ticket in tickets" :key="ticket.name">
-                <td style="font-weight: 700">
-                  <div style="display: flex; align-items: center; gap: 8px">
-                    <a
-                      @click="openTicket(ticket.name)"
-                      style="
-                        cursor: pointer;
-                        color: var(--primary-purple);
-                        text-decoration: underline;
-                      "
-                      >[[ ticket.name ]]</a
-                    >
-                    <span
-                      class="status-dot"
-                      :style="{ backgroundColor: getStatusColor(ticket.status) }"
-                      :title="ticket.status"
-                    ></span>
-                  </div>
-                </td>
-                <td style="font-weight: 500">[[ ticket.branch || '-' ]]</td>
-                <td>[[ ticket.employee_name || ticket.owner ]]</td>
-                <td style="font-weight: 500">
-                  [[ ticket.assigned_to_name || ticket.assigned_to ||
-                  'Unassigned' ]]
-                  <i
-                    v-if="!(ticket.assigned_to_name || ticket.assigned_to)"
-                    class="fas fa-pencil-alt assign-pencil"
-                  ></i>
-                </td>
-                <td>
-                  <span
-                    class="status-dot"
-                    :style="{ backgroundColor: getStatusColor(ticket.status) }"
-                  ></span>
-                  [[ ticket.status ]]
-                </td>
-                <td>
-                  <span :class="['badge', getPriorityClass(ticket.priority)]"
-                    >[[ ticket.priority ]]</span
-                  >
-                </td>
-                <td style="color: var(--text-muted); font-size: 12px">
-                  [[ formatDate(ticket.creation) ]] ([[ getAge(ticket.creation)
-                  ]]d)
-                </td>
-                <td>
-                  <button
-                    @click="viewTicketDetails(ticket)"
-                    style="
-                      border: none;
-                      background: transparent;
-                      cursor: pointer;
-                      font-size: 16px;
-                    "
-                  >
-                    📋
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <!-- Pagination Controls -->
-          <div
-            v-if="currentPage > 0 || hasNextPage"
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              padding: 16px 8px;
-              border-top: 1px solid var(--border-color);
-              background: white;
-            "
-          >
-            <button
-              @click="init(statusToggle, currentPage - 1)"
-              :disabled="currentPage === 0"
-              style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; background: white; font-size: 11px; font-weight: 700; cursor: pointer; opacity: currentPage === 0 ? 0.5 : 1;"
-            >
-              <i class="fas fa-chevron-left mr-1"></i> Previous
-            </button>
-            <span
-              style="
-                font-size: 11px;
-                font-weight: 800;
-                color: var(--text-muted);
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-              "
-            >
-              Page [[ currentPage + 1 ]]
-            </span>
-            <button
-              @click="init(statusToggle, currentPage + 1)"
-              :disabled="!hasNextPage"
-              style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; background: white; font-size: 11px; font-weight: 700; cursor: pointer; opacity: !hasNextPage ? 0.5 : 1;"
-            >
-              Next <i class="fas fa-chevron-right mr-1"></i>
-            </button>
-          </div>
-
-          <div
-            v-else-if="!selectedItem"
-            style="
-              height: 100%;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              color: var(--text-muted);
-            "
-          >
-            <i
-              class="fas fa-arrow-left mb-4"
-              style="font-size: 24px; opacity: 0.3"
-            ></i>
-            <p>Select an item from the sidebar to view tickets</p>
-          </div>
-        </div>
-      </main>
-
-      <!-- Detailed Ticket Modal -->
-      <div
-        v-if="showModal"
-        style="
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.6);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        "
-        @click.self="showModal = false"
-      >
-        <div
-          style="
-            background: white;
-            width: 95%;
-            height: 90vh;
-            max-width: 1200px;
-            border-radius: 16px;
-            overflow: hidden;
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            grid-template-rows: 70px repeat(4, 1fr);
-          "
-        >
-          <!-- Header -->
-          <div
-            style="
-              grid-area: 1 / 1 / 2 / 6;
-              border-bottom: 1px solid var(--border-color);
-              background: #fdfdfd;
-              display: flex;
-              align-items: center;
-              padding: 0 24px;
-              gap: 40px;
-            "
-          >
-            <div style="display: flex; flex-direction: column">
-              <label
-                style="
-                  font-size: 9px;
-                  font-weight: 800;
-                  color: var(--text-muted);
-                "
-                >ID</label
-              >
-              <div
-                style="
-                  font-weight: 800;
-                  font-size: 16px;
-                  color: var(--primary-purple);
-                "
-              >
-                [[ activeTicket.name ]]
-              </div>
-            </div>
-            <div style="display: flex; flex-direction: column">
-              <label
-                style="
-                  font-size: 9px;
-                  font-weight: 800;
-                  color: var(--text-muted);
-                "
-                >PRIORITY</label
-              >
-              <div>
-                <span
-                  :class="['badge', getPriorityClass(activeTicket.priority)]"
-                  >[[ activeTicket.priority ]]</span
-                >
-              </div>
-            </div>
-            <div style="display: flex; flex-direction: column">
-              <label
-                style="
-                  font-size: 9px;
-                  font-weight: 800;
-                  color: var(--text-muted);
-                "
-                >CREATED</label
-              >
-              <div style="font-size: 13px; font-weight: 600">
-                [[ formatDate(activeTicket.creation) ]]
-              </div>
-            </div>
-            <div
-              style="
-                height: 32px;
-                width: 1px;
-                background: var(--border-color);
-                margin: 0 -8px;
-              "
-            ></div>
-            <div style="display: flex; flex-direction: column">
-              <label
-                style="
-                  font-size: 9px;
-                  font-weight: 800;
-                  color: var(--text-muted);
-                "
-                >REQUEST TO</label
-              >
-              <div style="font-size: 13px; font-weight: 600">
-                [[ activeTicket.dept_name || 'IT' ]]
-              </div>
-            </div>
-            <div style="display: flex; flex-direction: column">
-              <label
-                style="
-                  font-size: 9px;
-                  font-weight: 800;
-                  color: var(--text-muted);
-                "
-                >ISSUE</label
-              >
-              <div
-                style="
-                  font-size: 13px;
-                  font-weight: 600;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                  white-space: nowrap;
-                  max-width: 150px;
-                "
-                :title="activeTicket.ticket_type"
-              >
-                [[ activeTicket.ticket_type || '-' ]]
-              </div>
-            </div>
-            <div style="display: flex; flex-direction: column">
-              <label
-                style="
-                  font-size: 9px;
-                  font-weight: 800;
-                  color: var(--text-muted);
-                "
-                >TAT</label
-              >
-              <div style="font-size: 13px; font-weight: 600">
-                [[ activeTicket.tat || 'N/A' ]]
-              </div>
-            </div>
-
-            <div
-              v-if="canCreateMaterialRequest()"
-              style="display: flex; flex-direction: column"
-            >
-              <label style="font-size: 9px; font-weight: 800; color: #d97706"
-                >ACTION</label
-              >
-              <button
-                @click="createMaterialRequest"
-                style="
-                  background: #fff9f2;
-                  color: #d97706;
-                  border: 1px solid #ffe8cc;
-                  border-radius: 6px;
-                  padding: 4px 12px;
-                  font-size: 10px;
-                  font-weight: 800;
-                  cursor: pointer;
-                  text-transform: uppercase;
-                  white-space: nowrap;
-                "
-              >
-                Create Material Request
-              </button>
-            </div>
-
-            <div
-              style="display: flex; flex-direction: column; margin-left: auto"
-            >
-              <label
-                style="
-                  font-size: 9px;
-                  font-weight: 800;
-                  color: var(--text-muted);
-                "
-                >STATUS</label
-              >
-              <div style="display: flex; align-items: center; gap: 6px">
-                <span
-                  class="status-dot"
-                  :style="{ backgroundColor: getStatusColor(activeTicket.status) }"
-                ></span>
-                <select
-                  @change="updateTicketStatus(activeTicket.name, $event.target.value)"
-                  :value="activeTicket.status"
-                  style="
-                    font-size: 11px;
-                    font-weight: 700;
-                    border: 1px solid #ddd;
-                    border-radius: 6px;
-                    padding: 4px 8px;
-                    outline: none;
-                    cursor: pointer;
-                    text-transform: uppercase;
-                    background: white;
-                  "
-                >
-                  <option value="Open">Open</option>
-                  <option value="In-Progress">In-Progress</option>
-                  <option value="Resolved">Resolved</option>
-                  <option value="Closed">Closed</option>
-                </select>
-              </div>
-            </div>
-            <button
-              @click="showModal = false"
-              style="
-                background: none;
-                border: none;
-                font-size: 28px;
-                cursor: pointer;
-                color: #ccc;
-              "
-            >
-              &times;
-            </button>
-          </div>
-          <!-- Left Col -->
-          <div
-            style="
-              grid-area: 2 / 1 / 6 / 2;
-              border-right: 1px solid var(--border-color);
-              padding: 20px;
-              background: #fafafa;
-              overflow-y: auto;
-            "
-          >
-            <div
-              style="
-                background: white;
-                border: 1px solid var(--border-color);
-                border-radius: 12px;
-                padding: 16px;
-                margin-bottom: 12px;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-              "
-            >
-              <label
-                style="
-                  font-size: 9px;
-                  font-weight: 800;
-                  color: var(--text-muted);
-                  text-transform: uppercase;
-                "
-                >Raised By</label
-              >
-              <div style="font-size: 14px; font-weight: 700; margin-top: 6px">
-                [[ activeTicket.employee_name ]]
-              </div>
-              <div
-                v-if="activeTicket.designation"
-                style="
-                  font-size: 10px;
-                  color: var(--text-muted);
-                  font-weight: 600;
-                  margin-top: 1px;
-                "
-              >
-                [[ activeTicket.designation ]]
-              </div>
-              <div
-                style="
-                  font-size: 11px;
-                  color: var(--text-muted);
-                  margin-top: 2px;
-                "
-              >
-                [[ activeTicket.owner ]]
-              </div>
-              <div
-                v-if="activeTicket.cell_number"
-                style="
-                  font-size: 12px;
-                  font-weight: 600;
-                  margin-top: 8px;
-                  color: var(--primary-purple);
-                "
-              >
-                <i class="fas fa-phone-alt mr-2"></i>[[ activeTicket.cell_number
-                ]]
-              </div>
-              <div
-                style="
-                  border-top: 1px dashed #eee;
-                  padding-top: 12px;
-                  margin-top: 12px;
-                  display: grid;
-                  gap: 8px;
-                "
-              >
-                <div style="display: flex; justify-content: space-between">
-                  <span
-                    style="
-                      font-size: 9px;
-                      font-weight: 700;
-                      color: var(--text-muted);
-                    "
-                    >BRANCH</span
-                  ><span style="font-size: 11px; font-weight: 700"
-                    >[[ activeTicket.branch || '-' ]]</span
-                  >
-                </div>
-                <div style="display: flex; justify-content: space-between">
-                  <span
-                    style="
-                      font-size: 9px;
-                      font-weight: 700;
-                      color: var(--text-muted);
-                    "
-                    >DISTRICT</span
-                  ><span style="font-size: 11px; font-weight: 700"
-                    >[[ activeTicket.district || '-' ]]</span
-                  >
-                </div>
-              </div>
-            </div>
-            <div
-              @click="openAssignDialog"
-              style="
-                background: white;
-                border: 1px solid var(--border-color);
-                border-radius: 12px;
-                padding: 16px;
-                margin-bottom: 24px;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-                cursor: pointer;
-              "
-            >
-              <label
-                style="
-                  font-size: 9px;
-                  font-weight: 800;
-                  color: var(--text-muted);
-                  text-transform: uppercase;
-                "
-                >Assigned To</label
-              >
-              <div style="font-size: 13px; font-weight: 700; margin-top: 6px">
-                [[ activeTicket.assigned_to_name || activeTicket.assigned_to ||
-                'Unassigned' ]]
-                <i
-                  v-if="!(activeTicket.assigned_to_name || activeTicket.assigned_to)"
-                  class="fas fa-pencil-alt assign-pencil"
-                ></i>
-              </div>
-            </div>
-            <button
-              @click="openTicket(activeTicket.name)"
-              style="
-                width: 100%;
-                padding: 12px;
-                border-radius: 10px;
-                border: 1px solid #ddd;
-                background: white;
-                font-size: 11px;
-                font-weight: 800;
-                cursor: pointer;
-                text-transform: uppercase;
-              "
-            >
-              Full Record
-            </button>
-          </div>
-          <!-- Mid Col -->
-          <div
-            style="
-              grid-area: 2 / 2 / 6 / 4;
-              padding: 24px;
-              overflow-y: auto;
-              border-right: 1px solid var(--border-color);
-            "
-          >
-            <h4
-              style="
-                margin: 0 0 20px;
-                font-size: 11px;
-                font-weight: 800;
-                color: var(--text-muted);
-                text-transform: uppercase;
-              "
-            >
-              Issue Description
-            </h4>
-            <div v-if="loadingDetail" style="padding: 40px; text-align: center">
-              <i class="fas fa-spinner fa-spin fa-2x" style="color: #ddd"></i>
-            </div>
-            <div v-else>
-              <!-- Specialized Account Details View -->
-              <div
-                v-if="activeTicket.ticket_type === 'Account Service Request' && activeTicket.request_detail && activeTicket.request_detail.length"
-                style="
-                  margin-bottom: 24px;
-                  padding: 20px;
-                  background: #f0fdf4;
-                  border: 1px solid #bbf7d0;
-                  border-radius: 12px;
-                "
-              >
-                <h5
-                  style="
-                    margin: 0 0 12px;
-                    font-size: 11px;
-                    font-weight: 800;
-                    color: #166534;
-                    text-transform: uppercase;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                  "
-                >
-                  <i class="fas fa-user-check"></i> Account Service Details
-                </h5>
-                <div
-                  style="
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 16px;
-                  "
-                >
-                  <div>
-                    <div
-                      style="
-                        font-size: 9px;
-                        font-weight: 800;
-                        color: #166534;
-                        text-transform: uppercase;
-                        opacity: 0.6;
-                      "
-                    >
-                      Request Type
-                    </div>
-                    <div
-                      style="font-size: 13px; font-weight: 700; color: #14532d"
-                    >
-                      [[ activeTicket.request_detail[0].request_type ]]
-                    </div>
-                  </div>
-                  <div>
-                    <div
-                      style="
-                        font-size: 9px;
-                        font-weight: 800;
-                        color: #166534;
-                        text-transform: uppercase;
-                        opacity: 0.6;
-                      "
-                    >
-                      Account Number
-                    </div>
-                    <div
-                      style="font-size: 13px; font-weight: 700; color: #14532d"
-                    >
-                      [[ activeTicket.request_detail[0].account_number ]]
-                    </div>
-                  </div>
-                  <div v-if="activeTicket.request_detail[0].customer_name">
-                    <div
-                      style="
-                        font-size: 9px;
-                        font-weight: 800;
-                        color: #166534;
-                        text-transform: uppercase;
-                        opacity: 0.6;
-                      "
-                    >
-                      Customer Name
-                    </div>
-                    <div
-                      style="font-size: 13px; font-weight: 700; color: #14532d"
-                    >
-                      [[ activeTicket.request_detail[0].customer_name ]]
-                    </div>
-                  </div>
-                  <div v-if="activeTicket.request_detail[0].cif">
-                    <div
-                      style="
-                        font-size: 9px;
-                        font-weight: 800;
-                        color: #166534;
-                        text-transform: uppercase;
-                        opacity: 0.6;
-                      "
-                    >
-                      CIF (Customer ID)
-                    </div>
-                    <div
-                      style="font-size: 13px; font-weight: 700; color: #14532d"
-                    >
-                      [[ activeTicket.request_detail[0].cif ]]
-                    </div>
-                  </div>
-                </div>
-
-                <!-- New Info Section (Conditional) -->
-                <div
-                  v-if="activeTicket.request_detail[0].new_address || activeTicket.request_detail[0].new_contact_number || activeTicket.request_detail[0].new_email || activeTicket.request_detail[0].new_pan_no || activeTicket.request_detail[0].new_kyc_no"
-                  style="
-                    margin-top: 16px;
-                    padding-top: 16px;
-                    border-top: 1px dashed #bbf7d0;
-                  "
-                >
+            <!-- Main Content -->
+            <main class="main-content">
+              <!-- LIST VIEW -->
+              <template v-if="viewMode === 'list'">
+                <header class="top-bar">
                   <div
-                    style="
-                      font-size: 9px;
-                      font-weight: 800;
-                      color: #166534;
-                      text-transform: uppercase;
-                      margin-bottom: 8px;
-                    "
+                    style="font-size: 13px; font-weight: 500; color: var(--text-muted)"
                   >
-                    Update Requested To:
+                    Workspace /
+                    <span style="color: black; font-weight: 700"
+                      >[[ selectedItem || 'Overview' ]]</span
+                    >
                   </div>
+                  <div style="display: flex; align-items: center; gap: 16px">
+                    <!-- Status Toggle -->
+                    <div
+                      style="
+                        display: flex;
+                        background: #f3f4f6;
+                        border-radius: 8px;
+                        padding: 2px;
+                        font-size: 10px;
+                        font-weight: 800;
+                        text-transform: uppercase;
+                        width: 180px;
+                        border: 1px solid var(--border-color);
+                      "
+                    >
+                      <div
+                        @click="init('active', 0)"
+                        :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'active' ? 'var(--primary-purple)' : 'transparent', color: statusToggle === 'active' ? 'white' : '#888', transition: '0.2s' }"
+                      >
+                        Pending
+                      </div>
+                      <div
+                        @click="init('completed', 0)"
+                        :style="{ flex: 1, textAlign: 'center', padding: '6px 0', cursor: 'pointer', borderRadius: '6px', background: statusToggle === 'completed' ? 'var(--primary-purple)' : 'transparent', color: statusToggle === 'completed' ? 'white' : '#888', transition: '0.2s' }"
+                      >
+                        Closed
+                      </div>
+                    </div>
+                    <button
+                      class="btn-create"
+                      @click="showCreateModal = true; initEditor()"
+                    >
+                      <i class="fas fa-plus mr-2"></i> Create Ticket
+                    </button>
+                  </div>
+                </header>
+      
+                <div class="table-container">
+                  <table v-if="selectedItem">
+                    <thead>
+                      <tr>
+                        <th width="140">Ticket ID</th>
+                        <th>Branch</th>
+                        <th>Raised By</th>
+                        <th>Assigned To</th>
+                        <th width="100">Status</th>
+                        <th width="100">Priority</th>
+                        <th width="120">Created</th>
+                        <th width="40"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="ticket in tickets" :key="ticket.name">
+                        <td style="font-weight: 700">
+                          <div style="display: flex; align-items: center; gap: 8px">
+                            <a
+                              @click="openTicket(ticket.name)"
+                              style="
+                                cursor: pointer;
+                                color: var(--primary-purple);
+                                text-decoration: underline;
+                              "
+                              >[[ ticket.name ]]</a
+                            >
+                            <span
+                              class="status-dot"
+                              :style="{ backgroundColor: getStatusColor(ticket.status) }"
+                              :title="ticket.status"
+                            ></span>
+                          </div>
+                        </td>
+                        <td style="font-weight: 500">[[ ticket.branch || '-' ]]</td>
+                        <td>[[ ticket.employee_name || ticket.owner ]]</td>
+                        <td style="font-weight: 500">
+                          [[ ticket.assigned_to_name || ticket.assigned_to ||
+                          'Unassigned' ]]
+                          <i
+                            v-if="!(ticket.assigned_to_name || ticket.assigned_to) && canAssign"
+                            @click.stop="openAssignDialog(ticket)"
+                            class="fas fa-pencil-alt assign-pencil"
+                            style="cursor: pointer;"
+                          ></i>
+                        </td>
+                        <td>
+                          <span
+                            class="status-dot"
+                            :style="{ backgroundColor: getStatusColor(ticket.status) }"
+                          ></span>
+                          [[ ticket.status ]]
+                        </td>
+                        <td>
+                          <span :class="['badge', getPriorityClass(ticket.priority)]"
+                            >[[ ticket.priority ]]</span
+                          >
+                        </td>
+                        <td style="color: var(--text-muted); font-size: 12px">
+                          [[ formatDate(ticket.creation) ]] ([[ getAge(ticket.creation)
+                          ]]d)
+                        </td>
+                        <td>
+                          <button
+                            @click="viewTicketDetails(ticket)"
+                            style="
+                              border: none;
+                              background: transparent;
+                              cursor: pointer;
+                              font-size: 16px;
+                            "
+                          >
+                            📋
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+      
+                  <!-- Pagination Controls -->
                   <div
+                    v-if="currentPage > 0 || hasNextPage"
                     style="
-                      font-size: 13px;
-                      font-weight: 700;
-                      color: #166534;
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      padding: 16px 8px;
+                      border-top: 1px solid var(--border-color);
                       background: white;
-                      padding: 10px;
-                      border-radius: 8px;
-                      border: 1px solid #dcfce7;
                     "
                   >
-                    <span v-if="activeTicket.request_detail[0].new_address"
-                      >[[ activeTicket.request_detail[0].new_address ]]</span
+                    <button
+                      @click="init(statusToggle, currentPage - 1)"
+                      :disabled="currentPage === 0"
+                      :style="{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #ddd',
+                        background: 'white',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        opacity: (currentPage === 0 ? 0.5 : 1)
+                      }"
                     >
+                      <i class="fas fa-chevron-left mr-1"></i> Previous
+                    </button>
                     <span
-                      v-if="activeTicket.request_detail[0].new_contact_number"
-                      >[[ activeTicket.request_detail[0].new_contact_number
-                      ]]</span
+                      style="
+                        font-size: 11px;
+                        font-weight: 800;
+                        color: var(--text-muted);
+                        text-transform: uppercase;
+                        letter-spacing: 0.05em;
+                      "
                     >
-                    <span v-if="activeTicket.request_detail[0].new_email"
-                      >[[ activeTicket.request_detail[0].new_email ]]</span
+                      Page [[ currentPage + 1 ]]
+                    </span>
+                    <button
+                      @click="init(statusToggle, currentPage + 1)"
+                      :disabled="!hasNextPage"
+                      :style="{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #ddd',
+                        background: 'white',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        opacity: (!hasNextPage ? 0.5 : 1)
+                      }"
                     >
-                    <span v-if="activeTicket.request_detail[0].new_pan_no"
-                      >PAN: [[ activeTicket.request_detail[0].new_pan_no
-                      ]]</span
-                    >
-                    <span v-if="activeTicket.request_detail[0].new_kyc_no"
-                      >KYC: [[ activeTicket.request_detail[0].new_kyc_no
-                      ]]</span
-                    >
-                    <span v-if="activeTicket.request_detail[0].new_name"
-                      >Name: [[ activeTicket.request_detail[0].new_name ]]</span
-                    >
+                      Next <i class="fas fa-chevron-right mr-1"></i>
+                    </button>
+                  </div>
+      
+                  <div
+                    v-else-if="!selectedItem"
+                    style="
+                      height: 100%;
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                      color: var(--text-muted);
+                    "
+                  >
+                    <i
+                      class="fas fa-arrow-left mb-4"
+                      style="font-size: 24px; opacity: 0.3"
+                    ></i>
+                    <p>Select an item from the sidebar to view tickets</p>
                   </div>
                 </div>
-              </div>
-
-              <div
-                style="font-size: 15px; line-height: 1.7; color: #222"
-                v-html="activeTicket.description || 'No description provided.'"
-              ></div>
-            </div>
-          </div>
-          <!-- Right Col -->
-          <div
-            style="
-              grid-area: 2 / 4 / 6 / 6;
-              display: flex;
-              flex-direction: column;
-              background: #fdfdfd;
-            "
-          >
-            <div
-              style="
-                padding: 16px 24px;
-                border-bottom: 1px solid var(--border-color);
-                background: white;
-              "
-            >
-              <h4
-                style="
-                  margin: 0;
-                  font-size: 11px;
-                  font-weight: 800;
-                  color: var(--text-muted);
-                  text-transform: uppercase;
-                "
-              >
-                Communication Log
-              </h4>
-            </div>
-            <div
-              style="
-                flex: 1;
-                overflow-y: auto;
-                padding: 20px;
-                background: #f0f2f5;
-              "
-              id="commentList"
-            >
-              <div
-                v-for="c in comments"
-                :key="c.name"
-                :style="{ display: 'flex', flexDirection: 'column', marginBottom: '16px', alignItems: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? 'flex-end' : 'flex-start' }"
-              >
+              </template>
+      
+              <!-- DETAIL VIEW (FULL SCREEN) -->
+              <template v-else>
                 <div
-                  style="max-width: 85%; display: flex; flex-direction: column"
-                  :style="{ alignItems: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? 'flex-end' : 'flex-start' }"
+                  style="
+                    height: 100%;
+                    display: grid;
+                    grid-template-columns: 240px 1fr 350px;
+                    grid-template-rows: 70px 1fr;
+                  "
                 >
-                  <span
-                    style="
-                      font-size: 10px;
-                      font-weight: 800;
-                      color: #888;
-                      margin-bottom: 4px;
-                      padding: 0 4px;
-                    "
-                  >
-                    [[ (c.sender_name || c.comment_by || c.comment_email) ]]
-                  </span>
-
+                  <!-- Header -->
                   <div
-                    :style="{ 
-                                background: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? '#dcf8c6' : 'white', 
-                                border: '1px solid #edf0f2', 
-                                padding: '10px 14px', 
-                                borderRadius: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? '16px 2px 16px 16px' : '2px 16px 16px 16px', 
-                                fontSize: '13px', 
-                                lineHeight: '1.5', 
-                                color: '#333', 
-                                boxShadow: '0 1px 1px rgba(0,0,0,0.05)',
-                                position: 'relative'
-                               }"
-                    v-html="c.content"
-                  ></div>
-
-                  <span
                     style="
-                      font-size: 9px;
-                      color: #aaa;
-                      margin-top: 4px;
-                      padding: 0 4px;
+                      grid-area: 1 / 1 / 2 / 4;
+                      border-bottom: 1px solid var(--border-color);
+                      background: #fdfdfd;
+                      display: flex;
+                      align-items: center;
+                      padding: 0 24px;
+                      gap: 40px;
                     "
-                    >[[ formatDate(c.creation) ]]</span
                   >
+                    <button
+                      @click="backToList"
+                      style="
+                        background: none;
+                        border: none;
+                        font-size: 18px;
+                        cursor: pointer;
+                        color: var(--text-muted);
+                        margin-right: -20px;
+                      "
+                    >
+                      <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div style="display: flex; flex-direction: column">
+                      <label
+                        style="
+                          font-size: 9px;
+                          font-weight: 800;
+                          color: var(--text-muted);
+                        "
+                        >ID</label
+                      >
+                      <div
+                        style="
+                          font-weight: 800;
+                          font-size: 16px;
+                          color: var(--primary-purple);
+                        "
+                      >
+                        [[ activeTicket.name ]]
+                      </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column">
+                      <label
+                        style="
+                          font-size: 9px;
+                          font-weight: 800;
+                          color: var(--text-muted);
+                        "
+                        >PRIORITY</label
+                      >
+                      <div>
+                        <span
+                          :class="['badge', getPriorityClass(activeTicket.priority)]"
+                          >[[ activeTicket.priority ]]</span
+                        >
+                      </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column">
+                      <label
+                        style="
+                          font-size: 9px;
+                          font-weight: 800;
+                          color: var(--text-muted);
+                        "
+                      >CREATED</label>
+                      <div style="font-size: 13px; font-weight: 600">[[ formatDate(activeTicket.creation) ]]</div>
+                    </div>
+                    <div style="height: 32px; width: 1px; background: var(--border-color); margin: 0 -8px;"></div>
+                    <div style="display: flex; flex-direction: column">
+                      <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">REQUEST TO</label>
+                      <div style="font-size: 13px; font-weight: 600">[[ activeTicket.dept_name || 'IT' ]]</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column">
+                      <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">ISSUE</label>
+                      <div style="font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;" :title="activeTicket.ticket_type">[[ activeTicket.ticket_type || '-' ]]</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column">
+                      <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">TAT</label>
+                      <div style="font-size: 13px; font-weight: 600">[[ activeTicket.tat || 'N/A' ]]</div>
+                    </div>
+                    <div v-if="canCreateMaterialRequest()" style="display: flex; flex-direction: column">
+                      <label style="font-size: 9px; font-weight: 800; color: #d97706">ACTION</label>
+                      <button @click="createMaterialRequest" style="background: #fff9f2; color: #d97706; border: 1px solid #ffe8cc; border-radius: 6px; padding: 4px 12px; font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; white-space: nowrap;">Create Material Request</button>
+                    </div>
+                    <div style="display: flex; flex-direction: column; margin-left: auto">
+                      <label style="font-size: 9px; font-weight: 800; color: var(--text-muted);">STATUS</label>
+                                      <div style="display: flex; align-items: center; gap: 6px">
+                                        <span class="status-dot" :style="{ backgroundColor: getStatusColor(activeTicket.status) }"></span>
+                                        <select @change="updateTicketStatus(activeTicket.name, $event.target.value)" :value="activeTicket.status" :disabled="!canChangeStatus" style="font-size: 11px; font-weight: 700; border: 1px solid #ddd; border-radius: 6px; padding: 4px 8px; outline: none; cursor: pointer; text-transform: uppercase; background: white;" :style="{ opacity: canChangeStatus ? 1 : 0.6, cursor: canChangeStatus ? 'pointer' : 'not-allowed' }">
+                                          <option value="Open">Open</option>
+                                          <option value="In-Progress">In-Progress</option>
+                                          <option value="Resolved">Resolved</option>
+                                          <option value="Closed">Closed</option>
+                                        </select>
+                                      </div>                    </div>
+                  </div>
+      
+                  <!-- Body Grid -->
+                  <!-- Left Col (Raised By) -->
+                  <div style="grid-area: 2 / 1 / 3 / 2; border-right: 1px solid var(--border-color); padding: 20px; background: #fafafa; overflow-y: auto;">
+                    <div style="background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+                      <label style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Raised By</label>
+                      <div style="font-size: 14px; font-weight: 700; margin-top: 6px">[[ activeTicket.employee_name ]]</div>
+                      <div v-if="activeTicket.designation" style="font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 1px;">[[ activeTicket.designation ]]</div>
+                      <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">[[ activeTicket.owner ]]</div>
+                      <div v-if="activeTicket.cell_number" style="font-size: 12px; font-weight: 600; margin-top: 8px; color: var(--primary-purple);"><i class="fas fa-phone-alt mr-2"></i>[[ activeTicket.cell_number ]]</div>
+                      <div style="border-top: 1px dashed #eee; padding-top: 12px; margin-top: 12px; display: grid; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between"><span style="font-size: 9px; font-weight: 700; color: var(--text-muted);">BRANCH</span><span style="font-size: 11px; font-weight: 700">[[ activeTicket.branch || '-' ]]</span></div>
+                        <div style="display: flex; justify-content: space-between"><span style="font-size: 9px; font-weight: 700; color: var(--text-muted);">DISTRICT</span><span style="font-size: 11px; font-weight: 700">[[ activeTicket.district || '-' ]]</span></div>
+                      </div>
+                    </div>
+                                  <div
+                                    @click="canAssign && openAssignDialog()"
+                                    style="
+                                      background: white;
+                                      border: 1px solid var(--border-color);
+                                      border-radius: 12px;
+                                      padding: 16px;
+                                      margin-bottom: 24px;
+                                      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+                                    "
+                                    :style="{ cursor: canAssign ? 'pointer' : 'default' }"
+                                  >
+                                    <label
+                                      style="
+                                        font-size: 9px;
+                                        font-weight: 800;
+                                        color: var(--text-muted);
+                                        text-transform: uppercase;
+                                      "
+                                      >Assigned To</label
+                                    >
+                                    <div style="font-size: 13px; font-weight: 700; margin-top: 6px">
+                                      [[ activeTicket.assigned_to_name || activeTicket.assigned_to ||
+                                      'Unassigned' ]]
+                                      <i
+                                        v-if="!(activeTicket.assigned_to_name || activeTicket.assigned_to) && canAssign"
+                                        class="fas fa-pencil-alt assign-pencil"
+                                      ></i>
+                                    </div>
+                                  </div>
+                                  <button
+                                    @click="window.top.frappe ? window.top.frappe.set_route('Form', 'Sahayog Ticket', activeTicket.name) : window.top.location.href = '/app/sahayog-ticket/' + activeTicket.name"
+                                    style="
+                                      width: 100%;
+                                      padding: 12px;
+                                      border-radius: 10px;
+                                      border: 1px solid #ddd;
+                                      background: white;
+                                      font-size: 11px;
+                                      font-weight: 800;
+                                      cursor: pointer;
+                                      text-transform: uppercase;
+                                    "
+                                  >
+                                    Full Record
+                                  </button>
+                  </div>
+      
+                  <!-- Mid Col (Description) -->
+                  <div style="grid-area: 2 / 2 / 3 / 3; padding: 24px; overflow-y: auto; border-right: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                      <h4 style="margin: 0; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Issue Description</h4>
+                      <button v-if="activeTicket.status === 'Open' && activeTicket.owner === window.current_user && !isEditingDescription" @click="startEditDescription" style="border: none; background: transparent; cursor: pointer; color: var(--primary-purple); font-size: 14px;" title="Edit Description">
+                        <i class="fas fa-pencil-alt"></i>
+                      </button>
+                    </div>
+                    
+                    <div v-if="loadingDetail" style="padding: 40px; text-align: center"><i class="fas fa-spinner fa-spin fa-2x" style="color: #ddd"></i></div>
+                    <div v-else>
+                      <!-- Specialized Account Details View -->
+                      <div v-if="activeTicket.ticket_type === 'Account Service Request' && activeTicket.request_detail && activeTicket.request_detail.length" style="margin-bottom: 24px; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">
+                        <h5 style="margin: 0 0 12px; font-size: 11px; font-weight: 800; color: #166534; text-transform: uppercase; display: flex; align-items: center; gap: 8px;"><i class="fas fa-user-check"></i> Account Service Details</h5>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                          <div><div style="font-size: 9px; font-weight: 800; color: #166534; text-transform: uppercase; opacity: 0.6;">Request Type</div><div style="font-size: 13px; font-weight: 700; color: #14532d">[[ activeTicket.request_detail[0].request_type ]]</div></div>
+                          <div><div style="font-size: 9px; font-weight: 800; color: #166534; text-transform: uppercase; opacity: 0.6;">Account Number</div><div style="font-size: 13px; font-weight: 700; color: #14532d">[[ activeTicket.request_detail[0].account_number ]]</div></div>
+                          <div v-if="activeTicket.request_detail[0].customer_name"><div style="font-size: 9px; font-weight: 800; color: #166534; text-transform: uppercase; opacity: 0.6;">Customer Name</div><div style="font-size: 13px; font-weight: 700; color: #14532d">[[ activeTicket.request_detail[0].customer_name ]]</div></div>
+                          <div v-if="activeTicket.request_detail[0].cif"><div style="font-size: 9px; font-weight: 800; color: #166534; text-transform: uppercase; opacity: 0.6;">CIF (Customer ID)</div><div style="font-size: 13px; font-weight: 700; color: #14532d">[[ activeTicket.request_detail[0].cif ]]</div></div>
+                        </div>
+                        <!-- New Info Section (Conditional) -->
+                        <div v-if="activeTicket.request_detail[0].new_address || activeTicket.request_detail[0].new_contact_number || activeTicket.request_detail[0].new_email || activeTicket.request_detail[0].new_pan_no || activeTicket.request_detail[0].new_kyc_no" style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #bbf7d0;">
+                          <div style="font-size: 9px; font-weight: 800; color: #166534; text-transform: uppercase; margin-bottom: 8px;">Update Requested To:</div>
+                          <div style="font-size: 13px; font-weight: 700; color: #166534; background: white; padding: 10px; border-radius: 8px; border: 1px solid #dcfce7;">
+                            <span v-if="activeTicket.request_detail[0].new_address">[[ activeTicket.request_detail[0].new_address ]]</span>
+                            <span v-if="activeTicket.request_detail[0].new_contact_number">[[ activeTicket.request_detail[0].new_contact_number ]]</span>
+                            <span v-if="activeTicket.request_detail[0].new_email">[[ activeTicket.request_detail[0].new_email ]]</span>
+                            <span v-if="activeTicket.request_detail[0].new_pan_no">PAN: [[ activeTicket.request_detail[0].new_pan_no ]]</span>
+                            <span v-if="activeTicket.request_detail[0].new_kyc_no">KYC: [[ activeTicket.request_detail[0].new_kyc_no ]]</span>
+                            <span v-if="activeTicket.request_detail[0].new_name">Name: [[ activeTicket.request_detail[0].new_name ]]</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div v-if="!isEditingDescription" style="font-size: 15px; line-height: 1.7; color: #222" v-html="activeTicket.description || 'No description provided.'"></div>
+                      <div v-else>
+                        <div id="edit-description-editor" style="height: 250px; background: white; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 12px;"></div>
+                        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                          <button @click="isEditingDescription = false" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; background: white; font-size: 11px; font-weight: 700; cursor: pointer;">Cancel</button>
+                          <button @click="saveDescription" style="padding: 6px 16px; border-radius: 6px; border: none; background: var(--primary-purple); color: white; font-size: 11px; font-weight: 700; cursor: pointer;">Save Changes</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+      
+                  <!-- Right Col (Communication Log - Mobile Width) -->
+                  <div style="grid-area: 2 / 3 / 3 / 4; display: flex; flex-direction: column; background: #fdfdfd; border-left: 1px solid var(--border-color);">
+                    <div style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); background: white;">
+                      <h4 style="margin: 0; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Communication Log</h4>
+                    </div>
+                    <div style="flex: 1; overflow-y: auto; padding: 20px; background: #f0f2f5;" id="commentList">
+                      <div v-for="c in comments" :key="c.name" :style="{ display: 'flex', flexDirection: 'column', marginBottom: '16px', alignItems: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? 'flex-end' : 'flex-start' }">
+                        <div style="max-width: 85%; display: flex; flex-direction: column" :style="{ alignItems: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? 'flex-end' : 'flex-start' }">
+                          <span style="font-size: 10px; font-weight: 800; color: #888; margin-bottom: 4px; padding: 0 4px;">[[ (c.sender_name || c.comment_by || c.comment_email).split(' ')[0] ]]</span>
+                          <div :style="{ background: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? '#dcf8c6' : 'white', border: '1px solid #edf0f2', padding: '10px 14px', borderRadius: (c.comment_email === activeTicket.owner || c.comment_by === activeTicket.owner || c.owner === activeTicket.owner) ? '16px 2px 16px 16px' : '2px 16px 16px 16px', fontSize: '13px', lineHeight: '1.5', color: '#333', boxShadow: '0 1px 1px rgba(0,0,0,0.05)', position: 'relative' }" v-html="c.content"></div>
+                          <span style="font-size: 9px; color: #aaa; margin-top: 4px; padding: 0 4px;">[[ formatDate(c.creation) ]]</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style="padding: 20px; border-top: 1px solid var(--border-color); background: white;">
+                      <div style="display: flex; gap: 10px">
+                        <textarea v-model="newComment" placeholder="Type a message..." style="flex: 1; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; font-size: 13px; height: 44px; resize: none; outline: none; transition: border-color 0.2s;" @keypress.enter.prevent="addComment"></textarea>
+                        <button @click="addComment" style="background: var(--primary-purple); color: white; border: none; border-radius: 10px; padding: 0 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;" :disabled="postingComment">[[ postingComment ? '...' : 'Send' ]]</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div
-              style="
-                padding: 20px;
-                border-top: 1px solid var(--border-color);
-                background: white;
-              "
-            >
-              <div style="display: flex; gap: 10px">
-                <textarea
-                  v-model="newComment"
-                  placeholder="Type a message..."
-                  style="
-                    flex: 1;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 10px;
-                    padding: 10px;
-                    font-size: 13px;
-                    height: 44px;
-                    resize: none;
-                    outline: none;
-                    transition: border-color 0.2s;
-                  "
-                  @keypress.enter.prevent="addComment"
-                ></textarea>
-                <button
-                  @click="addComment"
-                  style="
-                    background: var(--primary-purple);
-                    color: white;
-                    border: none;
-                    border-radius: 10px;
-                    padding: 0 20px;
-                    font-size: 13px;
-                    font-weight: 700;
-                    cursor: pointer;
-                    transition: opacity 0.2s;
-                  "
-                  :disabled="postingComment"
-                >
-                  [[ postingComment ? '...' : 'Send' ]]
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+              </template>
+            </main>
 
       <!-- Status Update Modal -->
-      <div
-        v-if="showStatusModal"
-        style="
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1100;
-        "
-        @click.self="cancelStatusChange"
-      >
+      <template v-if="showStatusModal">
+        <div
+          v-cloak
+          style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+          "
+          @click.self="cancelStatusChange"
+        >
         <div
           style="
             background: white;
@@ -1381,24 +1097,26 @@
           </div>
         </div>
       </div>
+    </template>
 
       <!-- Assignment Modal -->
-      <div
-        v-if="showAssignModal"
-        style="
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1200;
-        "
-        @click.self="showAssignModal = false"
-      >
+      <template v-if="showAssignModal">
+        <div
+          v-cloak
+          style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1200;
+          "
+          @click.self="showAssignModal = false"
+        >
         <div
           style="
             background: white;
@@ -1451,7 +1169,7 @@
             <div
               v-for="exec in assignableUsers"
               :key="exec.id"
-              @click="submitAssignment(exec.id)"
+              @click="submitAssignment(exec)"
               style="
                 display: flex;
                 align-items: center;
@@ -1513,22 +1231,25 @@
           </div>
         </div>
       </div>
+    </template>
 
-      <div
-        v-if="showCreateModal"
-        style="
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.6);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1300;
-        "
-      >
+      <!-- Create Ticket Modal -->
+      <template v-if="showCreateModal">
+        <div
+          v-cloak
+          style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1300;
+          "
+        >
         <div
           style="
             background: white;
@@ -1562,24 +1283,31 @@
             >
               Create New Ticket
             </h3>
-            <button
-              @click="showCreateModal = false; init(statusToggle, currentPage)"
-              style="
-                background: none;
-                border: none;
-                font-size: 24px;
-                cursor: pointer;
-                color: #ccc;
-              "
-            >
-              &times;
-            </button>
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <button @click="submitTicket" :disabled="submittingTicket" style="padding: 8px 16px; border-radius: 8px; border: none; background: var(--primary-purple); color: white; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; display: flex; align-items: center; gap: 8px;">
+                <i v-if="submittingTicket" class="fas fa-spinner fa-spin"></i>
+                [[ submittingTicket ? 'Creating...' : 'Create Ticket' ]]
+              </button>
+              <button
+                @click="showCreateModal = false; init(statusToggle, currentPage)"
+                style="
+                  background: none;
+                  border: none;
+                  font-size: 24px;
+                  cursor: pointer;
+                  color: #ccc;
+                  line-height: 1;
+                "
+              >
+                &times;
+              </button>
+            </div>
           </div>
-          <div style="flex: 1; padding: 24px; overflow-y: auto;">
+          <div style="flex: 1; padding: 16px 24px; overflow-y: auto;">
             <div style="max-width: 100%; margin: 0 auto;">
               <!-- Admin Only: Raise For Employee -->
-              <div v-if="hasRole('Administrator')" style="margin-bottom: 24px; position: relative">
-                <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Raise For Employee <span style="color: red">*</span></label>
+              <div v-if="hasRole('Administrator')" style="margin-bottom: 16px; position: relative">
+                <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Raise For Employee <span style="color: red">*</span></label>
                 <div style="position: relative">
                   <input v-model="employeeSearchQuery" @input="searchEmployees" @focus="showEmployeeDropdown = true; searchEmployees()" placeholder="Search by name or ID..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-size: 13px;" />
                   <div v-if="showEmployeeDropdown && employeeResults.length" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; margin-top: 4px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); z-index: 100; max-height: 200px; overflow-y: auto;">
@@ -1592,24 +1320,30 @@
               </div>
 
               <!-- Row 1: Dept, Type, and Priority -->
-              <div style="display: grid; grid-template-columns: 1fr 1fr 120px; gap: 20px; margin-bottom: 24px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr 120px; gap: 20px; margin-bottom: 16px;">
                 <div>
-                  <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Department <span style="color: red">*</span></label>
+                  <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Department <span style="color: red">*</span></label>
                   <select v-model="newTicket.dept_name" @change="onDeptChange" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-size: 13px;">
                     <option value="">Select Department</option>
                     <option v-for="dept in departments" :key="dept.name" :value="dept.name">[[ dept.name ]]</option>
                   </select>
                 </div>
                 <div>
-                  <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Issue Type <span style="color: red">*</span></label>
-                  <select v-model="newTicket.ticket_type" @change="onTicketTypeChange" :disabled="!newTicket.dept_name" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-size: 13px; background: !newTicket.dept_name ? '#f3f4f6' : 'white';">
-                    <option value="">Select Issue Type</option>
-                    <option v-for="type in ticketTypes" :key="type.name" :value="type.name">[[ type.name ]]</option>
-                  </select>
-                  <div v-if="newTicket.tat" style="margin-top: 6px; font-size: 11px; color: var(--primary-purple); font-weight: 600;">Standard TAT: [[ newTicket.tat ]]</div>
-                </div>
+                  <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Issue Type <span style="color: red">*</span></label>
+                    <select
+                      v-model="newTicket.ticket_type"
+                      @change="onTicketTypeChange"
+                      :disabled="!newTicket.dept_name"
+                      style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-size: 13px;"
+                      :style="{ background: !newTicket.dept_name ? '#f3f4f6' : 'white' }"
+                    >
+                      <option value="">Select Issue Type</option>
+                      <option v-for="type in ticketTypes" :key="type.name" :value="type.name">[[ type.name ]]</option>
+                    </select>
+                    <div v-if="newTicket.tat" style="margin-top: 4px; font-size: 10px; color: var(--primary-purple); font-weight: 600;">Standard TAT: [[ newTicket.tat ]]</div>
+                  </div>
                 <div>
-                  <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Priority</label>
+                  <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Priority</label>
                   <select v-model="newTicket.priority" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-size: 13px;">
                     <option v-for="p in ['Normal', 'Medium', 'High', 'Urgent']" :key="p" :value="p">[[ p ]]</option>
                   </select>
@@ -1617,11 +1351,11 @@
               </div>
 
               <!-- Account Service Request Specific Fields (Full Width) -->
-            <div v-if="newTicket.ticket_type === 'Account Service Request'" style="margin-bottom: 24px; padding: 20px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-              <h4 style="grid-column: span 2; margin: 0; font-size: 12px; font-weight: 800; color: #334155; text-transform: uppercase;">Account Service Details</h4>
+            <div v-if="newTicket.ticket_type === 'Account Service Request'" style="margin-bottom: 16px; padding: 16px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <h4 style="grid-column: span 2; margin: 0; font-size: 11px; font-weight: 800; color: #334155; text-transform: uppercase;">Account Service Details</h4>
               
               <div>
-                <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">Request Type *</label>
+                <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">Request Type *</label>
                 <select v-model="newTicket.request_detail[0].request_type" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;">
                   <option value="">Select Request Type</option>
                   <option v-for="opt in ['Change of Address', 'Update Contact Number', 'Update Email Address', 'Update KYC (Adhaar/Voter/Passport/etc)', 'Update PAN NO', 'Update Signature', 'Name Change', 'Activation of Dormant account', 'SMS Alert Registration', 'Nomination Addition/ Deletion/ Modification', 'Account Transfer', 'DOB Updation']" :value="opt">[[ opt ]]</option>
@@ -1629,51 +1363,51 @@
               </div>
 
               <div>
-                <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">Account Number *</label>
+                <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">Account Number *</label>
                 <div style="display: flex; gap: 4px">
                   <input v-model="newTicket.request_detail[0].account_number" type="text" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
                   <button @click="getAccountDetails" :disabled="fetchingAccount" style="background: var(--primary-purple); color: white; border: none; padding: 0 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700;">[[ fetchingAccount ? '...' : 'Fetch' ]]</button>
                 </div>
               </div>
 
-              <div v-if="newTicket.request_detail[0].customer_name" style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; background: white; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <div v-if="newTicket.request_detail[0].customer_name" style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: white; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <div>
-                  <div style="font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Customer</div>
+                  <div style="font-size: 9px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Customer</div>
                   <div style="font-size: 12px; font-weight: 700;">[[ newTicket.request_detail[0].customer_name ]]</div>
                 </div>
                 <div>
-                  <div style="font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">ID (CIF)</div>
+                  <div style="font-size: 9px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">ID (CIF)</div>
                   <div style="font-size: 12px; font-weight: 700;">[[ newTicket.request_detail[0].cif ]]</div>
                 </div>
               </div>
 
-              <div style="grid-column: span 2; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+              <div style="grid-column: span 2; border-top: 1px solid #e2e8f0; padding-top: 12px;">
                 <div v-if="newTicket.request_detail[0].request_type === 'Change of Address'">
-                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New Address *</label>
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">New Address *</label>
                   <textarea v-model="newTicket.request_detail[0].new_address" style="width: 100%; height: 60px; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 12px;"></textarea>
                 </div>
                 <div v-if="['Update Contact Number', 'SMS Alert Registration'].includes(newTicket.request_detail[0].request_type)">
-                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New Contact Number *</label>
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">New Contact Number *</label>
                   <input v-model="newTicket.request_detail[0].new_contact_number" type="text" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
                 </div>
                 <div v-if="newTicket.request_detail[0].request_type === 'Update Email Address'">
-                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New Email Address *</label>
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">New Email Address *</label>
                   <input v-model="newTicket.request_detail[0].new_email" type="email" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
                 </div>
                 <div v-if="newTicket.request_detail[0].request_type === 'Update KYC (Adhaar/Voter/Passport/etc)'">
-                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New KYC No *</label>
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">New KYC No *</label>
                   <input v-model="newTicket.request_detail[0].new_kyc_no" type="text" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
                 </div>
                 <div v-if="newTicket.request_detail[0].request_type === 'Update PAN NO'">
-                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New PAN No *</label>
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">New PAN No *</label>
                   <input v-model="newTicket.request_detail[0].new_pan_no" type="text" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
                 </div>
                 <div v-if="newTicket.request_detail[0].request_type === 'Name Change'">
-                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New Name *</label>
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">New Name *</label>
                   <input v-model="newTicket.request_detail[0].new_name" type="text" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
                 </div>
                 <div v-if="newTicket.request_detail[0].request_type === 'Nomination Addition/ Deletion/ Modification'">
-                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">Nomination Operation *</label>
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">Nomination Operation *</label>
                   <select v-model="newTicket.request_detail[0].nomination_opration" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;">
                     <option value="Addition">Addition</option>
                     <option value="Deletion">Deletion</option>
@@ -1682,108 +1416,124 @@
                 </div>
                 <div v-if="newTicket.request_detail[0].request_type === 'Account Transfer'" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                   <div>
-                    <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">Existing Branch *</label>
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">Existing Branch *</label>
                     <input v-model="newTicket.request_detail[0].existing_branch" type="text" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
                   </div>
                   <div>
-                    <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">New Branch *</label>
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">New Branch *</label>
                     <input v-model="newTicket.request_detail[0].new_branch" type="text" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
                   </div>
                 </div>
                 <div v-if="newTicket.request_detail[0].request_type === 'DOB Updation'">
-                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px;">Updated DOB *</label>
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">Updated DOB *</label>
                   <input v-model="newTicket.request_detail[0].updated_dob" type="date" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;" />
                 </div>
               </div>
             </div>
 
-            <!-- Description (Full Width) -->
-            <div style="margin-bottom: 32px">
-              <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Description <span style="color: red">*</span></label>
-              <textarea v-model="newTicket.description" placeholder="Describe the issue in detail..." style="width: 100%; height: 120px; padding: 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-size: 13px; resize: none; line-height: 1.5;"></textarea>
+            <!-- Description & Attachments (Full Width) -->
+            <div style="margin-bottom: 16px">
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 6px;">
+                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Description <span style="color: red">*</span></label>
+                
+                <!-- Custom File Upload Button -->
+                <div style="position: relative;">
+                  <input type="file" id="file-upload" @change="handleFileUpload" style="display: none;" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+                  <button @click="document.getElementById('file-upload').click()" :disabled="uploadingFile" 
+                          style="background: #f3f4f6; border: 1px solid #ddd; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i v-if="uploadingFile" class="fas fa-spinner fa-spin"></i>
+                    <i v-else class="fas fa-paperclip"></i>
+                    [[ uploadingFile ? 'Uploading...' : 'Attach Document' ]]
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Quill Editor Container -->
+              <div style="background: white; border-radius: 8px; border: 1px solid #ddd; overflow: hidden;">
+                <div id="editor-container" style="height: 250px; font-size: 14px; border: none;"></div>
+              </div>
+              <p style="font-size: 10px; color: #94a3b8; margin-top: 4px;">Support: Images (will show inline), PDF, and Documents (as links).</p>
             </div>
+          </div>
+        </div>
+      </div>
+    </template>
 
-            <button @click="submitTicket" :disabled="submittingTicket" style="width: 100%; padding: 14px; border-radius: 8px; border: none; background: var(--primary-purple); color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;">
-              <i v-if="submittingTicket" class="fas fa-spinner fa-spin"></i>
-              [[ submittingTicket ? 'Creating Ticket...' : 'Create Ticket' ]]
+      <!-- Generic Alert Modal -->
+      <template v-if="showAlertModal">
+        <div
+          v-cloak
+          style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1400;
+          "
+          @click.self="showAlertModal = false"
+        >
+          <div
+            style="
+              background: white;
+              width: 400px;
+              border-radius: 16px;
+              overflow: hidden;
+              box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+              padding: 32px;
+              text-align: center;
+            "
+          >
+            <div style="margin-bottom: 20px">
+              <i
+                class="fas fa-exclamation-circle"
+                style="font-size: 48px; color: #f59e0b"
+              ></i>
+            </div>
+            <h3
+              style="
+                margin: 0 0 12px;
+                font-size: 18px;
+                font-weight: 800;
+                color: var(--text-main);
+              "
+            >
+              [[ alertTitle ]]
+            </h3>
+            <p
+              style="
+                font-size: 14px;
+                color: var(--text-muted);
+                line-height: 1.6;
+                margin-bottom: 24px;
+              "
+            >
+              [[ alertMessage ]]
+            </p>
+            <button
+              @click="showAlertModal = false"
+              style="
+                width: 100%;
+                padding: 12px;
+                border-radius: 10px;
+                border: none;
+                background: var(--primary-purple);
+                color: white;
+                font-size: 14px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: opacity 0.2s;
+              "
+            >
+              Got it
             </button>
           </div>
         </div>
-      </div>
-
-      <!-- Generic Alert Modal -->
-      <div
-        v-if="showAlertModal"
-        style="
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1400;
-        "
-        @click.self="showAlertModal = false"
-      >
-        <div
-          style="
-            background: white;
-            width: 400px;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            padding: 32px;
-            text-align: center;
-          "
-        >
-          <div style="margin-bottom: 20px">
-            <i
-              class="fas fa-exclamation-circle"
-              style="font-size: 48px; color: #f59e0b"
-            ></i>
-          </div>
-          <h3
-            style="
-              margin: 0 0 12px;
-              font-size: 18px;
-              font-weight: 800;
-              color: var(--text-main);
-            "
-          >
-            [[ alertTitle ]]
-          </h3>
-          <p
-            style="
-              font-size: 14px;
-              color: var(--text-muted);
-              line-height: 1.6;
-              margin-bottom: 24px;
-            "
-          >
-            [[ alertMessage ]]
-          </p>
-          <button
-            @click="showAlertModal = false"
-            style="
-              width: 100%;
-              padding: 12px;
-              border-radius: 10px;
-              border: none;
-              background: var(--primary-purple);
-              color: white;
-              font-size: 14px;
-              font-weight: 700;
-              cursor: pointer;
-              transition: opacity 0.2s;
-            "
-          >
-            Got it
-          </button>
-        </div>
-      </div>
+      </template>
     </div>
     <!-- END #app -->
 
@@ -1798,7 +1548,6 @@
         loading: false,
         searchQuery: "",
         showSearch: false,
-        showModal: false,
         activeTicket: {},
         comments: [],
         newComment: "",
@@ -1818,6 +1567,72 @@
         currentPage: 0,
         pageSize: 8,
         summaryData: [],
+        viewMode: "list", // 'list' or 'detail'
+        theme: localStorage.getItem('helpdesk_theme') || 'light',
+        isEditingDescription: false,
+        editDescriptionQuill: null,
+        
+        toggleTheme() {
+          this.theme = this.theme === 'light' ? 'dark' : 'light';
+          localStorage.setItem('helpdesk_theme', this.theme);
+          this.applyTheme();
+        },
+        
+        applyTheme() {
+          if (this.theme === 'dark') {
+            document.body.classList.add('dark-mode');
+          } else {
+            document.body.classList.remove('dark-mode');
+          }
+        },
+
+        backToList() {
+          this.viewMode = "list";
+          this.activeTicket = {};
+          this.isEditingDescription = false;
+        },
+        async startEditDescription() {
+          this.isEditingDescription = true;
+          setTimeout(() => {
+            if (!this.editDescriptionQuill) {
+              this.editDescriptionQuill = new Quill('#edit-description-editor', {
+                theme: 'snow',
+                modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link', 'image']] }
+              });
+            }
+            this.editDescriptionQuill.root.innerHTML = this.activeTicket.description || '';
+          }, 100);
+        },
+        async saveDescription() {
+          const newDescription = this.editDescriptionQuill.root.innerHTML;
+          if (newDescription === this.activeTicket.description) {
+            this.isEditingDescription = false;
+            return;
+          }
+          try {
+            const res = await fetch("/api/method/frappe.client.set_value", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": this.getCsrfToken() },
+              body: JSON.stringify({
+                doctype: "Sahayog Ticket",
+                name: this.activeTicket.name,
+                fieldname: "description",
+                value: newDescription
+              })
+            });
+            if (res.ok) {
+              this.activeTicket.description = newDescription;
+              this.isEditingDescription = false;
+              this.showAlert("Success", "Description updated successfully.");
+            } else {
+              const data = await res.json();
+              this.showAlert("Error", data.exception || "Failed to update description.");
+            }
+          } catch (e) {
+            console.error(e);
+            this.showAlert("Error", "An unexpected error occurred.");
+          }
+        },
         showAlertModal: false,
         alertTitle: "",
         alertMessage: "",
@@ -1858,6 +1673,74 @@
         employeeSearchQuery: "",
         employeeResults: [],
         showEmployeeDropdown: false,
+        quill: null,
+        uploadingFile: false,
+
+        initEditor() {
+          if (this.quill) return;
+          setTimeout(() => {
+            const container = document.getElementById('editor-container');
+            if (!container) return;
+            
+            this.quill = new Quill('#editor-container', {
+              theme: 'snow',
+              placeholder: 'Describe the issue in detail...',
+              modules: {
+                table: true, // Enable table module
+                toolbar: [
+                  [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                  [{ 'font': [] }, { 'size': [] }],
+                  ['bold', 'italic', 'underline', 'strike'],
+                  [{ 'color': [] }, { 'background': [] }],
+                  [{ 'script': 'sub'}, { 'script': 'super' }],
+                  ['blockquote', 'code-block'],
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
+                  [{ 'direction': 'rtl' }, { 'align': [] }],
+                  ['link', 'image', 'video', 'formula'],
+                  ['table'], // Add table button
+                  ['clean']
+                ]
+              }
+            });
+          }, 100);
+        },
+
+        async handleFileUpload(event) {
+          const file = event.target.event ? event.target.event.target.files[0] : event.target.files[0];
+          if (!file) return;
+
+          this.uploadingFile = true;
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('is_private', 0); // Public so we can link it easily
+
+          try {
+            const res = await fetch('/api/method/upload_file', {
+              method: 'POST',
+              headers: { 'X-Frappe-CSRF-Token': this.getCsrfToken() },
+              body: formData
+            });
+            const data = await res.json();
+            
+            if (data.message && data.message.file_url) {
+              const url = data.message.file_url;
+              const range = this.quill.getSelection();
+              const index = range ? range.index : this.quill.getLength();
+
+              if (file.type.startsWith('image/')) {
+                this.quill.insertEmbed(index, 'image', url);
+              } else {
+                this.quill.insertText(index, `\nAttachment: ${file.name}\n`, 'link', url);
+              }
+              this.showAlert("Success", "File uploaded and linked to description.");
+            }
+          } catch (e) {
+            console.error(e);
+            this.showAlert("Error", "Failed to upload file.");
+          }
+          this.uploadingFile = false;
+          event.target.value = ''; // Reset input
+        },
 
         async searchEmployees() {
           let url = "/api/method/sahayog_ticket.api.helpdesks.search_employees";
@@ -1984,14 +1867,15 @@
         },
 
         async submitTicket() {
+          const description = this.quill ? this.quill.root.innerHTML : this.newTicket.description;
           if (
             !this.newTicket.dept_name ||
             !this.newTicket.ticket_type ||
-            !this.newTicket.description
+            (description === '<p><br></p>' || !description)
           ) {
             this.showAlert(
               "Validation Error",
-              "Please fill in all required fields.",
+              "Please fill in all required fields (Dept, Type, and Description).",
             );
             return;
           }
@@ -2015,7 +1899,7 @@
               dept_name: this.newTicket.dept_name,
               ticket_type: this.newTicket.ticket_type,
               priority: this.newTicket.priority,
-              description: this.newTicket.description,
+              description: description,
               status: "Open",
             };
 
@@ -2034,12 +1918,22 @@
             });
             if (res.ok) {
               const data = await res.json();
-              this.showAlert(
-                "Success",
-                `Ticket created successfully: ${data.message.name}`,
-              );
+              
+              // High-Safety Quill Reset
+              try {
+                if (this.quill && this.quill.root) {
+                  this.quill.blur();
+                  this.quill.setSelection(null);
+                  this.quill.setContents([]);
+                }
+              } catch (e) {
+                console.warn("Quill reset skipped:", e);
+              }
+
               this.showCreateModal = false;
               this.newTicket = {
+                employee_id: "",
+                employee_name: "",
                 dept_name: "",
                 ticket_type: "",
                 priority: "Normal",
@@ -2047,6 +1941,13 @@
                 tat: "",
                 request_detail: [],
               };
+              this.employeeSearchQuery = "";
+              
+              // Direct navigation to the new ticket in full-screen mode
+              if (data.message) {
+                this.viewTicketDetails(data.message);
+              }
+              
               this.init(this.statusToggle, 0);
             } else {
               const data = await res.json();
@@ -2130,7 +2031,8 @@
           return Math.ceil(this.filteredTickets.length / this.pageSize);
         },
 
-        async openAssignDialog() {
+        async openAssignDialog(ticket) {
+          if (ticket) this.activeTicket = ticket;
           if (!this.activeTicket.dept_name) return;
           this.showAssignModal = true;
           this.loadingAssign = true;
@@ -2164,6 +2066,7 @@
                       id: u[0],
                       name: match ? match[1].trim() : u[1],
                       count: match ? parseInt(match[2], 10) : 0,
+                      firstName: u[2] || (match ? match[1].trim() : u[1])
                     };
                   })
                   .sort((a, b) => a.count - b.count);
@@ -2175,8 +2078,11 @@
           this.loadingAssign = false;
         },
 
-        async submitAssignment(userEmail) {
+        async submitAssignment(exec) {
           if (this.loadingAssign) return;
+          const userEmail = exec.id;
+          const userName = exec.firstName || exec.name || userEmail;
+          
           this.loadingAssign = true;
           try {
             const res = await fetch("/api/method/frappe.client.set_value", {
@@ -2204,7 +2110,7 @@
                 body: JSON.stringify({
                   reference_doctype: "Sahayog Ticket",
                   reference_name: this.activeTicket.name,
-                  content: `<b>Ticket assigned to ${userEmail}</b>`,
+                  content: `Ticket assigned to ${userName}`,
                   comment_email: window.current_user,
                   comment_by: window.current_user,
                 }),
@@ -2237,6 +2143,27 @@
             this.user_roles &&
             this.user_roles.some((r) => r.toLowerCase().includes("manager"))
           );
+        },
+
+        get canChangeStatus() {
+          const allowed = [
+            "IT Support Executive",
+            "IT Support Manager",
+            "Administrator",
+            "System Manager",
+          ];
+          return allowed.some((r) => this.hasRole(r));
+        },
+
+        get canAssign() {
+          const roles = (this.user_roles || []).map(r => r.toLowerCase());
+          if (roles.includes("administrator") || roles.includes("system manager"))
+            return true;
+          
+          const isManager = roles.some(r => r.includes("manager"));
+          const isExecutive = roles.some(r => r.includes("executive"));
+          
+          return isManager && !isExecutive;
         },
 
         canOpenTicket(ticket) {
@@ -2361,6 +2288,7 @@
           filterKey = null,
           filterValue = null,
         ) {
+          this.applyTheme();
           this.loading = true;
           this.statusToggle = group;
           this.currentPage = page;
@@ -2608,7 +2536,7 @@
           }
 
           this.activeTicket = { ...ticket };
-          this.showModal = true;
+          this.viewMode = "detail";
           this.loadingDetail = true;
           this.comments = [];
 
@@ -2737,16 +2665,13 @@
         },
         openTicket(n) {
           const ticket = this.rawData.find((t) => t.name === n);
-          if (!this.canOpenTicket(ticket)) {
-            this.showAlert(
-              "Access Denied",
-              "You only have permission to open 'Open' tickets or those assigned to you.",
-            );
-            return;
+          if (ticket) {
+            this.viewTicketDetails(ticket);
+          } else {
+            if (window.top.frappe)
+              window.top.frappe.set_route("Form", "Sahayog Ticket", n);
+            else window.top.location.href = "/app/sahayog-ticket/" + n;
           }
-          if (window.top.frappe)
-            window.top.frappe.set_route("Form", "Sahayog Ticket", n);
-          else window.top.location.href = "/app/sahayog-ticket/" + n;
         },
         openListView() {
           if (window.top.frappe && this.selectedItem) {
