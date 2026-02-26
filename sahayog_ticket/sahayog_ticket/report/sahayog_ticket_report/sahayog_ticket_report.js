@@ -5,7 +5,7 @@ frappe.query_reports["Sahayog Ticket Report"] = {
       fieldname: "status",
       label: "Status",
       fieldtype: "Select",
-      options: "\nOpen\nIn Progress\nClosed",
+      options: "\nOpen\nIn-Progress\nResolved\nClosed",
       default: "",
     },
     {
@@ -39,19 +39,20 @@ frappe.query_reports["Sahayog Ticket Report"] = {
     {
       fieldname: "branch_name",
       label: "Branch Name",
-      fieldtype: "Data",
+      fieldtype: "Link",
+      options: "Branch",
     },
     {
       fieldname: "department",
-      label: "Department",
+      label: "Ticket Department",
       fieldtype: "Link",
-      options: "Departsection", // Link to your actual DocType
+      options: "Departsection",
     },
     {
       fieldname: "zone",
       label: "Zone",
       fieldtype: "Link",
-      options: "Zone", // Replace with actual DocType name if different
+      options: "Zone",
     },
     {
       fieldname: "region",

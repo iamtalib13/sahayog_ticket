@@ -38,24 +38,24 @@ def execute(filters=None):
 
     ]
 
-    # Base SQL query to fetch ticket data with assigned user full name
+    # Base SQL query to fetch ticket data with assigned user full name and employee details from Employee doctype
     query = """
         SELECT
             st.name AS ticket_id,
             st.status,
             st.priority,
             st.employee_id,
-            st.employee_name,
-            st.designation,
-            st.emp_department,
-            st.branch_name,
-            st.zone,
-            st.region,
-            st.division,
+            emp.employee_name,
+            emp.designation,
+            emp.department AS emp_department,
+            emp.branch AS branch_name,
+            emp.custom_zone AS zone,
+            emp.custom_region AS region,
+            emp.custom_division AS division,
             st.dept_name,
             st.ticket_type,
             st.description,
-            u.full_name AS assigned_to_name,
+            COALESCE(u.full_name, st.assigned_to_name) AS assigned_to_name,
             st.ticket_resolved_user,
             st.ticket_resolved_on,
             st.resolved_remark,
@@ -64,6 +64,8 @@ def execute(filters=None):
             st.creation
         FROM
             `tabSahayog Ticket` st
+        LEFT JOIN
+            `tabEmployee` emp ON st.employee_id = emp.employee_number
         LEFT JOIN
             `tabUser` u ON st.assigned_to = u.name
     """
@@ -80,9 +82,9 @@ def execute(filters=None):
         if filters.get("priority"):
             conditions.append(f"st.priority = '{filters['priority']}'")
 
-        # Filter by organizational division
+        # Filter by organizational division (from Employee)
         if filters.get("division"):
-            conditions.append(f"st.division = '{filters['division']}'")
+            conditions.append(f"emp.custom_division = '{filters['division']}'")
 
         # Filter by ticket type
         if filters.get("ticket_type"):
@@ -92,25 +94,25 @@ def execute(filters=None):
         if filters.get("employee_id"):
             conditions.append(f"st.employee_id = '{filters['employee_id']}'")
 
-        # Filter by employee name
+        # Filter by employee name (from Employee)
         if filters.get("employee_name"):
-            conditions.append(f"st.employee_name = '{filters['employee_name']}'")
+            conditions.append(f"emp.employee_name LIKE '%%{filters['employee_name']}%%'")
 
-        # Filter by branch name
+        # Filter by branch name (from Employee)
         if filters.get("branch_name"):
-            conditions.append(f"st.branch_name = '{filters['branch_name']}'")
+            conditions.append(f"emp.branch = '{filters['branch_name']}'")
 
         # Filter by ticket department
         if filters.get("department"):
             conditions.append(f"st.dept_name = '{filters['department']}'")
 
-        # Filter by zone
+        # Filter by zone (from Employee)
         if filters.get("zone"):
-            conditions.append(f"st.zone = '{filters['zone']}'")
+            conditions.append(f"emp.custom_zone = '{filters['zone']}'")
 
-        # Filter by region
+        # Filter by region (from Employee)
         if filters.get("region"):
-            conditions.append(f"st.region = '{filters['region']}'")
+            conditions.append(f"emp.custom_region = '{filters['region']}'")
 
         # Filter by assigned user
         if filters.get("assigned_to"):
