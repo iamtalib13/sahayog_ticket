@@ -1,7 +1,77 @@
+// --- 1. HIDE PRIVACY TOGGLE BUTTONS GLOBALLY FOR TICKET FORM ---
+frappe.dom.set_style(`
+    /* Hide standard sidebar lock/unlock icons and Make Private actions */
+    body.ticket-active-form [data-action="toggle_private"],
+    body.ticket-active-form [data-action="make_private"],
+    body.ticket-active-form .btn-private,
+    body.ticket-active-form .btn-public,
+    /* Hide dynamically tagged Vue elements inside the Uploader */
+    body.ticket-active-form .force-hide-privacy-btn {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+`, 'ticket-file-privacy-css');
+
+// --- 2. VUE INTERCEPTOR (MUTATION OBSERVER) ---
+// This continuously monitors the File Uploader modal and actively hides the Private toggles
+const ticketPrivacyObserver = new MutationObserver((mutations) => {
+    // Only run if we are on the Sahayog Ticket form AND a modal is open
+    if ($('body').hasClass('ticket-active-form') && $('.modal-dialog').length > 0) {
+        
+        // Target buttons and checkboxes inside the modal that aren't hidden yet
+        $('.modal-dialog label.frappe-checkbox:not(.force-hide-privacy-btn), .modal-dialog button:not(.force-hide-privacy-btn)').each(function() {
+            // Clean up the text to match reliably
+            let text = $(this).text().toLowerCase().trim().replace(/\s+/g, ' ');
+            
+            if (text === 'private' || text === 'set all private' || text === 'set all public') {
+                $(this).addClass('force-hide-privacy-btn');
+            }
+        });
+    }
+});
+
+// Start observing the DOM
+ticketPrivacyObserver.observe(document.body, { childList: true, subtree: true });
+
+// Listen to route changes to safely add/remove the CSS scope
+frappe.router.on('change', () => {
+    if (frappe.get_route()[0] === 'Form' && frappe.get_route()[1] === 'Sahayog Ticket') {
+        $('body').addClass('ticket-active-form');
+    } else {
+        $('body').removeClass('ticket-active-form');
+    }
+});
+// -------------------------------------------------------------
+
+
+
 // Copyright (c) 2023, Sid and contributors
 
 frappe.ui.form.on("Sahayog Ticket", {
+
+
+  setup: function(frm) {
+    // --- CUSTOM FILE UPLOADER OVERRIDE ---
+    if (frappe.ui.form.ControlAttach && !frappe.ui.form.ControlAttach.prototype._original_set_upload_options) {
+        frappe.ui.form.ControlAttach.prototype._original_set_upload_options = frappe.ui.form.ControlAttach.prototype.set_upload_options;
+        
+        frappe.ui.form.ControlAttach.prototype.set_upload_options = function() {
+            this._original_set_upload_options();
+            // Apply this to Sahayog Ticket
+            if (this.frm && this.frm.doctype === "Sahayog Ticket") {
+                this.upload_options.make_attachments_public = true;
+            }
+        };
+    }
+  },
+
+
   refresh: function (frm) {
+    // Ensure CSS class is applied on reload
+    $('body').addClass('ticket-active-form');
+
+    // Trigger custom functions
     frm.trigger("common_hidden_fields");
     frm.trigger("hide_timeline");
     frm.trigger("hide_sidebar_options");
