@@ -2,7 +2,7 @@ import frappe
 
 def execute(filters=None):
     columns = get_columns()
-    data = get_data()
+    data = get_data(filters)
     summary = get_summary()
 
     return columns, data, None, None, summary
@@ -16,6 +16,7 @@ def get_columns():
         {"label": "Ticket", "fieldname": "ticket", "fieldtype": "Link", "options": "Sahayog Ticket", "width": 130},
         {"label": "Request Type", "fieldname": "request_type", "fieldtype": "Data", "width": 200},
         {"label": "Status", "fieldname": "status", "fieldtype": "Data", "width": 100},
+        {"label": "Response Pending", "fieldname": "response_pending", "fieldtype": "Data", "width": 150},
         {"label": "Ticket Type", "fieldname": "ticket_type", "fieldtype": "Data", "width": 150},
 
         {"label": "Employee ID", "fieldname": "employee_id", "fieldtype": "Link", "options": "Employee", "width": 120},
@@ -35,46 +36,70 @@ def get_columns():
 # ----------------------------------------
 # Main Data Fetch
 # ----------------------------------------
-def get_data():
+def get_data(filters=None):
     data = []
+
+    if not filters:
+        filters = {}
+
+    query_filters = {"ticket_type": "Account Service Request"}
+    
+    if filters.get("status"):
+        query_filters["status"] = filters.get("status")
+    
+    if filters.get("response_pending"):
+        query_filters["response_pending"] = filters.get("response_pending")
+    
+    if filters.get("sol_id"):
+        query_filters["sol_id"] = filters.get("sol_id")
 
     tickets = frappe.get_all(
         "Sahayog Ticket",
-        filters={"ticket_type": "Account Service Request"},
-        fields=["name", "employee_id", "ticket_type", "status"]
+        filters=query_filters,
+        fields=["name", "employee_id", "ticket_type", "status", "response_pending"]
     )
 
     for t in tickets:
 
         # Employee Details
-        emp = frappe.db.get_value(
+        emp = (frappe.db.get_value(
             "Employee",
             t.employee_id,
             ["employee_name", "sol_id"],
             as_dict=True
-        ) if t.employee_id else {}
+        ) if t.employee_id else {}) or {}
 
         # Branch Details from sol_id
-        branch = frappe.db.get_value(
+        sol_id = emp.get("sol_id")
+        branch = (frappe.db.get_value(
             "Sahayog Branch",
-            {"sol_id": emp.get("sol_id")},
+            {"sol_id": sol_id},
             ["branch", "state", "zone", "region", "district"],
             as_dict=True
-        ) if emp else {}
+        ) if sol_id else {}) or {}
 
         # Child (Ticket Item)
+        detail_filters = {"parent": t.name}
+        if filters.get("request_type"):
+            detail_filters["request_type"] = filters.get("request_type")
+
         detail = frappe.get_all(
             "Ticket Item",
-            filters={"parent": t.name},
+            filters=detail_filters,
             fields=["request_type"],
             limit=1
         )
+
+        if filters.get("request_type") and not detail:
+            continue
+
         request_type = detail[0].request_type if detail else None
 
         # Append Row
         data.append({
             "ticket": t.name,
             "status": t.status,
+            "response_pending": t.response_pending,
             "ticket_type": t.ticket_type,
 
             "employee_id": t.employee_id,
