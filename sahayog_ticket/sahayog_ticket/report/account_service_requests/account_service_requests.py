@@ -47,20 +47,21 @@ def get_data():
     for t in tickets:
 
         # Employee Details
-        emp = frappe.db.get_value(
+        emp = (frappe.db.get_value(
             "Employee",
             t.employee_id,
             ["employee_name", "sol_id"],
             as_dict=True
-        ) if t.employee_id else {}
+        ) if t.employee_id else {}) or {}
 
         # Branch Details from sol_id
-        branch = frappe.db.get_value(
+        sol_id = emp.get("sol_id")
+        branch = (frappe.db.get_value(
             "Sahayog Branch",
-            {"sol_id": emp.get("sol_id")},
+            {"sol_id": sol_id},
             ["branch", "state", "zone", "region", "district"],
             as_dict=True
-        ) if emp else {}
+        ) if sol_id else {}) or {}
 
         # Child (Ticket Item)
         detail = frappe.get_all(
