@@ -2,7 +2,7 @@ import frappe
 
 def execute(filters=None):
     columns = get_columns()
-    data = get_data()
+    data = get_data(filters)
     summary = get_summary()
 
     return columns, data, None, None, summary
@@ -36,12 +36,23 @@ def get_columns():
 # ----------------------------------------
 # Main Data Fetch
 # ----------------------------------------
-def get_data():
+def get_data(filters=None):
     data = []
+
+    if not filters:
+        filters = {}
+
+    query_filters = {"ticket_type": "Account Service Request"}
+    
+    if filters.get("status"):
+        query_filters["status"] = filters.get("status")
+    
+    if filters.get("response_pending"):
+        query_filters["response_pending"] = filters.get("response_pending")
 
     tickets = frappe.get_all(
         "Sahayog Ticket",
-        filters={"ticket_type": "Account Service Request"},
+        filters=query_filters,
         fields=["name", "employee_id", "ticket_type", "status", "response_pending"]
     )
 
@@ -65,12 +76,20 @@ def get_data():
         ) if sol_id else {}) or {}
 
         # Child (Ticket Item)
+        detail_filters = {"parent": t.name}
+        if filters.get("request_type"):
+            detail_filters["request_type"] = ["like", f"%{filters.get('request_type')}%"]
+
         detail = frappe.get_all(
             "Ticket Item",
-            filters={"parent": t.name},
+            filters=detail_filters,
             fields=["request_type"],
             limit=1
         )
+
+        if filters.get("request_type") and not detail:
+            continue
+
         request_type = detail[0].request_type if detail else None
 
         # Append Row
