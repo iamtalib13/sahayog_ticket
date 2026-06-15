@@ -51,7 +51,7 @@ def get_data(filters=None):
         query_filters["response_pending"] = filters.get("response_pending")
     
     if filters.get("sol_id"):
-        query_filters["sol_id"] = ["like", f"%{filters.get('sol_id')}%"]
+        query_filters["sol_id"] = filters.get("sol_id")
 
     tickets = frappe.get_all(
         "Sahayog Ticket",
@@ -81,7 +81,7 @@ def get_data(filters=None):
         # Child (Ticket Item)
         detail_filters = {"parent": t.name}
         if filters.get("request_type"):
-            detail_filters["request_type"] = ["like", f"%{filters.get('request_type')}%"]
+            detail_filters["request_type"] = filters.get("request_type")
 
         detail = frappe.get_all(
             "Ticket Item",

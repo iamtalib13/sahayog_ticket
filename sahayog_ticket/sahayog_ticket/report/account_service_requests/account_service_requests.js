@@ -18,12 +18,23 @@ frappe.query_reports["Account Service Requests"] = {
 		{
 			"fieldname": "request_type",
 			"label": __("Request Type"),
-			"fieldtype": "Data"
+			"fieldtype": "Select",
+			"options": [
+				{ "value": "", "label": __("All") },
+				{ "value": "Activation of Dormant account", "label": __("Activation of Dormant account") },
+				{ "value": "Change of Address", "label": __("Change of Address") },
+				{ "value": "DOB Updation", "label": __("DOB Updation") },
+				{ "value": "MOBILE", "label": __("MOBILE") },
+				{ "value": "Name Change", "label": __("Name Change") },
+				{ "value": "Nomination Addition/ Deletion/ Modification", "label": __("Nomination Addition/ Deletion/ Modification") },
+				{ "value": "Update Contact Number", "label": __("Update Contact Number") }
+			]
 		},
 		{
 			"fieldname": "sol_id",
 			"label": __("SOL ID"),
-			"fieldtype": "Data"
+			"fieldtype": "Link",
+			"options": "Sahayog Branch"
 		}
 	]
 };
