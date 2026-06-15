@@ -16,6 +16,7 @@ def get_columns():
         {"label": "Ticket", "fieldname": "ticket", "fieldtype": "Link", "options": "Sahayog Ticket", "width": 130},
         {"label": "Request Type", "fieldname": "request_type", "fieldtype": "Data", "width": 200},
         {"label": "Status", "fieldname": "status", "fieldtype": "Data", "width": 100},
+        {"label": "Response Pending", "fieldname": "response_pending", "fieldtype": "Data", "width": 150},
         {"label": "Ticket Type", "fieldname": "ticket_type", "fieldtype": "Data", "width": 150},
 
         {"label": "Employee ID", "fieldname": "employee_id", "fieldtype": "Link", "options": "Employee", "width": 120},
@@ -41,7 +42,7 @@ def get_data():
     tickets = frappe.get_all(
         "Sahayog Ticket",
         filters={"ticket_type": "Account Service Request"},
-        fields=["name", "employee_id", "ticket_type", "status"]
+        fields=["name", "employee_id", "ticket_type", "status", "response_pending"]
     )
 
     for t in tickets:
@@ -76,6 +77,7 @@ def get_data():
         data.append({
             "ticket": t.name,
             "status": t.status,
+            "response_pending": t.response_pending,
             "ticket_type": t.ticket_type,
 
             "employee_id": t.employee_id,
