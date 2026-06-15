@@ -39,6 +39,7 @@
   "column_break_w2jv5",
   "call_log_date",
   "creation_time",
+  "response_pending",
   "section_break_45",
   "request_detail",
   "description",
@@ -223,8 +224,7 @@
    "in_preview": 1,
    "label": "Description",
    "mandatory_depends_on": "eval:doc.ticket_type",
-   "read_only_depends_on": "eval:doc.status != 'Open'",
-   "set_only_once": 0
+   "read_only_depends_on": "eval:doc.status != 'Open'"
   },
   {
    "default": "Today",
@@ -449,11 +449,17 @@
    "in_standard_filter": 1,
    "label": "SOL ID",
    "read_only": 1
+  },
+  {
+   "fieldname": "response_pending",
+   "fieldtype": "Select",
+   "label": "Response Pending",
+   "options": "Pending Operations\nPending Branch\nResolved"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-20 15:48:06.467430",
+ "modified": "2026-06-15 15:39:33.440926",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
