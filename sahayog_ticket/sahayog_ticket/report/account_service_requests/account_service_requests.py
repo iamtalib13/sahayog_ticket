@@ -49,6 +49,9 @@ def get_data(filters=None):
     
     if filters.get("response_pending"):
         query_filters["response_pending"] = filters.get("response_pending")
+    
+    if filters.get("sol_id"):
+        query_filters["sol_id"] = ["like", f"%{filters.get('sol_id')}%"]
 
     tickets = frappe.get_all(
         "Sahayog Ticket",

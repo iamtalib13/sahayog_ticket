@@ -19,6 +19,11 @@ frappe.query_reports["Account Service Requests"] = {
 			"fieldname": "request_type",
 			"label": __("Request Type"),
 			"fieldtype": "Data"
+		},
+		{
+			"fieldname": "sol_id",
+			"label": __("SOL ID"),
+			"fieldtype": "Data"
 		}
 	]
 };
