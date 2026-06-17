@@ -233,10 +233,10 @@ frappe.ui.form.on("Sahayog Ticket", {
                 <div id="chat-history" style="
                     flex-grow: 1;
                     overflow-y: auto;
-                    padding: 10px;
+                    padding: 8px;
                     display: flex;
                     flex-direction: column;
-                    gap: 8px;
+                    gap: 4px;
                     background-color: #f7f9fb;
                     scroll-behavior: smooth;
                     min-height: 80px;
@@ -485,16 +485,16 @@ frappe.ui.form.on("Sahayog Ticket", {
                         </div>
                     ` : ''}
                     <div style="display: flex; flex-direction: column; align-items: ${is_me ? 'flex-end' : 'flex-start'};">
-                        <div style="font-size: 9px; font-weight: 600; color: #64748b; margin: 0 4px 2px 4px;">
+                        <div style="font-size: 8.5px; font-weight: 600; color: #64748b; margin: 0 4px 1px 4px;">
                             ${is_me ? 'You' : (item.by.split('@')[0])}
                         </div>
                         <div style="
                             background: ${is_me ? '#00b09b' : 'white'};
                             color: ${is_me ? 'white' : '#1e293b'};
-                            padding: 6px 10px;
-                            border-radius: ${is_me ? '12px 12px 2px 12px' : '12px 12px 12px 2px'};
+                            padding: 4px 8px;
+                            border-radius: ${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'};
                             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-                            font-size: 11.5px;
+                            font-size: 11px;
                             line-height: 1.4;
                             border: ${is_me ? 'none' : '1px solid #e2e8f0'};
                         ">
