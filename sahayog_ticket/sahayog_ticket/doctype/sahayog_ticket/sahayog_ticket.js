@@ -205,9 +205,6 @@ frappe.ui.form.on("Sahayog Ticket", {
                     color: white; display: flex; align-items: center; justify-content: space-between;
                 ">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 30px; height: 30px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
-                            <i class="fa fa-robot"></i>
-                        </div>
                         <div>
                             <div style="font-weight: 700; font-size: 12px;">Support Assistant</div>
                         </div>
@@ -368,16 +365,20 @@ frappe.ui.form.on("Sahayog Ticket", {
         history.sort((a, b) => new Date(a.date) - new Date(b.date));
         chat_history.empty();
         if (history.length === 0) chat_history.append('<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:10px;">No messages.</p>');
+        let last_sender = null;
         history.forEach((item) => {
           let is_me = item.by === frappe.session.user;
           let time = frappe.datetime.get_time(item.date).split(':').slice(0, 2).join(':');
           if (item.is_system) {
             chat_history.append(`<div style="align-self:center; background:#eef2f6; color:#64748b; padding:4px 10px; border-radius:15px; font-size:10px; text-align:center; max-width:90%; margin:2px 0; border:1px solid #dfe5ec;">${item.content} <span style="font-size:8px; margin-left:4px; font-weight:600;">${time}</span></div>`);
+            last_sender = null;
           } else {
+            let show_sender = item.by !== last_sender;
+            last_sender = item.by;
             chat_history.append(`
-                <div style="display:flex; gap:6px; flex-direction:${is_me ? 'row-reverse' : 'row'}; align-self:${is_me ? 'flex-end' : 'flex-start'}; max-width:90%;">
+                <div style="display:flex; gap:6px; flex-direction:${is_me ? 'row-reverse' : 'row'}; align-self:${is_me ? 'flex-end' : 'flex-start'}; max-width:90%; ${!show_sender ? 'margin-top:-2px;' : ''}">
                     <div style="display:flex; flex-direction:column; align-items:${is_me ? 'flex-end' : 'flex-start'};">
-                        <div style="font-size:9px; font-weight:600; color:#64748b; margin:0 4px 1px 4px;">${is_me ? 'You' : (item.by.split('@')[0])}</div>
+                        ${show_sender ? `<div style="font-size:9px; font-weight:600; color:#64748b; margin:0 4px 1px 4px;">${is_me ? 'You' : (item.by.split('@')[0])}</div>` : ''}
                         <div style="background:${is_me ? '#00b09b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'};">
                             <div style="display:flex; flex-direction:row; align-items:flex-end; justify-content:space-between; gap:8px;">
                                 <div style="flex-grow:1; word-break:break-word;">${item.content}</div>
