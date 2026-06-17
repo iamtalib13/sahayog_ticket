@@ -498,9 +498,11 @@ frappe.ui.form.on("Sahayog Ticket", {
                             line-height: 1.4;
                             border: ${is_me ? 'none' : '1px solid #e2e8f0'};
                         ">
-                            ${item.content}
-                            <div style="text-align: right; font-size: 8px; opacity: 0.7; margin-top: 2px; font-weight: 500;">
-                                ${time}
+                            <div style="display: flex; flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 8px;">
+                                <div style="flex-grow: 1; word-break: break-word;">${item.content}</div>
+                                <div style="font-size: 8px; opacity: 0.7; font-weight: 500; white-space: nowrap; margin-bottom: -2px; align-self: flex-end;">
+                                    ${time}
+                                </div>
                             </div>
                         </div>
                     </div>
