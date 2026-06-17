@@ -184,121 +184,145 @@ frappe.ui.form.on("Sahayog Ticket", {
   setup_floating_chatbot: function (frm) {
     if (frm.is_new()) return;
 
-    // Remove existing to prevent duplicates
-    $(".chatbot-fab, .chatbot-floating-window").remove();
+    // 1. Clean existing elements
+    $(".chatbot-wrapper-global").remove();
 
-    // Floating Button
-    let fab_html = `
-        <div class="chatbot-fab" style="
-            position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px;
-            background: linear-gradient(135deg, #00b09b, #96c93d); color: white;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            z-index: 9999; transition: transform 0.2s;
+    // 2. Global Wrapper
+    let html = `
+        <div class="chatbot-wrapper-global" style="
+            position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; align-items: flex-end;
+            font-family: 'Inter', sans-serif;
         ">
-            <i class="fa fa-paper-plane"></i>
-        </div>
-    `;
-
-    // Floating Window
-    let window_html = `
-        <div class="chatbot-floating-window" style="
-            position: fixed; bottom: 80px; right: 20px; width: 300px; height: 350px;
-            background: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            display: none; flex-direction: column; overflow: hidden; z-index: 9998;
-            font-family: 'Inter', sans-serif; border: 1px solid #e0e6ed;
-        ">
-            <div class="chat-header" style="
-                padding: 10px 15px; background: linear-gradient(135deg, #00b09b, #96c93d);
-                color: white; display: flex; align-items: center; justify-content: space-between;
+            <!-- Floating History Window -->
+            <div class="chatbot-floating-window" style="
+                width: 320px; height: 380px; background: white; border-radius: 16px;
+                box-shadow: 0 12px 28px rgba(0,0,0,0.12); margin-bottom: 12px;
+                display: none; flex-direction: column; overflow: hidden; border: 1px solid #e0e6ed;
             ">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fa fa-robot" style="font-size: 14px;"></i>
-                    <span style="font-weight: 700; font-size: 12px;">Support Assistant</span>
-                </div>
-                <i class="fa fa-times chat-close-trigger" style="cursor: pointer; font-size: 12px; opacity: 0.8;"></i>
-            </div>
-            
-            <div id="chat-history-dynamic" style="
-                flex-grow: 1; overflow-y: auto; padding: 10px; display: flex;
-                flex-direction: column; gap: 4px; background-color: #f7f9fb; scroll-behavior: smooth;
-            "></div>
-
-            <div class="chat-input-area" style="
-                padding: 8px 12px; background: white; display: flex;
-                align-items: center; gap: 8px; border-top: 1px solid #eef2f6;
-            ">
-                <button id="chat-attach-dynamic" style="background: none; border: none; color: #94a3b8; font-size: 16px; cursor: pointer;">
-                    <i class="fa fa-paperclip"></i>
-                </button>
-                <textarea id="chat-input-dynamic" placeholder="Type a message..." style="
-                    flex-grow: 1; border: 1px solid #e2e8f0; border-radius: 15px;
-                    padding: 6px 12px; font-size: 12px; outline: none; resize: none;
-                    height: 32px; background: #f8fafc; max-height: 80px;
-                "></textarea>
-                <button id="chat-send-dynamic" style="
-                    background: linear-gradient(135deg, #00b09b, #96c93d); color: white;
-                    border: none; border-radius: 50%; width: 32px; height: 32px;
-                    cursor: pointer; display: flex; align-items: center; justify-content: center;
+                <div class="chat-header" style="
+                    padding: 10px 15px; background: linear-gradient(135deg, #00b09b, #96c93d);
+                    color: white; display: flex; align-items: center; justify-content: space-between;
                 ">
-                    <i class="fa fa-paper-plane" style="font-size: 10px;"></i>
-                </button>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 30px; height: 30px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                            <i class="fa fa-robot"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; font-size: 12px;">Support Assistant</div>
+                        </div>
+                    </div>
+                    <i class="fa fa-times chat-close-trigger" style="cursor: pointer; opacity: 0.8; font-size: 14px;"></i>
+                </div>
+                
+                <div id="chat-history-dynamic" style="
+                    flex-grow: 1; overflow-y: auto; padding: 12px; display: flex;
+                    flex-direction: column; gap: 4px; background-color: #f8fafc; scroll-behavior: smooth;
+                "></div>
             </div>
-            <div id="chat-resize-dynamic" style="height: 4px; cursor: ns-resize; background: #f8fafc; border-top: 1px solid #f1f5f9;"></div>
+
+            <!-- Bottom Row (Input + Circular FAB) -->
+            <div style="display: flex; align-items: flex-end; gap: 10px; width: 100%; justify-content: flex-end;">
+                
+                <!-- Input Container (Slides out from FAB) -->
+                <div class="chat-input-container" style="
+                    display: none; background: white; border-radius: 24px;
+                    padding: 4px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                    flex-grow: 1; border: 1px solid #e2e8f0; align-items: center;
+                    gap: 8px; max-width: 260px;
+                ">
+                    <button id="chat-attach-dynamic" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">
+                        <i class="fa fa-paperclip"></i>
+                    </button>
+                    <textarea id="chat-input-dynamic" placeholder="Type a message..." style="
+                        flex-grow: 1; border: none; padding: 8px 0; font-size: 13px;
+                        outline: none; resize: none; height: 36px; background: transparent;
+                        max-height: 100px;
+                    "></textarea>
+                </div>
+
+                <!-- Circular FAB (Acts as Open Trigger & Send Button) -->
+                <div class="chatbot-fab" style="
+                    width: 50px; height: 50px; background: linear-gradient(135deg, #00b09b, #96c93d);
+                    color: white; border-radius: 50%; display: flex; align-items: center;
+                    justify-content: center; font-size: 20px; cursor: pointer;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15); flex-shrink: 0;
+                    transition: transform 0.2s;
+                ">
+                    <i class="fa fa-paper-plane"></i>
+                </div>
+            </div>
         </div>
     `;
 
-    $("body").append(fab_html).append(window_html);
+    $("body").append(html);
 
-    $(".chatbot-fab").on('click', function() {
-        $(".chatbot-floating-window").fadeToggle(200);
-        if ($(".chatbot-floating-window").is(":visible")) {
+    let fab = $(".chatbot-fab");
+    let win = $(".chatbot-floating-window");
+    let input_container = $(".chat-input-container");
+    let input = $("#chat-input-dynamic");
+
+    // Unified FAB Action
+    fab.on('click', function() {
+        if (!win.is(":visible")) {
+            // OPEN CHAT
+            win.fadeIn(200);
+            input_container.css('display', 'flex').hide().fadeIn(200);
             frm.trigger("render_floating_chat_content");
-            $("#chat-input-dynamic").focus();
+            input.focus();
+        } else {
+            // SEND MESSAGE
+            let message = input.val().trim();
+            if (!message) return;
+
+            input.prop('disabled', true);
+            fab.css('opacity', '0.5').css('pointer-events', 'none');
+
+            frappe.call({
+                method: "frappe.desk.form.utils.add_comment",
+                args: {
+                    reference_doctype: frm.doctype, reference_name: frm.docname,
+                    content: message, comment_by: frappe.session.user, comment_email: frappe.session.user
+                },
+                callback: function() {
+                    input.val('').prop('disabled', false).css('height', '36px');
+                    fab.css('opacity', '1').css('pointer-events', 'auto');
+                    frm.trigger("render_floating_chat_content");
+                    input.focus();
+                }
+            });
         }
     });
 
-    $(".chat-close-trigger").on('click', () => $(".chatbot-floating-window").fadeOut(200));
-
-    // Resize
-    $("#chat-resize-dynamic").on('mousedown', function(e) {
-        e.preventDefault();
-        let startY = e.pageY;
-        let startHeight = $(".chatbot-floating-window").height();
-        $(document).on('mousemove.chatdynamic', function(e) {
-            let newHeight = startHeight - (e.pageY - startY);
-            if (newHeight >= 150 && newHeight <= 800) $(".chatbot-floating-window").css('height', newHeight + 'px');
-        });
-        $(document).on('mouseup.chatdynamic', () => $(document).off('.chatdynamic'));
+    $(".chat-close-trigger").on('click', () => {
+        win.fadeOut(200);
+        input_container.fadeOut(200);
     });
 
-    // Send
-    $("#chat-send-dynamic").on('click', function() {
-        let message = $("#chat-input-dynamic").val().trim();
-        if (!message) return;
-        $("#chat-input-dynamic").prop('disabled', true);
-        frappe.call({
-            method: "frappe.desk.form.utils.add_comment",
-            args: {
-                reference_doctype: frm.doctype, reference_name: frm.docname,
-                content: message, comment_by: frappe.session.user, comment_email: frappe.session.user
-            },
-            callback: function() {
-                $("#chat-input-dynamic").val('').prop('disabled', false).css('height', '32px');
-                frm.trigger("render_floating_chat_content");
-            }
-        });
+    // Enter to Send
+    input.on('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); fab.click(); }
     });
 
-    $("#chat-input-dynamic").on('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $("#chat-send-dynamic").click(); }
+    // Auto-resize Input
+    input.on('input', function() {
+        this.style.height = '36px';
+        this.style.height = (this.scrollHeight) + 'px';
     });
 
+    // Attachment Logic
     $("#chat-attach-dynamic").on('click', function() {
         new frappe.ui.FileUploader({
             doctype: frm.doctype, docname: frm.docname, make_attachments_public: true,
             on_success: () => frm.trigger("render_floating_chat_content")
         });
+    });
+
+    // Navigation Cleanup
+    frappe.router.on('change', () => {
+        if (frappe.get_route()[0] !== 'Form' || frappe.get_route()[1] !== 'Sahayog Ticket') {
+            $(".chatbot-wrapper-global").remove();
+        }
     });
   },
 
