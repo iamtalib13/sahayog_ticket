@@ -323,7 +323,11 @@ frappe.ui.form.on("Sahayog Ticket", {
     // Click Outside to Close
     $(document).on('mousedown.chat_outside', function(e) {
         let wrapper = $(".chatbot-wrapper-global");
-        if (win.is(":visible") && !wrapper.is(e.target) && wrapper.has(e.target).length === 0) {
+        // Don't close if clicking inside chatbot or any modal/overlay
+        if (win.is(":visible") && 
+            !wrapper.is(e.target) && wrapper.has(e.target).length === 0 &&
+            !$(e.target).closest('.modal, .modal-backdrop, .frappe-control-popup').length
+        ) {
             $(".chat-close-trigger").click();
         }
     });
