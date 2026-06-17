@@ -473,10 +473,6 @@ frappe.ui.form.on("Sahayog Ticket", {
     });
   },
 
-  render_comments_and_remarks: function (frm) {
-    $(frm.fields_dict.comments_and_remarks.wrapper).hide();
-  },
-
   onload: function (frm) {
     if (!frm.is_new()) {
       // frm.trigger("set_intro");
