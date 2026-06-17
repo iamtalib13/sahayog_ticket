@@ -192,7 +192,7 @@ frappe.ui.form.on("Sahayog Ticket", {
         <div class="chatbot-container" style="
             display: flex;
             flex-direction: column;
-            height: 600px;
+            height: 550px;
             background: #f7f9fb;
             border-radius: 16px;
             border: 1px solid #e0e6ed;
@@ -202,98 +202,156 @@ frappe.ui.form.on("Sahayog Ticket", {
             position: relative;
         ">
             <div class="chat-header" style="
-                padding: 15px 20px;
+                padding: 12px 20px;
                 background: linear-gradient(135deg, #00b09b, #96c93d);
                 color: white;
                 display: flex;
                 align-items: center;
-                gap: 12px;
+                justify-content: space-between;
                 z-index: 10;
+                cursor: pointer;
             ">
-                <div style="position: relative;">
-                    <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid white;">
-                        <i class="fa fa-robot"></i>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="position: relative;">
+                        <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid white;">
+                            <i class="fa fa-robot"></i>
+                        </div>
+                        <div style="position: absolute; bottom: 0; right: 0; width: 8px; height: 8px; background: #4caf50; border-radius: 50%; border: 1px solid white;"></div>
                     </div>
-                    <div style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: #4caf50; border-radius: 50%; border: 2px solid white;"></div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px; letter-spacing: 0.3px;">Sahayog Support Bot</div>
+                    </div>
                 </div>
-                <div>
-                    <div style="font-weight: 700; font-size: 15px; letter-spacing: 0.3px;">Sahayog Support Bot</div>
-                    <div style="font-size: 11px; opacity: 0.9; display: flex; align-items: center; gap: 4px;">
-                        <span style="width: 6px; height: 6px; background: #fff; border-radius: 50%; display: inline-block;"></span>
-                        Always active
-                    </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="chat-toggle-size" title="Minimize/Maximize" style="cursor: pointer; font-size: 14px; opacity: 0.8; transition: opacity 0.2s;">
+                        <i class="fa fa-window-minimize"></i>
+                    </span>
                 </div>
             </div>
             
-            <div id="chat-history" style="
-                flex-grow: 1;
-                overflow-y: auto;
-                padding: 20px;
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
-                background-color: #f7f9fb;
-                scroll-behavior: smooth;
-            ">
-                <p style="text-align: center; color: #aab4be; font-size: 12px; margin-top: 10px; font-weight: 500;">
-                    <i class="fa fa-lock" style="font-size: 10px;"></i> Conversation is recorded for quality assurance
-                </p>
-                <p id="chat-loading-spinner" style="text-align: center; color: #667781; font-size: 13px;">
-                    <i class="fa fa-spinner fa-spin"></i> Initializing conversation...
-                </p>
-            </div>
-
-            <div class="chat-input-area" style="
-                padding: 15px 20px;
-                background: white;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                border-top: 1px solid #eef2f6;
-            ">
-                <button id="chat-attach-btn" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">
-                    <i class="fa fa-paperclip"></i>
-                </button>
-                <textarea id="chat-user-input" placeholder="How can we help you?" style="
+            <div id="chat-content-wrapper" style="display: flex; flex-direction: column; flex-grow: 1; overflow: hidden;">
+                <div id="chat-history" style="
                     flex-grow: 1;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 20px;
-                    padding: 8px 16px;
-                    font-size: 14px;
-                    outline: none;
-                    resize: none;
-                    height: 38px;
-                    background: #f8fafc;
-                    transition: border-color 0.2s;
-                "></textarea>
-                <button id="chat-send-btn" style="
-                    background: linear-gradient(135deg, #00b09b, #96c93d);
-                    color: white;
-                    border: none;
-                    border-radius: 50%;
-                    width: 38px;
-                    height: 38px;
-                    cursor: pointer;
+                    overflow-y: auto;
+                    padding: 20px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                    background-color: #f7f9fb;
+                    scroll-behavior: smooth;
+                    min-height: 200px;
+                ">
+                    <p style="text-align: center; color: #aab4be; font-size: 11px; margin-top: 5px; font-weight: 500;">
+                        <i class="fa fa-lock" style="font-size: 10px;"></i> Recorded for quality assurance
+                    </p>
+                    <p id="chat-loading-spinner" style="text-align: center; color: #667781; font-size: 13px;">
+                        <i class="fa fa-spinner fa-spin"></i> Initializing...
+                    </p>
+                </div>
+
+                <div class="chat-input-area" style="
+                    padding: 12px 15px;
+                    background: white;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    border-top: 1px solid #eef2f6;
+                ">
+                    <button id="chat-attach-btn" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">
+                        <i class="fa fa-paperclip"></i>
+                    </button>
+                    <textarea id="chat-user-input" placeholder="Type a message..." style="
+                        flex-grow: 1;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 18px;
+                        padding: 8px 15px;
+                        font-size: 13px;
+                        outline: none;
+                        resize: none;
+                        height: 36px;
+                        background: #f8fafc;
+                        transition: border-color 0.2s;
+                    "></textarea>
+                    <button id="chat-send-btn" style="
+                        background: linear-gradient(135deg, #00b09b, #96c93d);
+                        color: white;
+                        border: none;
+                        border-radius: 50%;
+                        width: 36px;
+                        height: 36px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 4px 6px rgba(0, 176, 155, 0.2);
+                    ">
+                        <i class="fa fa-paper-plane" style="font-size: 12px;"></i>
+                    </button>
+                </div>
+                <!-- Resize Handle -->
+                <div id="chat-resize-handle" style="
+                    height: 8px;
+                    background: #eef2f6;
+                    cursor: ns-resize;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    box-shadow: 0 4px 6px rgba(0, 176, 155, 0.2);
+                    border-top: 1px solid #e0e6ed;
                 ">
-                    <i class="fa fa-paper-plane" style="font-size: 14px; transform: translateX(-1px);"></i>
-                </button>
+                    <div style="width: 30px; height: 3px; background: #cbd5e1; border-radius: 2px;"></div>
+                </div>
             </div>
         </div>
     `;
 
     wrapper.append(container_html);
+    let container = wrapper.find(".chatbot-container");
+    let content_wrapper = wrapper.find("#chat-content-wrapper");
+    let toggle_btn = wrapper.find("#chat-toggle-size");
+    let resize_handle = wrapper.find("#chat-resize-handle");
     let chat_history = wrapper.find("#chat-history");
     let user_input = wrapper.find("#chat-user-input");
     let send_btn = wrapper.find("#chat-send-btn");
     let attach_btn = wrapper.find("#chat-attach-btn");
 
+    // Toggle Minimize/Maximize
+    toggle_btn.on('click', function(e) {
+        e.stopPropagation();
+        let is_minimized = content_wrapper.is(':hidden');
+        if (is_minimized) {
+            content_wrapper.slideDown(200);
+            container.css('height', container.data('prev-height') || '550px');
+            $(this).html('<i class="fa fa-window-minimize"></i>');
+        } else {
+            container.data('prev-height', container.height());
+            content_wrapper.slideUp(200, function() {
+                container.css('height', 'auto');
+            });
+            $(this).html('<i class="fa fa-window-maximize"></i>');
+        }
+    });
+
+    // Resize Logic
+    resize_handle.on('mousedown', function(e) {
+        e.preventDefault();
+        let startY = e.pageY;
+        let startHeight = container.height();
+
+        $(document).on('mousemove.chatresize', function(e) {
+            let newHeight = startHeight + (e.pageY - startY);
+            if (newHeight >= 150 && newHeight <= 1000) {
+                container.css('height', newHeight + 'px');
+            }
+        });
+
+        $(document).on('mouseup.chatresize', function() {
+            $(document).off('mousemove.chatresize mouseup.chatresize');
+        });
+    });
+
     // Auto-resize textarea
     user_input.on('input', function() {
-        this.style.height = '38px';
+        this.style.height = '36px';
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
     });
 
@@ -326,7 +384,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                 comment_email: frappe.session.user
             },
             callback: function(r) {
-                user_input.val('').prop('disabled', false).css('height', '38px');
+                user_input.val('').prop('disabled', false).css('height', '36px');
                 send_btn.prop('disabled', false).css('opacity', '1');
                 user_input.focus();
                 frm.trigger("render_comments_and_remarks");
@@ -638,7 +696,7 @@ frappe.ui.form.on("Sahayog Ticket", {
               let maxCount = Math.max(...users.map((u) => u.count));
 
               // Build HTML header
-              let html = `<div style="display:flex; font-weight:700; font-size:13px; color:#087b74; padding-left:29px; background:#e3f3f3; border-radius:11px 11px 0 0; border:1.5 solid #e0e3e7; margin-bottom:2px;">
+              let html = `<div style="display:flex; font-weight:700; font-size:13px; color:#087b74; padding-left:29px; background:#e3f3f3; border-radius:11px 11px 0 0; border:1.5px solid #e0e3e7; margin-bottom:2px;">
                           <div style="width:32px; padding-right:54px;">#</div>
                           <div style="flex:1;">Executive</div>
                           <div style="width:110px; text-align:right; padding-right:53px;">Pending</div>
@@ -652,7 +710,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
                 html += `<div style="
                         display:flex; align-items:center; background:#f3f6f9; border-radius:0 0 11px 11px; 
-                        border:1.5 solid #e0e3e7; margin:2px 0 10px 0; padding:0 18px;">
+                        border:1.5px solid #e0e3e7; margin:2px 0 10px 0; padding:0 18px;">
                         <div style="width:32px; text-align:center; color:#6c757d; font-size:12px; font-weight:600; margin-right:10px;">
                           ${index++}
                         </div>
@@ -674,7 +732,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                           display:flex; justify-content:flex-end; align-items:center;
                           background:#e3f3f3;color:#107561;
                           border-radius:10px; padding:0 15px;
-                          font-size:15px; font-weight:600; border:1.2 solid #c0ebe9;">
+                          font-size:15px; font-weight:600; border:1.2px solid #c0ebe9;">
                           ${u.count}
                           <span style="
                             display:inline-block; height:7px; border-radius:4px;
