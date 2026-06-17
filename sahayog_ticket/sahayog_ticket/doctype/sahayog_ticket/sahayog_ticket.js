@@ -187,22 +187,22 @@ frappe.ui.form.on("Sahayog Ticket", {
     let wrapper = $(frm.fields_dict.comments_and_remarks.wrapper);
     wrapper.empty();
 
-    // Create container with high-quality chatbot-like styling
+    // Create container with ultra-compact chatbot-like styling
     let container_html = `
         <div class="chatbot-container" style="
             display: flex;
             flex-direction: column;
-            height: 550px;
+            height: 220px;
             background: #f7f9fb;
-            border-radius: 16px;
+            border-radius: 10px;
             border: 1px solid #e0e6ed;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             overflow: hidden;
-            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             position: relative;
         ">
             <div class="chat-header" style="
-                padding: 12px 20px;
+                padding: 6px 12px;
                 background: linear-gradient(135deg, #00b09b, #96c93d);
                 color: white;
                 display: flex;
@@ -211,19 +211,19 @@ frappe.ui.form.on("Sahayog Ticket", {
                 z-index: 10;
                 cursor: pointer;
             ">
-                <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
                     <div style="position: relative;">
-                        <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid white;">
+                        <div style="width: 22px; height: 22px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; border: 1px solid white;">
                             <i class="fa fa-robot"></i>
                         </div>
-                        <div style="position: absolute; bottom: 0; right: 0; width: 8px; height: 8px; background: #4caf50; border-radius: 50%; border: 1px solid white;"></div>
+                        <div style="position: absolute; bottom: 0; right: 0; width: 6px; height: 6px; background: #4caf50; border-radius: 50%; border: 1px solid white;"></div>
                     </div>
                     <div>
-                        <div style="font-weight: 700; font-size: 14px; letter-spacing: 0.3px;">Sahayog Support Bot</div>
+                        <div style="font-weight: 700; font-size: 11px; letter-spacing: 0.1px;">Support Bot</div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span id="chat-toggle-size" title="Minimize/Maximize" style="cursor: pointer; font-size: 14px; opacity: 0.8; transition: opacity 0.2s;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="chat-toggle-size" title="Minimize/Maximize" style="cursor: pointer; font-size: 10px; opacity: 0.8; transition: opacity 0.2s;">
                         <i class="fa fa-window-minimize"></i>
                     </span>
                 </div>
@@ -233,42 +233,39 @@ frappe.ui.form.on("Sahayog Ticket", {
                 <div id="chat-history" style="
                     flex-grow: 1;
                     overflow-y: auto;
-                    padding: 20px;
+                    padding: 10px;
                     display: flex;
                     flex-direction: column;
-                    gap: 16px;
+                    gap: 8px;
                     background-color: #f7f9fb;
                     scroll-behavior: smooth;
-                    min-height: 200px;
+                    min-height: 80px;
                 ">
-                    <p style="text-align: center; color: #aab4be; font-size: 11px; margin-top: 5px; font-weight: 500;">
-                        <i class="fa fa-lock" style="font-size: 10px;"></i> Recorded for quality assurance
-                    </p>
-                    <p id="chat-loading-spinner" style="text-align: center; color: #667781; font-size: 13px;">
-                        <i class="fa fa-spinner fa-spin"></i> Initializing...
+                    <p id="chat-loading-spinner" style="text-align: center; color: #667781; font-size: 11px;">
+                        <i class="fa fa-spinner fa-spin"></i> Loading...
                     </p>
                 </div>
 
                 <div class="chat-input-area" style="
-                    padding: 12px 15px;
+                    padding: 6px 10px;
                     background: white;
                     display: flex;
                     align-items: center;
-                    gap: 10px;
+                    gap: 6px;
                     border-top: 1px solid #eef2f6;
                 ">
-                    <button id="chat-attach-btn" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">
+                    <button id="chat-attach-btn" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer;">
                         <i class="fa fa-paperclip"></i>
                     </button>
-                    <textarea id="chat-user-input" placeholder="Type a message..." style="
+                    <textarea id="chat-user-input" placeholder="Message..." style="
                         flex-grow: 1;
                         border: 1px solid #e2e8f0;
-                        border-radius: 18px;
-                        padding: 8px 15px;
-                        font-size: 13px;
+                        border-radius: 12px;
+                        padding: 4px 10px;
+                        font-size: 11.5px;
                         outline: none;
                         resize: none;
-                        height: 36px;
+                        height: 28px;
                         background: #f8fafc;
                         transition: border-color 0.2s;
                     "></textarea>
@@ -277,28 +274,28 @@ frappe.ui.form.on("Sahayog Ticket", {
                         color: white;
                         border: none;
                         border-radius: 50%;
-                        width: 36px;
-                        height: 36px;
+                        width: 28px;
+                        height: 28px;
                         cursor: pointer;
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        box-shadow: 0 4px 6px rgba(0, 176, 155, 0.2);
+                        box-shadow: 0 1px 3px rgba(0, 176, 155, 0.15);
                     ">
-                        <i class="fa fa-paper-plane" style="font-size: 12px;"></i>
+                        <i class="fa fa-paper-plane" style="font-size: 10px;"></i>
                     </button>
                 </div>
                 <!-- Resize Handle -->
                 <div id="chat-resize-handle" style="
-                    height: 8px;
-                    background: #eef2f6;
+                    height: 4px;
+                    background: #f8fafc;
                     cursor: ns-resize;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border-top: 1px solid #e0e6ed;
+                    border-top: 1px solid #f1f5f9;
                 ">
-                    <div style="width: 30px; height: 3px; background: #cbd5e1; border-radius: 2px;"></div>
+                    <div style="width: 20px; height: 2px; background: #e2e8f0; border-radius: 1px;"></div>
                 </div>
             </div>
         </div>
@@ -320,7 +317,7 @@ frappe.ui.form.on("Sahayog Ticket", {
         let is_minimized = content_wrapper.is(':hidden');
         if (is_minimized) {
             content_wrapper.slideDown(200);
-            container.css('height', container.data('prev-height') || '550px');
+            container.css('height', container.data('prev-height') || '220px');
             $(this).html('<i class="fa fa-window-minimize"></i>');
         } else {
             container.data('prev-height', container.height());
@@ -339,7 +336,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
         $(document).on('mousemove.chatresize', function(e) {
             let newHeight = startHeight + (e.pageY - startY);
-            if (newHeight >= 150 && newHeight <= 1000) {
+            if (newHeight >= 100 && newHeight <= 1000) {
                 container.css('height', newHeight + 'px');
             }
         });
@@ -351,8 +348,8 @@ frappe.ui.form.on("Sahayog Ticket", {
 
     // Auto-resize textarea
     user_input.on('input', function() {
-        this.style.height = '36px';
-        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        this.style.height = '28px';
+        this.style.height = Math.min(this.scrollHeight, 100) + 'px';
     });
 
     user_input.on('focus', function() { $(this).css('border-color', '#00b09b'); });
@@ -384,7 +381,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                 comment_email: frappe.session.user
             },
             callback: function(r) {
-                user_input.val('').prop('disabled', false).css('height', '36px');
+                user_input.val('').prop('disabled', false).css('height', '28px');
                 send_btn.prop('disabled', false).css('opacity', '1');
                 user_input.focus();
                 frm.trigger("render_comments_and_remarks");
@@ -427,13 +424,12 @@ frappe.ui.form.on("Sahayog Ticket", {
             
             if (is_attachment && content && content.startsWith("/") && !content.includes("<a")) {
               let filename = content.split("/").pop();
-              content = `<div style="display:flex; align-items:center; gap:10px; padding:6px; background: rgba(0,176,155,0.05); border-radius:8px;">
-                            <div style="width: 32px; height: 32px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #00b09b;">
-                                <i class="fa fa-file-pdf"></i>
+              content = `<div style="display:flex; align-items:center; gap:6px; padding:4px; background: rgba(0,176,155,0.05); border-radius:6px;">
+                            <div style="width: 24px; height: 24px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #00b09b; font-size: 10px;">
+                                <i class="fa fa-file"></i>
                             </div>
                             <div style="flex:1; overflow: hidden;">
-                                <a href="${content}" target="_blank" style="font-weight: 600; color: #1e293b; font-size: 13px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${filename}</a>
-                                <div style="font-size: 10px; color: #64748b;">Click to view file</div>
+                                <a href="${content}" target="_blank" style="font-weight: 600; color: #1e293b; font-size: 11px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${filename}</a>
                             </div>
                          </div>`;
             }
@@ -453,7 +449,7 @@ frappe.ui.form.on("Sahayog Ticket", {
             if (log.status_remark) {
               history.push({
                 type: "Status",
-                content: `<b>Status: ${log.to_status}</b><br><span style="opacity: 0.8; font-size: 11px;">${log.status_remark}</span>`,
+                content: `<b>Status: ${log.to_status}</b><br><span style="opacity: 0.8; font-size: 10px;">${log.status_remark}</span>`,
                 by: log.status_change_by,
                 date: log.status_change_on,
                 is_system: true
@@ -466,7 +462,7 @@ frappe.ui.form.on("Sahayog Ticket", {
         chat_history.find("#chat-loading-spinner").remove();
 
         if (history.length === 0) {
-          chat_history.append('<p style="text-align: center; color: #94a3b8; font-size: 13px; margin-top: 20px;">No messages yet. Start the conversation!</p>');
+          chat_history.append('<p style="text-align: center; color: #94a3b8; font-size: 11px; margin-top: 10px;">No messages.</p>');
           return;
         }
 
@@ -476,34 +472,34 @@ frappe.ui.form.on("Sahayog Ticket", {
           
           if (item.is_system) {
             chat_history.append(`
-                <div style="align-self: center; background: #eef2f6; color: #64748b; padding: 6px 14px; border-radius: 20px; font-size: 11px; text-align: center; max-width: 85%; margin: 4px 0; border: 1px solid #dfe5ec;">
-                    ${item.content} <span style="font-size: 9px; margin-left: 6px; font-weight: 600;">${time}</span>
+                <div style="align-self: center; background: #eef2f6; color: #64748b; padding: 4px 10px; border-radius: 15px; font-size: 10px; text-align: center; max-width: 90%; margin: 2px 0; border: 1px solid #dfe5ec;">
+                    ${item.content} <span style="font-size: 8px; margin-left: 4px; font-weight: 600;">${time}</span>
                 </div>
             `);
           } else {
             chat_history.append(`
-                <div style="display: flex; gap: 10px; flex-direction: ${is_me ? 'row-reverse' : 'row'}; align-self: ${is_me ? 'flex-end' : 'flex-start'}; max-width: 85%;">
+                <div style="display: flex; gap: 6px; flex-direction: ${is_me ? 'row-reverse' : 'row'}; align-self: ${is_me ? 'flex-end' : 'flex-start'}; max-width: 90%;">
                     ${!is_me ? `
-                        <div style="width: 32px; height: 32px; background: white; border: 1px solid #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #00b09b; flex-shrink: 0; align-self: flex-end;">
+                        <div style="width: 24px; height: 24px; background: white; border: 1px solid #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #00b09b; flex-shrink: 0; align-self: flex-end;">
                             <i class="fa fa-user"></i>
                         </div>
                     ` : ''}
                     <div style="display: flex; flex-direction: column; align-items: ${is_me ? 'flex-end' : 'flex-start'};">
-                        <div style="font-size: 10px; font-weight: 600; color: #64748b; margin: 0 4px 4px 4px;">
+                        <div style="font-size: 9px; font-weight: 600; color: #64748b; margin: 0 4px 2px 4px;">
                             ${is_me ? 'You' : (item.by.split('@')[0])}
                         </div>
                         <div style="
                             background: ${is_me ? '#00b09b' : 'white'};
                             color: ${is_me ? 'white' : '#1e293b'};
-                            padding: 10px 14px;
-                            border-radius: ${is_me ? '18px 18px 2px 18px' : '18px 18px 18px 2px'};
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-                            font-size: 13.5px;
-                            line-height: 1.5;
+                            padding: 6px 10px;
+                            border-radius: ${is_me ? '12px 12px 2px 12px' : '12px 12px 12px 2px'};
+                            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                            font-size: 11.5px;
+                            line-height: 1.4;
                             border: ${is_me ? 'none' : '1px solid #e2e8f0'};
                         ">
                             ${item.content}
-                            <div style="text-align: right; font-size: 9px; opacity: 0.7; margin-top: 4px; font-weight: 500;">
+                            <div style="text-align: right; font-size: 8px; opacity: 0.7; margin-top: 2px; font-weight: 500;">
                                 ${time}
                             </div>
                         </div>
