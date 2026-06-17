@@ -369,7 +369,13 @@ frappe.ui.form.on("Sahayog Ticket", {
         if (frm.doc.status_log) {
           frm.doc.status_log.forEach((log) => {
             if (log.status_remark) {
-              history.push({ type: "Status", content: `<b>Status: ${log.to_status}</b><br><span style="opacity: 0.8; font-size: 10px;">${log.status_remark}</span>`, by: log.status_change_by, date: log.status_change_on, is_system: true });
+              history.push({ 
+                type: "Status", 
+                content: `Status: ${log.from_status} to ${log.to_status}`, 
+                by: log.status_change_by, 
+                date: log.status_change_on, 
+                is_system: true 
+              });
               if (log.status_change_by && log.status_change_by !== 'Administrator' && log.status_change_by !== frappe.session.user) senders.add(log.status_change_by);
             }
           });
@@ -405,7 +411,19 @@ frappe.ui.form.on("Sahayog Ticket", {
             let is_me = item.by === frappe.session.user;
             let time = frappe.datetime.get_time(item.date).split(':').slice(0, 2).join(':');
             if (item.is_system) {
-              chat_history.append(`<div style="align-self:center; background:#eef2f6; color:#64748b; padding:4px 10px; border-radius:15px; font-size:10px; text-align:center; max-width:90%; margin:2px 0; border:1px solid #dfe5ec;">${item.content} <span style="font-size:8px; margin-left:4px; font-weight:600;">${time}</span></div>`);
+              let system_user = '';
+              if (item.type === 'Status') {
+                if (item.by === frappe.session.user) {
+                  system_user = ' by You';
+                } else if (item.by === 'Administrator') {
+                  system_user = ' by Administrator';
+                } else {
+                  let emp = emp_map[item.by];
+                  let name = emp ? emp.name.split(' ')[0] : (item.by ? item.by.split('@')[0] : '');
+                  system_user = name ? ` by ${name}` : '';
+                }
+              }
+              chat_history.append(`<div style="align-self:center; background:#eef2f6; color:#64748b; padding:4px 10px; border-radius:15px; font-size:10px; text-align:center; max-width:90%; margin:2px 0; border:1px solid #dfe5ec;">${item.content}${system_user} ${time}</div>`);
               last_sender = null;
             } else {
               let show_sender = item.by !== last_sender;
