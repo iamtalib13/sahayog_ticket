@@ -11,6 +11,10 @@ frappe.dom.set_style(`
         visibility: hidden !important;
         pointer-events: none !important;
     }
+    #chat-history-dynamic::-webkit-scrollbar { width: 6px; }
+    #chat-history-dynamic::-webkit-scrollbar-track { background: transparent; }
+    #chat-history-dynamic::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    #chat-history-dynamic::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 `, 'ticket-file-privacy-css');
 
 // --- 2. VUE INTERCEPTOR (MUTATION OBSERVER) ---
@@ -215,6 +219,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                 <div id="chat-history-dynamic" style="
                     flex-grow: 1; overflow-y: auto; padding: 12px; display: flex;
                     flex-direction: column; gap: 4px; background-color: #f8fafc; scroll-behavior: smooth;
+                    min-height: 0; overscroll-behavior: contain;
                 "></div>
             </div>
 
@@ -263,7 +268,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     fab.on('click', function() {
         if (!win.is(":visible")) {
             // OPEN CHAT
-            win.fadeIn(200);
+            win.css('display', 'flex').hide().fadeIn(200);
             input_container.css('display', 'flex').hide().fadeIn(200);
             frm.trigger("render_floating_chat_content");
             input.focus();
@@ -456,7 +461,9 @@ frappe.ui.form.on("Sahayog Ticket", {
               `);
             }
           });
-          chat_history.scrollTop(chat_history[0].scrollHeight);
+          setTimeout(() => {
+            chat_history.scrollTop(chat_history[0].scrollHeight);
+          }, 100);
         }
       }
     });
