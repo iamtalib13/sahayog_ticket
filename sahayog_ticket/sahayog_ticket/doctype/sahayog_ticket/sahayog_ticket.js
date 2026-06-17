@@ -318,10 +318,19 @@ frappe.ui.form.on("Sahayog Ticket", {
         });
     });
 
+    // Click Outside to Close
+    $(document).on('mousedown.chat_outside', function(e) {
+        let wrapper = $(".chatbot-wrapper-global");
+        if (win.is(":visible") && !wrapper.is(e.target) && wrapper.has(e.target).length === 0) {
+            $(".chat-close-trigger").click();
+        }
+    });
+
     // Navigation Cleanup
     frappe.router.on('change', () => {
         if (frappe.get_route()[0] !== 'Form' || frappe.get_route()[1] !== 'Sahayog Ticket') {
             $(".chatbot-wrapper-global").remove();
+            $(document).off('mousedown.chat_outside');
         }
     });
   },
