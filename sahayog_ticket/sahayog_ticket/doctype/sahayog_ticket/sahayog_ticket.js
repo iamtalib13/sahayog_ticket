@@ -40,6 +40,7 @@ frappe.router.on('change', () => {
         $('body').addClass('ticket-active-form');
     } else {
         $('body').removeClass('ticket-active-form');
+        $(".chatbot-fab, .chatbot-floating-window").remove();
     }
 });
 // -------------------------------------------------------------
@@ -177,332 +178,177 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
 
     frm.trigger("hide_additional_details_from_timeline");
-    frm.trigger("render_comments_and_remarks");
+    frm.trigger("setup_floating_chatbot");
   },
 
-  render_comments_and_remarks: function (frm) {
+  setup_floating_chatbot: function (frm) {
     if (frm.is_new()) return;
 
-    // Get the HTML field wrapper
-    let wrapper = $(frm.fields_dict.comments_and_remarks.wrapper);
-    wrapper.empty();
+    // Remove existing to prevent duplicates
+    $(".chatbot-fab, .chatbot-floating-window").remove();
 
-    // Create container with ultra-compact chatbot-like styling
-    let container_html = `
-        <div class="chatbot-container" style="
-            display: flex;
-            flex-direction: column;
-            height: 220px;
-            background: #f7f9fb;
-            border-radius: 10px;
-            border: 1px solid #e0e6ed;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            position: relative;
+    // Floating Button
+    let fab_html = `
+        <div class="chatbot-fab" style="
+            position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px;
+            background: linear-gradient(135deg, #00b09b, #96c93d); color: white;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 9999; transition: transform 0.2s;
         ">
-            <div class="chat-header" style="
-                padding: 6px 12px;
-                background: linear-gradient(135deg, #00b09b, #96c93d);
-                color: white;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                z-index: 10;
-                cursor: pointer;
-            ">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="position: relative;">
-                        <div style="width: 22px; height: 22px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; border: 1px solid white;">
-                            <i class="fa fa-robot"></i>
-                        </div>
-                        <div style="position: absolute; bottom: 0; right: 0; width: 6px; height: 6px; background: #4caf50; border-radius: 50%; border: 1px solid white;"></div>
-                    </div>
-                    <div>
-                        <div style="font-weight: 700; font-size: 11px; letter-spacing: 0.1px;">Support Bot</div>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span id="chat-toggle-size" title="Minimize/Maximize" style="cursor: pointer; font-size: 10px; opacity: 0.8; transition: opacity 0.2s;">
-                        <i class="fa fa-window-minimize"></i>
-                    </span>
-                </div>
-            </div>
-            
-            <div id="chat-content-wrapper" style="display: flex; flex-direction: column; flex-grow: 1; overflow: hidden;">
-                <div id="chat-history" style="
-                    flex-grow: 1;
-                    overflow-y: auto;
-                    padding: 8px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 4px;
-                    background-color: #f7f9fb;
-                    scroll-behavior: smooth;
-                    min-height: 80px;
-                ">
-                    <p id="chat-loading-spinner" style="text-align: center; color: #667781; font-size: 11px;">
-                        <i class="fa fa-spinner fa-spin"></i> Loading...
-                    </p>
-                </div>
-
-                <div class="chat-input-area" style="
-                    padding: 6px 10px;
-                    background: white;
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    border-top: 1px solid #eef2f6;
-                ">
-                    <button id="chat-attach-btn" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer;">
-                        <i class="fa fa-paperclip"></i>
-                    </button>
-                    <textarea id="chat-user-input" placeholder="Message..." style="
-                        flex-grow: 1;
-                        border: 1px solid #e2e8f0;
-                        border-radius: 12px;
-                        padding: 4px 10px;
-                        font-size: 11.5px;
-                        outline: none;
-                        resize: none;
-                        height: 28px;
-                        background: #f8fafc;
-                        transition: border-color 0.2s;
-                    "></textarea>
-                    <button id="chat-send-btn" style="
-                        background: linear-gradient(135deg, #00b09b, #96c93d);
-                        color: white;
-                        border: none;
-                        border-radius: 50%;
-                        width: 28px;
-                        height: 28px;
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        box-shadow: 0 1px 3px rgba(0, 176, 155, 0.15);
-                    ">
-                        <i class="fa fa-paper-plane" style="font-size: 10px;"></i>
-                    </button>
-                </div>
-                <!-- Resize Handle -->
-                <div id="chat-resize-handle" style="
-                    height: 4px;
-                    background: #f8fafc;
-                    cursor: ns-resize;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-top: 1px solid #f1f5f9;
-                ">
-                    <div style="width: 20px; height: 2px; background: #e2e8f0; border-radius: 1px;"></div>
-                </div>
-            </div>
+            <i class="fa fa-paper-plane"></i>
         </div>
     `;
 
-    wrapper.append(container_html);
-    let container = wrapper.find(".chatbot-container");
-    let content_wrapper = wrapper.find("#chat-content-wrapper");
-    let toggle_btn = wrapper.find("#chat-toggle-size");
-    let resize_handle = wrapper.find("#chat-resize-handle");
-    let chat_history = wrapper.find("#chat-history");
-    let user_input = wrapper.find("#chat-user-input");
-    let send_btn = wrapper.find("#chat-send-btn");
-    let attach_btn = wrapper.find("#chat-attach-btn");
+    // Floating Window
+    let window_html = `
+        <div class="chatbot-floating-window" style="
+            position: fixed; bottom: 80px; right: 20px; width: 300px; height: 350px;
+            background: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            display: none; flex-direction: column; overflow: hidden; z-index: 9998;
+            font-family: 'Inter', sans-serif; border: 1px solid #e0e6ed;
+        ">
+            <div class="chat-header" style="
+                padding: 10px 15px; background: linear-gradient(135deg, #00b09b, #96c93d);
+                color: white; display: flex; align-items: center; justify-content: space-between;
+            ">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fa fa-robot" style="font-size: 14px;"></i>
+                    <span style="font-weight: 700; font-size: 12px;">Support Assistant</span>
+                </div>
+                <i class="fa fa-times chat-close-trigger" style="cursor: pointer; font-size: 12px; opacity: 0.8;"></i>
+            </div>
+            
+            <div id="chat-history-dynamic" style="
+                flex-grow: 1; overflow-y: auto; padding: 10px; display: flex;
+                flex-direction: column; gap: 4px; background-color: #f7f9fb; scroll-behavior: smooth;
+            "></div>
 
-    // Toggle Minimize/Maximize
-    toggle_btn.on('click', function(e) {
-        e.stopPropagation();
-        let is_minimized = content_wrapper.is(':hidden');
-        if (is_minimized) {
-            content_wrapper.slideDown(200);
-            container.css('height', container.data('prev-height') || '220px');
-            $(this).html('<i class="fa fa-window-minimize"></i>');
-        } else {
-            container.data('prev-height', container.height());
-            content_wrapper.slideUp(200, function() {
-                container.css('height', 'auto');
-            });
-            $(this).html('<i class="fa fa-window-maximize"></i>');
+            <div class="chat-input-area" style="
+                padding: 8px 12px; background: white; display: flex;
+                align-items: center; gap: 8px; border-top: 1px solid #eef2f6;
+            ">
+                <button id="chat-attach-dynamic" style="background: none; border: none; color: #94a3b8; font-size: 16px; cursor: pointer;">
+                    <i class="fa fa-paperclip"></i>
+                </button>
+                <textarea id="chat-input-dynamic" placeholder="Type a message..." style="
+                    flex-grow: 1; border: 1px solid #e2e8f0; border-radius: 15px;
+                    padding: 6px 12px; font-size: 12px; outline: none; resize: none;
+                    height: 32px; background: #f8fafc; max-height: 80px;
+                "></textarea>
+                <button id="chat-send-dynamic" style="
+                    background: linear-gradient(135deg, #00b09b, #96c93d); color: white;
+                    border: none; border-radius: 50%; width: 32px; height: 32px;
+                    cursor: pointer; display: flex; align-items: center; justify-content: center;
+                ">
+                    <i class="fa fa-paper-plane" style="font-size: 10px;"></i>
+                </button>
+            </div>
+            <div id="chat-resize-dynamic" style="height: 4px; cursor: ns-resize; background: #f8fafc; border-top: 1px solid #f1f5f9;"></div>
+        </div>
+    `;
+
+    $("body").append(fab_html).append(window_html);
+
+    $(".chatbot-fab").on('click', function() {
+        $(".chatbot-floating-window").fadeToggle(200);
+        if ($(".chatbot-floating-window").is(":visible")) {
+            frm.trigger("render_floating_chat_content");
+            $("#chat-input-dynamic").focus();
         }
     });
 
-    // Resize Logic
-    resize_handle.on('mousedown', function(e) {
+    $(".chat-close-trigger").on('click', () => $(".chatbot-floating-window").fadeOut(200));
+
+    // Resize
+    $("#chat-resize-dynamic").on('mousedown', function(e) {
         e.preventDefault();
         let startY = e.pageY;
-        let startHeight = container.height();
-
-        $(document).on('mousemove.chatresize', function(e) {
-            let newHeight = startHeight + (e.pageY - startY);
-            if (newHeight >= 100 && newHeight <= 1000) {
-                container.css('height', newHeight + 'px');
-            }
+        let startHeight = $(".chatbot-floating-window").height();
+        $(document).on('mousemove.chatdynamic', function(e) {
+            let newHeight = startHeight - (e.pageY - startY);
+            if (newHeight >= 150 && newHeight <= 800) $(".chatbot-floating-window").css('height', newHeight + 'px');
         });
-
-        $(document).on('mouseup.chatresize', function() {
-            $(document).off('mousemove.chatresize mouseup.chatresize');
-        });
+        $(document).on('mouseup.chatdynamic', () => $(document).off('.chatdynamic'));
     });
 
-    // Auto-resize textarea
-    user_input.on('input', function() {
-        this.style.height = '28px';
-        this.style.height = Math.min(this.scrollHeight, 100) + 'px';
-    });
-
-    user_input.on('focus', function() { $(this).css('border-color', '#00b09b'); });
-    user_input.on('blur', function() { $(this).css('border-color', '#e2e8f0'); });
-
-    // Send on Enter
-    user_input.on('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            send_btn.click();
-        }
-    });
-
-    // Send Logic
-    send_btn.on('click', function() {
-        let message = user_input.val().trim();
+    // Send
+    $("#chat-send-dynamic").on('click', function() {
+        let message = $("#chat-input-dynamic").val().trim();
         if (!message) return;
-
-        user_input.prop('disabled', true);
-        send_btn.prop('disabled', true).css('opacity', '0.5');
-
+        $("#chat-input-dynamic").prop('disabled', true);
         frappe.call({
             method: "frappe.desk.form.utils.add_comment",
             args: {
-                reference_doctype: frm.doctype,
-                reference_name: frm.docname,
-                content: message,
-                comment_by: frappe.session.user,
-                comment_email: frappe.session.user
+                reference_doctype: frm.doctype, reference_name: frm.docname,
+                content: message, comment_by: frappe.session.user, comment_email: frappe.session.user
             },
-            callback: function(r) {
-                user_input.val('').prop('disabled', false).css('height', '28px');
-                send_btn.prop('disabled', false).css('opacity', '1');
-                user_input.focus();
-                frm.trigger("render_comments_and_remarks");
+            callback: function() {
+                $("#chat-input-dynamic").val('').prop('disabled', false).css('height', '32px');
+                frm.trigger("render_floating_chat_content");
             }
         });
     });
 
-    // Attachment Logic
-    attach_btn.on('click', function() {
+    $("#chat-input-dynamic").on('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $("#chat-send-dynamic").click(); }
+    });
+
+    $("#chat-attach-dynamic").on('click', function() {
         new frappe.ui.FileUploader({
-            doctype: frm.doctype,
-            docname: frm.docname,
-            make_attachments_public: true,
-            on_success: (file) => {
-                frm.trigger("render_comments_and_remarks");
-            }
+            doctype: frm.doctype, docname: frm.docname, make_attachments_public: true,
+            on_success: () => frm.trigger("render_floating_chat_content")
         });
     });
+  },
 
-    // Fetch Comments from DB
+  render_floating_chat_content: function (frm) {
+    let chat_history = $("#chat-history-dynamic");
     frappe.call({
       method: "frappe.client.get_list",
       args: {
         doctype: "Comment",
-        filters: {
-          reference_doctype: frm.doctype,
-          reference_name: frm.docname,
-          comment_type: ["in", ["Comment", "Attachment", "Info"]],
-        },
+        filters: { reference_doctype: frm.doctype, reference_name: frm.docname, comment_type: ["in", ["Comment", "Attachment", "Info"]] },
         fields: ["content", "owner", "creation", "comment_by", "comment_type"],
         order_by: "creation asc",
       },
       callback: function (r) {
         let history = [];
-
         if (r.message) {
           r.message.forEach((c) => {
-            let is_attachment = c.comment_type === "Attachment";
             let content = c.content;
-            
-            if (is_attachment && content && content.startsWith("/") && !content.includes("<a")) {
+            if (c.comment_type === "Attachment" && content && content.startsWith("/") && !content.includes("<a")) {
               let filename = content.split("/").pop();
               content = `<div style="display:flex; align-items:center; gap:6px; padding:4px; background: rgba(0,176,155,0.05); border-radius:6px;">
-                            <div style="width: 24px; height: 24px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #00b09b; font-size: 10px;">
-                                <i class="fa fa-file"></i>
-                            </div>
-                            <div style="flex:1; overflow: hidden;">
-                                <a href="${content}" target="_blank" style="font-weight: 600; color: #1e293b; font-size: 11px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${filename}</a>
-                            </div>
+                            <div style="width: 24px; height: 24px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #00b09b; font-size: 10px;"><i class="fa fa-file"></i></div>
+                            <div style="flex:1; overflow: hidden;"><a href="${content}" target="_blank" style="font-weight: 600; color: #1e293b; font-size: 11px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${filename}</a></div>
                          </div>`;
             }
-
-            history.push({
-              type: c.comment_type,
-              content: content,
-              by: c.comment_by || c.owner,
-              date: c.creation,
-              is_system: c.comment_type === "Info" || c.comment_type === "Attachment"
-            });
+            history.push({ type: c.comment_type, content: content, by: c.comment_by || c.owner, date: c.creation, is_system: c.comment_type === "Info" || c.comment_type === "Attachment" });
           });
         }
-
         if (frm.doc.status_log) {
           frm.doc.status_log.forEach((log) => {
-            if (log.status_remark) {
-              history.push({
-                type: "Status",
-                content: `<b>Status: ${log.to_status}</b><br><span style="opacity: 0.8; font-size: 10px;">${log.status_remark}</span>`,
-                by: log.status_change_by,
-                date: log.status_change_on,
-                is_system: true
-              });
-            }
+            if (log.status_remark) history.push({ type: "Status", content: `<b>Status: ${log.to_status}</b><br><span style="opacity: 0.8; font-size: 10px;">${log.status_remark}</span>`, by: log.status_change_by, date: log.status_change_on, is_system: true });
           });
         }
-
         history.sort((a, b) => new Date(a.date) - new Date(b.date));
-        chat_history.find("#chat-loading-spinner").remove();
-
-        if (history.length === 0) {
-          chat_history.append('<p style="text-align: center; color: #94a3b8; font-size: 11px; margin-top: 10px;">No messages.</p>');
-          return;
-        }
-
+        chat_history.empty();
+        if (history.length === 0) chat_history.append('<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:10px;">No messages.</p>');
         history.forEach((item) => {
           let is_me = item.by === frappe.session.user;
           let time = frappe.datetime.get_time(item.date).split(':').slice(0, 2).join(':');
-          
           if (item.is_system) {
-            chat_history.append(`
-                <div style="align-self: center; background: #eef2f6; color: #64748b; padding: 4px 10px; border-radius: 15px; font-size: 10px; text-align: center; max-width: 90%; margin: 2px 0; border: 1px solid #dfe5ec;">
-                    ${item.content} <span style="font-size: 8px; margin-left: 4px; font-weight: 600;">${time}</span>
-                </div>
-            `);
+            chat_history.append(`<div style="align-self:center; background:#eef2f6; color:#64748b; padding:4px 10px; border-radius:15px; font-size:10px; text-align:center; max-width:90%; margin:2px 0; border:1px solid #dfe5ec;">${item.content} <span style="font-size:8px; margin-left:4px; font-weight:600;">${time}</span></div>`);
           } else {
             chat_history.append(`
-                <div style="display: flex; gap: 6px; flex-direction: ${is_me ? 'row-reverse' : 'row'}; align-self: ${is_me ? 'flex-end' : 'flex-start'}; max-width: 90%;">
-                    ${!is_me ? `
-                        <div style="width: 24px; height: 24px; background: white; border: 1px solid #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #00b09b; flex-shrink: 0; align-self: flex-end;">
-                            <i class="fa fa-user"></i>
-                        </div>
-                    ` : ''}
-                    <div style="display: flex; flex-direction: column; align-items: ${is_me ? 'flex-end' : 'flex-start'};">
-                        <div style="font-size: 8.5px; font-weight: 600; color: #64748b; margin: 0 4px 1px 4px;">
-                            ${is_me ? 'You' : (item.by.split('@')[0])}
-                        </div>
-                        <div style="
-                            background: ${is_me ? '#00b09b' : 'white'};
-                            color: ${is_me ? 'white' : '#1e293b'};
-                            padding: 4px 8px;
-                            border-radius: ${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'};
-                            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-                            font-size: 11px;
-                            line-height: 1.4;
-                            border: ${is_me ? 'none' : '1px solid #e2e8f0'};
-                        ">
-                            <div style="display: flex; flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 8px;">
-                                <div style="flex-grow: 1; word-break: break-word;">${item.content}</div>
-                                <div style="font-size: 8px; opacity: 0.7; font-weight: 500; white-space: nowrap; margin-bottom: -2px; align-self: flex-end;">
-                                    ${time}
-                                </div>
+                <div style="display:flex; gap:6px; flex-direction:${is_me ? 'row-reverse' : 'row'}; align-self:${is_me ? 'flex-end' : 'flex-start'}; max-width:90%;">
+                    <div style="display:flex; flex-direction:column; align-items:${is_me ? 'flex-end' : 'flex-start'};">
+                        <div style="font-size:9px; font-weight:600; color:#64748b; margin:0 4px 1px 4px;">${is_me ? 'You' : (item.by.split('@')[0])}</div>
+                        <div style="background:${is_me ? '#00b09b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'};">
+                            <div style="display:flex; flex-direction:row; align-items:flex-end; justify-content:space-between; gap:8px;">
+                                <div style="flex-grow:1; word-break:break-word;">${item.content}</div>
+                                <div style="font-size:8px; opacity:0.7; font-weight:500; white-space:nowrap; align-self:flex-end;">${time}</div>
                             </div>
                         </div>
                     </div>
@@ -510,10 +356,13 @@ frappe.ui.form.on("Sahayog Ticket", {
             `);
           }
         });
-
-        setTimeout(() => { chat_history.scrollTop(chat_history[0].scrollHeight); }, 100);
-      },
+        chat_history.scrollTop(chat_history[0].scrollHeight);
+      }
     });
+  },
+
+  render_comments_and_remarks: function (frm) {
+    $(frm.fields_dict.comments_and_remarks.wrapper).hide();
   },
 
   onload: function (frm) {
@@ -1425,7 +1274,9 @@ function setup_notify_branch_button(frm) {
             });
 
             // Refresh History
-            frm.trigger("render_comments_and_remarks");
+            if($(".chatbot-floating-window").is(":visible")) {
+                frm.trigger("render_floating_chat_content");
+            }
 
             // ✅ SEND MANUAL EMAIL ONLY IF NEEDED
             if (recipients.length) {
