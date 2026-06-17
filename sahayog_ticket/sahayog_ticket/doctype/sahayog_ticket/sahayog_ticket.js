@@ -344,6 +344,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       },
       callback: function (r) {
         let history = [];
+        let senders = new Set();
         if (r.message) {
           r.message.forEach((c) => {
             let content = c.content;
@@ -354,43 +355,91 @@ frappe.ui.form.on("Sahayog Ticket", {
                             <div style="flex:1; overflow: hidden;"><a href="${content}" target="_blank" style="font-weight: 600; color: #1e293b; font-size: 11px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${filename}</a></div>
                          </div>`;
             }
-            history.push({ type: c.comment_type, content: content, by: c.comment_by || c.owner, date: c.creation, is_system: c.comment_type === "Info" || c.comment_type === "Attachment" });
+            let sender = c.comment_by || c.owner;
+            history.push({ 
+              type: c.comment_type, 
+              content: content, 
+              by: sender, 
+              date: c.creation, 
+              is_system: c.comment_type === "Info" || c.comment_type === "Attachment" 
+            });
+            if (sender && sender !== 'Administrator' && sender !== frappe.session.user) senders.add(sender);
           });
         }
         if (frm.doc.status_log) {
           frm.doc.status_log.forEach((log) => {
-            if (log.status_remark) history.push({ type: "Status", content: `<b>Status: ${log.to_status}</b><br><span style="opacity: 0.8; font-size: 10px;">${log.status_remark}</span>`, by: log.status_change_by, date: log.status_change_on, is_system: true });
+            if (log.status_remark) {
+              history.push({ type: "Status", content: `<b>Status: ${log.to_status}</b><br><span style="opacity: 0.8; font-size: 10px;">${log.status_remark}</span>`, by: log.status_change_by, date: log.status_change_on, is_system: true });
+              if (log.status_change_by && log.status_change_by !== 'Administrator' && log.status_change_by !== frappe.session.user) senders.add(log.status_change_by);
+            }
           });
         }
         history.sort((a, b) => new Date(a.date) - new Date(b.date));
-        chat_history.empty();
-        if (history.length === 0) chat_history.append('<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:10px;">No messages.</p>');
-        let last_sender = null;
-        history.forEach((item) => {
-          let is_me = item.by === frappe.session.user;
-          let time = frappe.datetime.get_time(item.date).split(':').slice(0, 2).join(':');
-          if (item.is_system) {
-            chat_history.append(`<div style="align-self:center; background:#eef2f6; color:#64748b; padding:4px 10px; border-radius:15px; font-size:10px; text-align:center; max-width:90%; margin:2px 0; border:1px solid #dfe5ec;">${item.content} <span style="font-size:8px; margin-left:4px; font-weight:600;">${time}</span></div>`);
-            last_sender = null;
-          } else {
-            let show_sender = item.by !== last_sender;
-            last_sender = item.by;
-            chat_history.append(`
-                <div style="display:flex; gap:6px; flex-direction:${is_me ? 'row-reverse' : 'row'}; align-self:${is_me ? 'flex-end' : 'flex-start'}; max-width:90%; ${!show_sender ? 'margin-top:-2px;' : ''}">
-                    <div style="display:flex; flex-direction:column; align-items:${is_me ? 'flex-end' : 'flex-start'};">
-                        ${show_sender ? `<div style="font-size:9px; font-weight:600; color:#64748b; margin:0 4px 1px 4px;">${is_me ? 'You' : (item.by.split('@')[0])}</div>` : ''}
-                        <div style="background:${is_me ? '#00b09b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'};">
-                            <div style="display:flex; flex-direction:row; align-items:flex-end; justify-content:space-between; gap:8px;">
-                                <div style="flex-grow:1; word-break:break-word;">${item.content}</div>
-                                <div style="font-size:8px; opacity:0.7; font-weight:500; white-space:nowrap; align-self:flex-end;">${time}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `);
-          }
-        });
-        chat_history.scrollTop(chat_history[0].scrollHeight);
+
+        // Fetch Employee details for senders
+        if (senders.size > 0) {
+          frappe.call({
+            method: "frappe.client.get_list",
+            args: {
+              doctype: "Employee",
+              filters: { user_id: ["in", Array.from(senders)] },
+              fields: ["user_id", "employee_name", "name"]
+            },
+            callback: function(res) {
+              let emp_map = {};
+              (res.message || []).forEach(e => {
+                emp_map[e.user_id] = { name: e.employee_name, id: e.name };
+              });
+              render_history(history, emp_map);
+            }
+          });
+        } else {
+          render_history(history, {});
+        }
+
+        function render_history(history, emp_map) {
+          chat_history.empty();
+          if (history.length === 0) chat_history.append('<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:10px;">No messages.</p>');
+          let last_sender = null;
+          history.forEach((item) => {
+            let is_me = item.by === frappe.session.user;
+            let time = frappe.datetime.get_time(item.date).split(':').slice(0, 2).join(':');
+            if (item.is_system) {
+              chat_history.append(`<div style="align-self:center; background:#eef2f6; color:#64748b; padding:4px 10px; border-radius:15px; font-size:10px; text-align:center; max-width:90%; margin:2px 0; border:1px solid #dfe5ec;">${item.content} <span style="font-size:8px; margin-left:4px; font-weight:600;">${time}</span></div>`);
+              last_sender = null;
+            } else {
+              let show_sender = item.by !== last_sender;
+              last_sender = item.by;
+              
+              let display_name = 'You';
+              if (!is_me) {
+                if (item.by === 'Administrator') {
+                  display_name = 'Administrator';
+                } else {
+                  let emp = emp_map[item.by];
+                  let first_name = emp ? emp.name.split(' ')[0] : (item.by.split('@')[0]);
+                  let emp_id = emp ? emp.id : (item.by.split('@')[0]);
+                  display_name = `${first_name} (${emp_id})`;
+                }
+              }
+
+              chat_history.append(`
+                  <div style="display:flex; gap:6px; flex-direction:${is_me ? 'row-reverse' : 'row'}; align-self:${is_me ? 'flex-end' : 'flex-start'}; max-width:90%; ${!show_sender ? 'margin-top:-2px;' : ''}">
+                      <div style="display:flex; flex-direction:column; align-items:${is_me ? 'flex-end' : 'flex-start'};">
+                          ${show_sender ? `<div style="font-size:9px; font-weight:600; color:#64748b; margin:0 4px 1px 4px;">${display_name}</div>` : ''}
+                          <div style="background:${is_me ? '#00b09b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'};">
+                              <div style="display:flex; flex-direction:row; align-items:flex-end; justify-content:space-between; gap:8px;">
+                                  <div style="flex-grow:1; word-break:break-word;">${item.content}</div>
+                                  <div style="font-size:8px; opacity:0.7; font-weight:500; white-space:nowrap; align-self:flex-end;">${time}</div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              `);
+            }
+          });
+          chat_history.scrollTop(chat_history[0].scrollHeight);
+        }
       }
     });
   },
