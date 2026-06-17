@@ -267,7 +267,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                     transition: border-color 0.2s;
                 "></textarea>
                 <button id="chat-send-btn" style="
-                    background: #00b09b;
+                    background: linear-gradient(135deg, #00b09b, #96c93d);
                     color: white;
                     border: none;
                     border-radius: 50%;
