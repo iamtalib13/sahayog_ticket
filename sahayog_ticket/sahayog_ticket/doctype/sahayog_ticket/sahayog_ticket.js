@@ -11,6 +11,10 @@ frappe.dom.set_style(`
         visibility: hidden !important;
         pointer-events: none !important;
     }
+    #chat-history-dynamic::-webkit-scrollbar { width: 6px; }
+    #chat-history-dynamic::-webkit-scrollbar-track { background: transparent; }
+    #chat-history-dynamic::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    #chat-history-dynamic::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 `, 'ticket-file-privacy-css');
 
 // --- 2. VUE INTERCEPTOR (MUTATION OBSERVER) ---
@@ -40,6 +44,7 @@ frappe.router.on('change', () => {
         $('body').addClass('ticket-active-form');
     } else {
         $('body').removeClass('ticket-active-form');
+        $(".chatbot-fab, .chatbot-floating-window").remove();
     }
 });
 // -------------------------------------------------------------
@@ -162,43 +167,6 @@ frappe.ui.form.on("Sahayog Ticket", {
           }
         }
       }
-
-      // let eid = user.match(/\d+/)[0];
-      // console.log("Eid-", eid);
-      // let modifiedEmployeeId = "";
-
-      // if (user.includes("ABPS")) {
-      //   modifiedEmployeeId = "ABPS" + eid;
-      // } else if (user.includes("MCPS")) {
-      //   modifiedEmployeeId = "MCPS" + eid;
-      // } else if (user.includes("NT")) {
-      //   modifiedEmployeeId = "NT" + eid;
-      // } else {
-      //   modifiedEmployeeId = eid;
-      // }
-
-      // if (modifiedEmployeeId === frm.doc.employee_id) {
-      //   if (frm.doc.status == "Open") {
-      //     frm.set_df_property("cancel_ticket_btn", "hidden", 0);
-      //     document.querySelectorAll(
-      //       "[data-fieldname='cancel_ticket_btn']"
-      //     )[1].style.backgroundColor = "red";
-      //     document.querySelectorAll(
-      //       "[data-fieldname='cancel_ticket_btn']"
-      //     )[1].style.color = "white";
-      //     document.querySelectorAll(
-      //       "[data-fieldname='cancel_ticket_btn']"
-      //     )[1].style.fontWeight = "bold";
-      //   }
-      //   {
-      //     frm.disable_save();
-      //   }
-
-      //   frm.toggle_display("employee_id", false);
-      //   frm.toggle_display("status", false);
-      // } else {
-      //   frm.set_df_property("cancel_ticket_btn", "hidden", 1);
-      // }
     }
 
     if (frm.doc.dept_name == "" || null) {
@@ -214,6 +182,299 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
 
     frm.trigger("hide_additional_details_from_timeline");
+    frm.trigger("setup_floating_chatbot");
+  },
+
+  setup_floating_chatbot: function (frm) {
+    if (frm.is_new()) return;
+
+    // 1. Clean existing elements
+    $(".chatbot-wrapper-global").remove();
+
+    // 2. Global Wrapper
+    let html = `
+        <div class="chatbot-wrapper-global" style="
+            position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; align-items: flex-end;
+            font-family: 'Inter', sans-serif;
+        ">
+            <!-- Floating History Window -->
+            <div class="chatbot-floating-window" style="
+                width: 320px; height: 380px; background: white; border-radius: 16px;
+                box-shadow: 0 12px 28px rgba(0,0,0,0.12); margin-bottom: 12px;
+                display: none; flex-direction: column; overflow: hidden; border: 1px solid #e0e6ed;
+            ">
+                <div class="chat-header" style="
+                    padding: 10px 15px; background: linear-gradient(135deg, #00b09b, #96c93d);
+                    color: white; display: flex; align-items: center; justify-content: space-between;
+                ">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div>
+                            <div style="font-weight: 700; font-size: 12px;">Support Assistant</div>
+                        </div>
+                    </div>
+                    <i class="fa fa-times chat-close-trigger" style="cursor: pointer; opacity: 0.8; font-size: 14px;"></i>
+                </div>
+                
+                <div id="chat-history-dynamic" style="
+                    flex-grow: 1; overflow-y: auto; padding: 12px; display: flex;
+                    flex-direction: column; gap: 4px; background-color: #f8fafc; scroll-behavior: smooth;
+                    min-height: 0; overscroll-behavior: contain;
+                "></div>
+            </div>
+
+            <!-- Bottom Row (Input + Circular FAB) -->
+            <div style="display: flex; align-items: flex-end; gap: 10px; width: 100%; justify-content: flex-end;">
+                
+                <!-- Input Container (Slides out from FAB) -->
+                <div class="chat-input-container" style="
+                    display: none; background: white; border-radius: 24px;
+                    padding: 4px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                    flex-grow: 1; border: 1px solid #e2e8f0; align-items: center;
+                    gap: 8px; max-width: 260px;
+                ">
+                    <button id="chat-attach-dynamic" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">
+                        <i class="fa fa-paperclip"></i>
+                    </button>
+                    <textarea id="chat-input-dynamic" placeholder="Type a message..." style="
+                        flex-grow: 1; border: none; padding: 8px 0; font-size: 13px;
+                        outline: none; resize: none; height: 36px; background: transparent;
+                        max-height: 100px;
+                    "></textarea>
+                </div>
+
+                <!-- Circular FAB (Acts as Open Trigger & Send Button) -->
+                <div class="chatbot-fab" style="
+                    width: 50px; height: 50px; background: linear-gradient(135deg, #00b09b, #96c93d);
+                    color: white; border-radius: 50%; display: flex; align-items: center;
+                    justify-content: center; font-size: 20px; cursor: pointer;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15); flex-shrink: 0;
+                    transition: transform 0.2s;
+                ">
+                    <i class="fa fa-paper-plane"></i>
+                </div>
+            </div>
+        </div>
+    `;
+
+    $("body").append(html);
+
+    let fab = $(".chatbot-fab");
+    let win = $(".chatbot-floating-window");
+    let input_container = $(".chat-input-container");
+    let input = $("#chat-input-dynamic");
+
+    // Unified FAB Action
+    fab.on('click', function() {
+        if (!win.is(":visible")) {
+            // OPEN CHAT
+            win.css('display', 'flex').hide().fadeIn(200);
+            input_container.css('display', 'flex').hide().fadeIn(200);
+            frm.trigger("render_floating_chat_content");
+            input.focus();
+        } else {
+            // SEND MESSAGE
+            let message = input.val().trim();
+            if (!message) return;
+
+            input.prop('disabled', true);
+            fab.css('opacity', '0.5').css('pointer-events', 'none');
+
+            frappe.call({
+                method: "frappe.desk.form.utils.add_comment",
+                args: {
+                    reference_doctype: frm.doctype, reference_name: frm.docname,
+                    content: message, comment_by: frappe.session.user, comment_email: frappe.session.user
+                },
+                callback: function() {
+                    input.val('').prop('disabled', false).css('height', '36px');
+                    fab.css('opacity', '1').css('pointer-events', 'auto');
+                    frm.trigger("render_floating_chat_content");
+                    input.focus();
+                }
+            });
+        }
+    });
+
+    $(".chat-close-trigger").on('click', () => {
+        win.fadeOut(200);
+        input_container.fadeOut(200);
+    });
+
+    // Enter to Send
+    input.on('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); fab.click(); }
+    });
+
+    // Auto-resize Input
+    input.on('input', function() {
+        this.style.height = '36px';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // Attachment Logic
+    $("#chat-attach-dynamic").on('click', function() {
+        new frappe.ui.FileUploader({
+            doctype: frm.doctype, docname: frm.docname, make_attachments_public: true,
+            on_success: () => frm.trigger("render_floating_chat_content")
+        });
+    });
+
+    // Click Outside to Close
+    $(document).on('mousedown.chat_outside', function(e) {
+        let wrapper = $(".chatbot-wrapper-global");
+        // Don't close if clicking inside chatbot or any modal/overlay
+        if (win.is(":visible") && 
+            !wrapper.is(e.target) && wrapper.has(e.target).length === 0 &&
+            !$(e.target).closest('.modal, .modal-backdrop, .frappe-control-popup').length
+        ) {
+            $(".chat-close-trigger").click();
+        }
+    });
+
+    // Navigation Cleanup
+    frappe.router.on('change', () => {
+        if (frappe.get_route()[0] !== 'Form' || frappe.get_route()[1] !== 'Sahayog Ticket') {
+            $(".chatbot-wrapper-global").remove();
+            $(document).off('mousedown.chat_outside');
+        }
+    });
+  },
+
+  render_floating_chat_content: function (frm) {
+    let chat_history = $("#chat-history-dynamic");
+    frappe.call({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Comment",
+        filters: { reference_doctype: frm.doctype, reference_name: frm.docname, comment_type: ["in", ["Comment", "Attachment", "Info"]] },
+        fields: ["content", "owner", "creation", "comment_by", "comment_type"],
+        order_by: "creation asc",
+      },
+      callback: function (r) {
+        let history = [];
+        let senders = new Set();
+        if (r.message) {
+          r.message.forEach((c) => {
+            let content = c.content;
+            if (c.comment_type === "Attachment" && content && content.startsWith("/") && !content.includes("<a")) {
+              let filename = content.split("/").pop();
+              content = `<div style="display:flex; align-items:center; gap:6px; padding:4px; background: rgba(0,176,155,0.05); border-radius:6px;">
+                            <div style="width: 24px; height: 24px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #00b09b; font-size: 10px;"><i class="fa fa-file"></i></div>
+                            <div style="flex:1; overflow: hidden;"><a href="${content}" target="_blank" style="font-weight: 600; color: #1e293b; font-size: 11px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${filename}</a></div>
+                         </div>`;
+            }
+            let sender = c.comment_by || c.owner;
+            history.push({ 
+              type: c.comment_type, 
+              content: content, 
+              by: sender, 
+              date: c.creation, 
+              is_system: c.comment_type === "Info" || c.comment_type === "Attachment" 
+            });
+            if (sender && sender !== 'Administrator' && sender !== frappe.session.user) senders.add(sender);
+          });
+        }
+        if (frm.doc.status_log) {
+          frm.doc.status_log.forEach((log) => {
+            if (log.status_remark) {
+              history.push({ 
+                type: "Status", 
+                content: `Status: ${log.from_status} to ${log.to_status}`, 
+                by: log.status_change_by, 
+                date: log.status_change_on, 
+                is_system: true 
+              });
+              if (log.status_change_by && log.status_change_by !== 'Administrator' && log.status_change_by !== frappe.session.user) senders.add(log.status_change_by);
+            }
+          });
+        }
+        history.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        // Fetch Employee details for senders
+        if (senders.size > 0) {
+          frappe.call({
+            method: "frappe.client.get_list",
+            args: {
+              doctype: "Employee",
+              filters: { user_id: ["in", Array.from(senders)] },
+              fields: ["user_id", "employee_name", "name"]
+            },
+            callback: function(res) {
+              let emp_map = {};
+              (res.message || []).forEach(e => {
+                emp_map[e.user_id] = { name: e.employee_name, id: e.name };
+              });
+              render_history(history, emp_map);
+            }
+          });
+        } else {
+          render_history(history, {});
+        }
+
+        function render_history(history, emp_map) {
+          chat_history.empty();
+          if (history.length === 0) chat_history.append('<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:10px;">No messages.</p>');
+          let last_sender = null;
+          history.forEach((item) => {
+            let is_me = item.by === frappe.session.user;
+            let time = frappe.datetime.get_time(item.date).split(':').slice(0, 2).join(':');
+            if (item.is_system) {
+              let system_user = '';
+              if (item.type === 'Status') {
+                if (item.by === frappe.session.user) {
+                  system_user = ' by You';
+                } else if (item.by === 'Administrator') {
+                  system_user = ' by Administrator';
+                } else {
+                  let emp = emp_map[item.by];
+                  let name = emp ? emp.name.split(' ')[0] : (item.by ? item.by.split('@')[0] : '');
+                  system_user = name ? ` by ${name}` : '';
+                }
+              }
+              chat_history.append(`<div style="align-self:center; background:#eef2f6; color:#64748b; padding:4px 10px; border-radius:15px; font-size:10px; text-align:center; max-width:90%; margin:2px 0; border:1px solid #dfe5ec;">${item.content}${system_user} ${time}</div>`);
+              last_sender = null;
+            } else {
+              let show_sender = item.by !== last_sender;
+              last_sender = item.by;
+              
+              let display_name = 'You';
+              if (!is_me) {
+                if (item.by === 'Administrator') {
+                  display_name = 'Administrator';
+                } else {
+                  let emp = emp_map[item.by];
+                  let first_name = emp ? emp.name.split(' ')[0] : (item.by.split('@')[0]);
+                  let emp_id = emp ? emp.id : (item.by.split('@')[0]);
+                  display_name = `${first_name} (${emp_id})`;
+                }
+              }
+
+              chat_history.append(`
+                  <div style="display:flex; gap:6px; flex-direction:${is_me ? 'row-reverse' : 'row'}; align-self:${is_me ? 'flex-end' : 'flex-start'}; max-width:90%; ${!show_sender ? 'margin-top:-2px;' : ''}">
+                      <div style="display:flex; flex-direction:column; align-items:${is_me ? 'flex-end' : 'flex-start'};">
+                          ${show_sender ? `<div style="font-size:9px; font-weight:600; color:#64748b; margin:0 4px 1px 4px;">${display_name}</div>` : ''}
+                          <div style="background:${is_me ? '#00b09b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'};">
+                              <div style="display:flex; flex-direction:row; align-items:flex-end; justify-content:space-between; gap:8px;">
+                                  <div style="flex-grow:1; word-break:break-word;">${item.content}</div>
+                                  <div style="font-size:8px; opacity:0.7; font-weight:500; white-space:nowrap; align-self:flex-end;">${time}</div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              `);
+            }
+          });
+          setTimeout(() => {
+            chat_history.scrollTop(chat_history[0].scrollHeight);
+          }, 100);
+        }
+      }
+    });
+  },
+
+  render_comments_and_remarks: function (frm) {
+    $(frm.fields_dict.comments_and_remarks.wrapper).hide();
   },
 
   onload: function (frm) {
@@ -260,36 +521,6 @@ frappe.ui.form.on("Sahayog Ticket", {
       });
     }
   },
-
-  // after_save: function (frm) {
-  //   let user = frappe.session.user;
-  //   let match = user.match(/\d+/);
-  //   let eid = match ? match[0] : null;
-
-  //   if (eid === frm.doc.employee_id) {
-  //     if (frm.doc.status == "Open") {
-  //       var dept = frm.doc.dept_name;
-  //       msgprint("Ticket is Saved Successfully.");
-  //       msgprint(dept + " Team will Contact You Shortly");
-  //       frappe.set_route("List", "Sahayog Ticket", { status: "Open" });
-  //     }
-  //   }
-
-  //   if (frm.doc.status == "Closed") {
-  //     frm.set_df_property("status", "read_only", 1);
-  //     frm.set_df_property("assigned_it", "read_only", 1);
-  //     frm.set_df_property("close_remark", "read_only", 1);
-  //     msgprint("Ticket is Closed Successfully . .");
-  //     frm.disable_save();
-  //   }
-
-  //   if (frm.doc.cancel_ticket == "Cancel Ticket") {
-  //     frm.set_df_property("status", "read_only", 1);
-  //     frm.set_df_property("assigned_it", "read_only", 1);
-  //     msgprint("Ticket is Cancelled Successfully . .");
-  //     frm.disable_save();
-  //   }
-  // },
 
   dept_name: function (frm) {
     console.log("Dept : " + frm.doc.dept_name);
@@ -570,51 +801,6 @@ frappe.ui.form.on("Sahayog Ticket", {
       frm.toggle_display("assigned_it", true);
     }
   },
-
-  // cancel_ticket_btn: function (frm) {
-  //   if (!frm.is_new()) {
-  //     let user = frappe.session.user;
-  //     let eid = user.match(/\d+/)[0];
-
-  //     if (eid === frm.doc.employee_id) {
-  //       frm.trigger("cancel_ticket_function");
-  //     } else {
-  //       frappe.show_alert({
-  //         message: "Only Ticket Owner can Close this Ticket !!",
-  //         indicator: "red",
-  //       });
-  //     }
-  //   }
-  // },
-
-  // cancel_ticket_function: function (frm) {
-  //   if (frm.doc.status == "Open") {
-  //     frappe.prompt(
-  //       {
-  //         label: "Ticket Cancellation Reason",
-  //         fieldname: "ticket_cancellation_reason",
-  //         fieldtype: "Data",
-  //         reqd: 1,
-  //       },
-  //       (values) => {
-  //         console.log(values.ticket_cancellation_reason);
-  //         frm.set_value("cancel_ticket", "Cancel Ticket");
-  //         frm.set_value(
-  //           "ticket_cancellation_reason",
-  //           values.ticket_cancellation_reason
-  //         );
-  //         frm.set_value("status", "Cancelled");
-  //         frm.refresh_field("status");
-  //         frm.save();
-  //       }
-  //     );
-  //   } else {
-  //     frappe.show_alert({
-  //       message: "Ticket Already Cancelled",
-  //       indicator: "red",
-  //     });
-  //   }
-  // },
 
   // assign to button with user fetch from server side based on department & roles
   assign_to_button: function (frm) {
@@ -1198,6 +1384,11 @@ function setup_notify_branch_button(frm) {
                 comment_email: frappe.session.user,
               },
             });
+
+            // Refresh History
+            if($(".chatbot-floating-window").is(":visible")) {
+                frm.trigger("render_floating_chat_content");
+            }
 
             // ✅ SEND MANUAL EMAIL ONLY IF NEEDED
             if (recipients.length) {

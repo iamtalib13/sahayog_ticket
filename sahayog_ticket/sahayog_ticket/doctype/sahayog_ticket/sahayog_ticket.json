@@ -23,6 +23,8 @@
   "column_break_4",
   "section_break_onliy",
   "executive_remark",
+  "column_break_bxzo",
+  "comments_and_remarks",
   "ticket_duration_section",
   "on_hold_time",
   "due_time",
@@ -455,11 +457,20 @@
    "fieldtype": "Select",
    "label": "Response Pending",
    "options": "Pending Operations\nPending Branch\nResolved"
+  },
+  {
+   "fieldname": "column_break_bxzo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "comments_and_remarks",
+   "fieldtype": "HTML",
+   "label": "Comments and Remarks"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-15 15:39:33.440926",
+ "modified": "2026-06-16 12:04:18.604180",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
