@@ -1,4 +1,5 @@
 import frappe
+from frappe.utils import getdate, get_time, time_diff_in_hours, now_datetime
 
 def execute(filters=None):
     columns = get_columns()
@@ -13,6 +14,10 @@ def execute(filters=None):
 # ----------------------------------------
 def get_columns():
     return [
+        {"label": "Creation Date", "fieldname": "creation_date", "fieldtype": "Date", "width": 120},
+        {"label": "Creation Time", "fieldname": "creation_time", "fieldtype": "Time", "width": 120},
+        {"label": "Resolved Date", "fieldname": "resolved_date", "fieldtype": "Date", "width": 120},
+        {"label": "Resolved Time", "fieldname": "resolved_time", "fieldtype": "Time", "width": 120},
         {"label": "Ticket", "fieldname": "ticket", "fieldtype": "Link", "options": "Sahayog Ticket", "width": 130},
         {"label": "Request Type", "fieldname": "request_type", "fieldtype": "Data", "width": 200},
         {"label": "Status", "fieldname": "status", "fieldtype": "Data", "width": 100},
@@ -29,7 +34,10 @@ def get_columns():
         {"label": "Region", "fieldname": "region", "fieldtype": "Data", "width": 120},
         {"label": "District", "fieldname": "district", "fieldtype": "Data", "width": 120},
 
-        
+        # New Columns added as per request
+        {"label": "Ticket Cycle", "fieldname": "ticket_cycle", "fieldtype": "Int", "width": 150},
+        {"label": "Resolved By", "fieldname": "resolved_by", "fieldtype": "Data", "width": 150},
+        {"label": "Remark", "fieldname": "remark", "fieldtype": "Small Text", "width": 200},
     ]
 
 
@@ -56,8 +64,28 @@ def get_data(filters=None):
     tickets = frappe.get_all(
         "Sahayog Ticket",
         filters=query_filters,
-        fields=["name", "employee_id", "ticket_type", "status", "response_pending"]
+        fields=["name", "employee_id", "ticket_type", "status", "response_pending", "creation", "ticket_resolved_user", "resolved_remark"]
     )
+
+    if not tickets:
+        return []
+
+    ticket_names = [t.name for t in tickets]
+
+    # Batch fetch status logs to optimize performance
+    status_logs = frappe.get_all(
+        "Ticket Status Log",
+        filters={"parent": ["in", ticket_names]},
+        fields=["parent", "to_status", "status_change_by", "status_change_on", "status_remark"],
+        order_by="status_change_on asc"
+    )
+
+    # Organize logs by ticket name
+    logs_map = {}
+    for log in status_logs:
+        if log.parent not in logs_map:
+            logs_map[log.parent] = []
+        logs_map[log.parent].append(log)
 
     for t in tickets:
 
@@ -95,6 +123,29 @@ def get_data(filters=None):
 
         request_type = detail[0].request_type if detail else None
 
+        # Process logs for the ticket
+        t_logs = logs_map.get(t.name, [])
+        
+        # Use first log entry for creation if available, else doc creation
+        creation_on = t_logs[0].status_change_on if t_logs else t.creation
+        creation_date = getdate(creation_on)
+        creation_time = get_time(creation_on)
+
+        resolved_date = None
+        resolved_time = None
+        resolved_on = None
+
+        # Find the latest "Resolved" log entry for date/time
+        for log in reversed(t_logs):
+            if log.to_status == "Resolved":
+                resolved_date = getdate(log.status_change_on)
+                resolved_time = get_time(log.status_change_on)
+                resolved_on = log.status_change_on
+                break
+
+        # Ticket Cycle (Now showing count of log entries)
+        ticket_cycle = len(t_logs)
+
         # Append Row
         data.append({
             "ticket": t.name,
@@ -113,6 +164,15 @@ def get_data(filters=None):
             "district": branch.get("district", ""),
 
             "request_type": request_type,
+            
+            # New field values
+            "creation_date": creation_date,
+            "creation_time": creation_time,
+            "ticket_cycle": ticket_cycle,
+            "resolved_date": resolved_date,
+            "resolved_time": resolved_time,
+            "resolved_by": t.get("ticket_resolved_user"),
+            "remark": t.get("resolved_remark")
         })
 
     return data
@@ -143,7 +203,7 @@ def get_summary():
         FROM `tabTicket Item`
         WHERE parent IN %(parents)s
         GROUP BY request_type
-    """, {"parents": pending_names}, as_dict=True)
+    """, {"parents": tuple(pending_names)}, as_dict=True)
 
     summary = []
 

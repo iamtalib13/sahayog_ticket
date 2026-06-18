@@ -36,5 +36,42 @@ frappe.query_reports["Account Service Requests"] = {
 			"fieldtype": "Link",
 			"options": "Sahayog Branch"
 		}
-	]
+	],
+	"formatter": function(value, row, column, data, default_formatter) {
+		value = default_formatter(value, row, column, data);
+
+		if (column.fieldname == "status") {
+			let color = "";
+			let bg_color = "";
+			
+			if (value == "Open") {
+				color = "red";
+				bg_color = "#ffe6e6";
+			} else if (value == "In-Progress") {
+				color = "orange";
+				bg_color = "#fff5e6";
+			} else if (value == "Resolved") {
+				color = "green";
+				bg_color = "#e6ffec";
+			} else if (value == "Closed") {
+				color = "blue";
+				bg_color = "#e6f0ff";
+			}
+
+			if (color) {
+				value = `<span style="
+					color: ${color}; 
+					background-color: ${bg_color}; 
+					font-weight: bold; 
+					padding: 1px 2px; 
+					border-radius: 15px; 
+					display: inline-block; 
+					text-align: center;
+					min-width: 80px;
+				">${value}</span>`;
+			}
+		}
+
+		return value;
+	}
 };
