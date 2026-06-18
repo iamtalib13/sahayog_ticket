@@ -502,7 +502,7 @@ frappe.ui.form.on("Sahayog Ticket", {
               content: content, 
               by: sender, 
               date: c.creation, 
-              is_system: c.comment_type === "Info" || c.comment_type === "Attachment" 
+              is_system: c.comment_type === "Info" 
             });
             if (sender && sender !== 'Administrator' && sender !== frappe.session.user) senders.add(sender);
           });
