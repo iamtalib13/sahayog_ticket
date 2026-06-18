@@ -33,7 +33,7 @@ def get_columns():
         # New Columns added as per request
         {"label": "Creation Date", "fieldname": "creation_date", "fieldtype": "Date", "width": 120},
         {"label": "Creation Time", "fieldname": "creation_time", "fieldtype": "Time", "width": 120},
-        {"label": "Ticket Cycle", "fieldname": "ticket_cycle", "fieldtype": "Data", "width": 150},
+        {"label": "Ticket Cycle", "fieldname": "ticket_cycle", "fieldtype": "Int", "width": 150},
         {"label": "Resolved Date", "fieldname": "resolved_date", "fieldtype": "Date", "width": 120},
         {"label": "Resolved Time", "fieldname": "resolved_time", "fieldtype": "Time", "width": 120},
         {"label": "Resolved By", "fieldname": "resolved_by", "fieldtype": "Data", "width": 150},
@@ -147,13 +147,8 @@ def get_data(filters=None):
                 resolved_on = log.status_change_on
                 break
 
-        # Calculate Ticket Cycle (Duration)
-        # From creation to resolution, or until now if not resolved
-        end_time = resolved_on if resolved_on else now_datetime()
-        diff_hours = time_diff_in_hours(end_time, creation_on)
-        days = int(diff_hours // 24)
-        hours = int(diff_hours % 24)
-        ticket_cycle = f"{days} Days {hours} Hours"
+        # Ticket Cycle (Now showing count of log entries)
+        ticket_cycle = len(t_logs)
 
         # Append Row
         data.append({
