@@ -64,7 +64,7 @@ def get_data(filters=None):
     tickets = frappe.get_all(
         "Sahayog Ticket",
         filters=query_filters,
-        fields=["name", "employee_id", "ticket_type", "status", "response_pending", "creation"]
+        fields=["name", "employee_id", "ticket_type", "status", "response_pending", "creation", "ticket_resolved_user", "resolved_remark"]
     )
 
     if not tickets:
@@ -133,17 +133,13 @@ def get_data(filters=None):
 
         resolved_date = None
         resolved_time = None
-        resolved_by = None
-        remark = None
         resolved_on = None
 
-        # Find the latest "Resolved" log entry
+        # Find the latest "Resolved" log entry for date/time
         for log in reversed(t_logs):
             if log.to_status == "Resolved":
                 resolved_date = getdate(log.status_change_on)
                 resolved_time = get_time(log.status_change_on)
-                resolved_by = log.status_change_by
-                remark = log.status_remark
                 resolved_on = log.status_change_on
                 break
 
@@ -175,8 +171,8 @@ def get_data(filters=None):
             "ticket_cycle": ticket_cycle,
             "resolved_date": resolved_date,
             "resolved_time": resolved_time,
-            "resolved_by": resolved_by,
-            "remark": remark
+            "resolved_by": t.get("ticket_resolved_user"),
+            "remark": t.get("resolved_remark")
         })
 
     return data
