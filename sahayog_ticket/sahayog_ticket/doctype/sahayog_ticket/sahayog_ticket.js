@@ -234,8 +234,11 @@ frappe.ui.form.on("Sahayog Ticket", {
                     gap: 4px; max-width: 260px;
                 ">
                     <!-- Attachment Preview -->
-                    <div id="chat-attachment-preview" style="display:none; align-items:center; gap:8px; background:#f1f5f9; padding:4px 8px; border-radius:12px; border:1px solid #e2e8f0; margin-top: 4px;">
-                        <i class="fa fa-paperclip" style="color:#64748b; font-size:12px;"></i>
+                    <div id="chat-attachment-preview" style="display:none; align-items:center; gap:8px; background:#f1f5f9; padding:6px 8px; border-radius:12px; border:1px solid #e2e8f0; margin-top: 4px;">
+                        <div id="chat-attachment-image-wrapper" style="display:none; width:36px; height:36px; flex-shrink:0;">
+                            <img id="chat-attachment-image-preview" style="width:100%; height:100%; object-fit:cover; border-radius:4px; border:1px solid #cbd5e1;" />
+                        </div>
+                        <i id="chat-attachment-icon-fallback" class="fa fa-paperclip" style="color:#64748b; font-size:12px;"></i>
                         <span id="chat-attachment-name" style="flex-grow:1; font-size:11px; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></span>
                         <i class="fa fa-times" id="chat-attachment-clear" style="cursor:pointer; color:#94a3b8; font-size:12px;"></i>
                     </div>
@@ -284,6 +287,20 @@ frappe.ui.form.on("Sahayog Ticket", {
             selected_file = this.files[0];
             $("#chat-attachment-name").text(selected_file.name);
             $("#chat-attachment-preview").css('display', 'flex');
+            
+            // Show image thumbnail if file is an image
+            if (selected_file.type.startsWith('image/')) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    $("#chat-attachment-image-preview").attr('src', e.target.result);
+                    $("#chat-attachment-image-wrapper").show();
+                    $("#chat-attachment-icon-fallback").hide();
+                }
+                reader.readAsDataURL(selected_file);
+            } else {
+                $("#chat-attachment-image-wrapper").hide();
+                $("#chat-attachment-icon-fallback").show();
+            }
             input.focus();
         }
     });
@@ -292,6 +309,9 @@ frappe.ui.form.on("Sahayog Ticket", {
         selected_file = null;
         file_input.val('');
         $("#chat-attachment-preview").hide();
+        $("#chat-attachment-image-preview").attr('src', '');
+        $("#chat-attachment-image-wrapper").hide();
+        $("#chat-attachment-icon-fallback").show();
     });
 
     // Unified FAB Action
@@ -366,6 +386,9 @@ frappe.ui.form.on("Sahayog Ticket", {
                 selected_file = null;
                 file_input.val('');
                 $("#chat-attachment-preview").hide();
+                $("#chat-attachment-image-preview").attr('src', '');
+                $("#chat-attachment-image-wrapper").hide();
+                $("#chat-attachment-icon-fallback").show();
                 frm.trigger("render_floating_chat_content");
                 input.focus();
             }
