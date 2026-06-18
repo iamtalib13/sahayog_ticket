@@ -202,10 +202,10 @@ frappe.ui.form.on("Sahayog Ticket", {
             <div class="chatbot-floating-window" style="
                 width: 320px; height: 380px; background: white; border-radius: 16px;
                 box-shadow: 0 12px 28px rgba(0,0,0,0.12); margin-bottom: 12px;
-                display: none; flex-direction: column; overflow: hidden; border: 1px solid #e0e6ed;
+                display: none; flex-direction: column; overflow: hidden; border: 1px solid #cbced1;
             ">
                 <div class="chat-header" style="
-                    padding: 10px 15px; background: linear-gradient(135deg, #00b09b, #96c93d);
+                    padding: 10px 15px; background: linear-gradient(135deg, #00b09b);
                     color: white; display: flex; align-items: center; justify-content: space-between;
                 ">
                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -258,7 +258,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
                 <!-- Circular FAB -->
                 <div class="chatbot-fab" style="
-                    width: 50px; height: 50px; background: linear-gradient(135deg, #00b09b, #96c93d);
+                    width: 50px; height: 50px; background: linear-gradient(135deg, #00b09b);
                     color: white; border-radius: 50%; display: flex; align-items: center;
                     justify-content: center; font-size: 20px; cursor: pointer;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15); flex-shrink: 0;
@@ -586,10 +586,10 @@ frappe.ui.form.on("Sahayog Ticket", {
                   <div style="display:flex; gap:6px; flex-direction:${is_me ? 'row-reverse' : 'row'}; align-self:${is_me ? 'flex-end' : 'flex-start'}; max-width:90%; ${!show_sender ? 'margin-top:-2px;' : ''}">
                       <div style="display:flex; flex-direction:column; align-items:${is_me ? 'flex-end' : 'flex-start'};">
                           ${show_sender ? `<div style="font-size:9px; font-weight:600; color:#64748b; margin:0 4px 1px 4px;">${display_name}</div>` : ''}
-                          <div style="background:${is_me ? '#00b09b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'};">
-                              <div style="display:flex; flex-direction:row; align-items:flex-end; justify-content:space-between; gap:8px;">
-                                  <div style="flex-grow:1; word-break:break-word;">${item.content}</div>
-                                  <div style="font-size:8px; opacity:0.7; font-weight:500; white-space:nowrap; align-self:flex-end;">${time}</div>
+                          <div style="background:${is_me ? '#00b09b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'}; min-width: 60px;">
+                              <div style="display:flex; flex-direction:column; gap:2px;">
+                                  <div style="word-break:break-word;">${item.content}</div>
+                                  <div style="font-size:8px; opacity:0.7; font-weight:500; white-space:nowrap; align-self:flex-end; margin-top: 2px;">${time}</div>
                               </div>
                           </div>
                       </div>
