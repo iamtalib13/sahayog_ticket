@@ -202,10 +202,10 @@ frappe.ui.form.on("Sahayog Ticket", {
             <div class="chatbot-floating-window" style="
                 width: 320px; height: 380px; background: white; border-radius: 16px;
                 box-shadow: 0 12px 28px rgba(0,0,0,0.12); margin-bottom: 12px;
-                display: none; flex-direction: column; overflow: hidden; border: 1px solid #e0e6ed;
+                display: none; flex-direction: column; overflow: hidden; border: 1px solid #cbced1;
             ">
                 <div class="chat-header" style="
-                    padding: 10px 15px; background: linear-gradient(135deg, #00b09b, #96c93d);
+                    padding: 10px 15px; background: linear-gradient(135deg, #00b09b);
                     color: white; display: flex; align-items: center; justify-content: space-between;
                 ">
                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -226,26 +226,39 @@ frappe.ui.form.on("Sahayog Ticket", {
             <!-- Bottom Row (Input + Circular FAB) -->
             <div style="display: flex; align-items: flex-end; gap: 10px; width: 100%; justify-content: flex-end;">
                 
-                <!-- Input Container (Slides out from FAB) -->
+                <!-- Input Container -->
                 <div class="chat-input-container" style="
                     display: none; background: white; border-radius: 24px;
                     padding: 4px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-                    flex-grow: 1; border: 1px solid #e2e8f0; align-items: center;
-                    gap: 8px; max-width: 260px;
+                    flex-grow: 1; border: 1px solid #e2e8f0; flex-direction: column;
+                    gap: 4px; max-width: 260px;
                 ">
-                    <button id="chat-attach-dynamic" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">
-                        <i class="fa fa-paperclip"></i>
-                    </button>
-                    <textarea id="chat-input-dynamic" placeholder="Type a message..." style="
-                        flex-grow: 1; border: none; padding: 8px 0; font-size: 13px;
-                        outline: none; resize: none; height: 36px; background: transparent;
-                        max-height: 100px;
-                    "></textarea>
+                    <!-- Attachment Preview -->
+                    <div id="chat-attachment-preview" style="display:none; align-items:center; gap:8px; background:#f1f5f9; padding:6px 8px; border-radius:12px; border:1px solid #e2e8f0; margin-top: 4px;">
+                        <div id="chat-attachment-image-wrapper" style="display:none; width:36px; height:36px; flex-shrink:0;">
+                            <img id="chat-attachment-image-preview" style="width:100%; height:100%; object-fit:cover; border-radius:4px; border:1px solid #cbd5e1;" />
+                        </div>
+                        <i id="chat-attachment-icon-fallback" class="fa fa-paperclip" style="color:#64748b; font-size:12px;"></i>
+                        <span id="chat-attachment-name" style="flex-grow:1; font-size:11px; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></span>
+                        <i class="fa fa-times" id="chat-attachment-clear" style="cursor:pointer; color:#94a3b8; font-size:12px;"></i>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:8px; width: 100%;">
+                        <button id="chat-attach-dynamic" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 0;">
+                            <i class="fa fa-paperclip"></i>
+                        </button>
+                        <textarea id="chat-input-dynamic" placeholder="Type a message..." style="
+                            flex-grow: 1; border: none; padding: 8px 0; font-size: 13px;
+                            outline: none; resize: none; height: 36px; background: transparent;
+                            max-height: 100px;
+                        "></textarea>
+                        <input type="file" id="chat-file-input-dynamic" style="display:none;">
+                    </div>
                 </div>
 
-                <!-- Circular FAB (Acts as Open Trigger & Send Button) -->
+                <!-- Circular FAB -->
                 <div class="chatbot-fab" style="
-                    width: 50px; height: 50px; background: linear-gradient(135deg, #00b09b, #96c93d);
+                    width: 50px; height: 50px; background: linear-gradient(135deg, #00b09b);
                     color: white; border-radius: 50%; display: flex; align-items: center;
                     justify-content: center; font-size: 20px; cursor: pointer;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15); flex-shrink: 0;
@@ -263,6 +276,43 @@ frappe.ui.form.on("Sahayog Ticket", {
     let win = $(".chatbot-floating-window");
     let input_container = $(".chat-input-container");
     let input = $("#chat-input-dynamic");
+    let file_input = $("#chat-file-input-dynamic");
+    let selected_file = null;
+
+    // Attachment Click -> Trigger Native File Browser
+    $("#chat-attach-dynamic").on('click', () => file_input.click());
+
+    file_input.on('change', function() {
+        if (this.files && this.files[0]) {
+            selected_file = this.files[0];
+            $("#chat-attachment-name").text(selected_file.name);
+            $("#chat-attachment-preview").css('display', 'flex');
+            
+            // Show image thumbnail if file is an image
+            if (selected_file.type.startsWith('image/')) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    $("#chat-attachment-image-preview").attr('src', e.target.result);
+                    $("#chat-attachment-image-wrapper").show();
+                    $("#chat-attachment-icon-fallback").hide();
+                }
+                reader.readAsDataURL(selected_file);
+            } else {
+                $("#chat-attachment-image-wrapper").hide();
+                $("#chat-attachment-icon-fallback").show();
+            }
+            input.focus();
+        }
+    });
+
+    $("#chat-attachment-clear").on('click', function() {
+        selected_file = null;
+        file_input.val('');
+        $("#chat-attachment-preview").hide();
+        $("#chat-attachment-image-preview").attr('src', '');
+        $("#chat-attachment-image-wrapper").hide();
+        $("#chat-attachment-icon-fallback").show();
+    });
 
     // Unified FAB Action
     fab.on('click', function() {
@@ -275,24 +325,73 @@ frappe.ui.form.on("Sahayog Ticket", {
         } else {
             // SEND MESSAGE
             let message = input.val().trim();
-            if (!message) return;
+            if (!message && !selected_file) return;
 
             input.prop('disabled', true);
             fab.css('opacity', '0.5').css('pointer-events', 'none');
 
-            frappe.call({
-                method: "frappe.desk.form.utils.add_comment",
-                args: {
-                    reference_doctype: frm.doctype, reference_name: frm.docname,
-                    content: message, comment_by: frappe.session.user, comment_email: frappe.session.user
-                },
-                callback: function() {
-                    input.val('').prop('disabled', false).css('height', '36px');
+            if (selected_file) {
+                // Silent upload using XMLHttpRequest
+                let xhr = new XMLHttpRequest();
+                let formData = new FormData();
+                formData.append("file", selected_file);
+                formData.append("doctype", frm.doctype);
+                formData.append("docname", frm.docname);
+                formData.append("is_private", 0); // Public attachment
+
+                xhr.open("POST", "/api/method/upload_file", true);
+                xhr.setRequestHeader("X-Frappe-CSRF-Token", frappe.csrf_token);
+                
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        if (message) {
+                            send_comment(message);
+                        } else {
+                            finalize_send();
+                        }
+                    } else {
+                        frappe.show_alert({message: __("Upload failed"), indicator: "red"});
+                        input.prop('disabled', false);
+                        fab.css('opacity', '1').css('pointer-events', 'auto');
+                    }
+                };
+
+                xhr.onerror = function () {
+                    frappe.show_alert({message: __("Network error"), indicator: "red"});
+                    input.prop('disabled', false);
                     fab.css('opacity', '1').css('pointer-events', 'auto');
-                    frm.trigger("render_floating_chat_content");
-                    input.focus();
-                }
-            });
+                };
+
+                xhr.send(formData);
+            } else {
+                send_comment(message);
+            }
+
+            function send_comment(content) {
+                frappe.call({
+                    method: "frappe.desk.form.utils.add_comment",
+                    args: {
+                        reference_doctype: frm.doctype, reference_name: frm.docname,
+                        content: content, comment_by: frappe.session.user, comment_email: frappe.session.user
+                    },
+                    callback: function() {
+                        finalize_send();
+                    }
+                });
+            }
+
+            function finalize_send() {
+                input.val('').prop('disabled', false).css('height', '36px');
+                fab.css('opacity', '1').css('pointer-events', 'auto');
+                selected_file = null;
+                file_input.val('');
+                $("#chat-attachment-preview").hide();
+                $("#chat-attachment-image-preview").attr('src', '');
+                $("#chat-attachment-image-wrapper").hide();
+                $("#chat-attachment-icon-fallback").show();
+                frm.trigger("render_floating_chat_content");
+                input.focus();
+            }
         }
     });
 
@@ -312,21 +411,13 @@ frappe.ui.form.on("Sahayog Ticket", {
         this.style.height = (this.scrollHeight) + 'px';
     });
 
-    // Attachment Logic
-    $("#chat-attach-dynamic").on('click', function() {
-        new frappe.ui.FileUploader({
-            doctype: frm.doctype, docname: frm.docname, make_attachments_public: true,
-            on_success: () => frm.trigger("render_floating_chat_content")
-        });
-    });
-
     // Click Outside to Close
     $(document).on('mousedown.chat_outside', function(e) {
         let wrapper = $(".chatbot-wrapper-global");
         // Don't close if clicking inside chatbot or any modal/overlay
         if (win.is(":visible") && 
             !wrapper.is(e.target) && wrapper.has(e.target).length === 0 &&
-            !$(e.target).closest('.modal, .modal-backdrop, .frappe-control-popup').length
+            !$(e.target).closest('.modal, .modal-backdrop, .frappe-control-popup, .file-uploader').length
         ) {
             $(".chat-close-trigger").click();
         }
@@ -357,12 +448,53 @@ frappe.ui.form.on("Sahayog Ticket", {
         if (r.message) {
           r.message.forEach((c) => {
             let content = c.content;
-            if (c.comment_type === "Attachment" && content && content.startsWith("/") && !content.includes("<a")) {
-              let filename = content.split("/").pop();
-              content = `<div style="display:flex; align-items:center; gap:6px; padding:4px; background: rgba(0,176,155,0.05); border-radius:6px;">
-                            <div style="width: 24px; height: 24px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #00b09b; font-size: 10px;"><i class="fa fa-file"></i></div>
-                            <div style="flex:1; overflow: hidden;"><a href="${content}" target="_blank" style="font-weight: 600; color: #1e293b; font-size: 11px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${filename}</a></div>
-                         </div>`;
+            if (c.comment_type === "Attachment" && content) {
+              let file_url = "";
+              if (content.includes("<a")) {
+                  let match = content.match(/href="([^"]+)"/);
+                  if (match) file_url = match[1];
+              } else if (content.trim().startsWith("/") || content.trim().startsWith("http")) {
+                  file_url = content.trim();
+              }
+
+              if (file_url) {
+                  let filename = decodeURIComponent(file_url.split("/").pop().split("?")[0]);
+                  let file_ext = filename.split('.').pop().toLowerCase();
+                  let image_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+                  
+                  if (image_exts.includes(file_ext)) {
+                      // IMAGE PREVIEW (WhatsApp style)
+                      content = `<div style="margin: 4px 0;">
+                                    <a href="${file_url}" target="_blank" style="display: block;">
+                                        <img src="${file_url}" style="max-width: 100%; max-height: 180px; border-radius: 8px; border: 1px solid #e2e8f0; display: block; object-fit: cover;" onerror="this.src='/assets/frappe/images/default-image.svg'; this.style.opacity=0.5;"/>
+                                    </a>
+                                 </div>`;
+                  } else {
+                      // DOCUMENT CARD
+                      let icon = "fa-file";
+                      let icon_color = "#00b09b";
+                      if (file_ext === 'pdf') { icon = "fa-file-pdf-o"; icon_color = "#e11d48"; }
+                      else if (['doc', 'docx'].includes(file_ext)) { icon = "fa-file-word-o"; icon_color = "#2563eb"; }
+                      else if (['xls', 'xlsx'].includes(file_ext)) { icon = "fa-file-excel-o"; icon_color = "#16a34a"; }
+                      else if (['zip', 'rar', '7z'].includes(file_ext)) { icon = "fa-file-archive-o"; icon_color = "#7c3aed"; }
+
+                      content = `<div style="display:flex; align-items:center; gap:10px; padding:10px; background: rgba(0,0,0,0.03); border-radius:10px; border: 1px solid rgba(0,0,0,0.05); margin: 4px 0;">
+                                    <div style="width: 36px; height: 36px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: ${icon_color}; font-size: 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
+                                        <i class="fa ${icon}"></i>
+                                    </div>
+                                    <div style="flex:1; overflow: hidden;">
+                                        <a href="${file_url}" target="_blank" style="font-weight: 600; color: #1e293b; font-size: 12px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none;">
+                                            ${filename}
+                                        </a>
+                                        <div style="display: flex; gap: 6px; align-items: center; margin-top: 2px;">
+                                            <span style="font-size: 9px; color: #64748b; text-transform: uppercase; font-weight: 700;">${file_ext}</span>
+                                            <span style="width: 3px; height: 3px; background: #cbd5e1; border-radius: 50%;"></span>
+                                            <span style="font-size: 9px; color: #94a3b8; cursor: pointer;" onclick="event.stopPropagation(); window.open('${file_url}', '_blank');">Click to open</span>
+                                        </div>
+                                    </div>
+                                 </div>`;
+                  }
+              }
             }
             let sender = c.comment_by || c.owner;
             history.push({ 
@@ -370,7 +502,7 @@ frappe.ui.form.on("Sahayog Ticket", {
               content: content, 
               by: sender, 
               date: c.creation, 
-              is_system: c.comment_type === "Info" || c.comment_type === "Attachment" 
+              is_system: c.comment_type === "Info" 
             });
             if (sender && sender !== 'Administrator' && sender !== frappe.session.user) senders.add(sender);
           });
@@ -454,10 +586,10 @@ frappe.ui.form.on("Sahayog Ticket", {
                   <div style="display:flex; gap:6px; flex-direction:${is_me ? 'row-reverse' : 'row'}; align-self:${is_me ? 'flex-end' : 'flex-start'}; max-width:90%; ${!show_sender ? 'margin-top:-2px;' : ''}">
                       <div style="display:flex; flex-direction:column; align-items:${is_me ? 'flex-end' : 'flex-start'};">
                           ${show_sender ? `<div style="font-size:9px; font-weight:600; color:#64748b; margin:0 4px 1px 4px;">${display_name}</div>` : ''}
-                          <div style="background:${is_me ? '#00b09b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'};">
-                              <div style="display:flex; flex-direction:row; align-items:flex-end; justify-content:space-between; gap:8px;">
-                                  <div style="flex-grow:1; word-break:break-word;">${item.content}</div>
-                                  <div style="font-size:8px; opacity:0.7; font-weight:500; white-space:nowrap; align-self:flex-end;">${time}</div>
+                          <div style="background:${is_me ? '#00b09b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'}; min-width: 60px;">
+                              <div style="display:flex; flex-direction:column; gap:2px;">
+                                  <div style="word-break:break-word;">${item.content}</div>
+                                  <div style="font-size:8px; opacity:0.7; font-weight:500; white-space:nowrap; align-self:flex-end; margin-top: 2px;">${time}</div>
                               </div>
                           </div>
                       </div>
