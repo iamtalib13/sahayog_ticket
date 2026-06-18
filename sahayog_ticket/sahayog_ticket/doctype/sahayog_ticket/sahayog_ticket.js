@@ -226,24 +226,34 @@ frappe.ui.form.on("Sahayog Ticket", {
             <!-- Bottom Row (Input + Circular FAB) -->
             <div style="display: flex; align-items: flex-end; gap: 10px; width: 100%; justify-content: flex-end;">
                 
-                <!-- Input Container (Slides out from FAB) -->
+                <!-- Input Container -->
                 <div class="chat-input-container" style="
                     display: none; background: white; border-radius: 24px;
                     padding: 4px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-                    flex-grow: 1; border: 1px solid #e2e8f0; align-items: center;
-                    gap: 8px; max-width: 260px;
+                    flex-grow: 1; border: 1px solid #e2e8f0; flex-direction: column;
+                    gap: 4px; max-width: 260px;
                 ">
-                    <button id="chat-attach-dynamic" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">
-                        <i class="fa fa-paperclip"></i>
-                    </button>
-                    <textarea id="chat-input-dynamic" placeholder="Type a message..." style="
-                        flex-grow: 1; border: none; padding: 8px 0; font-size: 13px;
-                        outline: none; resize: none; height: 36px; background: transparent;
-                        max-height: 100px;
-                    "></textarea>
+                    <!-- Attachment Preview -->
+                    <div id="chat-attachment-preview" style="display:none; align-items:center; gap:8px; background:#f1f5f9; padding:4px 8px; border-radius:12px; border:1px solid #e2e8f0; margin-top: 4px;">
+                        <i class="fa fa-paperclip" style="color:#64748b; font-size:12px;"></i>
+                        <span id="chat-attachment-name" style="flex-grow:1; font-size:11px; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></span>
+                        <i class="fa fa-times" id="chat-attachment-clear" style="cursor:pointer; color:#94a3b8; font-size:12px;"></i>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:8px; width: 100%;">
+                        <button id="chat-attach-dynamic" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 0;">
+                            <i class="fa fa-paperclip"></i>
+                        </button>
+                        <textarea id="chat-input-dynamic" placeholder="Type a message..." style="
+                            flex-grow: 1; border: none; padding: 8px 0; font-size: 13px;
+                            outline: none; resize: none; height: 36px; background: transparent;
+                            max-height: 100px;
+                        "></textarea>
+                        <input type="file" id="chat-file-input-dynamic" style="display:none;">
+                    </div>
                 </div>
 
-                <!-- Circular FAB (Acts as Open Trigger & Send Button) -->
+                <!-- Circular FAB -->
                 <div class="chatbot-fab" style="
                     width: 50px; height: 50px; background: linear-gradient(135deg, #00b09b, #96c93d);
                     color: white; border-radius: 50%; display: flex; align-items: center;
@@ -263,6 +273,26 @@ frappe.ui.form.on("Sahayog Ticket", {
     let win = $(".chatbot-floating-window");
     let input_container = $(".chat-input-container");
     let input = $("#chat-input-dynamic");
+    let file_input = $("#chat-file-input-dynamic");
+    let selected_file = null;
+
+    // Attachment Click -> Trigger Native File Browser
+    $("#chat-attach-dynamic").on('click', () => file_input.click());
+
+    file_input.on('change', function() {
+        if (this.files && this.files[0]) {
+            selected_file = this.files[0];
+            $("#chat-attachment-name").text(selected_file.name);
+            $("#chat-attachment-preview").css('display', 'flex');
+            input.focus();
+        }
+    });
+
+    $("#chat-attachment-clear").on('click', function() {
+        selected_file = null;
+        file_input.val('');
+        $("#chat-attachment-preview").hide();
+    });
 
     // Unified FAB Action
     fab.on('click', function() {
@@ -275,24 +305,70 @@ frappe.ui.form.on("Sahayog Ticket", {
         } else {
             // SEND MESSAGE
             let message = input.val().trim();
-            if (!message) return;
+            if (!message && !selected_file) return;
 
             input.prop('disabled', true);
             fab.css('opacity', '0.5').css('pointer-events', 'none');
 
-            frappe.call({
-                method: "frappe.desk.form.utils.add_comment",
-                args: {
-                    reference_doctype: frm.doctype, reference_name: frm.docname,
-                    content: message, comment_by: frappe.session.user, comment_email: frappe.session.user
-                },
-                callback: function() {
-                    input.val('').prop('disabled', false).css('height', '36px');
+            if (selected_file) {
+                // Silent upload using XMLHttpRequest
+                let xhr = new XMLHttpRequest();
+                let formData = new FormData();
+                formData.append("file", selected_file);
+                formData.append("doctype", frm.doctype);
+                formData.append("docname", frm.docname);
+                formData.append("is_private", 0); // Public attachment
+
+                xhr.open("POST", "/api/method/upload_file", true);
+                xhr.setRequestHeader("X-Frappe-CSRF-Token", frappe.csrf_token);
+                
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        if (message) {
+                            send_comment(message);
+                        } else {
+                            finalize_send();
+                        }
+                    } else {
+                        frappe.show_alert({message: __("Upload failed"), indicator: "red"});
+                        input.prop('disabled', false);
+                        fab.css('opacity', '1').css('pointer-events', 'auto');
+                    }
+                };
+
+                xhr.onerror = function () {
+                    frappe.show_alert({message: __("Network error"), indicator: "red"});
+                    input.prop('disabled', false);
                     fab.css('opacity', '1').css('pointer-events', 'auto');
-                    frm.trigger("render_floating_chat_content");
-                    input.focus();
-                }
-            });
+                };
+
+                xhr.send(formData);
+            } else {
+                send_comment(message);
+            }
+
+            function send_comment(content) {
+                frappe.call({
+                    method: "frappe.desk.form.utils.add_comment",
+                    args: {
+                        reference_doctype: frm.doctype, reference_name: frm.docname,
+                        content: content, comment_by: frappe.session.user, comment_email: frappe.session.user
+                    },
+                    callback: function() {
+                        finalize_send();
+                    }
+                });
+            }
+
+            function finalize_send() {
+                input.val('').prop('disabled', false).css('height', '36px');
+                fab.css('opacity', '1').css('pointer-events', 'auto');
+                selected_file = null;
+                file_input.val('');
+                $("#chat-attachment-preview").hide();
+                frm.trigger("render_floating_chat_content");
+                input.focus();
+            }
         }
     });
 
@@ -312,21 +388,13 @@ frappe.ui.form.on("Sahayog Ticket", {
         this.style.height = (this.scrollHeight) + 'px';
     });
 
-    // Attachment Logic
-    $("#chat-attach-dynamic").on('click', function() {
-        new frappe.ui.FileUploader({
-            doctype: frm.doctype, docname: frm.docname, make_attachments_public: true,
-            on_success: () => frm.trigger("render_floating_chat_content")
-        });
-    });
-
     // Click Outside to Close
     $(document).on('mousedown.chat_outside', function(e) {
         let wrapper = $(".chatbot-wrapper-global");
         // Don't close if clicking inside chatbot or any modal/overlay
         if (win.is(":visible") && 
             !wrapper.is(e.target) && wrapper.has(e.target).length === 0 &&
-            !$(e.target).closest('.modal, .modal-backdrop, .frappe-control-popup').length
+            !$(e.target).closest('.modal, .modal-backdrop, .frappe-control-popup, .file-uploader').length
         ) {
             $(".chat-close-trigger").click();
         }
