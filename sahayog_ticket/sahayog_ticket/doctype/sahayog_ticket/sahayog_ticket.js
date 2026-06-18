@@ -425,12 +425,53 @@ frappe.ui.form.on("Sahayog Ticket", {
         if (r.message) {
           r.message.forEach((c) => {
             let content = c.content;
-            if (c.comment_type === "Attachment" && content && content.startsWith("/") && !content.includes("<a")) {
-              let filename = content.split("/").pop();
-              content = `<div style="display:flex; align-items:center; gap:6px; padding:4px; background: rgba(0,176,155,0.05); border-radius:6px;">
-                            <div style="width: 24px; height: 24px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #00b09b; font-size: 10px;"><i class="fa fa-file"></i></div>
-                            <div style="flex:1; overflow: hidden;"><a href="${content}" target="_blank" style="font-weight: 600; color: #1e293b; font-size: 11px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${filename}</a></div>
-                         </div>`;
+            if (c.comment_type === "Attachment" && content) {
+              let file_url = "";
+              if (content.includes("<a")) {
+                  let match = content.match(/href="([^"]+)"/);
+                  if (match) file_url = match[1];
+              } else if (content.trim().startsWith("/") || content.trim().startsWith("http")) {
+                  file_url = content.trim();
+              }
+
+              if (file_url) {
+                  let filename = decodeURIComponent(file_url.split("/").pop().split("?")[0]);
+                  let file_ext = filename.split('.').pop().toLowerCase();
+                  let image_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+                  
+                  if (image_exts.includes(file_ext)) {
+                      // IMAGE PREVIEW (WhatsApp style)
+                      content = `<div style="margin: 4px 0;">
+                                    <a href="${file_url}" target="_blank" style="display: block;">
+                                        <img src="${file_url}" style="max-width: 100%; max-height: 180px; border-radius: 8px; border: 1px solid #e2e8f0; display: block; object-fit: cover;" onerror="this.src='/assets/frappe/images/default-image.svg'; this.style.opacity=0.5;"/>
+                                    </a>
+                                 </div>`;
+                  } else {
+                      // DOCUMENT CARD
+                      let icon = "fa-file";
+                      let icon_color = "#00b09b";
+                      if (file_ext === 'pdf') { icon = "fa-file-pdf-o"; icon_color = "#e11d48"; }
+                      else if (['doc', 'docx'].includes(file_ext)) { icon = "fa-file-word-o"; icon_color = "#2563eb"; }
+                      else if (['xls', 'xlsx'].includes(file_ext)) { icon = "fa-file-excel-o"; icon_color = "#16a34a"; }
+                      else if (['zip', 'rar', '7z'].includes(file_ext)) { icon = "fa-file-archive-o"; icon_color = "#7c3aed"; }
+
+                      content = `<div style="display:flex; align-items:center; gap:10px; padding:10px; background: rgba(0,0,0,0.03); border-radius:10px; border: 1px solid rgba(0,0,0,0.05); margin: 4px 0;">
+                                    <div style="width: 36px; height: 36px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: ${icon_color}; font-size: 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
+                                        <i class="fa ${icon}"></i>
+                                    </div>
+                                    <div style="flex:1; overflow: hidden;">
+                                        <a href="${file_url}" target="_blank" style="font-weight: 600; color: #1e293b; font-size: 12px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none;">
+                                            ${filename}
+                                        </a>
+                                        <div style="display: flex; gap: 6px; align-items: center; margin-top: 2px;">
+                                            <span style="font-size: 9px; color: #64748b; text-transform: uppercase; font-weight: 700;">${file_ext}</span>
+                                            <span style="width: 3px; height: 3px; background: #cbd5e1; border-radius: 50%;"></span>
+                                            <span style="font-size: 9px; color: #94a3b8; cursor: pointer;" onclick="event.stopPropagation(); window.open('${file_url}', '_blank');">Click to open</span>
+                                        </div>
+                                    </div>
+                                 </div>`;
+                  }
+              }
             }
             let sender = c.comment_by || c.owner;
             history.push({ 
