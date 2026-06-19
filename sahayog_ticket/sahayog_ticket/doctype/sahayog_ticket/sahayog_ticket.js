@@ -259,13 +259,13 @@ frappe.ui.form.on("Sahayog Ticket", {
                 <!-- Circular FAB -->
                 <div class="chatbot-fab" style="
                     position: relative;
-                    width: 50px; height: 50px; background: linear-gradient(135deg, #00b09b);
+                    width: 60px; height: 60px; background: linear-gradient(135deg, #00b09b);
                     color: white; border-radius: 50%; display: flex; align-items: center;
                     justify-content: center; font-size: 20px; cursor: pointer;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15); flex-shrink: 0;
                     transition: transform 0.2s;
                 ">
-                    <i class="fa fa-paper-plane"></i>
+                    <img src="/assets/sahayog_ticket/images/chatbot.png" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
                     <!-- Notification Dot -->
                     <div class="chat-notification-dot" style="
                         position: absolute; top: 2px; right: 2px;
