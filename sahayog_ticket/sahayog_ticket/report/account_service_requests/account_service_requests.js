@@ -38,7 +38,7 @@ frappe.query_reports["Account Service Requests"] = {
 		}
 	],
 	"onload": function(report) {
-		report.page.add_inner_button(__("Export to CSV"), function() {
+		report.page.add_inner_button(__("Download Report"), function() {
 			frappe.query_report.export_report();
 		});
 	},
