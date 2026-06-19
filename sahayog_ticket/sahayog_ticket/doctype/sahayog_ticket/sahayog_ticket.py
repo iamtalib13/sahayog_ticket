@@ -252,6 +252,20 @@ class SahayogTicket(Document):
                     frappe.throw(
                         _("Row #{0}: Enter valid Email Address").format(row.idx)
                     )
+
+            # Validate account_number (if present)
+            if row.account_number:
+                if not re.match(r"^\d{15}$", str(row.account_number)):
+                    frappe.throw(
+                        _("Row #{0}: Account Number must be a valid 15-digit number").format(row.idx)
+                    )
+
+            # Validate contact_number (if present)
+            if row.contact_number:
+                if not re.match(mobile_pattern, row.contact_number):
+                    frappe.throw(
+                        _("Row #{0}: Contact Number must be a valid 10-digit Indian Mobile Number").format(row.idx)
+                    )
     
     def validate_request_detail(self):
         # Check only when ticket type is Account Service Request

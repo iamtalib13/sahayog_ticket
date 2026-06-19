@@ -49,7 +49,34 @@ frappe.router.on('change', () => {
 });
 // -------------------------------------------------------------
 
+// --- 3. ENFORCE DIGIT LIMITS & NUMERIC VALIDATION FOR ACCOUNT/CONTACT NUMBERS ---
+$(document).on('focus', 'input[data-fieldname="account_number"]', function() {
+    $(this).attr('maxlength', 15);
+});
 
+$(document).on('focus', 'input[data-fieldname="contact_number"], input[data-fieldname="new_contact_number"]', function() {
+    $(this).attr('maxlength', 10);
+});
+
+$(document).on('input', 'input[data-fieldname="account_number"]', function() {
+    let val = $(this).val().replace(/\D/g, '');
+    if (val.length > 15) {
+        val = val.slice(0, 15);
+    }
+    if ($(this).val() !== val) {
+        $(this).val(val).trigger('change');
+    }
+});
+
+$(document).on('input', 'input[data-fieldname="contact_number"], input[data-fieldname="new_contact_number"]', function() {
+    let val = $(this).val().replace(/\D/g, '');
+    if (val.length > 10) {
+        val = val.slice(0, 10);
+    }
+    if ($(this).val() !== val) {
+        $(this).val(val).trigger('change');
+    }
+});
 
 // Copyright (c) 2023, Sid and contributors
 
