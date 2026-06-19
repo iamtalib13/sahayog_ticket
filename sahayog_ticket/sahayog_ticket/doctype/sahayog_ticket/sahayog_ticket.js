@@ -265,7 +265,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15); flex-shrink: 0;
                     transition: transform 0.2s;
                 ">
-                    <i class="fas fa-comments"></i>
+                    <i class="fa fa-paper-plane"></i>
                     <!-- Notification Dot -->
                     <div class="chat-notification-dot" style="
                         position: absolute; top: 2px; right: 2px;
