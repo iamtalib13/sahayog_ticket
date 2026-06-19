@@ -82,6 +82,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     frm.trigger("hide_sidebar_options");
     frm.trigger("custom_buttons");
     frm.trigger("reset_user_password");
+    frm.trigger("status");
 
     // Check if the user is an employee and has a specific role
     if (frm.doc.status === "Closed") {
@@ -670,6 +671,14 @@ frappe.ui.form.on("Sahayog Ticket", {
         },
       };
     });
+  },
+
+  status: function (frm) {
+    if (frm.doc.status === "In-Progress") {
+      frm.set_df_property("description", "read_only", 1);
+    } else {
+      frm.set_df_property("description", "read_only", 0);
+    }
   },
 
   priority: function (frm) {
