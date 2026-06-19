@@ -37,6 +37,11 @@ frappe.query_reports["Account Service Requests"] = {
 			"options": "Sahayog Branch"
 		}
 	],
+	"onload": function(report) {
+		report.page.add_inner_button(__("Download Report"), function() {
+			frappe.query_report.export_report();
+		});
+	},
 	"formatter": function(value, row, column, data, default_formatter) {
 		value = default_formatter(value, row, column, data);
 
