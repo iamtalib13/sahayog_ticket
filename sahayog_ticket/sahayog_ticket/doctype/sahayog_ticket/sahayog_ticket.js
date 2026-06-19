@@ -674,7 +674,7 @@ frappe.ui.form.on("Sahayog Ticket", {
   },
 
   status: function (frm) {
-    if (frm.doc.status === "In-Progress") {
+    if (!frm.is_new() && ["Open", "In-Progress", "Resolved", "Closed"].includes(frm.doc.status)) {
       frm.set_df_property("description", "read_only", 1);
     } else {
       frm.set_df_property("description", "read_only", 0);
