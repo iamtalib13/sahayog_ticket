@@ -82,6 +82,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     frm.trigger("hide_sidebar_options");
     frm.trigger("custom_buttons");
     frm.trigger("reset_user_password");
+    frm.trigger("status");
 
     // Check if the user is an employee and has a specific role
     if (frm.doc.status === "Closed") {
@@ -258,38 +259,46 @@ frappe.ui.form.on("Sahayog Ticket", {
 
                 <!-- Circular FAB -->
                 <div class="chatbot-fab" style="
-                    width: 50px; height: 50px; background: linear-gradient(135deg, #00b09b);
+                    position: relative;
+                    width: 60px; height: 60px; background: linear-gradient(135deg, #00b09b);
                     color: white; border-radius: 50%; display: flex; align-items: center;
                     justify-content: center; font-size: 20px; cursor: pointer;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15); flex-shrink: 0;
                     transition: transform 0.2s;
                 ">
-                    <i class="fa fa-paper-plane"></i>
+                    <img src="/assets/sahayog_ticket/images/chatbot.png" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
+                    <!-- Notification Dot -->
+                    <div class="chat-notification-dot" style="
+                        position: absolute; top: 2px; right: 2px;
+                        width: 10px; height: 10px; background: #ff4d4f;
+                        border-radius: 50%; border: 1.5px solid white;
+                        display: block;
+                    "></div>
                 </div>
-            </div>
-        </div>
-    `;
+                </div>
+                </div>
+                `;
 
-    $("body").append(html);
+                $("body").append(html);
 
-    let fab = $(".chatbot-fab");
-    let win = $(".chatbot-floating-window");
-    let input_container = $(".chat-input-container");
-    let input = $("#chat-input-dynamic");
-    let file_input = $("#chat-file-input-dynamic");
-    let selected_file = null;
+                let fab = $(".chatbot-fab");
+                let win = $(".chatbot-floating-window");
+                let input_container = $(".chat-input-container");
+                let input = $("#chat-input-dynamic");
+                let file_input = $("#chat-file-input-dynamic");
+                let selected_file = null;
 
-    // Attachment Click -> Trigger Native File Browser
-    $("#chat-attach-dynamic").on('click', () => file_input.click());
+                // Attachment Click -> Trigger Native File Browser
+                $("#chat-attach-dynamic").on('click', () => file_input.click());
 
-    file_input.on('change', function() {
-        if (this.files && this.files[0]) {
-            selected_file = this.files[0];
-            $("#chat-attachment-name").text(selected_file.name);
-            $("#chat-attachment-preview").css('display', 'flex');
-            
-            // Show image thumbnail if file is an image
-            if (selected_file.type.startsWith('image/')) {
+                file_input.on('change', function() {
+                if (this.files && this.files[0]) {
+                selected_file = this.files[0];
+                $("#chat-attachment-name").text(selected_file.name);
+                $("#chat-attachment-preview").css('display', 'flex');
+
+                // Show image thumbnail if file is an image
+                if (selected_file.type.startsWith('image/')) {
                 let reader = new FileReader();
                 reader.onload = function(e) {
                     $("#chat-attachment-image-preview").attr('src', e.target.result);
@@ -297,26 +306,27 @@ frappe.ui.form.on("Sahayog Ticket", {
                     $("#chat-attachment-icon-fallback").hide();
                 }
                 reader.readAsDataURL(selected_file);
-            } else {
+                } else {
                 $("#chat-attachment-image-wrapper").hide();
                 $("#chat-attachment-icon-fallback").show();
-            }
-            input.focus();
-        }
-    });
+                }
+                input.focus();
+                }
+                });
 
-    $("#chat-attachment-clear").on('click', function() {
-        selected_file = null;
-        file_input.val('');
-        $("#chat-attachment-preview").hide();
-        $("#chat-attachment-image-preview").attr('src', '');
-        $("#chat-attachment-image-wrapper").hide();
-        $("#chat-attachment-icon-fallback").show();
-    });
+                $("#chat-attachment-clear").on('click', function() {
+                selected_file = null;
+                file_input.val('');
+                $("#chat-attachment-preview").hide();
+                $("#chat-attachment-image-preview").attr('src', '');
+                $("#chat-attachment-image-wrapper").hide();
+                $("#chat-attachment-icon-fallback").show();
+                });
 
-    // Unified FAB Action
-    fab.on('click', function() {
-        if (!win.is(":visible")) {
+                // Unified FAB Action
+                fab.on('click', function() {
+                $(".chat-notification-dot").fadeOut(200); // Hide dot on click
+                if (!win.is(":visible")) {
             // OPEN CHAT
             win.css('display', 'flex').hide().fadeIn(200);
             input_container.css('display', 'flex').hide().fadeIn(200);
@@ -661,6 +671,14 @@ frappe.ui.form.on("Sahayog Ticket", {
         },
       };
     });
+  },
+
+  status: function (frm) {
+    if (frm.doc.status === "In-Progress") {
+      frm.set_df_property("description", "read_only", 1);
+    } else {
+      frm.set_df_property("description", "read_only", 0);
+    }
   },
 
   priority: function (frm) {
