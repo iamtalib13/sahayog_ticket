@@ -224,7 +224,7 @@
    "in_preview": 1,
    "label": "Description",
    "mandatory_depends_on": "eval:doc.ticket_type",
-   "read_only_depends_on": "eval:doc.status != 'Open'"
+   "read_only_depends_on": "eval:!doc.__islocal && ['Open', 'In-Progress', 'Resolved', 'Closed'].includes(doc.status)"
   },
   {
    "default": "Today",

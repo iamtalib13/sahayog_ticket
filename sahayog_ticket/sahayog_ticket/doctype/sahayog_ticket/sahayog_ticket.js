@@ -49,7 +49,72 @@ frappe.router.on('change', () => {
 });
 // -------------------------------------------------------------
 
+// --- 3. ENFORCE DIGIT LIMITS & NUMERIC VALIDATION FOR ACCOUNT/CONTACT NUMBERS & PAN ---
+$(document).on('focus', 'input[data-fieldname="account_number"]', function() {
+    $(this).attr('maxlength', 15);
+});
 
+$(document).on('focus', 'input[data-fieldname="contact_number"], input[data-fieldname="new_contact_number"]', function() {
+    $(this).attr('maxlength', 10);
+});
+
+$(document).on('focus', 'input[data-fieldname="new_pan_no"]', function() {
+    $(this).attr('maxlength', 10);
+});
+
+$(document).on('input', 'input[data-fieldname="account_number"]', function() {
+    let val = $(this).val().replace(/\D/g, '');
+    if (val.length > 15) {
+        val = val.slice(0, 15);
+    }
+    if ($(this).val() !== val) {
+        $(this).val(val).trigger('change');
+    }
+});
+
+$(document).on('input', 'input[data-fieldname="contact_number"], input[data-fieldname="new_contact_number"]', function() {
+    let val = $(this).val().replace(/\D/g, '');
+    // Handle Indian mobile prefixes (e.g. +91, 91, or 0)
+    if (val.length > 10) {
+        if (val.startsWith('91') && val.length === 12) {
+            val = val.slice(2);
+        } else if (val.startsWith('0') && val.length === 11) {
+            val = val.slice(1);
+        }
+    }
+    // Limit to 10 digits and ensure it starts with 6-9
+    if (val.length > 0 && !/^[6-9]/.test(val)) {
+        val = val.slice(1);
+    }
+    if (val.length > 10) {
+        val = val.slice(0, 10);
+    }
+    if ($(this).val() !== val) {
+        $(this).val(val).trigger('change');
+    }
+});
+
+$(document).on('input', 'input[data-fieldname="new_pan_no"]', function() {
+    let val = $(this).val().toUpperCase();
+    let cleanVal = "";
+    // Enforce PAN format: 5 letters, 4 digits, 1 letter (e.g., ABCDE1234F)
+    for (let i = 0; i < val.length; i++) {
+        let char = val[i];
+        if (i < 5) {
+            if (/[A-Z]/.test(char)) cleanVal += char;
+        } else if (i >= 5 && i < 9) {
+            if (/[0-9]/.test(char)) cleanVal += char;
+        } else if (i === 9) {
+            if (/[A-Z]/.test(char)) cleanVal += char;
+        }
+    }
+    if (cleanVal.length > 10) {
+        cleanVal = cleanVal.slice(0, 10);
+    }
+    if ($(this).val() !== cleanVal) {
+        $(this).val(cleanVal).trigger('change');
+    }
+});
 
 // Copyright (c) 2023, Sid and contributors
 
@@ -674,7 +739,7 @@ frappe.ui.form.on("Sahayog Ticket", {
   },
 
   status: function (frm) {
-    if (frm.doc.status === "In-Progress") {
+    if (!frm.is_new() && ["Open", "In-Progress", "Resolved", "Closed"].includes(frm.doc.status)) {
       frm.set_df_property("description", "read_only", 1);
     } else {
       frm.set_df_property("description", "read_only", 0);
