@@ -687,12 +687,12 @@ frappe.ui.form.on("Sahayog Ticket", {
                   <div style="display:flex; gap:6px; flex-direction:${is_me ? 'row-reverse' : 'row'}; align-self:${is_me ? 'flex-end' : 'flex-start'}; max-width:90%; ${!show_sender ? 'margin-top:-2px;' : ''}">
                       <div style="display:flex; flex-direction:column; align-items:${is_me ? 'flex-end' : 'flex-start'};">
                           ${show_sender ? `<div style="font-size:9px; font-weight:600; color:#64748b; margin:0 4px 1px 4px;">${display_name}</div>` : ''}
-                          <div style="background:${is_me ? '#00b09b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'}; min-width: 60px;">
-                              <div style="display:flex; flex-direction:column; gap:2px;">
-                                  <div style="word-break:break-word;">${item.content}</div>
-                                  <div style="font-size:8px; opacity:0.7; font-weight:500; white-space:nowrap; align-self:flex-end; margin-top: 2px;">${time}</div>
-                              </div>
-                          </div>
+                           <div style="background:${is_me ? '#00b09b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'}; min-width: 60px;">
+                               <div style="word-break:break-word;">
+                                   ${item.content}
+                                   <span style="font-size:8px; opacity:0.7; font-weight:500; white-space:nowrap; margin-left:6px; float:right; margin-top:4px;">${time}</span>
+                               </div>
+                           </div>
                       </div>
                   </div>
               `);
