@@ -331,7 +331,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15); flex-shrink: 0;
                     transition: transform 0.2s;
                 ">
-                    <img src="/assets/sahayog_ticket/images/chatbot.png" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
+                    <img src="/assets/sahayog_ticket/images/chatbot2.png" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
                     <!-- Notification Dot -->
                     <div class="chat-notification-dot" style="
                         position: absolute; top: 2px; right: 2px;
@@ -605,12 +605,12 @@ frappe.ui.form.on("Sahayog Ticket", {
             args: {
               doctype: "Employee",
               filters: { user_id: ["in", Array.from(senders)] },
-              fields: ["user_id", "employee_name", "name"]
+              fields: ["user_id", "employee_name", "employee_number", "name"]
             },
             callback: function(res) {
               let emp_map = {};
               (res.message || []).forEach(e => {
-                emp_map[e.user_id] = { name: e.employee_name, id: e.name };
+                emp_map[e.user_id] = { name: e.employee_name, id: e.employee_number || e.name };
               });
               render_history(history, emp_map);
             }
