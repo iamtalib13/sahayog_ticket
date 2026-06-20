@@ -605,12 +605,12 @@ frappe.ui.form.on("Sahayog Ticket", {
             args: {
               doctype: "Employee",
               filters: { user_id: ["in", Array.from(senders)] },
-              fields: ["user_id", "employee_name", "name"]
+              fields: ["user_id", "employee_name", "employee_number", "name"]
             },
             callback: function(res) {
               let emp_map = {};
               (res.message || []).forEach(e => {
-                emp_map[e.user_id] = { name: e.employee_name, id: e.name };
+                emp_map[e.user_id] = { name: e.employee_name, id: e.employee_number || e.name };
               });
               render_history(history, emp_map);
             }
