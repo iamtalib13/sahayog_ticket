@@ -15,6 +15,19 @@ frappe.dom.set_style(`
     #chat-history-dynamic::-webkit-scrollbar-track { background: transparent; }
     #chat-history-dynamic::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     #chat-history-dynamic::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Notification dot bounce animation */
+    @keyframes chatbot-bounce {
+        0%, 100% { transform: translateY(0) scale(1); }
+        20%       { transform: translateY(-7px) scale(1.15); }
+        40%       { transform: translateY(-3px) scale(1); }
+        60%       { transform: translateY(-5px) scale(1.08); }
+        80%       { transform: translateY(-1px) scale(1); }
+    }
+    .chat-notification-dot.chatbot-bouncing {
+        animation: chatbot-bounce 0.9s ease-in-out infinite;
+        display: block !important;
+    }
 `, 'ticket-file-privacy-css');
 
 // --- 2. VUE INTERCEPTOR (MUTATION OBSERVER) ---
@@ -352,12 +365,16 @@ frappe.ui.form.on("Sahayog Ticket", {
                     transition: transform 0.2s;
                 ">
                     <img src="/assets/sahayog_ticket/images/chatbot2.png" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
-                    <!-- Notification Dot (hidden by default, shown only on unread msgs) -->
+                    <!-- Count Badge (hidden by default, shown only on unread msgs) -->
                     <div class="chat-notification-dot" style="
-                        position: absolute; top: 2px; right: 2px;
-                        width: 10px; height: 10px; background: #ff4d4f;
-                        border-radius: 50%; border: 1.5px solid white;
-                        display: none;
+                        position: absolute; top: -5px; right: -5px;
+                        min-width: 18px; height: 18px;
+                        background: #ff4d4f;
+                        border-radius: 9px; border: 2px solid white;
+                        display: none; align-items: center; justify-content: center;
+                        font-size: 10px; font-weight: 700; color: white;
+                        padding: 0 4px; line-height: 1;
+                        font-family: 'Inter', sans-serif;
                     "></div>
                 </div>
             </div>
@@ -411,13 +428,20 @@ frappe.ui.form.on("Sahayog Ticket", {
     const _ticket_seen_key = () => `chatbot_last_seen_${frm.docname}`;
 
     function mark_messages_seen() {
-        // Store current UTC timestamp as last-seen for this ticket
+        // Store current UTC timestamp as last-seen for this ticket (local)
         localStorage.setItem(_ticket_seen_key(), new Date().toISOString());
-        $(".chat-notification-dot").fadeOut(200);
+        // Remove bounce and hide dot
+        $(".chat-notification-dot").removeClass('chatbot-bouncing').fadeOut(200);
+        // Also persist seen time on server (for WhatsApp tick rendering)
+        frappe.call({
+            method: "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.chat_utils.mark_ticket_chat_seen",
+            args: { docname: frm.docname },
+            freeze: false
+        });
     }
 
     function check_unread_messages() {
-        // Fetch the latest comment NOT by the current user
+        // Fetch ALL comments from others to count unread ones
         frappe.call({
             method: "frappe.client.get_list",
             args: {
@@ -430,21 +454,28 @@ frappe.ui.form.on("Sahayog Ticket", {
                 },
                 fields: ["creation"],
                 order_by: "creation desc",
-                limit_page_length: 1
+                limit_page_length: 100
             },
             callback: function(r) {
                 let dot = $(".chat-notification-dot");
                 if (r.message && r.message.length > 0) {
-                    let latest_creation = r.message[0].creation;
                     let last_seen = localStorage.getItem(_ticket_seen_key());
-                    if (!last_seen || new Date(latest_creation) > new Date(last_seen)) {
-                        // There is an unread message from someone else
-                        if (!dot.is(':visible')) dot.fadeIn(200);
+                    // Count how many messages are newer than last_seen
+                    let unread_count = last_seen
+                        ? r.message.filter(c => new Date(c.creation) > new Date(last_seen)).length
+                        : r.message.length;
+
+                    if (unread_count > 0) {
+                        // Show badge with count + bounce
+                        dot.text(unread_count > 99 ? '99+' : unread_count);
+                        dot.css('display', 'flex').addClass('chatbot-bouncing');
                     } else {
+                        dot.removeClass('chatbot-bouncing');
                         if (dot.is(':visible')) dot.fadeOut(200);
                     }
                 } else {
                     // No messages from others at all
+                    dot.removeClass('chatbot-bouncing');
                     if (dot.is(':visible')) dot.fadeOut(200);
                 }
             }
@@ -689,6 +720,19 @@ frappe.ui.form.on("Sahayog Ticket", {
         }
         history.sort((a, b) => new Date(a.date) - new Date(b.date));
 
+        // Helper: fetch seen_map then render
+        function fetch_seen_and_render(history, emp_map) {
+          frappe.call({
+            method: "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.chat_utils.get_ticket_chat_seen",
+            args: { docname: frm.docname },
+            freeze: false,
+            callback: function(seen_res) {
+              let seen_map = seen_res.message || {};
+              render_history(history, emp_map, seen_map);
+            }
+          });
+        }
+
         // Fetch Employee details for senders
         if (senders.size > 0) {
           frappe.call({
@@ -703,14 +747,15 @@ frappe.ui.form.on("Sahayog Ticket", {
               (res.message || []).forEach(e => {
                 emp_map[e.user_id] = { name: e.employee_name, id: e.employee_number || e.name };
               });
-              render_history(history, emp_map);
+              fetch_seen_and_render(history, emp_map);
             }
           });
         } else {
-          render_history(history, {});
+          fetch_seen_and_render(history, {});
         }
 
-        function render_history(history, emp_map) {
+        function render_history(history, emp_map, seen_map) {
+          seen_map = seen_map || {};
           chat_history.empty();
           if (history.length === 0) chat_history.append('<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:10px;">No messages.</p>');
           let last_sender = null;
@@ -748,14 +793,32 @@ frappe.ui.form.on("Sahayog Ticket", {
                 }
               }
 
+              // --- WhatsApp-style seen tick (only on current user's messages) ---
+              let tick_html = '';
+              if (is_me) {
+                let msg_time = new Date(item.date);
+                // Check if any OTHER user has a seen_time AFTER this message was created
+                let is_seen_by_other = Object.entries(seen_map).some(([u, seen_time]) => {
+                  return u !== frappe.session.user && new Date(seen_time) >= msg_time;
+                });
+                let tick_color  = is_seen_by_other ? '#2ae9f7' : 'rgba(255,255,255,0.92)';
+                let tick_symbol = is_seen_by_other
+                  ? '&#10003;&#10003;'   // ✓✓ double tick (seen)
+                  : '&#10003;';          // ✓  single tick (sent)
+                tick_html = `<span style="font-size:10px; color:${tick_color}; letter-spacing:-1.5px; line-height:1;">${tick_symbol}</span>`;
+              }
+
               chat_history.append(`
                   <div style="display:flex; gap:6px; flex-direction:${is_me ? 'row-reverse' : 'row'}; align-self:${is_me ? 'flex-end' : 'flex-start'}; max-width:90%; ${!show_sender ? 'margin-top:-2px;' : ''}">
                       <div style="display:flex; flex-direction:column; align-items:${is_me ? 'flex-end' : 'flex-start'};">
                           ${show_sender ? `<div style="font-size:9px; font-weight:600; color:#64748b; margin:0 4px 1px 4px;">${display_name}</div>` : ''}
-                           <div style="background:${is_me ? '#00b09b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'}; min-width: 60px;">
+                           <div style="background:${is_me ? '#04665b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'}; min-width: 60px;">
                                <div style="word-break:break-word;">
                                    ${item.content}
-                                   <span style="font-size:8px; opacity:0.7; font-weight:500; white-space:nowrap; margin-left:6px; float:right; margin-top:4px;">${time}</span>
+                                   <span style="display:inline-flex; align-items:center; float:right; margin-left:6px; margin-top:4px; gap:2px; white-space:nowrap;">
+                                       <span style="font-size:8px; opacity:0.7; font-weight:500;">${time}</span>
+                                       ${tick_html}
+                                   </span>
                                </div>
                            </div>
                       </div>
