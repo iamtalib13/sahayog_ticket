@@ -638,6 +638,7 @@ frappe.ui.form.on("Sahayog Ticket", {
         filters: { reference_doctype: frm.doctype, reference_name: frm.docname, comment_type: ["in", ["Comment", "Attachment", "Info"]] },
         fields: ["content", "owner", "creation", "comment_by", "comment_type"],
         order_by: "creation asc",
+        limit_page_length: 0  // Fetch all comments
       },
       callback: function (r) {
         let history = [];
