@@ -254,8 +254,12 @@ frappe.ui.form.on("Sahayog Ticket", {
   setup_floating_chatbot: function (frm) {
     if (frm.is_new()) return;
 
-    // 1. Clean existing elements
+    // 1. Clean existing elements & clear any old polling timer
     $(".chatbot-wrapper-global").remove();
+    if (window._chatbot_poll_timer) {
+        clearInterval(window._chatbot_poll_timer);
+        window._chatbot_poll_timer = null;
+    }
 
     // 2. Global Wrapper
     let html = `
@@ -348,12 +352,12 @@ frappe.ui.form.on("Sahayog Ticket", {
                     transition: transform 0.2s;
                 ">
                     <img src="/assets/sahayog_ticket/images/chatbot2.png" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
-                    <!-- Notification Dot -->
+                    <!-- Notification Dot (hidden by default, shown only on unread msgs) -->
                     <div class="chat-notification-dot" style="
                         position: absolute; top: 2px; right: 2px;
                         width: 10px; height: 10px; background: #ff4d4f;
                         border-radius: 50%; border: 1.5px solid white;
-                        display: block;
+                        display: none;
                     "></div>
                 </div>
             </div>
@@ -403,9 +407,64 @@ frappe.ui.form.on("Sahayog Ticket", {
         $("#chat-attachment-icon-fallback").show();
     });
 
+    // --- Notification Helpers ---
+    const _ticket_seen_key = () => `chatbot_last_seen_${frm.docname}`;
+
+    function mark_messages_seen() {
+        // Store current UTC timestamp as last-seen for this ticket
+        localStorage.setItem(_ticket_seen_key(), new Date().toISOString());
+        $(".chat-notification-dot").fadeOut(200);
+    }
+
+    function check_unread_messages() {
+        // Fetch the latest comment NOT by the current user
+        frappe.call({
+            method: "frappe.client.get_list",
+            args: {
+                doctype: "Comment",
+                filters: {
+                    reference_doctype: frm.doctype,
+                    reference_name: frm.docname,
+                    comment_type: ["in", ["Comment", "Attachment"]],
+                    owner: ["!=", frappe.session.user]
+                },
+                fields: ["creation"],
+                order_by: "creation desc",
+                limit_page_length: 1
+            },
+            callback: function(r) {
+                let dot = $(".chat-notification-dot");
+                if (r.message && r.message.length > 0) {
+                    let latest_creation = r.message[0].creation;
+                    let last_seen = localStorage.getItem(_ticket_seen_key());
+                    if (!last_seen || new Date(latest_creation) > new Date(last_seen)) {
+                        // There is an unread message from someone else
+                        if (!dot.is(':visible')) dot.fadeIn(200);
+                    } else {
+                        if (dot.is(':visible')) dot.fadeOut(200);
+                    }
+                } else {
+                    // No messages from others at all
+                    if (dot.is(':visible')) dot.fadeOut(200);
+                }
+            }
+        });
+    }
+
+    // Initial check on load
+    check_unread_messages();
+
+    // Background poll every 30s (only when FAB visible / chat closed)
+    window._chatbot_poll_timer = setInterval(function() {
+        // Only poll if chat window is NOT open
+        if (!$(".chatbot-floating-window").is(':visible')) {
+            check_unread_messages();
+        }
+    }, 30000);
+
     // FAB Action -> Click to Open Chat, Hide FAB
     fab.on('click', function() {
-        $(".chat-notification-dot").fadeOut(200); // Hide dot on click
+        mark_messages_seen(); // Mark as seen when opening
         fab.fadeOut(200, function() {
             win.css('display', 'flex').hide().fadeIn(200);
             frm.trigger("render_floating_chat_content");
@@ -507,6 +566,8 @@ frappe.ui.form.on("Sahayog Ticket", {
             $("#chat-attachment-image-preview").attr('src', '');
             $("#chat-attachment-image-wrapper").hide();
             $("#chat-attachment-icon-fallback").show();
+            // User is active in chat — mark as seen so dot stays hidden
+            localStorage.setItem(`chatbot_last_seen_${frm.docname}`, new Date().toISOString());
             frm.trigger("render_floating_chat_content");
             input.focus();
         }
@@ -529,6 +590,10 @@ frappe.ui.form.on("Sahayog Ticket", {
         if (frappe.get_route()[0] !== 'Form' || frappe.get_route()[1] !== 'Sahayog Ticket') {
             $(".chatbot-wrapper-global").remove();
             $(document).off('mousedown.chat_outside');
+            if (window._chatbot_poll_timer) {
+                clearInterval(window._chatbot_poll_timer);
+                window._chatbot_poll_timer = null;
+            }
         }
     });
   },
