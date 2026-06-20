@@ -287,17 +287,11 @@ frappe.ui.form.on("Sahayog Ticket", {
                     flex-direction: column; gap: 4px; background-color: #f8fafc; scroll-behavior: smooth;
                     min-height: 0; overscroll-behavior: contain;
                 "></div>
-            </div>
 
-            <!-- Bottom Row (Input + Circular FAB) -->
-            <div style="display: flex; align-items: flex-end; gap: 10px; width: 100%; justify-content: flex-end;">
-                
-                <!-- Input Container -->
+                <!-- Input Container (Inside Floating Window) -->
                 <div class="chat-input-container" style="
-                    display: none; background: white; border-radius: 24px;
-                    padding: 4px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-                    flex-grow: 1; border: 1px solid #e2e8f0; flex-direction: column;
-                    gap: 4px; max-width: 260px;
+                    display: flex; background: white; border-top: 1px solid #e2e8f0;
+                    padding: 8px 12px; flex-direction: column; gap: 4px; width: 100%;
                 ">
                     <!-- Attachment Preview -->
                     <div id="chat-attachment-preview" style="display:none; align-items:center; gap:8px; background:#f1f5f9; padding:6px 8px; border-radius:12px; border:1px solid #e2e8f0; margin-top: 4px;">
@@ -319,9 +313,31 @@ frappe.ui.form.on("Sahayog Ticket", {
                             max-height: 100px;
                         "></textarea>
                         <input type="file" id="chat-file-input-dynamic" style="display:none;">
+                        
+                        <!-- Send Button -->
+                        <button id="chat-send-btn" style="
+                            background: linear-gradient(135deg, #00b09b);
+                            border: none;
+                            color: white;
+                            width: 32px;
+                            height: 32px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: pointer;
+                            font-size: 14px;
+                            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                            flex-shrink: 0;
+                        ">
+                            <i class="fa fa-paper-plane"></i>
+                        </button>
                     </div>
                 </div>
+            </div>
 
+            <!-- Bottom Row (Circular FAB) -->
+            <div style="display: flex; align-items: flex-end; gap: 10px; width: 100%; justify-content: flex-end;">
                 <!-- Circular FAB -->
                 <div class="chatbot-fab" style="
                     position: relative;
@@ -340,30 +356,29 @@ frappe.ui.form.on("Sahayog Ticket", {
                         display: block;
                     "></div>
                 </div>
-                </div>
-                </div>
-                `;
+            </div>
+        </div>
+    `;
 
-                $("body").append(html);
+    $("body").append(html);
 
-                let fab = $(".chatbot-fab");
-                let win = $(".chatbot-floating-window");
-                let input_container = $(".chat-input-container");
-                let input = $("#chat-input-dynamic");
-                let file_input = $("#chat-file-input-dynamic");
-                let selected_file = null;
+    let fab = $(".chatbot-fab");
+    let win = $(".chatbot-floating-window");
+    let input = $("#chat-input-dynamic");
+    let file_input = $("#chat-file-input-dynamic");
+    let selected_file = null;
 
-                // Attachment Click -> Trigger Native File Browser
-                $("#chat-attach-dynamic").on('click', () => file_input.click());
+    // Attachment Click -> Trigger Native File Browser
+    $("#chat-attach-dynamic").on('click', () => file_input.click());
 
-                file_input.on('change', function() {
-                if (this.files && this.files[0]) {
-                selected_file = this.files[0];
-                $("#chat-attachment-name").text(selected_file.name);
-                $("#chat-attachment-preview").css('display', 'flex');
+    file_input.on('change', function() {
+        if (this.files && this.files[0]) {
+            selected_file = this.files[0];
+            $("#chat-attachment-name").text(selected_file.name);
+            $("#chat-attachment-preview").css('display', 'flex');
 
-                // Show image thumbnail if file is an image
-                if (selected_file.type.startsWith('image/')) {
+            // Show image thumbnail if file is an image
+            if (selected_file.type.startsWith('image/')) {
                 let reader = new FileReader();
                 reader.onload = function(e) {
                     $("#chat-attachment-image-preview").attr('src', e.target.result);
@@ -371,113 +386,51 @@ frappe.ui.form.on("Sahayog Ticket", {
                     $("#chat-attachment-icon-fallback").hide();
                 }
                 reader.readAsDataURL(selected_file);
-                } else {
-                $("#chat-attachment-image-wrapper").hide();
-                $("#chat-attachment-icon-fallback").show();
-                }
-                input.focus();
-                }
-                });
-
-                $("#chat-attachment-clear").on('click', function() {
-                selected_file = null;
-                file_input.val('');
-                $("#chat-attachment-preview").hide();
-                $("#chat-attachment-image-preview").attr('src', '');
-                $("#chat-attachment-image-wrapper").hide();
-                $("#chat-attachment-icon-fallback").show();
-                });
-
-                // Unified FAB Action
-                fab.on('click', function() {
-                $(".chat-notification-dot").fadeOut(200); // Hide dot on click
-                if (!win.is(":visible")) {
-            // OPEN CHAT
-            win.css('display', 'flex').hide().fadeIn(200);
-            input_container.css('display', 'flex').hide().fadeIn(200);
-            frm.trigger("render_floating_chat_content");
-            input.focus();
-        } else {
-            // SEND MESSAGE
-            let message = input.val().trim();
-            if (!message && !selected_file) return;
-
-            input.prop('disabled', true);
-            fab.css('opacity', '0.5').css('pointer-events', 'none');
-
-            if (selected_file) {
-                // Silent upload using XMLHttpRequest
-                let xhr = new XMLHttpRequest();
-                let formData = new FormData();
-                formData.append("file", selected_file);
-                formData.append("doctype", frm.doctype);
-                formData.append("docname", frm.docname);
-                formData.append("is_private", 0); // Public attachment
-
-                xhr.open("POST", "/api/method/upload_file", true);
-                xhr.setRequestHeader("X-Frappe-CSRF-Token", frappe.csrf_token);
-                
-                xhr.onload = function () {
-                    if (xhr.status === 200) {
-                        if (message) {
-                            send_comment(message);
-                        } else {
-                            finalize_send();
-                        }
-                    } else {
-                        frappe.show_alert({message: __("Upload failed"), indicator: "red"});
-                        input.prop('disabled', false);
-                        fab.css('opacity', '1').css('pointer-events', 'auto');
-                    }
-                };
-
-                xhr.onerror = function () {
-                    frappe.show_alert({message: __("Network error"), indicator: "red"});
-                    input.prop('disabled', false);
-                    fab.css('opacity', '1').css('pointer-events', 'auto');
-                };
-
-                xhr.send(formData);
             } else {
-                send_comment(message);
-            }
-
-            function send_comment(content) {
-                frappe.call({
-                    method: "frappe.desk.form.utils.add_comment",
-                    args: {
-                        reference_doctype: frm.doctype, reference_name: frm.docname,
-                        content: content, comment_by: frappe.session.user, comment_email: frappe.session.user
-                    },
-                    callback: function() {
-                        finalize_send();
-                    }
-                });
-            }
-
-            function finalize_send() {
-                input.val('').prop('disabled', false).css('height', '36px');
-                fab.css('opacity', '1').css('pointer-events', 'auto');
-                selected_file = null;
-                file_input.val('');
-                $("#chat-attachment-preview").hide();
-                $("#chat-attachment-image-preview").attr('src', '');
                 $("#chat-attachment-image-wrapper").hide();
                 $("#chat-attachment-icon-fallback").show();
-                frm.trigger("render_floating_chat_content");
-                input.focus();
             }
+            input.focus();
         }
     });
 
+    $("#chat-attachment-clear").on('click', function() {
+        selected_file = null;
+        file_input.val('');
+        $("#chat-attachment-preview").hide();
+        $("#chat-attachment-image-preview").attr('src', '');
+        $("#chat-attachment-image-wrapper").hide();
+        $("#chat-attachment-icon-fallback").show();
+    });
+
+    // FAB Action -> Click to Open Chat, Hide FAB
+    fab.on('click', function() {
+        $(".chat-notification-dot").fadeOut(200); // Hide dot on click
+        fab.fadeOut(200, function() {
+            win.css('display', 'flex').hide().fadeIn(200);
+            frm.trigger("render_floating_chat_content");
+            input.focus();
+        });
+    });
+
+    // Close Button -> Hide Chat, Show FAB
     $(".chat-close-trigger").on('click', () => {
-        win.fadeOut(200);
-        input_container.fadeOut(200);
+        win.fadeOut(200, function() {
+            fab.fadeIn(200);
+        });
+    });
+
+    // Send Button Click
+    $("#chat-send-btn").on('click', function() {
+        send_chat_message();
     });
 
     // Enter to Send
     input.on('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); fab.click(); }
+        if (e.key === 'Enter' && !e.shiftKey) { 
+            e.preventDefault(); 
+            send_chat_message(); 
+        }
     });
 
     // Auto-resize Input
@@ -485,6 +438,79 @@ frappe.ui.form.on("Sahayog Ticket", {
         this.style.height = '36px';
         this.style.height = (this.scrollHeight) + 'px';
     });
+
+    // Function to send message
+    function send_chat_message() {
+        let message = input.val().trim();
+        if (!message && !selected_file) return;
+
+        let send_btn = $("#chat-send-btn");
+        input.prop('disabled', true);
+        send_btn.css('opacity', '0.5').css('pointer-events', 'none');
+
+        if (selected_file) {
+            // Silent upload using XMLHttpRequest
+            let xhr = new XMLHttpRequest();
+            let formData = new FormData();
+            formData.append("file", selected_file);
+            formData.append("doctype", frm.doctype);
+            formData.append("docname", frm.docname);
+            formData.append("is_private", 0); // Public attachment
+
+            xhr.open("POST", "/api/method/upload_file", true);
+            xhr.setRequestHeader("X-Frappe-CSRF-Token", frappe.csrf_token);
+            
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    if (message) {
+                        send_comment(message);
+                    } else {
+                        finalize_send();
+                    }
+                } else {
+                    frappe.show_alert({message: __("Upload failed"), indicator: "red"});
+                    input.prop('disabled', false);
+                    send_btn.css('opacity', '1').css('pointer-events', 'auto');
+                }
+            };
+
+            xhr.onerror = function () {
+                frappe.show_alert({message: __("Network error"), indicator: "red"});
+                input.prop('disabled', false);
+                send_btn.css('opacity', '1').css('pointer-events', 'auto');
+            };
+
+            xhr.send(formData);
+        } else {
+            send_comment(message);
+        }
+
+        function send_comment(content) {
+            frappe.call({
+                method: "frappe.desk.form.utils.add_comment",
+                args: {
+                    reference_doctype: frm.doctype, reference_name: frm.docname,
+                    content: content, comment_by: frappe.session.user, comment_email: frappe.session.user
+                },
+                callback: function() {
+                    finalize_send();
+                }
+            });
+        }
+
+        function finalize_send() {
+            input.val('').prop('disabled', false).css('height', '36px');
+            send_btn.css('opacity', '1').css('pointer-events', 'auto');
+            selected_file = null;
+            file_input.val('');
+            $("#chat-attachment-preview").hide();
+            $("#chat-attachment-image-preview").attr('src', '');
+            $("#chat-attachment-image-wrapper").hide();
+            $("#chat-attachment-icon-fallback").show();
+            frm.trigger("render_floating_chat_content");
+            input.focus();
+        }
+    }
 
     // Click Outside to Close
     $(document).on('mousedown.chat_outside', function(e) {
