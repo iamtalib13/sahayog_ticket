@@ -485,13 +485,16 @@ frappe.ui.form.on("Sahayog Ticket", {
     // Initial check on load
     check_unread_messages();
 
-    // Background poll every 30s (only when FAB visible / chat closed)
+    // Background poll every 5s
     window._chatbot_poll_timer = setInterval(function() {
-        // Only poll if chat window is NOT open
-        if (!$(".chatbot-floating-window").is(':visible')) {
+        if ($(".chatbot-floating-window").is(':visible')) {
+            // Chat is open — refresh messages
+            frm.trigger("render_floating_chat_content");
+        } else {
+            // Chat is closed — check for unread count
             check_unread_messages();
         }
-    }, 30000);
+    }, 2000);
 
     // FAB Action -> Click to Open Chat, Hide FAB
     fab.on('click', function() {
