@@ -15,6 +15,24 @@ frappe.dom.set_style(`
     #chat-history-dynamic::-webkit-scrollbar-track { background: transparent; }
     #chat-history-dynamic::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     #chat-history-dynamic::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Force white color for all content inside own message bubbles (including edited text) */
+    #chat-history-dynamic [style*="background:#04665b"] * {
+        color: white !important;
+    }
+
+    /* Notification dot bounce animation */
+    @keyframes chatbot-bounce {
+        0%, 100% { transform: translateY(0) scale(1); }
+        20%       { transform: translateY(-7px) scale(1.15); }
+        40%       { transform: translateY(-3px) scale(1); }
+        60%       { transform: translateY(-5px) scale(1.08); }
+        80%       { transform: translateY(-1px) scale(1); }
+    }
+    .chat-notification-dot.chatbot-bouncing {
+        animation: chatbot-bounce 0.9s ease-in-out infinite;
+        display: block !important;
+    }
 `, 'ticket-file-privacy-css');
 
 // --- 2. VUE INTERCEPTOR (MUTATION OBSERVER) ---
@@ -254,8 +272,12 @@ frappe.ui.form.on("Sahayog Ticket", {
   setup_floating_chatbot: function (frm) {
     if (frm.is_new()) return;
 
-    // 1. Clean existing elements
+    // 1. Clean existing elements & clear any old polling timer
     $(".chatbot-wrapper-global").remove();
+    if (window._chatbot_poll_timer) {
+        clearInterval(window._chatbot_poll_timer);
+        window._chatbot_poll_timer = null;
+    }
 
     // 2. Global Wrapper
     let html = `
@@ -287,17 +309,11 @@ frappe.ui.form.on("Sahayog Ticket", {
                     flex-direction: column; gap: 4px; background-color: #f8fafc; scroll-behavior: smooth;
                     min-height: 0; overscroll-behavior: contain;
                 "></div>
-            </div>
 
-            <!-- Bottom Row (Input + Circular FAB) -->
-            <div style="display: flex; align-items: flex-end; gap: 10px; width: 100%; justify-content: flex-end;">
-                
-                <!-- Input Container -->
+                <!-- Input Container (Inside Floating Window) -->
                 <div class="chat-input-container" style="
-                    display: none; background: white; border-radius: 24px;
-                    padding: 4px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-                    flex-grow: 1; border: 1px solid #e2e8f0; flex-direction: column;
-                    gap: 4px; max-width: 260px;
+                    display: flex; background: white; border-top: 1px solid #e2e8f0;
+                    padding: 8px 12px; flex-direction: column; gap: 4px; width: 100%;
                 ">
                     <!-- Attachment Preview -->
                     <div id="chat-attachment-preview" style="display:none; align-items:center; gap:8px; background:#f1f5f9; padding:6px 8px; border-radius:12px; border:1px solid #e2e8f0; margin-top: 4px;">
@@ -319,9 +335,31 @@ frappe.ui.form.on("Sahayog Ticket", {
                             max-height: 100px;
                         "></textarea>
                         <input type="file" id="chat-file-input-dynamic" style="display:none;">
+                        
+                        <!-- Send Button -->
+                        <button id="chat-send-btn" style="
+                            background: linear-gradient(135deg, #00b09b);
+                            border: none;
+                            color: white;
+                            width: 32px;
+                            height: 32px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: pointer;
+                            font-size: 14px;
+                            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                            flex-shrink: 0;
+                        ">
+                            <i class="fa fa-paper-plane"></i>
+                        </button>
                     </div>
                 </div>
+            </div>
 
+            <!-- Bottom Row (Circular FAB) -->
+            <div style="display: flex; align-items: flex-end; gap: 10px; width: 100%; justify-content: flex-end;">
                 <!-- Circular FAB -->
                 <div class="chatbot-fab" style="
                     position: relative;
@@ -332,38 +370,41 @@ frappe.ui.form.on("Sahayog Ticket", {
                     transition: transform 0.2s;
                 ">
                     <img src="/assets/sahayog_ticket/images/chatbot2.png" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
-                    <!-- Notification Dot -->
+                    <!-- Count Badge (hidden by default, shown only on unread msgs) -->
                     <div class="chat-notification-dot" style="
-                        position: absolute; top: 2px; right: 2px;
-                        width: 10px; height: 10px; background: #ff4d4f;
-                        border-radius: 50%; border: 1.5px solid white;
-                        display: block;
+                        position: absolute; top: -5px; right: -5px;
+                        min-width: 18px; height: 18px;
+                        background: #ff4d4f;
+                        border-radius: 9px; border: 2px solid white;
+                        display: none; align-items: center; justify-content: center;
+                        font-size: 10px; font-weight: 700; color: white;
+                        padding: 0 4px; line-height: 1;
+                        font-family: 'Inter', sans-serif;
                     "></div>
                 </div>
-                </div>
-                </div>
-                `;
+            </div>
+        </div>
+    `;
 
-                $("body").append(html);
+    $("body").append(html);
 
-                let fab = $(".chatbot-fab");
-                let win = $(".chatbot-floating-window");
-                let input_container = $(".chat-input-container");
-                let input = $("#chat-input-dynamic");
-                let file_input = $("#chat-file-input-dynamic");
-                let selected_file = null;
+    let fab = $(".chatbot-fab");
+    let win = $(".chatbot-floating-window");
+    let input = $("#chat-input-dynamic");
+    let file_input = $("#chat-file-input-dynamic");
+    let selected_file = null;
 
-                // Attachment Click -> Trigger Native File Browser
-                $("#chat-attach-dynamic").on('click', () => file_input.click());
+    // Attachment Click -> Trigger Native File Browser
+    $("#chat-attach-dynamic").on('click', () => file_input.click());
 
-                file_input.on('change', function() {
-                if (this.files && this.files[0]) {
-                selected_file = this.files[0];
-                $("#chat-attachment-name").text(selected_file.name);
-                $("#chat-attachment-preview").css('display', 'flex');
+    file_input.on('change', function() {
+        if (this.files && this.files[0]) {
+            selected_file = this.files[0];
+            $("#chat-attachment-name").text(selected_file.name);
+            $("#chat-attachment-preview").css('display', 'flex');
 
-                // Show image thumbnail if file is an image
-                if (selected_file.type.startsWith('image/')) {
+            // Show image thumbnail if file is an image
+            if (selected_file.type.startsWith('image/')) {
                 let reader = new FileReader();
                 reader.onload = function(e) {
                     $("#chat-attachment-image-preview").attr('src', e.target.result);
@@ -371,113 +412,123 @@ frappe.ui.form.on("Sahayog Ticket", {
                     $("#chat-attachment-icon-fallback").hide();
                 }
                 reader.readAsDataURL(selected_file);
-                } else {
-                $("#chat-attachment-image-wrapper").hide();
-                $("#chat-attachment-icon-fallback").show();
-                }
-                input.focus();
-                }
-                });
-
-                $("#chat-attachment-clear").on('click', function() {
-                selected_file = null;
-                file_input.val('');
-                $("#chat-attachment-preview").hide();
-                $("#chat-attachment-image-preview").attr('src', '');
-                $("#chat-attachment-image-wrapper").hide();
-                $("#chat-attachment-icon-fallback").show();
-                });
-
-                // Unified FAB Action
-                fab.on('click', function() {
-                $(".chat-notification-dot").fadeOut(200); // Hide dot on click
-                if (!win.is(":visible")) {
-            // OPEN CHAT
-            win.css('display', 'flex').hide().fadeIn(200);
-            input_container.css('display', 'flex').hide().fadeIn(200);
-            frm.trigger("render_floating_chat_content");
-            input.focus();
-        } else {
-            // SEND MESSAGE
-            let message = input.val().trim();
-            if (!message && !selected_file) return;
-
-            input.prop('disabled', true);
-            fab.css('opacity', '0.5').css('pointer-events', 'none');
-
-            if (selected_file) {
-                // Silent upload using XMLHttpRequest
-                let xhr = new XMLHttpRequest();
-                let formData = new FormData();
-                formData.append("file", selected_file);
-                formData.append("doctype", frm.doctype);
-                formData.append("docname", frm.docname);
-                formData.append("is_private", 0); // Public attachment
-
-                xhr.open("POST", "/api/method/upload_file", true);
-                xhr.setRequestHeader("X-Frappe-CSRF-Token", frappe.csrf_token);
-                
-                xhr.onload = function () {
-                    if (xhr.status === 200) {
-                        if (message) {
-                            send_comment(message);
-                        } else {
-                            finalize_send();
-                        }
-                    } else {
-                        frappe.show_alert({message: __("Upload failed"), indicator: "red"});
-                        input.prop('disabled', false);
-                        fab.css('opacity', '1').css('pointer-events', 'auto');
-                    }
-                };
-
-                xhr.onerror = function () {
-                    frappe.show_alert({message: __("Network error"), indicator: "red"});
-                    input.prop('disabled', false);
-                    fab.css('opacity', '1').css('pointer-events', 'auto');
-                };
-
-                xhr.send(formData);
             } else {
-                send_comment(message);
-            }
-
-            function send_comment(content) {
-                frappe.call({
-                    method: "frappe.desk.form.utils.add_comment",
-                    args: {
-                        reference_doctype: frm.doctype, reference_name: frm.docname,
-                        content: content, comment_by: frappe.session.user, comment_email: frappe.session.user
-                    },
-                    callback: function() {
-                        finalize_send();
-                    }
-                });
-            }
-
-            function finalize_send() {
-                input.val('').prop('disabled', false).css('height', '36px');
-                fab.css('opacity', '1').css('pointer-events', 'auto');
-                selected_file = null;
-                file_input.val('');
-                $("#chat-attachment-preview").hide();
-                $("#chat-attachment-image-preview").attr('src', '');
                 $("#chat-attachment-image-wrapper").hide();
                 $("#chat-attachment-icon-fallback").show();
-                frm.trigger("render_floating_chat_content");
-                input.focus();
             }
+            input.focus();
         }
     });
 
+    $("#chat-attachment-clear").on('click', function() {
+        selected_file = null;
+        file_input.val('');
+        $("#chat-attachment-preview").hide();
+        $("#chat-attachment-image-preview").attr('src', '');
+        $("#chat-attachment-image-wrapper").hide();
+        $("#chat-attachment-icon-fallback").show();
+    });
+
+    // --- Notification Helpers ---
+    const _ticket_seen_key = () => `chatbot_last_seen_${frm.docname}`;
+
+    function mark_messages_seen() {
+        // Store current UTC timestamp as last-seen for this ticket (local)
+        localStorage.setItem(_ticket_seen_key(), new Date().toISOString());
+        // Remove bounce and hide dot
+        $(".chat-notification-dot").removeClass('chatbot-bouncing').fadeOut(200);
+        // Also persist seen time on server (for WhatsApp tick rendering)
+        frappe.call({
+            method: "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.chat_utils.mark_ticket_chat_seen",
+            args: { docname: frm.docname },
+            freeze: false
+        });
+    }
+
+    function check_unread_messages() {
+        // Fetch ALL comments from others to count unread ones
+        frappe.call({
+            method: "frappe.client.get_list",
+            args: {
+                doctype: "Comment",
+                filters: {
+                    reference_doctype: frm.doctype,
+                    reference_name: frm.docname,
+                    comment_type: ["in", ["Comment", "Attachment"]],
+                    owner: ["!=", frappe.session.user]
+                },
+                fields: ["creation"],
+                order_by: "creation desc",
+                limit_page_length: 100
+            },
+            callback: function(r) {
+                let dot = $(".chat-notification-dot");
+                if (r.message && r.message.length > 0) {
+                    let last_seen = localStorage.getItem(_ticket_seen_key());
+                    // Count how many messages are newer than last_seen
+                    let unread_count = last_seen
+                        ? r.message.filter(c => new Date(c.creation) > new Date(last_seen)).length
+                        : r.message.length;
+
+                    if (unread_count > 0) {
+                        // Show badge with count + bounce
+                        dot.text(unread_count > 99 ? '99+' : unread_count);
+                        dot.css('display', 'flex').addClass('chatbot-bouncing');
+                    } else {
+                        dot.removeClass('chatbot-bouncing');
+                        if (dot.is(':visible')) dot.fadeOut(200);
+                    }
+                } else {
+                    // No messages from others at all
+                    dot.removeClass('chatbot-bouncing');
+                    if (dot.is(':visible')) dot.fadeOut(200);
+                }
+            }
+        });
+    }
+
+    // Initial check on load
+    check_unread_messages();
+
+    // Background poll every 5s
+    window._chatbot_poll_timer = setInterval(function() {
+        if ($(".chatbot-floating-window").is(':visible')) {
+            // Chat is open — refresh messages
+            frm.trigger("render_floating_chat_content");
+        } else {
+            // Chat is closed — check for unread count
+            check_unread_messages();
+        }
+    }, 2000);
+
+    // FAB Action -> Click to Open Chat, Hide FAB
+    fab.on('click', function() {
+        mark_messages_seen(); // Mark as seen when opening
+        fab.fadeOut(200, function() {
+            win.css('display', 'flex').hide().fadeIn(200);
+            frm.trigger("render_floating_chat_content");
+            input.focus();
+        });
+    });
+
+    // Close Button -> Hide Chat, Show FAB
     $(".chat-close-trigger").on('click', () => {
-        win.fadeOut(200);
-        input_container.fadeOut(200);
+        win.fadeOut(200, function() {
+            fab.fadeIn(200);
+        });
+    });
+
+    // Send Button Click
+    $("#chat-send-btn").on('click', function() {
+        send_chat_message();
     });
 
     // Enter to Send
     input.on('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); fab.click(); }
+        if (e.key === 'Enter' && !e.shiftKey) { 
+            e.preventDefault(); 
+            send_chat_message(); 
+        }
     });
 
     // Auto-resize Input
@@ -485,6 +536,81 @@ frappe.ui.form.on("Sahayog Ticket", {
         this.style.height = '36px';
         this.style.height = (this.scrollHeight) + 'px';
     });
+
+    // Function to send message
+    function send_chat_message() {
+        let message = input.val().trim();
+        if (!message && !selected_file) return;
+
+        let send_btn = $("#chat-send-btn");
+        input.prop('disabled', true);
+        send_btn.css('opacity', '0.5').css('pointer-events', 'none');
+
+        if (selected_file) {
+            // Silent upload using XMLHttpRequest
+            let xhr = new XMLHttpRequest();
+            let formData = new FormData();
+            formData.append("file", selected_file);
+            formData.append("doctype", frm.doctype);
+            formData.append("docname", frm.docname);
+            formData.append("is_private", 0); // Public attachment
+
+            xhr.open("POST", "/api/method/upload_file", true);
+            xhr.setRequestHeader("X-Frappe-CSRF-Token", frappe.csrf_token);
+            
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    if (message) {
+                        send_comment(message);
+                    } else {
+                        finalize_send();
+                    }
+                } else {
+                    frappe.show_alert({message: __("Upload failed"), indicator: "red"});
+                    input.prop('disabled', false);
+                    send_btn.css('opacity', '1').css('pointer-events', 'auto');
+                }
+            };
+
+            xhr.onerror = function () {
+                frappe.show_alert({message: __("Network error"), indicator: "red"});
+                input.prop('disabled', false);
+                send_btn.css('opacity', '1').css('pointer-events', 'auto');
+            };
+
+            xhr.send(formData);
+        } else {
+            send_comment(message);
+        }
+
+        function send_comment(content) {
+            frappe.call({
+                method: "frappe.desk.form.utils.add_comment",
+                args: {
+                    reference_doctype: frm.doctype, reference_name: frm.docname,
+                    content: content, comment_by: frappe.session.user, comment_email: frappe.session.user
+                },
+                callback: function() {
+                    finalize_send();
+                }
+            });
+        }
+
+        function finalize_send() {
+            input.val('').prop('disabled', false).css('height', '36px');
+            send_btn.css('opacity', '1').css('pointer-events', 'auto');
+            selected_file = null;
+            file_input.val('');
+            $("#chat-attachment-preview").hide();
+            $("#chat-attachment-image-preview").attr('src', '');
+            $("#chat-attachment-image-wrapper").hide();
+            $("#chat-attachment-icon-fallback").show();
+            // User is active in chat — mark as seen so dot stays hidden
+            localStorage.setItem(`chatbot_last_seen_${frm.docname}`, new Date().toISOString());
+            frm.trigger("render_floating_chat_content");
+            input.focus();
+        }
+    }
 
     // Click Outside to Close
     $(document).on('mousedown.chat_outside', function(e) {
@@ -503,6 +629,10 @@ frappe.ui.form.on("Sahayog Ticket", {
         if (frappe.get_route()[0] !== 'Form' || frappe.get_route()[1] !== 'Sahayog Ticket') {
             $(".chatbot-wrapper-global").remove();
             $(document).off('mousedown.chat_outside');
+            if (window._chatbot_poll_timer) {
+                clearInterval(window._chatbot_poll_timer);
+                window._chatbot_poll_timer = null;
+            }
         }
     });
   },
@@ -516,6 +646,7 @@ frappe.ui.form.on("Sahayog Ticket", {
         filters: { reference_doctype: frm.doctype, reference_name: frm.docname, comment_type: ["in", ["Comment", "Attachment", "Info"]] },
         fields: ["content", "owner", "creation", "comment_by", "comment_type"],
         order_by: "creation asc",
+        limit_page_length: 0  // Fetch all comments
       },
       callback: function (r) {
         let history = [];
@@ -598,6 +729,19 @@ frappe.ui.form.on("Sahayog Ticket", {
         }
         history.sort((a, b) => new Date(a.date) - new Date(b.date));
 
+        // Helper: fetch seen_map then render
+        function fetch_seen_and_render(history, emp_map) {
+          frappe.call({
+            method: "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.chat_utils.get_ticket_chat_seen",
+            args: { docname: frm.docname },
+            freeze: false,
+            callback: function(seen_res) {
+              let seen_map = seen_res.message || {};
+              render_history(history, emp_map, seen_map);
+            }
+          });
+        }
+
         // Fetch Employee details for senders
         if (senders.size > 0) {
           frappe.call({
@@ -612,14 +756,15 @@ frappe.ui.form.on("Sahayog Ticket", {
               (res.message || []).forEach(e => {
                 emp_map[e.user_id] = { name: e.employee_name, id: e.employee_number || e.name };
               });
-              render_history(history, emp_map);
+              fetch_seen_and_render(history, emp_map);
             }
           });
         } else {
-          render_history(history, {});
+          fetch_seen_and_render(history, {});
         }
 
-        function render_history(history, emp_map) {
+        function render_history(history, emp_map, seen_map) {
+          seen_map = seen_map || {};
           chat_history.empty();
           if (history.length === 0) chat_history.append('<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:10px;">No messages.</p>');
           let last_sender = null;
@@ -657,16 +802,34 @@ frappe.ui.form.on("Sahayog Ticket", {
                 }
               }
 
+              // --- WhatsApp-style seen tick (only on current user's messages) ---
+              let tick_html = '';
+              if (is_me) {
+                let msg_time = new Date(item.date);
+                // Check if any OTHER user has a seen_time AFTER this message was created
+                let is_seen_by_other = Object.entries(seen_map).some(([u, seen_time]) => {
+                  return u !== frappe.session.user && new Date(seen_time) >= msg_time;
+                });
+                let tick_color  = is_seen_by_other ? '#2ae9f7' : 'rgba(255,255,255,0.92)';
+                let tick_symbol = is_seen_by_other
+                  ? '&#10003;&#10003;'   // ✓✓ double tick (seen)
+                  : '&#10003;';          // ✓  single tick (sent)
+                tick_html = `<span style="font-size:10px; color:${tick_color}; letter-spacing:-1.5px; line-height:1;">${tick_symbol}</span>`;
+              }
+
               chat_history.append(`
                   <div style="display:flex; gap:6px; flex-direction:${is_me ? 'row-reverse' : 'row'}; align-self:${is_me ? 'flex-end' : 'flex-start'}; max-width:90%; ${!show_sender ? 'margin-top:-2px;' : ''}">
                       <div style="display:flex; flex-direction:column; align-items:${is_me ? 'flex-end' : 'flex-start'};">
                           ${show_sender ? `<div style="font-size:9px; font-weight:600; color:#64748b; margin:0 4px 1px 4px;">${display_name}</div>` : ''}
-                          <div style="background:${is_me ? '#00b09b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'}; min-width: 60px;">
-                              <div style="display:flex; flex-direction:column; gap:2px;">
-                                  <div style="word-break:break-word;">${item.content}</div>
-                                  <div style="font-size:8px; opacity:0.7; font-weight:500; white-space:nowrap; align-self:flex-end; margin-top: 2px;">${time}</div>
-                              </div>
-                          </div>
+                           <div style="background:${is_me ? '#04665b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'}; min-width: 60px;">
+                               <div style="word-break:break-word;">
+                                   ${item.content}
+                                   <span style="display:inline-flex; align-items:center; float:right; margin-left:6px; margin-top:4px; gap:2px; white-space:nowrap;">
+                                       <span style="font-size:8px; opacity:0.7; font-weight:500;">${time}</span>
+                                       ${tick_html}
+                                   </span>
+                               </div>
+                           </div>
                       </div>
                   </div>
               `);
