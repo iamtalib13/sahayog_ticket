@@ -16,6 +16,11 @@ frappe.dom.set_style(`
     #chat-history-dynamic::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     #chat-history-dynamic::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
+    /* Force white color for all content inside own message bubbles (including edited text) */
+    #chat-history-dynamic [style*="background:#04665b"] * {
+        color: white !important;
+    }
+
     /* Notification dot bounce animation */
     @keyframes chatbot-bounce {
         0%, 100% { transform: translateY(0) scale(1); }
