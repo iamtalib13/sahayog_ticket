@@ -506,6 +506,8 @@ frappe.ui.form.on("Sahayog Ticket", {
         mark_messages_seen(); // Mark as seen when opening
         fab.fadeOut(200, function() {
             win.css('display', 'flex').hide().fadeIn(200);
+            // Force scroll to bottom on open
+            setTimeout(() => chat_history.scrollTop(999999), 300);
             frm.trigger("render_floating_chat_content");
             input.focus();
         });
@@ -639,6 +641,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
   render_floating_chat_content: function (frm) {
     let chat_history = $("#chat-history-dynamic");
+    
     frappe.call({
       method: "frappe.client.get_list",
       args: {
@@ -649,6 +652,12 @@ frappe.ui.form.on("Sahayog Ticket", {
         limit_page_length: 0  // Fetch all comments
       },
       callback: function (r) {
+        // Skip re-render if message count hasn't changed
+        if (frm._last_chat_count && r.message && r.message.length === frm._last_chat_count) {
+          return;
+        }
+        if (r.message) frm._last_chat_count = r.message.length;
+        
         let history = [];
         let senders = new Set();
         if (r.message) {
@@ -764,7 +773,9 @@ frappe.ui.form.on("Sahayog Ticket", {
         }
 
         function render_history(history, emp_map, seen_map) {
+          console.log('🔄 render_history called', new Date().toISOString());
           seen_map = seen_map || {};
+          
           chat_history.empty();
           if (history.length === 0) chat_history.append('<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:10px;">No messages.</p>');
           let last_sender = null;
@@ -836,6 +847,7 @@ frappe.ui.form.on("Sahayog Ticket", {
             }
           });
           setTimeout(() => {
+            // Always scroll to bottom (WhatsApp behavior - new messages priority)
             chat_history.scrollTop(chat_history[0].scrollHeight);
           }, 100);
         }
