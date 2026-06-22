@@ -506,6 +506,8 @@ frappe.ui.form.on("Sahayog Ticket", {
         mark_messages_seen(); // Mark as seen when opening
         fab.fadeOut(200, function() {
             win.css('display', 'flex').hide().fadeIn(200);
+            // Force scroll to bottom on open
+            setTimeout(() => chat_history.scrollTop(999999), 300);
             frm.trigger("render_floating_chat_content");
             input.focus();
         });
@@ -639,6 +641,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
   render_floating_chat_content: function (frm) {
     let chat_history = $("#chat-history-dynamic");
+    
     frappe.call({
       method: "frappe.client.get_list",
       args: {
@@ -649,6 +652,12 @@ frappe.ui.form.on("Sahayog Ticket", {
         limit_page_length: 0  // Fetch all comments
       },
       callback: function (r) {
+        // Skip re-render if message count hasn't changed
+        if (frm._last_chat_count && r.message && r.message.length === frm._last_chat_count) {
+          return;
+        }
+        if (r.message) frm._last_chat_count = r.message.length;
+        
         let history = [];
         let senders = new Set();
         if (r.message) {
@@ -666,6 +675,14 @@ frappe.ui.form.on("Sahayog Ticket", {
               if (file_url) {
                   let filename = decodeURIComponent(file_url.split("/").pop().split("?")[0]);
                   let file_ext = filename.split('.').pop().toLowerCase();
+                  
+                  // Truncate long filename (keep first 20 chars + ... + extension)
+                  let display_name = filename;
+                  if (filename.length > 30) {
+                    let name_without_ext = filename.substring(0, filename.lastIndexOf('.'));
+                    display_name = name_without_ext.substring(0, 20) + '...' + file_ext;
+                  }
+                  
                   let image_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
                   
                   if (image_exts.includes(file_ext)) {
@@ -684,13 +701,13 @@ frappe.ui.form.on("Sahayog Ticket", {
                       else if (['xls', 'xlsx'].includes(file_ext)) { icon = "fa-file-excel-o"; icon_color = "#16a34a"; }
                       else if (['zip', 'rar', '7z'].includes(file_ext)) { icon = "fa-file-archive-o"; icon_color = "#7c3aed"; }
 
-                      content = `<div style="display:flex; align-items:center; gap:10px; padding:10px; background: rgba(0,0,0,0.03); border-radius:10px; border: 1px solid rgba(0,0,0,0.05); margin: 4px 0;">
+                      content = `<div style="display:flex; align-items:center; gap:8px; padding:6px; background: rgba(0,0,0,0.03); border-radius:10px; border: 1px solid rgba(0,0,0,0.05); margin: 4px 0;">
                                     <div style="width: 36px; height: 36px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: ${icon_color}; font-size: 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
                                         <i class="fa ${icon}"></i>
                                     </div>
                                     <div style="flex:1; overflow: hidden;">
-                                        <a href="${file_url}" target="_blank" style="font-weight: 600; color: #1e293b; font-size: 12px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none;">
-                                            ${filename}
+                                        <a href="${file_url}" target="_blank" style="font-weight: 600; color: #1e293b; font-size: 12px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none;" title="${filename}">
+                                            ${display_name}
                                         </a>
                                         <div style="display: flex; gap: 6px; align-items: center; margin-top: 2px;">
                                             <span style="font-size: 9px; color: #64748b; text-transform: uppercase; font-weight: 700;">${file_ext}</span>
@@ -764,7 +781,9 @@ frappe.ui.form.on("Sahayog Ticket", {
         }
 
         function render_history(history, emp_map, seen_map) {
+          console.log('🔄 render_history called', new Date().toISOString());
           seen_map = seen_map || {};
+          
           chat_history.empty();
           if (history.length === 0) chat_history.append('<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:10px;">No messages.</p>');
           let last_sender = null;
@@ -836,6 +855,7 @@ frappe.ui.form.on("Sahayog Ticket", {
             }
           });
           setTimeout(() => {
+            // Always scroll to bottom (WhatsApp behavior - new messages priority)
             chat_history.scrollTop(chat_history[0].scrollHeight);
           }, 100);
         }
