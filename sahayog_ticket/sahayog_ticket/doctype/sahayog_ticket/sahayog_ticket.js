@@ -288,9 +288,9 @@ frappe.ui.form.on("Sahayog Ticket", {
         ">
             <!-- Floating History Window -->
             <div class="chatbot-floating-window" style="
-                width: 320px; height: 380px; background: white; border-radius: 16px;
+                width: 320px; height: 380px; background: var(--card-bg,white); border-radius: 16px;
                 box-shadow: 0 12px 28px rgba(0,0,0,0.12); margin-bottom: 12px;
-                display: none; flex-direction: column; overflow: hidden; border: 1px solid #cbced1;
+                display: none; flex-direction: column; overflow: hidden; border: 1px solid var(--border-color,#cbced1);
             ">
                 <div class="chat-header" style="
                     padding: 10px 15px; background: linear-gradient(135deg, #00b09b);
@@ -306,31 +306,31 @@ frappe.ui.form.on("Sahayog Ticket", {
                 
                 <div id="chat-history-dynamic" style="
                     flex-grow: 1; overflow-y: auto; padding: 12px; display: flex;
-                    flex-direction: column; gap: 4px; background-color: #f8fafc; scroll-behavior: smooth;
+                    flex-direction: column; gap: 4px; background-color: var(--bg-color,#f8fafc); scroll-behavior: smooth;
                     min-height: 0; overscroll-behavior: contain;
                 "></div>
 
                 <!-- Input Container (Inside Floating Window) -->
                 <div class="chat-input-container" style="
-                    display: flex; background: white; border-top: 1px solid #e2e8f0;
+                    display: flex; background: var(--card-bg,white); border-top: 1px solid var(--border-color,#e2e8f0);
                     padding: 8px 12px; flex-direction: column; gap: 4px; width: 100%;
                 ">
                     <!-- Attachment Preview -->
-                    <div id="chat-attachment-preview" style="display:none; align-items:center; gap:8px; background:#f1f5f9; padding:6px 8px; border-radius:12px; border:1px solid #e2e8f0; margin-top: 4px;">
+                    <div id="chat-attachment-preview" style="display:none; align-items:center; gap:8px; background:var(--control-bg,#f1f5f9); padding:6px 8px; border-radius:12px; border:1px solid var(--border-color,#e2e8f0); margin-top: 4px;">
                         <div id="chat-attachment-image-wrapper" style="display:none; width:36px; height:36px; flex-shrink:0;">
-                            <img id="chat-attachment-image-preview" style="width:100%; height:100%; object-fit:cover; border-radius:4px; border:1px solid #cbd5e1;" />
+                            <img id="chat-attachment-image-preview" style="width:100%; height:100%; object-fit:cover; border-radius:4px; border:1px solid var(--border-color,#cbd5e1);" />
                         </div>
-                        <i id="chat-attachment-icon-fallback" class="fa fa-paperclip" style="color:#64748b; font-size:12px;"></i>
-                        <span id="chat-attachment-name" style="flex-grow:1; font-size:11px; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></span>
-                        <i class="fa fa-times" id="chat-attachment-clear" style="cursor:pointer; color:#94a3b8; font-size:12px;"></i>
+                        <i id="chat-attachment-icon-fallback" class="fa fa-paperclip" style="color:var(--text-muted,#64748b); font-size:12px;"></i>
+                        <span id="chat-attachment-name" style="flex-grow:1; font-size:11px; color:var(--text-color,#1e293b); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></span>
+                        <i class="fa fa-times" id="chat-attachment-clear" style="cursor:pointer; color:var(--text-muted,#94a3b8); font-size:12px;"></i>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:8px; width: 100%;">
-                        <button id="chat-attach-dynamic" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 0;">
+                        <button id="chat-attach-dynamic" style="background: none; border: none; color: var(--text-muted,#94a3b8); font-size: 18px; cursor: pointer; padding: 0;">
                             <i class="fa fa-paperclip"></i>
                         </button>
                         <textarea id="chat-input-dynamic" placeholder="Type a message..." style="
-                            flex-grow: 1; border: none; padding: 8px 0; font-size: 13px;
+                            flex-grow: 1; border: none; padding: 8px 0; font-size: 13px; color: var(--text-color,inherit);
                             outline: none; resize: none; height: 36px; background: transparent;
                             max-height: 100px;
                         "></textarea>
@@ -499,7 +499,7 @@ frappe.ui.form.on("Sahayog Ticket", {
             // Chat is closed — check for unread count
             check_unread_messages();
         }
-    }, 2000);
+    }, 5000);
 
     // FAB Action -> Click to Open Chat, Hide FAB
     fab.on('click', function() {
@@ -720,6 +720,20 @@ frappe.ui.form.on("Sahayog Ticket", {
               }
             }
             let sender = c.comment_by || c.owner;
+            
+            // Parse Info type for Re-open status
+            if (c.comment_type === "Info" && content.includes("Re-open Remark")) {
+              let reopenMatch = content.match(/Ticket Status from (\w+) to (\w+)/);
+              let remarkMatch = content.match(/Re-open Remark from .*? to (.+?)(?:,|·|$)/s);
+              
+              if (reopenMatch && remarkMatch) {
+                let fromStatus = reopenMatch[1];
+                let toStatus = reopenMatch[2];
+                let remark = remarkMatch[1].replace(/\.+$/, '').trim(); // Remove trailing dots
+                content = `<b>Status Re-opened:</b> ${fromStatus} → ${toStatus}<br><b>Remark:</b> ${remark}`;
+              }
+            }
+            
             history.push({ 
               type: c.comment_type, 
               content: content, 
@@ -733,9 +747,25 @@ frappe.ui.form.on("Sahayog Ticket", {
         if (frm.doc.status_log) {
           frm.doc.status_log.forEach((log) => {
             if (log.status_remark) {
+              let statusMsg = `<b>Status Changed:</b> ${log.from_status} → ${log.to_status}`;
+              
+              // Get actual remark from parent doc based on status type
+              let actualRemark = '';
+              if (log.to_status === 'In-Progress' && frm.doc.executive_remark) {
+                actualRemark = frm.doc.executive_remark;
+              } else if (log.to_status === 'Resolved' && frm.doc.resolved_remark) {
+                actualRemark = frm.doc.resolved_remark;
+              } else if (log.to_status === 'Open' && log.from_status === 'Resolved' && frm.doc.reopen_remark) {
+                actualRemark = frm.doc.reopen_remark;
+              }
+              
+              if (actualRemark) {
+                statusMsg += `<br><b>Remark:</b> ${actualRemark}`;
+              }
+              
               history.push({ 
                 type: "Status", 
-                content: `Status: ${log.from_status} to ${log.to_status}`, 
+                content: statusMsg, 
                 by: log.status_change_by, 
                 date: log.status_change_on, 
                 is_system: true 
@@ -785,7 +815,7 @@ frappe.ui.form.on("Sahayog Ticket", {
           seen_map = seen_map || {};
           
           chat_history.empty();
-          if (history.length === 0) chat_history.append('<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:10px;">No messages.</p>');
+          if (history.length === 0) chat_history.append('<p style="text-align:center; color:var(--text-muted,#94a3b8); font-size:11px; margin-top:10px;">No messages.</p>');
           let last_sender = null;
           history.forEach((item) => {
             let is_me = item.by === frappe.session.user;
@@ -803,7 +833,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                   system_user = name ? ` by ${name}` : '';
                 }
               }
-              chat_history.append(`<div style="align-self:center; background:#eef2f6; color:#64748b; padding:4px 10px; border-radius:15px; font-size:10px; text-align:center; max-width:90%; margin:2px 0; border:1px solid #dfe5ec;">${item.content}${system_user} ${time}</div>`);
+              chat_history.append(`<div style="align-self:center; background:var(--control-bg,#eef2f6); color:var(--text-muted,#64748b); padding:6px 12px; border-radius:12px; font-size:10px; text-align:left; max-width:85%; margin:4px 0; border:1px solid var(--border-color,#dfe5ec); word-wrap:break-word; white-space:normal;">${item.content}${system_user} ${time}</div>`);
               last_sender = null;
             } else {
               let show_sender = item.by !== last_sender;
@@ -839,8 +869,8 @@ frappe.ui.form.on("Sahayog Ticket", {
               chat_history.append(`
                   <div style="display:flex; gap:6px; flex-direction:${is_me ? 'row-reverse' : 'row'}; align-self:${is_me ? 'flex-end' : 'flex-start'}; max-width:90%; ${!show_sender ? 'margin-top:-2px;' : ''}">
                       <div style="display:flex; flex-direction:column; align-items:${is_me ? 'flex-end' : 'flex-start'};">
-                          ${show_sender ? `<div style="font-size:9px; font-weight:600; color:#64748b; margin:0 4px 1px 4px;">${display_name}</div>` : ''}
-                           <div style="background:${is_me ? '#04665b' : 'white'}; color:${is_me ? 'white' : '#1e293b'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid #e2e8f0'}; min-width: 60px;">
+                          ${show_sender ? `<div style="font-size:9px; font-weight:600; color:var(--text-muted,#64748b); margin:0 4px 1px 4px;">${display_name}</div>` : ''}
+                           <div style="background:${is_me ? '#04665b' : 'var(--card-bg,white)'}; color:${is_me ? 'white' : 'var(--text-color,#1e293b)'}; padding:4px 8px; border-radius:${is_me ? '10px 10px 2px 10px' : '10px 10px 10px 2px'}; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:11px; line-height:1.4; border:${is_me ? 'none' : '1px solid var(--border-color,#e2e8f0)'}; min-width: 60px;">
                                <div style="word-break:break-word;">
                                    ${item.content}
                                    <span style="display:inline-flex; align-items:center; float:right; margin-left:6px; margin-top:4px; gap:2px; white-space:nowrap;">
@@ -1926,7 +1956,7 @@ function render_safe_intro_always_visible(frm) {
         // ✅ YOUR EXACT SAME DESIGN
         const intro_html = `
           <div id="custom-ticket-intro" style="margin:20px 0">
-            <div style="display:flex;align-items:center;padding:15px;background:#ededed;border-radius:8px;color:#006767">
+            <div style="display:flex;align-items:center;padding:15px;background:var(--card-bg,#ededed);border-radius:8px;color:#006767;border:1px solid var(--border-color,#d3d3d3)">
               <img src="/assets/sahayog_ticket/images/profile.png"
                   style="width:60px;height:60px;border-radius:50%;margin-right:15px" />
               <div>
@@ -1940,7 +1970,7 @@ function render_safe_intro_always_visible(frm) {
               </div>
             </div>
 
-            <div style="margin-top:1px;border:1px solid #d3d3d3;padding:10px;border-radius:6px;background:#ededed;font-family:Courier New">
+            <div style="margin-top:1px;border:1px solid var(--border-color,#d3d3d3);padding:10px;border-radius:6px;background:var(--card-bg,#ededed);font-family:Courier New">
               <div style="display:flex;flex-wrap:wrap;gap:20px;font-size:13px">
                 <div><strong>Request To:</strong> ${ticket_department}</div>
                 <div><strong>Issue:</strong> ${ticket_type}</div>
@@ -1948,7 +1978,7 @@ function render_safe_intro_always_visible(frm) {
               </div>
               <div style="margin-top:8px">
                 <strong>${ticket_assigned_label}</strong> 
-                <span style="background:rgba(0,103,103,0.1);padding:4px 8px;border-radius:4px">${ticket_assigned_to}</span>
+                <span style="background:var(--control-bg,rgba(0,103,103,0.1));padding:4px 8px;border-radius:4px">${ticket_assigned_to}</span>
               </div>
             </div>
           </div>
@@ -1999,7 +2029,7 @@ function render_safe_intro_fallback(frm) {
 
   const intro_html = `
     <div id="custom-ticket-intro" style="margin:20px 0">
-      <div style="display:flex;align-items:center;padding:15px;background:#ededed;border-radius:8px;color:#006767">
+      <div style="display:flex;align-items:center;padding:15px;background:var(--card-bg,#ededed);border-radius:8px;color:#006767;border:1px solid var(--border-color,#d3d3d3)">
         <img src="/assets/sahayog_ticket/images/profile.png"
             style="width:60px;height:60px;border-radius:50%;margin-right:15px" />
         <div>
@@ -2012,7 +2042,7 @@ function render_safe_intro_fallback(frm) {
           </div>
         </div>
       </div>
-      <div style="margin-top:1px;border:1px solid #d3d3d3;padding:10px;border-radius:6px;background:#ededed;font-family:Courier New">
+      <div style="margin-top:1px;border:1px solid var(--border-color,#d3d3d3);padding:10px;border-radius:6px;background:var(--card-bg,#ededed);font-family:Courier New">
         <div style="display:flex;flex-wrap:wrap;gap:20px;font-size:13px">
           <div><strong>Request To:</strong> ${ticket_department}</div>
           <div><strong>Issue:</strong> ${ticket_type}</div>
@@ -2020,7 +2050,7 @@ function render_safe_intro_fallback(frm) {
         </div>
         <div style="margin-top:8px">
           <strong>${ticket_assigned_label}</strong> 
-          <span style="background:rgba(0,103,103,0.1);padding:4px 8px;border-radius:4px">${ticket_assigned_to}</span>
+          <span style="background:var(--control-bg,rgba(0,103,103,0.1));padding:4px 8px;border-radius:4px">${ticket_assigned_to}</span>
         </div>
       </div>
     </div>

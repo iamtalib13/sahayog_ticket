@@ -16,8 +16,6 @@ def get_columns():
     return [
         {"label": "Creation Date", "fieldname": "creation_date", "fieldtype": "Date", "width": 120},
         {"label": "Creation Time", "fieldname": "creation_time", "fieldtype": "Time", "width": 120},
-        {"label": "Resolved Date", "fieldname": "resolved_date", "fieldtype": "Date", "width": 120},
-        {"label": "Resolved Time", "fieldname": "resolved_time", "fieldtype": "Time", "width": 120},
         {"label": "Ticket", "fieldname": "ticket", "fieldtype": "Link", "options": "Sahayog Ticket", "width": 130},
         {"label": "Request Type", "fieldname": "request_type", "fieldtype": "Data", "width": 200},
         {"label": "Status", "fieldname": "status", "fieldtype": "Data", "width": 100},
@@ -37,6 +35,8 @@ def get_columns():
         # New Columns added as per request
         {"label": "Ticket Cycle", "fieldname": "ticket_cycle", "fieldtype": "Int", "width": 150},
         {"label": "Resolved By", "fieldname": "resolved_by", "fieldtype": "Data", "width": 150},
+        {"label": "Resolved Date", "fieldname": "resolved_date", "fieldtype": "Date", "width": 120},
+        {"label": "Resolved Time", "fieldname": "resolved_time", "fieldtype": "Time", "width": 120},
         {"label": "Remark", "fieldname": "remark", "fieldtype": "Small Text", "width": 200},
     ]
 
