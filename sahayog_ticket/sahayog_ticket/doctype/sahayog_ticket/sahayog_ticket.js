@@ -499,7 +499,7 @@ frappe.ui.form.on("Sahayog Ticket", {
             // Chat is closed — check for unread count
             check_unread_messages();
         }
-    }, 2000);
+    }, 5000);
 
     // FAB Action -> Click to Open Chat, Hide FAB
     fab.on('click', function() {
