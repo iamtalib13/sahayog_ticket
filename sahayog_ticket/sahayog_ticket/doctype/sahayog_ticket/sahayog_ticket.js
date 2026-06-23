@@ -720,6 +720,20 @@ frappe.ui.form.on("Sahayog Ticket", {
               }
             }
             let sender = c.comment_by || c.owner;
+            
+            // Parse Info type for Re-open status
+            if (c.comment_type === "Info" && content.includes("Re-open Remark")) {
+              let reopenMatch = content.match(/Ticket Status from (\w+) to (\w+)/);
+              let remarkMatch = content.match(/Re-open Remark from .*? to (.+?)(?:,|·|$)/s);
+              
+              if (reopenMatch && remarkMatch) {
+                let fromStatus = reopenMatch[1];
+                let toStatus = reopenMatch[2];
+                let remark = remarkMatch[1].replace(/\.+$/, '').trim(); // Remove trailing dots
+                content = `<b>Status Re-opened:</b> ${fromStatus} → ${toStatus}<br><b>Remark:</b> ${remark}`;
+              }
+            }
+            
             history.push({ 
               type: c.comment_type, 
               content: content, 
@@ -733,9 +747,25 @@ frappe.ui.form.on("Sahayog Ticket", {
         if (frm.doc.status_log) {
           frm.doc.status_log.forEach((log) => {
             if (log.status_remark) {
+              let statusMsg = `<b>Status Changed:</b> ${log.from_status} → ${log.to_status}`;
+              
+              // Get actual remark from parent doc based on status type
+              let actualRemark = '';
+              if (log.to_status === 'In-Progress' && frm.doc.executive_remark) {
+                actualRemark = frm.doc.executive_remark;
+              } else if (log.to_status === 'Resolved' && frm.doc.resolved_remark) {
+                actualRemark = frm.doc.resolved_remark;
+              } else if (log.to_status === 'Open' && log.from_status === 'Resolved' && frm.doc.reopen_remark) {
+                actualRemark = frm.doc.reopen_remark;
+              }
+              
+              if (actualRemark) {
+                statusMsg += `<br><b>Remark:</b> ${actualRemark}`;
+              }
+              
               history.push({ 
                 type: "Status", 
-                content: `Status: ${log.from_status} to ${log.to_status}`, 
+                content: statusMsg, 
                 by: log.status_change_by, 
                 date: log.status_change_on, 
                 is_system: true 
@@ -803,7 +833,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                   system_user = name ? ` by ${name}` : '';
                 }
               }
-              chat_history.append(`<div style="align-self:center; background:#eef2f6; color:#64748b; padding:4px 10px; border-radius:15px; font-size:10px; text-align:center; max-width:90%; margin:2px 0; border:1px solid #dfe5ec;">${item.content}${system_user} ${time}</div>`);
+              chat_history.append(`<div style="align-self:center; background:#eef2f6; color:#64748b; padding:6px 12px; border-radius:12px; font-size:10px; text-align:left; max-width:85%; margin:4px 0; border:1px solid #dfe5ec; word-wrap:break-word; white-space:normal;">${item.content}${system_user} ${time}</div>`);
               last_sender = null;
             } else {
               let show_sender = item.by !== last_sender;
