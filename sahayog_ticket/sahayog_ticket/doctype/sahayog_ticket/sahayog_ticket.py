@@ -234,7 +234,10 @@ class SahayogTicket(Document):
 
             # Validate new_contact_number (if present)
             if row.new_contact_number:
-                if not re.match(mobile_pattern, row.new_contact_number):
+                new_contact = row.new_contact_number
+                if new_contact.startswith("+91"):
+                    new_contact = new_contact[3:]
+                if not re.match(mobile_pattern, new_contact):
                     frappe.throw(
                         _("Row #{0}: Enter valid 10-digit Indian Mobile Number").format(row.idx)
                     )
@@ -262,7 +265,10 @@ class SahayogTicket(Document):
 
             # Validate contact_number (if present)
             if row.contact_number:
-                if not re.match(mobile_pattern, row.contact_number):
+                contact = row.contact_number
+                if contact.startswith("+91"):
+                    contact = contact[3:]
+                if not re.match(mobile_pattern, contact):
                     frappe.throw(
                         _("Row #{0}: Contact Number must be a valid 10-digit Indian Mobile Number").format(row.idx)
                     )

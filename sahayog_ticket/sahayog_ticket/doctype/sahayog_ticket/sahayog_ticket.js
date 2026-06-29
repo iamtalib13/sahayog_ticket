@@ -2143,12 +2143,12 @@ frappe.ui.form.on("Ticket Item", {
             "customer_name",
             r.message.customer_name,
           );
-          frappe.model.set_value(
-            cdt,
-            cdn,
-            "contact_number",
-            r.message.contact_number,
-          );
+          let contact_number = r.message.contact_number || "";
+          // Strip +91 prefix if present
+          if (contact_number.startsWith("+91")) {
+            contact_number = contact_number.substring(3);
+          }
+          frappe.model.set_value(cdt, cdn, "contact_number", contact_number);
           frappe.model.set_value(
             cdt,
             cdn,
