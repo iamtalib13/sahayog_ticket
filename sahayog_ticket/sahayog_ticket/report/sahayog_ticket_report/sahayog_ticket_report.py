@@ -159,6 +159,21 @@ def execute(filters=None):
 
 
 @frappe.whitelist()
+def get_employee_department(user=None):
+    if not user:
+        user = frappe.session.user
+    employee = frappe.db.get_value(
+        "Employee",
+        {"user_id": user},
+        ["department"],
+        as_dict=True,
+    )
+    if employee and employee.department:
+        return employee.department
+    return None
+
+
+@frappe.whitelist()
 def get_status_counts(department=None, from_date=None, to_date=None):
     conditions = []
     if department:

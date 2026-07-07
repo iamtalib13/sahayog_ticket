@@ -35,6 +35,30 @@ frappe.query_reports["Sahayog Ticket Report"] = {
       });
       d.show();
     });
+    const isHOUser =
+      frappe.session.user === "Administrator" ||
+      frappe.user.has_role("HO Support Executive") ||
+      frappe.user.has_role("HO Support Manager");
+
+    if (!isHOUser) {
+      frappe.call({
+        method: "sahayog_ticket.sahayog_ticket.report.sahayog_ticket_report.sahayog_ticket_report.get_employee_department",
+        args: { user: frappe.session.user },
+        callback: function (r) {
+          if (r.message) {
+            frappe.query_report.set_filter_value("department", r.message);
+            setTimeout(function () {
+              const deptFilter = report.get_filter("department");
+              if (deptFilter) {
+                deptFilter.$input.prop("disabled", true);
+              }
+            }, 500);
+          }
+        },
+        async: false,
+      });
+    }
+
     frappe.call({
       method: "frappe.client.get_list",
       args: {
@@ -135,28 +159,35 @@ frappe.query_reports["Sahayog Ticket Report"] = {
                 "box-shadow": "0 0 8px rgba(0,0,0,0.4)",
               });
             }
-            $(document).on("click", ".department-pill", function () {
-              const $pill = $(this);
-              const dept = $pill.data("dept");
-              const isActive = $pill.hasClass("active-pill");
-              $(".department-pill").removeClass("active-pill").css({
-                background: "rgba(0,0,0,0.1)",
-                color: "rgb(51,51,51)",
-                "font-weight": "500",
+            if (!isHOUser) {
+              $(".department-pill").css({
+                cursor: "not-allowed",
+                opacity: "0.5",
               });
-              if (isActive) {
-                frappe.query_report.set_filter_value("department", "");
-                fetchStatusCounts("");
-              } else {
-                $pill.addClass("active-pill").css({
-                  background: "#006767",
-                  color: "white",
-                  "font-weight": "700",
+            } else {
+              $(document).on("click", ".department-pill", function () {
+                const $pill = $(this);
+                const dept = $pill.data("dept");
+                const isActive = $pill.hasClass("active-pill");
+                $(".department-pill").removeClass("active-pill").css({
+                  background: "rgba(0,0,0,0.1)",
+                  color: "rgb(51,51,51)",
+                  "font-weight": "500",
                 });
-                frappe.query_report.set_filter_value("department", dept);
-                fetchStatusCounts(dept);
-              }
-            });
+                if (isActive) {
+                  frappe.query_report.set_filter_value("department", "");
+                  fetchStatusCounts("");
+                } else {
+                  $pill.addClass("active-pill").css({
+                    background: "#006767",
+                    color: "white",
+                    "font-weight": "700",
+                  });
+                  frappe.query_report.set_filter_value("department", dept);
+                  fetchStatusCounts(dept);
+                }
+              });
+            }
             $(document).on("click", ".status-pill", function () {
               const $pill = $(this);
               const status = $pill.data("status");
