@@ -15,7 +15,7 @@ def execute(filters=None):
     # Define report columns with proper field types and widths
     columns = [
         {"fieldname": "ticket_id", "label": "Ticket ID", "fieldtype": "Link", "options": "Sahayog Ticket", "width": 120},
-        {"fieldname": "status", "label": "Status", "fieldtype": "Data", "width": 100},
+        {"fieldname": "status", "label": "Status", "fieldtype": "Data", "width": 100, "escape_html": 0},
         {"fieldname": "tat", "label": "TAT", "fieldtype": "Int", "width": 80},
         {"fieldname": "priority", "label": "Priority", "fieldtype": "Data", "width": 100},
         {"fieldname": "assigned_to_name", "label": "Assigned To", "fieldtype": "Data", "width": 150},
@@ -141,5 +141,18 @@ def execute(filters=None):
 
     # Execute query and return results
     data = frappe.db.sql(query, as_dict=True)
+
+    status_colors = {
+        "Open": "#2490ef",
+        "In-Progress": "#f59f00",
+        "Resolved": "#28a745",
+        "Closed": "#98a6ad",
+    }
+
+    for row in data:
+        status = row.get("status")
+        if status and status in status_colors:
+            color = status_colors[status]
+            row["status"] = f'<span style="background-color:{color}; color:white; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:500;">{status}</span>'
 
     return columns, data
