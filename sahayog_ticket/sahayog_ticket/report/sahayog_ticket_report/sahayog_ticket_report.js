@@ -13,7 +13,7 @@ frappe.query_reports["Sahayog Ticket Report"] = {
           const html = depts
             .map(
               (d) =>
-                `<span class="department-pill" data-dept="${d}" style="cursor:pointer; margin:2px; padding:4px 12px; border-radius:16px; background:#b0c4c4; color:#333; font-size:12px; font-weight:500;">${d}</span>`
+                `<span class="department-pill" data-dept="${d}" style="cursor:pointer; margin:2px; padding:4px 12px; border-radius:16px; background:rgba(0,0,0,0.1); color:rgb(51,51,51); font-size:12px; font-weight:500;">${d}</span>`
             )
             .join("");
           const capsuleHtml = `<div class="department-capsules" style="margin-bottom:10px; padding:8px 15px; background:white; border-radius:8px; border:1px solid #d1d8dd;"><span style="font-size:12px; color:#6c7681; margin-right:8px; font-weight:600;">Departments:</span>${html}</div>`;
@@ -33,8 +33,8 @@ frappe.query_reports["Sahayog Ticket Report"] = {
               const dept = $pill.data("dept");
               const isActive = $pill.hasClass("active-pill");
               $(".department-pill").removeClass("active-pill").css({
-                background: "#b0c4c4",
-                color: "#333",
+                background: "rgba(0,0,0,0.1)",
+                color: "rgb(51,51,51)",
                 "font-weight": "500",
               });
               if (isActive) {
