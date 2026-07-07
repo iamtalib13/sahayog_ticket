@@ -156,3 +156,30 @@ def execute(filters=None):
             row["status"] = f'<span style="background-color:{color}; color:white; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:500;">{status}</span>'
 
     return columns, data
+
+
+@frappe.whitelist()
+def get_status_counts(department=None, from_date=None, to_date=None):
+    conditions = []
+    if department:
+        conditions.append(f"st.dept_name = '{department}'")
+    if from_date and to_date:
+        conditions.append(f"st.creation BETWEEN '{from_date} 00:00:00' AND '{to_date} 23:59:59'")
+    elif from_date:
+        conditions.append(f"st.creation >= '{from_date} 00:00:00'")
+    elif to_date:
+        conditions.append(f"st.creation <= '{to_date} 23:59:59'")
+
+    where = "WHERE " + " AND ".join(conditions) if conditions else ""
+    query = f"""
+        SELECT st.status, COUNT(*) as count
+        FROM `tabSahayog Ticket` st
+        {where}
+        GROUP BY st.status
+    """
+    result = frappe.db.sql(query, as_dict=True)
+    counts = {"Open": 0, "In-Progress": 0, "Resolved": 0, "Closed": 0}
+    for row in result:
+        if row.status in counts:
+            counts[row.status] = row.count
+    return counts

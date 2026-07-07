@@ -74,10 +74,30 @@ frappe.query_reports["Sahayog Ticket Report"] = {
             { name: "Resolved", color: "#28a745" },
             { name: "Closed", color: "#98a6ad" },
           ];
+          function fetchStatusCounts(dept) {
+            frappe.call({
+              method: "sahayog_ticket.sahayog_ticket.report.sahayog_ticket_report.sahayog_ticket_report.get_status_counts",
+              args: {
+                department: dept || "",
+                from_date: frappe.query_report.get_filter_value("from_date") || "",
+                to_date: frappe.query_report.get_filter_value("to_date") || "",
+              },
+              callback: function (r) {
+                if (r.message) {
+                  const counts = r.message;
+                  statuses.forEach((s) => {
+                    const $pill = $(`.status-pill[data-status="${s.name}"]`);
+                    const count = counts[s.name] || 0;
+                    $pill.find(".status-count").text(count);
+                  });
+                }
+              },
+            });
+          }
           const statusHtml = statuses
             .map(
               (s) =>
-                `<span class="status-pill" data-status="${s.name}" style="cursor:pointer; margin:2px; padding:4px 12px; border-radius:16px; background:${s.color}; color:white; font-size:12px; font-weight:500;">${s.name}</span>`
+                `<span class="status-pill" data-status="${s.name}" style="cursor:pointer; margin:2px; padding:4px 12px; border-radius:16px; background:${s.color}; color:white; font-size:12px; font-weight:500;">${s.name} <span class="status-count" style="background:rgba(0,0,0,0.2); padding:1px 6px; border-radius:10px; font-size:11px; margin-left:4px;">0</span></span>`
             )
             .join("");
           const statusCapsuleHtml = `<div class="status-capsules" style="margin-bottom:10px; padding:8px 15px; background:white; border-radius:8px; border:1px solid #d1d8dd; display:flex; align-items:center; flex-wrap:wrap;"><span style="font-size:12px; color:#6c7681; margin-right:8px; font-weight:600;">Status:</span>${statusHtml}</div>`;
@@ -94,8 +114,10 @@ frappe.query_reports["Sahayog Ticket Report"] = {
             }
             $(document).on("change", "[data-fieldname='from_date'], [data-fieldname='to_date']", function () {
               updateDateCapsule();
+              fetchStatusCounts(frappe.query_report.get_filter_value("department"));
             });
             const activeDept = frappe.query_report.get_filter_value("department");
+            fetchStatusCounts(activeDept);
             if (activeDept) {
               $(`.department-pill[data-dept="${activeDept}"]`).addClass("active-pill").css({
                 background: "#006767",
@@ -124,6 +146,7 @@ frappe.query_reports["Sahayog Ticket Report"] = {
               });
               if (isActive) {
                 frappe.query_report.set_filter_value("department", "");
+                fetchStatusCounts("");
               } else {
                 $pill.addClass("active-pill").css({
                   background: "#006767",
@@ -131,6 +154,7 @@ frappe.query_reports["Sahayog Ticket Report"] = {
                   "font-weight": "700",
                 });
                 frappe.query_report.set_filter_value("department", dept);
+                fetchStatusCounts(dept);
               }
             });
             $(document).on("click", ".status-pill", function () {
