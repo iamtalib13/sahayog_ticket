@@ -16,7 +16,8 @@ def execute(filters=None):
     columns = [
         {"fieldname": "ticket_id", "label": "Ticket ID", "fieldtype": "Link", "options": "Sahayog Ticket", "width": 120},
         {"fieldname": "status", "label": "Status", "fieldtype": "Data", "width": 100, "escape_html": 0},
-        {"fieldname": "tat", "label": "TAT", "fieldtype": "Int", "width": 80},
+        {"fieldname": "total_days", "label": "Age", "fieldtype": "Int", "width": 60},
+        {"fieldname": "tat", "label": "TAT", "fieldtype": "Int", "width": 60},
         {"fieldname": "priority", "label": "Priority", "fieldtype": "Data", "width": 100},
         {"fieldname": "assigned_to_name", "label": "Assigned To", "fieldtype": "Data", "width": 150},
         {"fieldname": "employee_id", "label": "Employee ID", "fieldtype": "Data", "width": 100},
@@ -32,7 +33,6 @@ def execute(filters=None):
         {"fieldname": "description", "label": "Description", "fieldtype": "Data", "width": 200},
         {"fieldname": "ticket_resolved_user", "label": "Resolved By", "fieldtype": "Data", "width": 150},
         {"fieldname": "resolved_remark", "label": "Resolved Remark", "fieldtype": "Data", "width": 200},
-        {"fieldname": "total_days", "label": "Ticket Age (Days)", "fieldtype": "Int", "width": 150},
         {"fieldname": "creation", "label": "Created On", "fieldtype": "Datetime", "width": 180},
         {"fieldname": "ticket_resolved_on", "label": "Resolved On", "fieldtype": "Datetime", "width": 180},
 
