@@ -16,7 +16,7 @@ def execute(filters=None):
     columns = [
         {"fieldname": "ticket_id", "label": "Ticket ID", "fieldtype": "Link", "options": "Sahayog Ticket", "width": 120},
         {"fieldname": "status", "label": "Status", "fieldtype": "Data", "width": 100},
-        {"fieldname": "tat", "label": "TAT", "fieldtype": "Int", "width": 180},
+        {"fieldname": "tat", "label": "TAT", "fieldtype": "Int", "width": 80},
         {"fieldname": "priority", "label": "Priority", "fieldtype": "Data", "width": 100},
         {"fieldname": "assigned_to_name", "label": "Assigned To", "fieldtype": "Data", "width": 150},
         {"fieldname": "employee_id", "label": "Employee ID", "fieldtype": "Data", "width": 100},
