@@ -1,5 +1,40 @@
 frappe.query_reports["Sahayog Ticket Report"] = {
-  onload: function () {
+  onload: function (report) {
+    report.page.add_inner_button("Download", function () {
+      const d = new frappe.ui.Dialog({
+        title: "Export Report",
+        fields: [
+          {
+            label: "File Format",
+            fieldname: "file_format",
+            fieldtype: "Select",
+            options: "XLSX\nCSV",
+            default: "XLSX",
+            reqd: 1,
+          },
+        ],
+        primary_action_label: "Export",
+        primary_action(values) {
+          const format = values.file_format;
+          const filters = frappe.query_report.get_filter_values();
+          const data = frappe.query_report.data || [];
+          const visible_idx = data.map((_, i) => i);
+          const args = {
+            report_name: "Sahayog Ticket Report",
+            file_format_type: format === "XLSX" ? "Excel" : format,
+            filters: JSON.stringify(filters),
+            visible_idx: JSON.stringify(visible_idx),
+            include_indentation: 0,
+            include_filters: 1,
+            custom_columns: "[]",
+            include_hidden_columns: 0,
+          };
+          open_url_post("/api/method/frappe.desk.query_report.export_query", args);
+          d.hide();
+        },
+      });
+      d.show();
+    });
     frappe.call({
       method: "frappe.client.get_list",
       args: {
