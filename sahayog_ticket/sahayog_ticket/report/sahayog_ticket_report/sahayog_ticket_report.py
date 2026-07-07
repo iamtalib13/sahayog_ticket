@@ -15,8 +15,11 @@ def execute(filters=None):
     # Define report columns with proper field types and widths
     columns = [
         {"fieldname": "ticket_id", "label": "Ticket ID", "fieldtype": "Link", "options": "Sahayog Ticket", "width": 120},
-        {"fieldname": "status", "label": "Status", "fieldtype": "Data", "width": 100},
+        {"fieldname": "status", "label": "Status", "fieldtype": "Data", "width": 100, "escape_html": 0},
+        {"fieldname": "total_days", "label": "Age", "fieldtype": "Int", "width": 60},
+        {"fieldname": "tat", "label": "TAT", "fieldtype": "Int", "width": 60},
         {"fieldname": "priority", "label": "Priority", "fieldtype": "Data", "width": 100},
+        {"fieldname": "assigned_to_name", "label": "Assigned To", "fieldtype": "Data", "width": 150},
         {"fieldname": "employee_id", "label": "Employee ID", "fieldtype": "Data", "width": 100},
         {"fieldname": "employee_name", "label": "Employee Name", "fieldtype": "Data", "width": 150},
         {"fieldname": "designation", "label": "Designation", "fieldtype": "Data", "width": 150},
@@ -28,11 +31,8 @@ def execute(filters=None):
         {"fieldname": "dept_name", "label": "Ticket Department", "fieldtype": "Data", "width": 150},
         {"fieldname": "ticket_type", "label": "Ticket Type", "fieldtype": "Link", "options": "Ticket Type", "width": 150},
         {"fieldname": "description", "label": "Description", "fieldtype": "Data", "width": 200},
-        {"fieldname": "assigned_to_name", "label": "Assigned To", "fieldtype": "Data", "width": 150},
         {"fieldname": "ticket_resolved_user", "label": "Resolved By", "fieldtype": "Data", "width": 150},
         {"fieldname": "resolved_remark", "label": "Resolved Remark", "fieldtype": "Data", "width": 200},
-        {"fieldname": "tat", "label": "TAT (Estimated Time for Resolution)", "fieldtype": "Int", "width": 180},
-        {"fieldname": "total_days", "label": "Ticket Age (Days)", "fieldtype": "Int", "width": 150},
         {"fieldname": "creation", "label": "Created On", "fieldtype": "Datetime", "width": 180},
         {"fieldname": "ticket_resolved_on", "label": "Resolved On", "fieldtype": "Datetime", "width": 180},
 
@@ -142,4 +142,59 @@ def execute(filters=None):
     # Execute query and return results
     data = frappe.db.sql(query, as_dict=True)
 
+    status_colors = {
+        "Open": "#2490ef",
+        "In-Progress": "#f59f00",
+        "Resolved": "#28a745",
+        "Closed": "#98a6ad",
+    }
+
+    for row in data:
+        status = row.get("status")
+        if status and status in status_colors:
+            color = status_colors[status]
+            row["status"] = f'<span style="background-color:{color}; color:white; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:500;">{status}</span>'
+
     return columns, data
+
+
+@frappe.whitelist()
+def get_employee_department(user=None):
+    if not user:
+        user = frappe.session.user
+    employee = frappe.db.get_value(
+        "Employee",
+        {"user_id": user},
+        ["department"],
+        as_dict=True,
+    )
+    if employee and employee.department:
+        return employee.department
+    return None
+
+
+@frappe.whitelist()
+def get_status_counts(department=None, from_date=None, to_date=None):
+    conditions = []
+    if department:
+        conditions.append(f"st.dept_name = '{department}'")
+    if from_date and to_date:
+        conditions.append(f"st.creation BETWEEN '{from_date} 00:00:00' AND '{to_date} 23:59:59'")
+    elif from_date:
+        conditions.append(f"st.creation >= '{from_date} 00:00:00'")
+    elif to_date:
+        conditions.append(f"st.creation <= '{to_date} 23:59:59'")
+
+    where = "WHERE " + " AND ".join(conditions) if conditions else ""
+    query = f"""
+        SELECT st.status, COUNT(*) as count
+        FROM `tabSahayog Ticket` st
+        {where}
+        GROUP BY st.status
+    """
+    result = frappe.db.sql(query, as_dict=True)
+    counts = {"Open": 0, "In-Progress": 0, "Resolved": 0, "Closed": 0}
+    for row in result:
+        if row.status in counts:
+            counts[row.status] = row.count
+    return counts
