@@ -13,7 +13,7 @@ frappe.query_reports["Sahayog Ticket Report"] = {
           const html = depts
             .map(
               (d) =>
-                `<span class="department-pill" data-dept="${d}" style="cursor:pointer; margin:2px; padding:4px 12px; border-radius:16px; background:#006767; color:white; font-size:12px;">${d}</span>`
+                `<span class="department-pill" data-dept="${d}" style="cursor:pointer; margin:2px; padding:4px 12px; border-radius:16px; background:#b0c4c4; color:#333; font-size:12px; font-weight:500;">${d}</span>`
             )
             .join("");
           const capsuleHtml = `<div class="department-capsules" style="margin-bottom:10px; padding:8px 15px; background:white; border-radius:8px; border:1px solid #d1d8dd;"><span style="font-size:12px; color:#6c7681; margin-right:8px; font-weight:600;">Departments:</span>${html}</div>`;
@@ -29,8 +29,24 @@ frappe.query_reports["Sahayog Ticket Report"] = {
               $("body").find(".query-report").prepend(capsuleHtml);
             }
             $(document).on("click", ".department-pill", function () {
-              const dept = $(this).data("dept");
-              frappe.query_report.set_filter_value("department", dept);
+              const $pill = $(this);
+              const dept = $pill.data("dept");
+              const isActive = $pill.hasClass("active-pill");
+              $(".department-pill").removeClass("active-pill").css({
+                background: "#b0c4c4",
+                color: "#333",
+                "font-weight": "500",
+              });
+              if (isActive) {
+                frappe.query_report.set_filter_value("department", "");
+              } else {
+                $pill.addClass("active-pill").css({
+                  background: "#006767",
+                  color: "white",
+                  "font-weight": "700",
+                });
+                frappe.query_report.set_filter_value("department", dept);
+              }
             });
           }, 1000);
         }
