@@ -1,4 +1,42 @@
 frappe.query_reports["Sahayog Ticket Report"] = {
+  onload: function () {
+    frappe.call({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Departsection",
+        fields: ["dept_name"],
+        limit_page_length: 0,
+      },
+      callback: function (r) {
+        if (r.message) {
+          const depts = r.message.map((d) => d.dept_name);
+          const html = depts
+            .map(
+              (d) =>
+                `<span class="department-pill" data-dept="${d}" style="cursor:pointer; margin:2px; padding:4px 12px; border-radius:16px; background:#006767; color:white; font-size:12px;">${d}</span>`
+            )
+            .join("");
+          const capsuleHtml = `<div class="department-capsules" style="margin-bottom:10px; padding:8px 15px; background:white; border-radius:8px; border:1px solid #d1d8dd;"><span style="font-size:12px; color:#6c7681; margin-right:8px; font-weight:600;">Departments:</span>${html}</div>`;
+          setTimeout(function () {
+            const target = $(".page-form").length
+              ? $(".page-form")
+              : $(".section-body").length
+              ? $(".section-body")
+              : $(".reports-wrapper");
+            if (target.length) {
+              target.before(capsuleHtml);
+            } else {
+              $("body").find(".query-report").prepend(capsuleHtml);
+            }
+            $(document).on("click", ".department-pill", function () {
+              const dept = $(this).data("dept");
+              frappe.query_report.set_filter_value("department", dept);
+            });
+          }, 1000);
+        }
+      },
+    });
+  },
   get_datatable_options(options) {
     options.columns = options.columns.map((col) => {
       if (col.fieldname === "status") {
