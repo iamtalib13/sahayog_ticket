@@ -68,6 +68,19 @@ frappe.query_reports["Sahayog Ticket Report"] = {
           const to = formatDate(frappe.query_report.get_filter_value("to_date"));
           const dateHtml = `<span class="date-range-capsule" style="font-size:12px; color:#6c7681; margin-left:15px; padding:4px 12px; border-radius:16px; background:#e8f0fe; color:#1a73e8; font-weight:500;">Showing data from ${from} to ${to}</span>`;
           const capsuleHtml = `<div class="department-capsules" style="margin-bottom:10px; padding:8px 15px; background:white; border-radius:8px; border:1px solid #d1d8dd; display:flex; align-items:center; flex-wrap:wrap;"><span style="font-size:12px; color:#6c7681; margin-right:8px; font-weight:600;">Departments:</span>${html}${dateHtml}</div>`;
+          const statuses = [
+            { name: "Open", color: "#2490ef" },
+            { name: "In-Progress", color: "#f59f00" },
+            { name: "Resolved", color: "#28a745" },
+            { name: "Closed", color: "#98a6ad" },
+          ];
+          const statusHtml = statuses
+            .map(
+              (s) =>
+                `<span class="status-pill" data-status="${s.name}" style="cursor:pointer; margin:2px; padding:4px 12px; border-radius:16px; background:${s.color}; color:white; font-size:12px; font-weight:500;">${s.name}</span>`
+            )
+            .join("");
+          const statusCapsuleHtml = `<div class="status-capsules" style="margin-bottom:10px; padding:8px 15px; background:white; border-radius:8px; border:1px solid #d1d8dd; display:flex; align-items:center; flex-wrap:wrap;"><span style="font-size:12px; color:#6c7681; margin-right:8px; font-weight:600;">Status:</span>${statusHtml}</div>`;
           setTimeout(function () {
             const target = $(".page-form").length
               ? $(".page-form")
@@ -75,9 +88,9 @@ frappe.query_reports["Sahayog Ticket Report"] = {
               ? $(".section-body")
               : $(".reports-wrapper");
             if (target.length) {
-              target.before(capsuleHtml);
+              target.before(capsuleHtml + statusCapsuleHtml);
             } else {
-              $("body").find(".query-report").prepend(capsuleHtml);
+              $("body").find(".query-report").prepend(capsuleHtml + statusCapsuleHtml);
             }
             $(document).on("change", "[data-fieldname='from_date'], [data-fieldname='to_date']", function () {
               updateDateCapsule();
@@ -88,6 +101,16 @@ frappe.query_reports["Sahayog Ticket Report"] = {
                 background: "#006767",
                 color: "white",
                 "font-weight": "700",
+              });
+            }
+            const activeStatus = frappe.query_report.get_filter_value("status");
+            if (activeStatus) {
+              const sColor = statuses.find((s) => s.name === activeStatus);
+              $(`.status-pill[data-status="${activeStatus}"]`).addClass("active-status-pill").css({
+                background: sColor ? sColor.color : "#006767",
+                color: "white",
+                "font-weight": "700",
+                "box-shadow": "0 0 8px rgba(0,0,0,0.4)",
               });
             }
             $(document).on("click", ".department-pill", function () {
@@ -108,6 +131,33 @@ frappe.query_reports["Sahayog Ticket Report"] = {
                   "font-weight": "700",
                 });
                 frappe.query_report.set_filter_value("department", dept);
+              }
+            });
+            $(document).on("click", ".status-pill", function () {
+              const $pill = $(this);
+              const status = $pill.data("status");
+              const isActive = $pill.hasClass("active-status-pill");
+              const sColor = statuses.find((s) => s.name === status);
+              $(".status-pill").removeClass("active-status-pill").each(function () {
+                const sName = $(this).data("status");
+                const sObj = statuses.find((s) => s.name === sName);
+                $(this).css({
+                  background: sObj ? sObj.color : "#98a6ad",
+                  color: "white",
+                  "font-weight": "500",
+                  "box-shadow": "none",
+                });
+              });
+              if (isActive) {
+                frappe.query_report.set_filter_value("status", "");
+              } else {
+                $pill.addClass("active-status-pill").css({
+                  background: sColor ? sColor.color : "#006767",
+                  color: "white",
+                  "font-weight": "700",
+                  "box-shadow": "0 0 8px rgba(0,0,0,0.4)",
+                });
+                frappe.query_report.set_filter_value("status", status);
               }
             });
           }, 1000);
