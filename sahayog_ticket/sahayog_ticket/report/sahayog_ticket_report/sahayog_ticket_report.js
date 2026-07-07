@@ -16,9 +16,17 @@ frappe.query_reports["Sahayog Ticket Report"] = {
                 `<span class="department-pill" data-dept="${d}" style="cursor:pointer; margin:2px; padding:4px 12px; border-radius:16px; background:rgba(0,0,0,0.1); color:rgb(51,51,51); font-size:12px; font-weight:500;">${d}</span>`
             )
             .join("");
+          function updateDateCapsule() {
+            const from = frappe.query_report.get_filter_value("from_date");
+            const to = frappe.query_report.get_filter_value("to_date");
+            const dateText = `Showing data from ${from} to ${to}`;
+            if ($(".date-range-capsule").length) {
+              $(".date-range-capsule").text(dateText);
+            }
+          }
           const from = frappe.query_report.get_filter_value("from_date");
           const to = frappe.query_report.get_filter_value("to_date");
-          const dateHtml = `<span style="font-size:12px; color:#6c7681; margin-left:15px; padding:4px 12px; border-radius:16px; background:#e8f0fe; color:#1a73e8; font-weight:500;">Showing data from ${from} to ${to}</span>`;
+          const dateHtml = `<span class="date-range-capsule" style="font-size:12px; color:#6c7681; margin-left:15px; padding:4px 12px; border-radius:16px; background:#e8f0fe; color:#1a73e8; font-weight:500;">Showing data from ${from} to ${to}</span>`;
           const capsuleHtml = `<div class="department-capsules" style="margin-bottom:10px; padding:8px 15px; background:white; border-radius:8px; border:1px solid #d1d8dd; display:flex; align-items:center; flex-wrap:wrap;"><span style="font-size:12px; color:#6c7681; margin-right:8px; font-weight:600;">Departments:</span>${html}${dateHtml}</div>`;
           setTimeout(function () {
             const target = $(".page-form").length
@@ -31,6 +39,9 @@ frappe.query_reports["Sahayog Ticket Report"] = {
             } else {
               $("body").find(".query-report").prepend(capsuleHtml);
             }
+            $(document).on("change", "[data-fieldname='from_date'], [data-fieldname='to_date']", function () {
+              updateDateCapsule();
+            });
             $(document).on("click", ".department-pill", function () {
               const $pill = $(this);
               const dept = $pill.data("dept");
