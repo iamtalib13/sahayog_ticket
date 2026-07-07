@@ -1,4 +1,22 @@
 frappe.query_reports["Sahayog Ticket Report"] = {
+  get_datatable_options(options) {
+    options.columns = options.columns.map((col) => {
+      if (col.fieldname === "status") {
+        col.formatter = (value) => {
+          const colors = {
+            Open: "blue",
+            "In-Progress": "orange",
+            Resolved: "green",
+            Closed: "gray",
+          };
+          const color = colors[value] || "gray";
+          return `<span class="indicator-pill whitespace-nowrap" style="background-color: var(--${color}); color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">${value}</span>`;
+        };
+      }
+      return col;
+    });
+    return options;
+  },
   // Filter definitions for report data filtering
   filters: [
     {
