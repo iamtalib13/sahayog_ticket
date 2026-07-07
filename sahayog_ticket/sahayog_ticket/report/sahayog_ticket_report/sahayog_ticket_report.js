@@ -82,6 +82,14 @@ frappe.query_reports["Sahayog Ticket Report"] = {
             $(document).on("change", "[data-fieldname='from_date'], [data-fieldname='to_date']", function () {
               updateDateCapsule();
             });
+            const activeDept = frappe.query_report.get_filter_value("department");
+            if (activeDept) {
+              $(`.department-pill[data-dept="${activeDept}"]`).addClass("active-pill").css({
+                background: "#006767",
+                color: "white",
+                "font-weight": "700",
+              });
+            }
             $(document).on("click", ".department-pill", function () {
               const $pill = $(this);
               const dept = $pill.data("dept");
