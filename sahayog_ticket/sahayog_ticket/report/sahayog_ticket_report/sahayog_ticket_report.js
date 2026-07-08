@@ -226,7 +226,7 @@ frappe.query_reports["Sahayog Ticket Report"] = {
       fieldname: "from_date",
       label: "From Date",
       fieldtype: "Date",
-      default: frappe.datetime.add_days(frappe.datetime.nowdate(), -30),
+      default: frappe.datetime.month_start(),
       reqd: 1,
     },
     {
