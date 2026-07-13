@@ -577,6 +577,16 @@ def create_emmr_from_ticket(ticket_id, items=None):
         doc.flags.ignore_permissions = True
 
         doc.insert()
+
+        if ticket.description:
+            frappe.get_doc({
+                "doctype": "Comment",
+                "comment_type": "Info",
+                "reference_doctype": "Employee Material Request",
+                "reference_name": doc.name,
+                "content": f"Remark: {ticket.description}",
+            }).insert(ignore_permissions=True)
+
         frappe.db.commit()
 
         return {"emmr_id": doc.name}
