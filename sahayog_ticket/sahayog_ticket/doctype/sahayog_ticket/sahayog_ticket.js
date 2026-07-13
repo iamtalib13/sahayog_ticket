@@ -979,67 +979,160 @@ frappe.ui.form.on("Sahayog Ticket", {
           frappe.user.has_role("Stationery Store & Support Manager")))
     ) {
       frm.add_custom_button(__("Create Material Request"), function () {
-        let request_department = "";
-        if (frappe.user.has_role("IT Support Executive")) {
-          request_department = "IT";
-        } else if (frappe.user.has_role("Admin Support Executive")) {
-          request_department = "Admin";
-        } else if (frappe.user.has_role("Stationery Store & Support Manager")) {
-          request_department = "Stationery";
-        }
-
-        let user = frappe.session.user;
-        frappe.confirm(
-          __("Are you sure you want to create Asset Request?"),
-          function () {
-            frm.call({
-              method: "create_asset_request",
-              freeze: true,
-              freeze_message: "Internet Not Stable, Please Wait...",
-              args: {
-                ticket_id: frm.doc.name,
-                employee_id: frm.doc.employee_id,
-                request_to: request_department,
-              },
-              callback: function (response) {
-                if (response.message && response.message.asset_request_id) {
-                  frm.set_value(
-                    "asset_request_id",
-                    response.message.asset_request_id,
-                  );
-                  frm.refresh_field("asset_request_id");
-                  frm.set_value("ticket_resolved_by", user);
-                  frm.set_value("status", "Closed");
-                  frm.refresh_field("status");
-                  frm.set_value(
-                    "close_remark",
-                    `Created Asset Request - ${response.message.asset_request_id}`,
-                  );
-                  frm.save();
-                  frappe.show_alert(
-                    {
-                      message: __("Asset Request created successfully"),
-                      indicator: "green",
-                    },
-                    5,
-                  );
-                } else {
-                  console.log(
-                    "Error creating Asset Request:",
-                    response.message,
-                  );
-                  frappe.show_alert(
-                    {
-                      message: __("Please Try Again"),
-                      indicator: "red",
-                    },
-                    5,
-                  );
-                }
-              },
-            });
+        frappe.call({
+          method: "frappe.client.get_value",
+          args: {
+            doctype: "Sahayog Settings",
+            filters: { name: "Sahayog Settings" },
+            fieldname: ["create_stockio_request"],
           },
-        );
+          callback: function (r) {
+            if (r.message && r.message.create_stockio_request == 1) {
+              const dept_map = { IT: "it", Stationery: "Stationery", Admin: "Asset" };
+              const mapped_dept = dept_map[frm.doc.dept_name] || "Purchase";
+              const remark = frm.doc.description || "";
+
+              const d = new frappe.ui.Dialog({
+                title: "Create Employee Material Request",
+                fields: [
+                  {
+                    fieldname: "info_section",
+                    fieldtype: "HTML",
+                    options: `
+                      <p><b>Employee:</b> ${frm.doc.employee_id || "N/A"}</p>
+                      <p><b>Department:</b> ${mapped_dept}</p>
+                      <p><b>Remark:</b> ${remark ? "[Remark: " + remark + "]" : "N/A"}</p>
+                    `,
+                  },
+                  {
+                    fieldname: "items_table",
+                    fieldtype: "Table",
+                    label: "Items",
+                    cannot_add_rows: false,
+                    in_place_edit: true,
+                    reqd: 1,
+                    fields: [
+                      {
+                        fieldname: "item_code",
+                        fieldtype: "Link",
+                        label: "Item Code",
+                        options: "Item",
+                        in_list_view: 1,
+                        reqd: 1,
+                        columns: 3,
+                      },
+                      {
+                        fieldname: "quantity",
+                        fieldtype: "Float",
+                        label: "Qty",
+                        default: 1,
+                        in_list_view: 1,
+                        reqd: 1,
+                        columns: 1,
+                      },
+                    ],
+                  },
+                ],
+                primary_action_label: "Create",
+                primary_action() {
+                  const items_data = d.get_values().items_table;
+                  if (!items_data || !items_data.length) {
+                    frappe.msgprint("Please add at least one item");
+                    return;
+                  }
+
+                  d.hide();
+                  frappe.call({
+                    method: "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.create_emmr_from_ticket",
+                    args: {
+                      ticket_id: frm.doc.name,
+                      items: JSON.stringify(items_data),
+                    },
+                    freeze: true,
+                    freeze_message: "Creating Employee Material Request...",
+                    callback: function (res) {
+                      if (res.message && res.message.emmr_id) {
+                        frappe.show_alert({
+                          message: __("EMMR created: " + res.message.emmr_id),
+                          indicator: "green",
+                        }, 5);
+                      } else {
+                        frappe.show_alert({
+                          message: __("Please Try Again"),
+                          indicator: "red",
+                        }, 5);
+                      }
+                    },
+                  });
+                },
+              });
+              d.show();
+              return;
+            }
+
+            let request_department = "";
+            if (frappe.user.has_role("IT Support Executive")) {
+              request_department = "IT";
+            } else if (frappe.user.has_role("Admin Support Executive")) {
+              request_department = "Admin";
+            } else if (frappe.user.has_role("Stationery Store & Support Manager")) {
+              request_department = "Stationery";
+            }
+
+            let user = frappe.session.user;
+            frappe.confirm(
+              __("Are you sure you want to create Asset Request?"),
+              function () {
+                frm.call({
+                  method: "create_asset_request",
+                  freeze: true,
+                  freeze_message: "Internet Not Stable, Please Wait...",
+                  args: {
+                    ticket_id: frm.doc.name,
+                    employee_id: frm.doc.employee_id,
+                    request_to: request_department,
+                  },
+                  callback: function (response) {
+                    if (response.message && response.message.asset_request_id) {
+                      frm.set_value(
+                        "asset_request_id",
+                        response.message.asset_request_id,
+                      );
+                      frm.refresh_field("asset_request_id");
+                      frm.set_value("ticket_resolved_by", user);
+                      frm.set_value("status", "Closed");
+                      frm.refresh_field("status");
+                      frm.set_value(
+                        "close_remark",
+                        `Created Asset Request - ${response.message.asset_request_id}`,
+                      );
+                      frm.save();
+                      frappe.show_alert(
+                        {
+                          message: __("Asset Request created successfully"),
+                          indicator: "green",
+                        },
+                        5,
+                      );
+                    } else {
+                      console.log(
+                        "Error creating Asset Request:",
+                        response.message,
+                      );
+                      frappe.show_alert(
+                        {
+                          message: __("Please Try Again"),
+                          indicator: "red",
+                        },
+                        5,
+                      );
+                    }
+                  },
+                });
+              },
+            );
+          },
+        });
       });
     }
   },

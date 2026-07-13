@@ -496,6 +496,108 @@ def create_asset_request(ticket_id, employee_id, request_to, emp_name=None, desi
         frappe.log_error(frappe.get_traceback(), "Asset Request Error")
         frappe.throw(f"Error: {str(e)}")
 
+
+DEPT_MAP = {
+    "IT": "it",
+    "Stationery": "Stationery",
+    "Admin": "Asset",
+}
+
+
+@frappe.whitelist()
+def create_emmr_from_ticket(ticket_id, items=None):
+    try:
+        ticket = frappe.get_doc("Sahayog Ticket", ticket_id)
+
+        emp_info = frappe.db.get_value(
+            "Employee",
+            {"employee_number": ticket.employee_id},
+            [
+                "name",
+                "employee_name",
+                "sol_id",
+                "branch",
+                "reports_to",
+            ],
+            as_dict=True,
+        )
+
+        if not emp_info:
+            frappe.throw(f"Employee {ticket.employee_id} not found")
+
+        reporting_person = frappe.session.user
+        if emp_info.reports_to:
+            reporting_user = frappe.db.get_value(
+                "Employee", emp_info.reports_to, "user_id"
+            )
+            if reporting_user:
+                reporting_person = reporting_user
+
+        emmr_department = DEPT_MAP.get(ticket.dept_name, "Purchase")
+
+        doc = frappe.new_doc("Employee Material Request")
+        doc.employee = emp_info.name
+        doc.request_date = frappe.utils.today()
+        doc.required_by_date = frappe.utils.today()
+        doc.request_type = "New"
+        doc.request_from = "Employee"
+        doc.department = emmr_department
+        doc.status = "Draft"
+        doc.requested_by = frappe.session.user
+        doc.reporting_person = reporting_person
+        doc.head_office_officer = "2800@sahayog.com"
+        doc.target_location = emp_info.sol_id or ""
+        doc.target_warehouse = emp_info.sol_id or ""
+
+        remark = ticket.description or ""
+        remark_text = f"[Remark: {remark}]" if remark else ""
+
+        if items:
+            item_list = frappe.parse_json(items)
+            for item in item_list:
+                doc.append("items", {
+                    "item_code": item.get("item_code"),
+                    "quantity": item.get("quantity", 1),
+                    "purpose": ticket.ticket_type or "",
+                    "remarks": remark_text,
+                })
+        else:
+            doc.append("items", {
+                "item_code": ticket.ticket_type,
+                "quantity": 1,
+                "purpose": ticket.ticket_type or "",
+                "remarks": remark_text,
+            })
+
+        doc.flags.ignore_validate = True
+        doc.flags.ignore_validate_update_after_submit = True
+        doc.flags.ignore_mandatory = True
+        doc.flags.ignore_links = True
+        doc.flags.ignore_validate_optional = True
+        doc.flags.ignore_permissions = True
+
+        doc.insert()
+
+        if ticket.description:
+            import re
+            plain_desc = re.sub(r'<[^>]+>', '', ticket.description).strip()
+            frappe.get_doc({
+                "doctype": "Comment",
+                "comment_type": "Comment",
+                "reference_doctype": "Employee Material Request",
+                "reference_name": doc.name,
+                "content": f"Remark: {plain_desc}",
+            }).insert(ignore_permissions=True)
+
+        frappe.db.commit()
+
+        return {"emmr_id": doc.name}
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "EMMR Creation Error")
+        frappe.throw(f"Error: {str(e)}")
+
+
 @frappe.whitelist()
 def get_employee_info(employee_number):
     employee = frappe.get_value(
