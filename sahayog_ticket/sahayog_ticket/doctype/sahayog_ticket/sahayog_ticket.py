@@ -505,7 +505,7 @@ DEPT_MAP = {
 
 
 @frappe.whitelist()
-def create_emmr_from_ticket(ticket_id):
+def create_emmr_from_ticket(ticket_id, items=None):
     try:
         ticket = frappe.get_doc("Sahayog Ticket", ticket_id)
 
@@ -540,12 +540,24 @@ def create_emmr_from_ticket(ticket_id):
         doc.target_location = emp_info.sol_id or ""
 
         remark = ticket.description or ""
-        doc.append("items", {
-            "item_code": ticket.ticket_type,
-            "quantity": 1,
-            "purpose": ticket.ticket_type or "",
-            "remarks": f"[Remark: {remark}]" if remark else "",
-        })
+        remark_text = f"[Remark: {remark}]" if remark else ""
+
+        if items:
+            item_list = frappe.parse_json(items)
+            for item in item_list:
+                doc.append("items", {
+                    "item_code": item.get("item_code"),
+                    "quantity": item.get("quantity", 1),
+                    "purpose": ticket.ticket_type or "",
+                    "remarks": remark_text,
+                })
+        else:
+            doc.append("items", {
+                "item_code": ticket.ticket_type,
+                "quantity": 1,
+                "purpose": ticket.ticket_type or "",
+                "remarks": remark_text,
+            })
 
         doc.flags.ignore_validate = True
         doc.flags.ignore_validate_update_after_submit = True

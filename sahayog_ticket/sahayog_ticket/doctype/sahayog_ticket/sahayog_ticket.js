@@ -996,42 +996,58 @@ frappe.ui.form.on("Sahayog Ticket", {
                 title: "Create Employee Material Request",
                 fields: [
                   {
-                    label: "Employee",
-                    fieldname: "employee_section",
+                    fieldname: "info_section",
                     fieldtype: "HTML",
-                    options: `<p><b>Employee:</b> ${frm.doc.employee_id || "N/A"}</p>`,
+                    options: `
+                      <p><b>Employee:</b> ${frm.doc.employee_id || "N/A"}</p>
+                      <p><b>Department:</b> ${mapped_dept}</p>
+                      <p><b>Remark:</b> ${remark ? "[Remark: " + remark + "]" : "N/A"}</p>
+                    `,
                   },
                   {
-                    label: "Department",
-                    fieldname: "dept_section",
-                    fieldtype: "HTML",
-                    options: `<p><b>Department:</b> ${mapped_dept}</p>`,
-                  },
-                  {
-                    label: "Item",
-                    fieldname: "item_section",
-                    fieldtype: "HTML",
-                    options: `<p><b>Item:</b> ${frm.doc.ticket_type || "N/A"}</p>`,
-                  },
-                  {
-                    label: "Quantity",
-                    fieldname: "qty_section",
-                    fieldtype: "HTML",
-                    options: `<p><b>Quantity:</b> 1</p>`,
-                  },
-                  {
-                    label: "Remark",
-                    fieldname: "remark_section",
-                    fieldtype: "HTML",
-                    options: `<p><b>Remark:</b> ${remark ? "[Remark: " + remark + "]" : "N/A"}</p>`,
+                    fieldname: "items_table",
+                    fieldtype: "Table",
+                    label: "Items",
+                    cannot_add_rows: false,
+                    in_place_edit: true,
+                    reqd: 1,
+                    fields: [
+                      {
+                        fieldname: "item_code",
+                        fieldtype: "Link",
+                        label: "Item Code",
+                        options: "Item",
+                        in_list_view: 1,
+                        reqd: 1,
+                        columns: 3,
+                      },
+                      {
+                        fieldname: "quantity",
+                        fieldtype: "Float",
+                        label: "Qty",
+                        default: 1,
+                        in_list_view: 1,
+                        reqd: 1,
+                        columns: 1,
+                      },
+                    ],
                   },
                 ],
                 primary_action_label: "Create",
                 primary_action() {
+                  const items_data = d.get_values().items_table;
+                  if (!items_data || !items_data.length) {
+                    frappe.msgprint("Please add at least one item");
+                    return;
+                  }
+
                   d.hide();
                   frappe.call({
                     method: "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.create_emmr_from_ticket",
-                    args: { ticket_id: frm.doc.name },
+                    args: {
+                      ticket_id: frm.doc.name,
+                      items: JSON.stringify(items_data),
+                    },
                     freeze: true,
                     freeze_message: "Creating Employee Material Request...",
                     callback: function (res) {
