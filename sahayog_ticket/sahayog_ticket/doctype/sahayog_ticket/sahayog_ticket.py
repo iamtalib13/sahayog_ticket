@@ -538,6 +538,7 @@ def create_emmr_from_ticket(ticket_id, items=None):
         doc.reporting_person = ticket.assigned_to or frappe.session.user
         doc.head_office_officer = "2800@sahayog.com"
         doc.target_location = emp_info.sol_id or ""
+        doc.target_warehouse = emp_info.sol_id or ""
 
         remark = ticket.description or ""
         remark_text = f"[Remark: {remark}]" if remark else ""
