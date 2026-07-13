@@ -517,12 +517,21 @@ def create_emmr_from_ticket(ticket_id, items=None):
                 "employee_name",
                 "sol_id",
                 "branch",
+                "reports_to",
             ],
             as_dict=True,
         )
 
         if not emp_info:
             frappe.throw(f"Employee {ticket.employee_id} not found")
+
+        reporting_person = frappe.session.user
+        if emp_info.reports_to:
+            reporting_user = frappe.db.get_value(
+                "Employee", emp_info.reports_to, "user_id"
+            )
+            if reporting_user:
+                reporting_person = reporting_user
 
         emmr_department = DEPT_MAP.get(ticket.dept_name, "Purchase")
 
@@ -535,7 +544,7 @@ def create_emmr_from_ticket(ticket_id, items=None):
         doc.department = emmr_department
         doc.status = "Draft"
         doc.requested_by = frappe.session.user
-        doc.reporting_person = ticket.assigned_to or frappe.session.user
+        doc.reporting_person = reporting_person
         doc.head_office_officer = "2800@sahayog.com"
         doc.target_location = emp_info.sol_id or ""
         doc.target_warehouse = emp_info.sol_id or ""
