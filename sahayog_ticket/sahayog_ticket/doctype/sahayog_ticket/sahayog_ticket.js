@@ -988,7 +988,69 @@ frappe.ui.form.on("Sahayog Ticket", {
           },
           callback: function (r) {
             if (r.message && r.message.create_stockio_request == 1) {
-              frappe.msgprint("Functionality not added yet");
+              const dept_map = { IT: "it", Stationery: "Stationery", Admin: "Asset" };
+              const mapped_dept = dept_map[frm.doc.dept_name] || "Purchase";
+              const remark = frm.doc.description || "";
+
+              const d = new frappe.ui.Dialog({
+                title: "Create Employee Material Request",
+                fields: [
+                  {
+                    label: "Employee",
+                    fieldname: "employee_section",
+                    fieldtype: "HTML",
+                    options: `<p><b>Employee:</b> ${frm.doc.employee_id || "N/A"}</p>`,
+                  },
+                  {
+                    label: "Department",
+                    fieldname: "dept_section",
+                    fieldtype: "HTML",
+                    options: `<p><b>Department:</b> ${mapped_dept}</p>`,
+                  },
+                  {
+                    label: "Item",
+                    fieldname: "item_section",
+                    fieldtype: "HTML",
+                    options: `<p><b>Item:</b> ${frm.doc.ticket_type || "N/A"}</p>`,
+                  },
+                  {
+                    label: "Quantity",
+                    fieldname: "qty_section",
+                    fieldtype: "HTML",
+                    options: `<p><b>Quantity:</b> 1</p>`,
+                  },
+                  {
+                    label: "Remark",
+                    fieldname: "remark_section",
+                    fieldtype: "HTML",
+                    options: `<p><b>Remark:</b> ${remark ? "[Remark: " + remark + "]" : "N/A"}</p>`,
+                  },
+                ],
+                primary_action_label: "Create",
+                primary_action() {
+                  d.hide();
+                  frappe.call({
+                    method: "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.create_emmr_from_ticket",
+                    args: { ticket_id: frm.doc.name },
+                    freeze: true,
+                    freeze_message: "Creating Employee Material Request...",
+                    callback: function (res) {
+                      if (res.message && res.message.emmr_id) {
+                        frappe.show_alert({
+                          message: __("EMMR created: " + res.message.emmr_id),
+                          indicator: "green",
+                        }, 5);
+                      } else {
+                        frappe.show_alert({
+                          message: __("Please Try Again"),
+                          indicator: "red",
+                        }, 5);
+                      }
+                    },
+                  });
+                },
+              });
+              d.show();
               return;
             }
 

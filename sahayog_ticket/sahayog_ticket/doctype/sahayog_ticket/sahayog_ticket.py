@@ -496,6 +496,74 @@ def create_asset_request(ticket_id, employee_id, request_to, emp_name=None, desi
         frappe.log_error(frappe.get_traceback(), "Asset Request Error")
         frappe.throw(f"Error: {str(e)}")
 
+
+DEPT_MAP = {
+    "IT": "it",
+    "Stationery": "Stationery",
+    "Admin": "Asset",
+}
+
+
+@frappe.whitelist()
+def create_emmr_from_ticket(ticket_id):
+    try:
+        ticket = frappe.get_doc("Sahayog Ticket", ticket_id)
+
+        emp_info = frappe.db.get_value(
+            "Employee",
+            {"employee_number": ticket.employee_id},
+            [
+                "name",
+                "employee_name",
+                "sol_id",
+                "branch",
+            ],
+            as_dict=True,
+        )
+
+        if not emp_info:
+            frappe.throw(f"Employee {ticket.employee_id} not found")
+
+        emmr_department = DEPT_MAP.get(ticket.dept_name, "Purchase")
+
+        doc = frappe.new_doc("Employee Material Request")
+        doc.employee = emp_info.name
+        doc.request_date = frappe.utils.today()
+        doc.required_by_date = frappe.utils.today()
+        doc.request_type = "New"
+        doc.request_from = "Employee"
+        doc.department = emmr_department
+        doc.status = "Draft"
+        doc.requested_by = frappe.session.user
+        doc.reporting_person = ticket.assigned_to or frappe.session.user
+        doc.head_office_officer = "2800@sahayog.com"
+        doc.target_location = emp_info.sol_id or ""
+
+        remark = ticket.description or ""
+        doc.append("items", {
+            "item_code": ticket.ticket_type,
+            "quantity": 1,
+            "purpose": ticket.ticket_type or "",
+            "remarks": f"[Remark: {remark}]" if remark else "",
+        })
+
+        doc.flags.ignore_validate = True
+        doc.flags.ignore_validate_update_after_submit = True
+        doc.flags.ignore_mandatory = True
+        doc.flags.ignore_links = True
+        doc.flags.ignore_validate_optional = True
+        doc.flags.ignore_permissions = True
+
+        doc.insert()
+        frappe.db.commit()
+
+        return {"emmr_id": doc.name}
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "EMMR Creation Error")
+        frappe.throw(f"Error: {str(e)}")
+
+
 @frappe.whitelist()
 def get_employee_info(employee_number):
     employee = frappe.get_value(
