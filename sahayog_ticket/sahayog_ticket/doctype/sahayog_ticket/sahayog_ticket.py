@@ -583,7 +583,7 @@ def create_emmr_from_ticket(ticket_id, items=None):
             plain_desc = re.sub(r'<[^>]+>', '', ticket.description).strip()
             frappe.get_doc({
                 "doctype": "Comment",
-                "comment_type": "Info",
+                "comment_type": "Comment",
                 "reference_doctype": "Employee Material Request",
                 "reference_name": doc.name,
                 "content": f"Remark: {plain_desc}",
