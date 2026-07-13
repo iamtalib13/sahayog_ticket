@@ -579,12 +579,14 @@ def create_emmr_from_ticket(ticket_id, items=None):
         doc.insert()
 
         if ticket.description:
+            import re
+            plain_desc = re.sub(r'<[^>]+>', '', ticket.description).strip()
             frappe.get_doc({
                 "doctype": "Comment",
                 "comment_type": "Info",
                 "reference_doctype": "Employee Material Request",
                 "reference_name": doc.name,
-                "content": f"Remark: {ticket.description}",
+                "content": f"Remark: {plain_desc}",
             }).insert(ignore_permissions=True)
 
         frappe.db.commit()
