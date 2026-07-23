@@ -938,6 +938,18 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
   },
 
+  assigned_to: function (frm) {
+    if (!frm.doc.assigned_to || frm.is_new()) return;
+
+    frappe.call({
+      method: "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.send_assignment_email",
+      args: {
+        ticket_name: frm.doc.name,
+        assigned_to: frm.doc.assigned_to
+      }
+    });
+  },
+
   dept_name: function (frm) {
     console.log("Dept : " + frm.doc.dept_name);
     frm.refresh_field("ticket_type");

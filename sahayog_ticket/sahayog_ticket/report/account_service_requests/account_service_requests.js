@@ -77,6 +77,11 @@ frappe.query_reports["Account Service Requests"] = {
 			}
 		}
 
+		// Display remark in black color
+		if (column.fieldname == "remark" && value) {
+			value = `<span style="color: black;">${value}</span>`;
+		}
+
 		return value;
 	}
 };
