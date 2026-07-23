@@ -1,3 +1,4 @@
+import re
 import frappe
 from frappe.utils import getdate, get_time, time_diff_in_hours, now_datetime
 
@@ -37,7 +38,7 @@ def get_columns():
         {"label": "Resolved By", "fieldname": "resolved_by", "fieldtype": "Data", "width": 150},
         {"label": "Resolved Date", "fieldname": "resolved_date", "fieldtype": "Date", "width": 120},
         {"label": "Resolved Time", "fieldname": "resolved_time", "fieldtype": "Time", "width": 120},
-        {"label": "Remark", "fieldname": "remark", "fieldtype": "Small Text", "width": 200},
+        {"label": "Remark", "fieldname": "remark", "fieldtype": "Small Text", "width": 400},
     ]
 
 
@@ -64,7 +65,7 @@ def get_data(filters=None):
     tickets = frappe.get_all(
         "Sahayog Ticket",
         filters=query_filters,
-        fields=["name", "employee_id", "ticket_type", "status", "response_pending", "creation", "ticket_resolved_user", "resolved_remark"]
+        fields=["name", "employee_id", "ticket_type", "status", "response_pending", "creation", "ticket_resolved_user", "resolved_remark", "executive_remark"]
     )
 
     if not tickets:
@@ -76,7 +77,7 @@ def get_data(filters=None):
     status_logs = frappe.get_all(
         "Ticket Status Log",
         filters={"parent": ["in", ticket_names]},
-        fields=["parent", "to_status", "status_change_by", "status_change_on", "status_remark"],
+        fields=["parent", "from_status", "to_status", "status_change_by", "status_change_on", "status_remark"],
         order_by="status_change_on asc"
     )
 
@@ -86,6 +87,25 @@ def get_data(filters=None):
         if log.parent not in logs_map:
             logs_map[log.parent] = []
         logs_map[log.parent].append(log)
+
+    # Batch fetch comments for all tickets
+    all_comments = frappe.get_all(
+        "Comment",
+        filters={
+            "reference_doctype": "Sahayog Ticket",
+            "reference_name": ["in", ticket_names],
+            "comment_type": ["in", ["Comment", "Attachment"]]
+        },
+        fields=["reference_name", "content", "owner", "creation"],
+        order_by="creation asc"
+    )
+
+    # Organize comments by ticket name
+    comments_map = {}
+    for c in all_comments:
+        if c.reference_name not in comments_map:
+            comments_map[c.reference_name] = []
+        comments_map[c.reference_name].append(c)
 
     for t in tickets:
 
@@ -146,6 +166,34 @@ def get_data(filters=None):
         # Ticket Cycle (Now showing count of log entries)
         ticket_cycle = len(t_logs)
 
+        # Build remark: executive_remark + resolved_remark + comments
+        remarks = []
+        
+        # Add executive remark
+        if t.get("executive_remark"):
+            exec_remark = str(t.executive_remark).strip()
+            if exec_remark:
+                remarks.append(f"Executive Remark: {exec_remark}")
+        
+        # Add resolved remark
+        if t.get("resolved_remark"):
+            resolved_rem = str(t.resolved_remark).strip()
+            if resolved_rem:
+                remarks.append(f"Resolved Remark: {resolved_rem}")
+        
+        # Add all comments
+        for c in comments_map.get(t.name, []):
+            content = str(c.content or "").strip()
+            # Remove HTML tags if present
+            if content:
+                # Simple HTML tag removal
+                content_clean = re.sub(r'<[^>]+>', '', content).strip()
+                if content_clean:
+                    remarks.append(f"{c.owner}: {content_clean}")
+        
+        # Join all remarks with newline for full display
+        combined_remark = "\n".join(remarks) if remarks else ""
+
         # Append Row
         data.append({
             "ticket": t.name,
@@ -172,7 +220,7 @@ def get_data(filters=None):
             "resolved_date": resolved_date,
             "resolved_time": resolved_time,
             "resolved_by": t.get("ticket_resolved_user"),
-            "remark": t.get("resolved_remark")
+            "remark": combined_remark
         })
 
     return data
