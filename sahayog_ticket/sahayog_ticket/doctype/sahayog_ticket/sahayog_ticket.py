@@ -334,6 +334,33 @@ class SahayogTicket(Document):
 
 
 @frappe.whitelist()
+def send_assignment_email(ticket_name, assigned_to):
+    emp = frappe.db.get_value("Employee", {"user_id": assigned_to}, "company_email")
+    if not emp:
+        return
+
+    ticket = frappe.get_doc("Sahayog Ticket", ticket_name)
+    ticket_url = frappe.utils.get_url(f"/app/sahayog-ticket/{ticket_name}")
+
+    frappe.sendmail(
+        recipients=[emp],
+        subject=f"Ticket Assigned to You: {ticket_name}",
+        message=f"""
+            <p>Hello,</p>
+            <p>A ticket has been assigned to you.</p>
+            <p><b>Ticket ID:</b> {ticket_name}</p>
+            <p><b>Department:</b> {ticket.dept_name or "N/A"}</p>
+            <p><b>Ticket Type:</b> {ticket.ticket_type or "N/A"}</p>
+            <p><b>Priority:</b> {ticket.priority or "N/A"}</p>
+            <p><b>Status:</b> {ticket.status or "N/A"}</p>
+            <p><b>Description:</b> {ticket.description or "N/A"}</p>
+            <p><a href="{ticket_url}">View Ticket</a></p>
+        """,
+        now=True
+    )
+
+
+@frappe.whitelist()
 def get_users_by_departsection_roles(departsection):
     if not departsection:
         return []
