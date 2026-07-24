@@ -606,6 +606,24 @@ def create_emmr_from_ticket(ticket_id, items=None):
 
         doc.insert()
 
+        try:
+            from frappe.model.workflow import apply_workflow
+            workflow_name = frappe.db.get_value("Workflow", {"document_type": "Employee Material Request", "is_active": 1}, "name")
+            action = frappe.db.get_value("Workflow Transition", {"parent": workflow_name, "state": "Draft", "next_state": "Pending Reporting Person"}, "action") if workflow_name else None
+            if action:
+                apply_workflow(doc, action)
+            else:
+                raise Exception("Action not found")
+        except Exception:
+            doc.db_set("status", "Pending Reporting Person")
+            doc.db_set("reporting_person_status", "Pending")
+            doc.db_set("request_datetime", frappe.utils.now())
+            if hasattr(doc, "send_reporting_person_email"):
+                try:
+                    doc.send_reporting_person_email()
+                except Exception:
+                    pass
+        
         if ticket.description:
             import re
             plain_desc = re.sub(r'<[^>]+>', '', ticket.description).strip()
