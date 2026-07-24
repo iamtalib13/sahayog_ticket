@@ -635,6 +635,7 @@ def create_emmr_from_ticket(ticket_id, items=None):
                 "content": f"Remark: {plain_desc}",
             }).insert(ignore_permissions=True)
 
+        ticket.db_set("asset_request_id", doc.name)
         frappe.db.commit()
 
         return {"emmr_id": doc.name}
