@@ -563,6 +563,7 @@ def create_emmr_from_ticket(ticket_id, items=None):
         emmr_department = DEPT_MAP.get(ticket.dept_name, "Purchase")
 
         doc = frappe.new_doc("Employee Material Request")
+        doc.naming_series = "EMR-.YYYY.-.#####"
         doc.employee = emp_info.name
         doc.request_date = frappe.utils.today()
         doc.required_by_date = frappe.utils.today()
