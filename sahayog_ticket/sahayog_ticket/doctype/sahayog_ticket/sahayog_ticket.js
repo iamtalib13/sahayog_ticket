@@ -1023,6 +1023,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                     cannot_add_rows: false,
                     in_place_edit: true,
                     reqd: 1,
+                    data: [{ item_code: "", quantity: 1 }],
                     fields: [
                       {
                         fieldname: "item_code",
