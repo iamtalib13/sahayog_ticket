@@ -67,9 +67,3 @@ def get_account_details(account_number):
     finally:
         cursor.close()
         conn.close()
-
-
-
-@frappe.whitelist()
-def test():
-    print("test")

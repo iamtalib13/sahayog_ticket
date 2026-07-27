@@ -127,8 +127,10 @@ scheduler_events = {
     "cron": {
         "0 0 * * *": [
             "sahayog_ticket.tasks.update_tat_age",
+        ],  # Daily at 12 AM
+        "0 1 * * *": [
             "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.auto_close_resolved_tickets"
-        ],  # Daily at 12 AM    
+        ],  # Daily at 1 AM
     }
 }
 

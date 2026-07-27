@@ -2,6 +2,7 @@
 # Copyright (c) 2022, Talib Sheikh and contributors
 # For license information, please see license.txt
 
+import re
 import frappe
 from frappe.model.document import Document
 from datetime import datetime
@@ -27,7 +28,6 @@ class SahayogTicket(Document):
 # sends email notification to branch when ticket is marked as Resolved or Closed
 # with fallback logic to find branch email by sol_id or branch name.
     def notify_branch_on_resolution(self):
-        # 1. Ensure we have an employee_id to work with
         emp_id = self.employee_id
         if not emp_id and self.owner:
             emp_id = frappe.db.get_value("Employee", {"user_id": self.owner}, "employee_number")
@@ -35,7 +35,6 @@ class SahayogTicket(Document):
         if not emp_id:
             return
 
-        # 2. Check if status is Resolved or Closed and ticket type is Account Service Request
         if self.status in ["Resolved", "Closed"] and self.ticket_type == "Account Service Request":
             is_status_changed = False
             if not self._doc_before_save:
@@ -44,29 +43,23 @@ class SahayogTicket(Document):
                 is_status_changed = True
 
             if is_status_changed:
-                # 3. Get Employee's branch info
-                emp_data = frappe.db.get_value("Employee", {"employee_number": emp_id}, ["sol_id", "sahayog_branch"], as_dict=True)
-                
+                # Single query to fetch all employee data
+                emp_data = frappe.db.get_value(
+                    "Employee",
+                    {"employee_number": emp_id},
+                    ["sol_id", "sahayog_branch", "employee_name", "designation", "branch", "department"],
+                    as_dict=True
+                ) or {}
+
                 branch_email = None
-                if emp_data:
-                    # Try finding email by sol_id first
-                    if emp_data.sol_id:
-                        branch_email = frappe.db.get_value("Sahayog Branch", {"sol_id": emp_data.sol_id}, "email")
-                    
-                    # Fallback to finding by branch name (sahayog_branch)
-                    if not branch_email and emp_data.sahayog_branch:
-                        branch_email = frappe.db.get_value("Sahayog Branch", {"branch": emp_data.sahayog_branch}, "email")
+                if emp_data.get("sol_id"):
+                    branch_email = frappe.db.get_value("Sahayog Branch", {"sol_id": emp_data.sol_id}, "email")
+                if not branch_email and emp_data.get("sahayog_branch"):
+                    branch_email = frappe.db.get_value("Sahayog Branch", {"branch": emp_data.sahayog_branch}, "email")
 
                 if branch_email:
                     subject = _("Ticket {0} has been {1}").format(self.name, self.status)
-                    
-                    # Fetch employee info for the card
-                    emp_info = frappe.get_value(
-                        "Employee",
-                        {"employee_number": emp_id},
-                        ["employee_name", "designation", "branch", "department"],
-                        as_dict=True
-                    ) or {}
+                    emp_info = emp_data
 
                     message = f"""
                         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #444; max-width: 800px; margin: auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
@@ -104,7 +97,6 @@ class SahayogTicket(Document):
                         recipients=[branch_email],
                         subject=subject,
                         message=message,
-                        now=True
                     )
 
     def after_insert(self):
@@ -184,7 +176,6 @@ class SahayogTicket(Document):
             recipients=["Accountservicing@sahayogmultistate.com"],
             subject=subject,
             message=intro_details,
-            now=True
         )
 
     def set_employee_id(self):
@@ -200,8 +191,6 @@ class SahayogTicket(Document):
 
     
     def check_account_validation(self):
-        import re
-
         # Regex patterns
         mobile_pattern = r"^[6-9]\d{9}$"                 # 10-digit Indian mobile
         pan_pattern = r"^[A-Z]{5}[0-9]{4}[A-Z]$"         # PAN Format ABCDE1234F
@@ -319,19 +308,6 @@ class SahayogTicket(Document):
             })
         
 
-    def set_creation_time(self):
-        creation_date_time = self.creation
-        creation_datetime = self.convert_to_datetime(creation_date_time)
-        creation_time = self.format_time(creation_datetime)
-        self.creation_time = creation_time
-
-    def convert_to_datetime(self, creation_date_time):
-        return datetime.strptime(creation_date_time, "%Y-%m-%d %H:%M:%S.%f")
-
-    def format_time(self, creation_datetime):
-        return creation_datetime.strftime("%I:%M %p")
-    
-
 
 @frappe.whitelist()
 def send_assignment_email(ticket_name, assigned_to):
@@ -356,7 +332,6 @@ def send_assignment_email(ticket_name, assigned_to):
             <p><b>Description:</b> {ticket.description or "N/A"}</p>
             <p><a href="{ticket_url}">View Ticket</a></p>
         """,
-        now=True
     )
 
 
@@ -431,28 +406,21 @@ def auto_close_resolved_tickets():
 
 @frappe.whitelist()
 def get_counts(employee_id):
-    statuses = [
-        "Open",
-        "Read",
-        "In-Progress",
-        "On-Hold",
-        "Re-Opened",
-        "Resolved",
-        "Closed",
-        "Cancelled",
-    ]
-    counts = {}
-
-    for status in statuses:
-        count = frappe.db.sql(
-            """SELECT COUNT(*)
-               FROM `tabSahayog Ticket`
-               WHERE employee_id = %s
-               AND status = %s;""",
-            (employee_id, status),
-        )
-        counts[status.lower().replace("-", "_")] = count[0][0] if count else 0
-
+    rows = frappe.db.sql(
+        """SELECT status, COUNT(*) as cnt
+           FROM `tabSahayog Ticket`
+           WHERE employee_id = %s
+           GROUP BY status""",
+        (employee_id,),
+        as_dict=True,
+    )
+    counts = {s.lower().replace("-", "_"): 0 for s in [
+        "Open", "Read", "In-Progress", "On-Hold", "Re-Opened",
+        "Resolved", "Closed", "Cancelled",
+    ]}
+    for row in rows:
+        key = row.status.lower().replace("-", "_")
+        counts[key] = row.cnt
     return counts
 @frappe.whitelist()
 def create_asset_request(ticket_id, employee_id, request_to, emp_name=None, designation=None, department=None, region=None, district=None, branch=None, phone=None, division=None, **kwargs):
@@ -625,7 +593,6 @@ def create_emmr_from_ticket(ticket_id, items=None):
                     pass
         
         if ticket.description:
-            import re
             plain_desc = re.sub(r'<[^>]+>', '', ticket.description).strip()
             frappe.get_doc({
                 "doctype": "Comment",

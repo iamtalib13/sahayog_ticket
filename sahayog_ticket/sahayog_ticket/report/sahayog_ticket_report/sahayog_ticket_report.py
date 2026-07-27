@@ -71,76 +71,75 @@ def execute(filters=None):
     """
 
     # Apply filters if provided
+    params = []
     if filters:
         conditions = []
 
-        # Filter by ticket status
         if filters.get("status"):
-            conditions.append(f"st.status = '{filters['status']}'")
+            conditions.append("st.status = %s")
+            params.append(filters["status"])
 
-        # Filter by priority level
         if filters.get("priority"):
-            conditions.append(f"st.priority = '{filters['priority']}'")
+            conditions.append("st.priority = %s")
+            params.append(filters["priority"])
 
-        # Filter by organizational division (from Employee)
         if filters.get("division"):
-            conditions.append(f"emp.custom_division = '{filters['division']}'")
+            conditions.append("emp.custom_division = %s")
+            params.append(filters["division"])
 
-        # Filter by ticket type
         if filters.get("ticket_type"):
-            conditions.append(f"st.ticket_type = '{filters['ticket_type']}'")
+            conditions.append("st.ticket_type = %s")
+            params.append(filters["ticket_type"])
 
-        # Filter by employee ID
         if filters.get("employee_id"):
-            conditions.append(f"st.employee_id = '{filters['employee_id']}'")
+            conditions.append("st.employee_id = %s")
+            params.append(filters["employee_id"])
 
-        # Filter by employee name (from Employee)
         if filters.get("employee_name"):
-            conditions.append(f"emp.employee_name LIKE '%%{filters['employee_name']}%%'")
+            conditions.append("emp.employee_name LIKE %s")
+            params.append(f"%{filters['employee_name']}%")
 
-        # Filter by branch name (from Employee)
         if filters.get("branch_name"):
-            conditions.append(f"emp.branch = '{filters['branch_name']}'")
+            conditions.append("emp.branch = %s")
+            params.append(filters["branch_name"])
 
-        # Filter by ticket department
         if filters.get("department"):
-            conditions.append(f"st.dept_name = '{filters['department']}'")
+            conditions.append("st.dept_name = %s")
+            params.append(filters["department"])
 
-        # Filter by zone (from Employee)
         if filters.get("zone"):
-            conditions.append(f"emp.custom_zone = '{filters['zone']}'")
+            conditions.append("emp.custom_zone = %s")
+            params.append(filters["zone"])
 
-        # Filter by region (from Employee)
         if filters.get("region"):
-            conditions.append(f"emp.custom_region = '{filters['region']}'")
+            conditions.append("emp.custom_region = %s")
+            params.append(filters["region"])
 
-        # Filter by assigned user
         if filters.get("assigned_to"):
-            conditions.append(f"st.assigned_to = '{filters['assigned_to']}'")
+            conditions.append("st.assigned_to = %s")
+            params.append(filters["assigned_to"])
 
-        # Handle date range filtering
         from_date = filters.get("from_date")
         to_date = filters.get("to_date")
 
-        # Validate and apply date range filters
         if from_date and to_date:
             if from_date > to_date:
                 frappe.throw("From Date cannot be after To Date")
-            conditions.append(f"st.creation BETWEEN '{from_date} 00:00:00' AND '{to_date} 23:59:59'")
+            conditions.append("st.creation BETWEEN %s AND %s")
+            params.extend([f"{from_date} 00:00:00", f"{to_date} 23:59:59"])
         elif from_date:
-            conditions.append(f"st.creation >= '{from_date} 00:00:00'")
+            conditions.append("st.creation >= %s")
+            params.append(f"{from_date} 00:00:00")
         elif to_date:
-            conditions.append(f"st.creation <= '{to_date} 23:59:59'")
+            conditions.append("st.creation <= %s")
+            params.append(f"{to_date} 23:59:59")
 
-        # Add WHERE clause if conditions exist
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
 
-    # Order results by creation date (newest first)
     query += " ORDER BY st.creation DESC"
 
-    # Execute query and return results
-    data = frappe.db.sql(query, as_dict=True)
+    data = frappe.db.sql(query, params, as_dict=True)
 
     status_colors = {
         "Open": "#2490ef",
@@ -176,14 +175,19 @@ def get_employee_department(user=None):
 @frappe.whitelist()
 def get_status_counts(department=None, from_date=None, to_date=None):
     conditions = []
+    params = []
     if department:
-        conditions.append(f"st.dept_name = '{department}'")
+        conditions.append("st.dept_name = %s")
+        params.append(department)
     if from_date and to_date:
-        conditions.append(f"st.creation BETWEEN '{from_date} 00:00:00' AND '{to_date} 23:59:59'")
+        conditions.append("st.creation BETWEEN %s AND %s")
+        params.extend([f"{from_date} 00:00:00", f"{to_date} 23:59:59"])
     elif from_date:
-        conditions.append(f"st.creation >= '{from_date} 00:00:00'")
+        conditions.append("st.creation >= %s")
+        params.append(f"{from_date} 00:00:00")
     elif to_date:
-        conditions.append(f"st.creation <= '{to_date} 23:59:59'")
+        conditions.append("st.creation <= %s")
+        params.append(f"{to_date} 23:59:59")
 
     where = "WHERE " + " AND ".join(conditions) if conditions else ""
     query = f"""
@@ -192,7 +196,7 @@ def get_status_counts(department=None, from_date=None, to_date=None):
         {where}
         GROUP BY st.status
     """
-    result = frappe.db.sql(query, as_dict=True)
+    result = frappe.db.sql(query, params, as_dict=True)
     counts = {"Open": 0, "In-Progress": 0, "Resolved": 0, "Closed": 0}
     for row in result:
         if row.status in counts:

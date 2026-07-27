@@ -1,4 +1,6 @@
+import re
 import frappe
+from frappe.utils import strip_html_tags
 
 
 def send_chat_notification(doc, method=None):
@@ -73,14 +75,12 @@ def get_message_preview(comment_doc):
     if comment_doc.comment_type == "Attachment":
         # Extract filename from attachment
         if "<a" in content:
-            import re
             match = re.search(r'>([^<]+)</a>', content)
             if match:
                 return f"📎 {match.group(1)}"
         return "📎 Sent an attachment"
     
     # Strip HTML tags for text preview
-    from frappe.utils import strip_html_tags
     text = strip_html_tags(content).strip()
     
     # Truncate to 50 chars

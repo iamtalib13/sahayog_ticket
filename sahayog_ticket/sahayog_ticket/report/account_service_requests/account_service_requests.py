@@ -107,41 +107,55 @@ def get_data(filters=None):
             comments_map[c.reference_name] = []
         comments_map[c.reference_name].append(c)
 
+    # Batch fetch Employee details
+    employee_ids = list(set(t.employee_id for t in tickets if t.employee_id))
+    employees = frappe.get_all(
+        "Employee",
+        filters={"employee_number": ["in", employee_ids]} if employee_ids else {},
+        fields=["employee_number", "employee_name", "sol_id"]
+    ) if employee_ids else []
+    emp_map = {e.employee_number: e for e in employees}
+
+    # Batch fetch Sahayog Branch details
+    sol_ids = list(set(emp_map[eid].get("sol_id") for eid in employee_ids if emp_map.get(eid, {}).get("sol_id")))
+    branches = frappe.get_all(
+        "Sahayog Branch",
+        filters={"sol_id": ["in", sol_ids]} if sol_ids else {},
+        fields=["sol_id", "branch", "state", "zone", "region", "district"]
+    ) if sol_ids else []
+    branch_map = {b.sol_id: b for b in branches}
+
+    # Batch fetch Ticket Items
+    detail_filters = {"parent": ["in", ticket_names]}
+    if filters.get("request_type"):
+        detail_filters["request_type"] = filters.get("request_type")
+    all_details = frappe.get_all(
+        "Ticket Item",
+        filters=detail_filters,
+        fields=["parent", "request_type"]
+    )
+    detail_map = {}
+    for d in all_details:
+        detail_map.setdefault(d.parent, []).append(d)
+
     for t in tickets:
 
-        # Employee Details
-        emp = (frappe.db.get_value(
-            "Employee",
-            t.employee_id,
-            ["employee_name", "sol_id"],
-            as_dict=True
-        ) if t.employee_id else {}) or {}
+        # Employee Details (pre-fetched)
+        emp = emp_map.get(t.employee_id, {})
 
-        # Branch Details from sol_id
+        # Branch Details from sol_id (pre-fetched)
         sol_id = emp.get("sol_id")
-        branch = (frappe.db.get_value(
-            "Sahayog Branch",
-            {"sol_id": sol_id},
-            ["branch", "state", "zone", "region", "district"],
-            as_dict=True
-        ) if sol_id else {}) or {}
+        branch = branch_map.get(sol_id, {}) if sol_id else {}
 
-        # Child (Ticket Item)
-        detail_filters = {"parent": t.name}
+        # Child (Ticket Item) (pre-fetched)
+        request_type = None
+        ticket_details = detail_map.get(t.name, [])
         if filters.get("request_type"):
-            detail_filters["request_type"] = filters.get("request_type")
-
-        detail = frappe.get_all(
-            "Ticket Item",
-            filters=detail_filters,
-            fields=["request_type"],
-            limit=1
-        )
-
-        if filters.get("request_type") and not detail:
-            continue
-
-        request_type = detail[0].request_type if detail else None
+            ticket_details = [d for d in ticket_details if d.request_type == filters.get("request_type")]
+            if not ticket_details:
+                continue
+        if ticket_details:
+            request_type = ticket_details[0].request_type
 
         # Process logs for the ticket
         t_logs = logs_map.get(t.name, [])

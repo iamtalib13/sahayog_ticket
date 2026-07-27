@@ -22,84 +22,74 @@ from frappe.utils import get_datetime, now, date_diff
 
 def update_tat_age():
     try:
-        # Get the current datetime
         current_datetime = get_datetime(now())
         
-        # Fetch all Sahayog Ticket records where status is not "Closed", "Cancelled", or "Resolved"
         tickets = frappe.get_all(
             "Sahayog Ticket",
             filters={"status": ["not in", ["Closed", "Cancelled", "Resolved"]]},
-            fields=[
-                "name",
-                "creation",
-                "status",
-                "dept_name",
-                "ticket_type",
-                "emp_first_name",
-                "emp_last_name",
-            ],
+            fields=["name", "creation", "emp_first_name", "emp_last_name"],
         )
 
-        # Initialize a counter for updated records
-        updated_records_count = 0
+        if not tickets:
+            return
+
+        # Build bulk update values
+        cases_total_days = []
+        cases_employee_name = []
+        cases_creation_time = []
+        ticket_names = []
 
         for ticket in tickets:
-            ticket_id = ticket.name
-            
-            # Convert creation datetime string to datetime object
             creation_datetime = get_datetime(ticket.creation)
-            
-            # Format creation date and time
-            creation_date = creation_datetime.strftime("%Y-%m-%d")  # Format YYYY-MM-DD
-            creation_time = creation_datetime.strftime("%I:%M %p")  # Format HH:MM AM/PM
-
-            # Debug print statements to verify the raw and formatted values
-            print(f"Raw Creation Datetime: {ticket.creation}")
-            print(f"Parsed Creation Datetime: {creation_datetime}")
-            print(f"Formatted Creation Date: {creation_date}")
-            print(f"Formatted Creation Time: {creation_time}")
-
-            # Calculate the total days since creation using date_diff
             total_days = date_diff(current_datetime, creation_datetime)
+            employee_name = f"{ticket.emp_first_name or ''} {ticket.emp_last_name or ''}".strip()
+            creation_time = creation_datetime.strftime("%I:%M %p")
 
-            # Concatenate first_name and last_name
-            employee_name = f"{ticket.emp_first_name} {ticket.emp_last_name}"
+            ticket_names.append(ticket.name)
+            cases_total_days.append((total_days, ticket.name))
+            cases_employee_name.append((employee_name, ticket.name))
+            cases_creation_time.append((creation_time, ticket.name))
 
-            # Update fields in the document
-            frappe.db.set_value(
-                "Sahayog Ticket", ticket_id, "total_days", total_days, update_modified=False
+        # Bulk update total_days
+        if cases_total_days:
+            frappe.db.sql(
+                """UPDATE `tabSahayog Ticket`
+                   SET total_days = CASE name {} END
+                   WHERE name IN ({})""".format(
+                       " ".join(f"WHEN %s THEN %s" for _ in cases_total_days),
+                       ", ".join(["%s"] * len(ticket_names))
+                   ),
+               [item for pair in cases_total_days for item in pair] + ticket_names
             )
-            
-            frappe.db.set_value(
-                "Sahayog Ticket",
-                ticket_id,
-                "employee_name",
-                employee_name,
-                update_modified=False,
+
+        # Bulk update employee_name
+        if cases_employee_name:
+            frappe.db.sql(
+                """UPDATE `tabSahayog Ticket`
+                   SET employee_name = CASE name {} END
+                   WHERE name IN ({})""".format(
+                       " ".join(f"WHEN %s THEN %s" for _ in cases_employee_name),
+                       ", ".join(["%s"] * len(ticket_names))
+                   ),
+               [item for pair in cases_employee_name for item in pair] + ticket_names
             )
-            
-            frappe.db.set_value(
-                "Sahayog Ticket", ticket_id, "creation_time", creation_time, update_modified=False
+
+        # Bulk update creation_time
+        if cases_creation_time:
+            frappe.db.sql(
+                """UPDATE `tabSahayog Ticket`
+                   SET creation_time = CASE name {} END
+                   WHERE name IN ({})""".format(
+                       " ".join(f"WHEN %s THEN %s" for _ in cases_creation_time),
+                       ", ".join(["%s"] * len(ticket_names))
+                   ),
+               [item for pair in cases_creation_time for item in pair] + ticket_names
             )
 
-            # Increment the counter
-            updated_records_count += 1
-
-            # Print the updated values
-            print(f"Ticket ID: {ticket_id}")
-            print(f"Creation Date: {creation_date}")
-            print(f"Creation Time: {creation_time}")
-            print(f"Total Days: {total_days}")
-            print(f"Employee Name: {employee_name}")
-
-        # Commit the transaction to the database
         frappe.db.commit()
-
-        # Log the number of records updated
-        frappe.log(f"Updated total days and employee names for {updated_records_count} records")
+        frappe.log(f"Updated TAT age for {len(ticket_names)} tickets")
 
     except Exception as e:
-        # Handle any exceptions and log an error message
         frappe.log_error(f"Error in update_tat_age: {e}", "Update TAT Age Error")
 
 import datetime
