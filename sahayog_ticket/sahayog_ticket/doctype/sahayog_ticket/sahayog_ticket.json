@@ -12,12 +12,13 @@
   "asset_request_section",
   "asset_request_id",
   "column_break_5",
-  "employee_id",
-  "branch",
-  "district",
-  "sol_id",
-  "column_break_17",
   "support_system_email",
+  "column_break_17",
+  "section_break_fvya",
+  "employee_id",
+  "column_break_cyht",
+  "column_break_ksez",
+  "column_break_wkfx",
   "ticket_details_tab",
   "last_user",
   "column_break_4",
@@ -49,7 +50,6 @@
   "reopen_remark",
   "ticket_assigned_details_section",
   "assigned_to",
-  "assigned_to_name",
   "ticket_resolved_details_section",
   "ticket_resolved_by",
   "ticket_resolved_user",
@@ -66,7 +66,24 @@
   "priority_timer",
   "status_log_tab",
   "status_log_details_section",
-  "status_log"
+  "status_log",
+  "report_data_tab",
+  "employee_name",
+  "sol_id",
+  "designation",
+  "emp_department",
+  "branch",
+  "state",
+  "zone",
+  "region",
+  "division",
+  "district",
+  "assigned_to_name",
+  "request_type",
+  "ticket_cycle",
+  "resolved_date",
+  "resolved_time",
+  "full_remarks_history"
  ],
  "fields": [
   {
@@ -455,11 +472,110 @@
    "fieldtype": "Select",
    "label": "Response Pending",
    "options": "Pending Operations\nPending Branch\nResolved"
+  },
+  {
+   "fieldname": "section_break_fvya",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_cyht",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_ksez",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_wkfx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "report_data_tab",
+   "fieldtype": "Tab Break",
+   "label": "Report Data"
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "fetch_from": "employee_id.employee_name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Data",
+   "label": "Designation",
+   "fetch_from": "employee_id.designation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "emp_department",
+   "fieldtype": "Data",
+   "label": "Employee Department",
+   "fetch_from": "employee_id.department",
+   "read_only": 1
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State",
+   "read_only": 1
+  },
+  {
+   "fieldname": "zone",
+   "fieldtype": "Data",
+   "label": "Zone",
+   "fetch_from": "employee_id.custom_zone",
+   "read_only": 1
+  },
+  {
+   "fieldname": "region",
+   "fieldtype": "Data",
+   "label": "Region",
+   "fetch_from": "employee_id.custom_region",
+   "read_only": 1
+  },
+  {
+   "fieldname": "division",
+   "fieldtype": "Data",
+   "label": "Division",
+   "fetch_from": "employee_id.custom_division",
+   "read_only": 1
+  },
+  {
+   "fieldname": "request_type",
+   "fieldtype": "Data",
+   "label": "Request Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ticket_cycle",
+   "fieldtype": "Int",
+   "label": "Ticket Cycle",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resolved_date",
+   "fieldtype": "Date",
+   "label": "Resolved Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resolved_time",
+   "fieldtype": "Time",
+   "label": "Resolved Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "full_remarks_history",
+   "fieldtype": "Text",
+   "label": "Full Remarks History",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-17 16:53:52.345949",
+ "modified": "2026-07-27 12:33:39.518807",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",

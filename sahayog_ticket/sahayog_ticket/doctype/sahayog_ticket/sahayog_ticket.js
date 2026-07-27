@@ -56,12 +56,13 @@ const ticketPrivacyObserver = new MutationObserver((mutations) => {
 // Start observing the DOM
 ticketPrivacyObserver.observe(document.body, { childList: true, subtree: true });
 
-// Listen to route changes to safely add/remove the CSS scope
+// Listen to route changes to safely add/remove the CSS scope and disconnect observer when not on form
 frappe.router.on('change', () => {
     if (frappe.get_route()[0] === 'Form' && frappe.get_route()[1] === 'Sahayog Ticket') {
         $('body').addClass('ticket-active-form');
     } else {
         $('body').removeClass('ticket-active-form');
+        ticketPrivacyObserver.disconnect();
         $(".chatbot-fab, .chatbot-floating-window").remove();
     }
 });
@@ -641,7 +642,7 @@ frappe.ui.form.on("Sahayog Ticket", {
         filters: { reference_doctype: frm.doctype, reference_name: frm.docname, comment_type: ["in", ["Comment", "Attachment", "Info"]] },
         fields: ["content", "owner", "creation", "comment_by", "comment_type"],
         order_by: "creation asc",
-        limit_page_length: 0  // Fetch all comments
+        limit_page_length: 200  // Limit to last 200 comments
       },
       callback: function (r) {
         // Skip re-render if message count hasn't changed

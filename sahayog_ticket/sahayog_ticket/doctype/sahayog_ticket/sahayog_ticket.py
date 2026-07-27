@@ -23,6 +23,7 @@ class SahayogTicket(Document):
         #self.set_creation_time()
         self.track_status_change()
         self.set_employee_id()
+        self.set_state_from_branch()
         self.notify_branch_on_resolution()
 
 # sends email notification to branch when ticket is marked as Resolved or Closed
@@ -184,6 +185,14 @@ class SahayogTicket(Document):
             if emp_info and emp_info.employee_number:
                 self.employee_id = emp_info.employee_number
 
+    def set_state_from_branch(self):
+        """Fetch state from Sahayog Branch using employee's sol_id.
+        fetch_from only supports one level deep, so we do this in Python."""
+        if self.sol_id:
+            state = frappe.db.get_value("Sahayog Branch", {"sol_id": self.sol_id}, "state")
+            if state:
+                self.state = state
+
     def validate(self):
         self.validate_request_detail()
         self.check_account_validation()
@@ -315,7 +324,8 @@ def send_assignment_email(ticket_name, assigned_to):
     if not emp:
         return
 
-    ticket = frappe.get_doc("Sahayog Ticket", ticket_name)
+    ticket = frappe.db.get_value("Sahayog Ticket", ticket_name, 
+        ["dept_name", "ticket_type", "priority", "status", "description"], as_dict=True)
     ticket_url = frappe.utils.get_url(f"/app/sahayog-ticket/{ticket_name}")
 
     frappe.sendmail(
@@ -375,33 +385,87 @@ def get_users_by_departsection_roles(departsection):
 def auto_close_resolved_tickets():
     frappe.log_error("Auto-close job triggered", "DEBUG")
 
-    threshold_time = add_to_date(now_datetime(), minutes=-48)  # Use minutes for quick testing
+    threshold_time = add_to_date(now_datetime(), minutes=-48)
 
     tickets = frappe.get_all("Sahayog Ticket", 
         filters={
             "status": "Resolved",
             "ticket_resolved_on": ["<", threshold_time]
         },
-        fields=["name"]
+        fields=["name", "employee_id", "ticket_type", "owner"]
     )
 
     frappe.log_error(f"Found {len(tickets)} tickets to close", "DEBUG")
 
-    for ticket in tickets:
-        doc = frappe.get_doc("Sahayog Ticket", ticket.name)
-    
-        if doc.status == "Resolved":
-            frappe.log_error(f"Attempting to close Ticket: {doc.name}", "DEBUG")
-            doc.status = "Closed"
-    
+    ticket_names = [t.name for t in tickets]
+    if ticket_names:
+        frappe.db.sql(
+            """UPDATE `tabSahayog Ticket`
+               SET status = 'Closed'
+               WHERE name IN %s AND status = 'Resolved'""",
+            (tuple(ticket_names),)
+        )
+
+        # Log status changes in status_log child table
+        for ticket in tickets:
             try:
-                doc.flags.ignore_mandatory = True
-                doc.flags.ignore_validate = True  # Add this too
-                doc.save(ignore_permissions=True)
-                frappe.db.commit()
-                frappe.log_error(f"Ticket {doc.name} auto-closed successfully", "DEBUG")
+                frappe.get_doc({
+                    "doctype": "Sahayog Ticket Status Log",
+                    "parent": ticket.name,
+                    "parenttype": "Sahayog Ticket",
+                    "parentfield": "status_log",
+                    "from_status": "Resolved",
+                    "to_status": "Closed",
+                    "status_change_by": "Administrator",
+                    "status_change_on": frappe.utils.now_datetime(),
+                    "status_remark": "Auto-closed after 48 hours"
+                }).insert(ignore_permissions=True)
+            except Exception:
+                pass
+
+        frappe.db.commit()
+
+        # Send branch notification emails for Account Service Request tickets
+        for ticket in tickets:
+            if ticket.ticket_type != "Account Service Request":
+                continue
+            try:
+                _send_auto_close_notification(ticket)
             except Exception as e:
-                frappe.log_error(f"Failed to auto-close ticket {doc.name}: {str(e)}", "ERROR")
+                frappe.log_error(f"Failed to notify for ticket {ticket.name}: {str(e)}", "ERROR")
+
+        frappe.log_error(f"Auto-closed {len(ticket_names)} tickets successfully", "DEBUG")
+
+
+def _send_auto_close_notification(ticket):
+    """Send email to branch when ticket is auto-closed."""
+    emp_id = ticket.employee_id
+    if not emp_id and ticket.owner:
+        emp_id = frappe.db.get_value("Employee", {"user_id": ticket.owner}, "employee_number")
+    if not emp_id:
+        return
+
+    emp_data = frappe.db.get_value(
+        "Employee",
+        {"employee_number": emp_id},
+        ["sol_id", "sahayog_branch", "employee_name", "branch"],
+        as_dict=True
+    ) or {}
+
+    branch_email = None
+    if emp_data.get("sol_id"):
+        branch_email = frappe.db.get_value("Sahayog Branch", {"sol_id": emp_data.sol_id}, "email")
+    if not branch_email and emp_data.get("sahayog_branch"):
+        branch_email = frappe.db.get_value("Sahayog Branch", {"branch": emp_data.sahayog_branch}, "email")
+
+    if branch_email:
+        subject = f"Ticket {ticket.name} has been auto-closed"
+        message = f"""
+            <p>The ticket <b>{ticket.name}</b> has been automatically closed after 48 hours of being in Resolved status.</p>
+            <p><b>Employee:</b> {emp_data.get('employee_name', 'N/A')}</p>
+            <p><b>Branch:</b> {emp_data.get('branch', 'N/A')}</p>
+        """
+        frappe.sendmail(recipients=[branch_email], subject=subject, message=message)
 
 
 @frappe.whitelist()
@@ -760,7 +824,7 @@ def get_it_support_executives(doctype=None, txt=None, searchfield=None, filters=
                 "User",
                 filters={"email": ["in", user_ids], "name": ["!=", "Administrator"],"enabled": 1},
                 fields=["name", "full_name",],
-                limit_page_length=0,
+                limit_page_length=200,
             )
             txt = (txt or "").lower()
 
