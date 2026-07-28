@@ -56,12 +56,13 @@ const ticketPrivacyObserver = new MutationObserver((mutations) => {
 // Start observing the DOM
 ticketPrivacyObserver.observe(document.body, { childList: true, subtree: true });
 
-// Listen to route changes to safely add/remove the CSS scope
+// Listen to route changes to safely add/remove the CSS scope and disconnect observer when not on form
 frappe.router.on('change', () => {
     if (frappe.get_route()[0] === 'Form' && frappe.get_route()[1] === 'Sahayog Ticket') {
         $('body').addClass('ticket-active-form');
     } else {
         $('body').removeClass('ticket-active-form');
+        ticketPrivacyObserver.disconnect();
         $(".chatbot-fab, .chatbot-floating-window").remove();
     }
 });
@@ -174,7 +175,6 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
 
     if (frm.is_new()) {
-      console.log("New Form - Set Employee Details");
       frm.trigger("Employee_hidden_fields");
     } else if (!frm.is_new()) {
       if (
@@ -206,7 +206,6 @@ frappe.ui.form.on("Sahayog Ticket", {
         frappe.user.has_role("Loan Support Executive") ||
         frappe.user.has_role("CBS Support Executive")
       ) {
-        console.log("User has one of the Support Executive roles");
 
         if (frm.doc.status === "Open") {
           frm.trigger("In_Progress_button");
@@ -220,22 +219,18 @@ frappe.ui.form.on("Sahayog Ticket", {
 
       if (frappe.user.has_role("System Manager")) {
       } else if (frappe.user.has_role("Employee")) {
-        console.log("Employee");
         if (
           frm.doc.status === "Resolved" &&
           frm.doc.owner === frappe.session.user
         ) {
-          console.log(frm.doc.owner);
           frm.trigger("reopen_button");
           frm.trigger("close_button");
         }
       } else {
         if (frappe.user.has_role("CTO")) {
-          console.log("CTO");
           frm.disable_save();
           frm.disable_form();
         } else {
-          console.log("Not Employee");
           frm.set_df_property("cancel_ticket_btn", "hidden", 1);
 
           if (
@@ -258,7 +253,6 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
 
     if (frappe.user.has_role("Stationery Store & Support Manager")) {
-      console.log("stationery");
       frm.remove_custom_button("Resolved", "Status");
       frm.remove_custom_button("Read", "Status");
       frm.remove_custom_button("On-Hold", "Status");
@@ -490,16 +484,15 @@ frappe.ui.form.on("Sahayog Ticket", {
     // Initial check on load
     check_unread_messages();
 
-    // Background poll every 5s
+    // Background poll every 15s, pause when tab is hidden
     window._chatbot_poll_timer = setInterval(function() {
+        if (document.hidden) return;
         if ($(".chatbot-floating-window").is(':visible')) {
-            // Chat is open — refresh messages
             frm.trigger("render_floating_chat_content");
         } else {
-            // Chat is closed — check for unread count
             check_unread_messages();
         }
-    }, 5000);
+    }, 15000);
 
     // FAB Action -> Click to Open Chat, Hide FAB
     fab.on('click', function() {
@@ -649,7 +642,7 @@ frappe.ui.form.on("Sahayog Ticket", {
         filters: { reference_doctype: frm.doctype, reference_name: frm.docname, comment_type: ["in", ["Comment", "Attachment", "Info"]] },
         fields: ["content", "owner", "creation", "comment_by", "comment_type"],
         order_by: "creation asc",
-        limit_page_length: 0  // Fetch all comments
+        limit_page_length: 200  // Limit to last 200 comments
       },
       callback: function (r) {
         // Skip re-render if message count hasn't changed
@@ -811,7 +804,6 @@ frappe.ui.form.on("Sahayog Ticket", {
         }
 
         function render_history(history, emp_map, seen_map) {
-          console.log('🔄 render_history called', new Date().toISOString());
           seen_map = seen_map || {};
           
           chat_history.empty();
@@ -910,32 +902,7 @@ frappe.ui.form.on("Sahayog Ticket", {
   },
 
   before_save: function (frm) {
-    let ticket_owner = frm.doc.owner;
-    console.log("Ticket Owner:", ticket_owner);
-
-    if (ticket_owner) {
-      frappe.call({
-        method: "frappe.client.get_list",
-        args: {
-          doctype: "Employee",
-          filters: {
-            user_id: ticket_owner,
-          },
-          fields: ["name", "employee_number"],
-          limit_page_length: 1,
-        },
-        callback: function (response) {
-          if (response.message && response.message.length > 0) {
-            let employee = response.message[0];
-            frm.set_value("employee_id", employee.employee_number);
-            frm.refresh_field("employee_id");
-            console.log("Employee Number:", employee.employee_number);
-          } else {
-            console.log("No Employee found for user:", ticket_owner);
-          }
-        },
-      });
-    }
+    // Employee ID is set server-side in set_employee_id()
   },
 
   assigned_to: function (frm) {
@@ -951,7 +918,6 @@ frappe.ui.form.on("Sahayog Ticket", {
   },
 
   dept_name: function (frm) {
-    console.log("Dept : " + frm.doc.dept_name);
     frm.refresh_field("ticket_type");
     frm.set_query("ticket_type", function () {
       return {
@@ -972,7 +938,6 @@ frappe.ui.form.on("Sahayog Ticket", {
   },
 
   priority: function (frm) {
-    console.log("priority : " + frm.doc.priority);
     frm.trigger("priority_for_it");
   },
 
@@ -1128,10 +1093,6 @@ frappe.ui.form.on("Sahayog Ticket", {
                         5,
                       );
                     } else {
-                      console.log(
-                        "Error creating Asset Request:",
-                        response.message,
-                      );
                       frappe.show_alert(
                         {
                           message: __("Please Try Again"),
@@ -1164,7 +1125,6 @@ frappe.ui.form.on("Sahayog Ticket", {
             "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_it_support_executives",
           args: { filters: JSON.stringify({ dept_name: frm.doc.dept_name }) },
           callback: function (r) {
-            console.log("Dept Name for Assigned To:", frm.doc.dept_name);
             if (r.message && r.message.length) {
               // Convert r.message to array of objects for sorting
               let users = r.message.map((u) => {
@@ -1288,7 +1248,6 @@ frappe.ui.form.on("Sahayog Ticket", {
         });
       });
     } else {
-      console.log("User does not have any Manager role.");
     }
   },
 
@@ -1322,7 +1281,6 @@ frappe.ui.form.on("Sahayog Ticket", {
     let employee_user = frm.doc.employee_user_id;
 
     if (user == employee_user) {
-      console.log("Employee matched for hidden fields");
     }
   },
 
@@ -2012,7 +1970,6 @@ function setup_notify_branch_button(frm) {
 // SAHAYOG TICKET INTRO RENDERING
 function render_safe_intro_always_visible(frm) {
   if (!frm || !frm.doc || frm.__intro_shown || !frm.doc.employee_id) {
-    console.log("❌ Skipped - no employee_id or already shown");
     return;
   }
 
@@ -2029,7 +1986,6 @@ function render_safe_intro_always_visible(frm) {
     callback: function (r) {
       if (r.message) {
         let data = r.message;
-        console.log("✅ Employee REST API Data:", data);
 
         // ✅ REAL EMPLOYEE FIELDS (standard Employee doctype)
         const emp_id = frm.doc.employee_id || "N/A";
@@ -2091,14 +2047,11 @@ function render_safe_intro_always_visible(frm) {
         `;
 
         insert_intro_perfectly(intro_html);
-        console.log("✅ REST API EMPLOYEE INTRO SHOWN 🎉");
       } else {
-        console.log("❌ No employee found - using form fallback");
         render_safe_intro_fallback(frm);
       }
     },
     error: function () {
-      console.log("❌ REST API failed - form fallback");
       render_safe_intro_fallback(frm);
     },
   });
@@ -2163,7 +2116,6 @@ function render_safe_intro_fallback(frm) {
   `;
 
   insert_intro_perfectly(intro_html);
-  console.log("✅ FALLBACK INTRO SHOWN");
 }
 
 function insert_intro_perfectly(html) {
@@ -2206,9 +2158,7 @@ function insert_intro_perfectly(html) {
           "z-index": "9999 !important",
         })
         .show();
-      console.log("✅ INTRO VISIBLE - SUCCESS");
     } else {
-      console.log("❌ INTRO NOT FOUND");
     }
   }, 200);
 }

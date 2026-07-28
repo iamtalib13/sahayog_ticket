@@ -11,25 +11,32 @@ def user_support_role_status():
         fields=["name", "first_name", "last_name"]
     )
 
+    if not users:
+        return []
+
+    # Batch fetch all Has Role records for all users at once
+    user_names = [u.name for u in users]
+    all_roles = frappe.get_all(
+        "Has Role",
+        filters={"parent": ["in", user_names]},
+        fields=["parent", "role"]
+    )
+
+    # Group roles by parent user
+    roles_by_user = {}
+    for r in all_roles:
+        roles_by_user.setdefault(r.parent, []).append(r.role)
+
     result = []
     for user in users:
-        # Fetch all roles for the user
-        user_roles = frappe.get_all(
-            "Has Role",
-            filters={"parent": user.name},
-            fields=["role"],
-            pluck="role"
-        )
+        user_roles = roles_by_user.get(user.name, [])
 
-        # Separate support manager and executive roles
         manager_roles = [r for r in user_roles if "support manager" in r.lower()]
         executive_roles = [r for r in user_roles if "support executive" in r.lower()]
 
-        # Convert flags (1 if role exists, else 0)
         support_manager = 1 if manager_roles else 0
         support_executive = 1 if executive_roles else 0
 
-        # Skip users without either role
         if support_manager or support_executive:
             full_name = (user.first_name or "") + " " + (user.last_name or "")
             full_name = full_name.strip() or user.name
@@ -74,7 +81,8 @@ def list_all_users():
             "enabled": 1,
             "email": ["not in", excluded_emails]
         },
-        fields=["name", "full_name", "email", "enabled", "user_type"]
+        fields=["name", "full_name", "email", "enabled", "user_type"],
+        limit_page_length=500
     )
     return {
         "count": len(users),

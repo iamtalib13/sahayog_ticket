@@ -12,12 +12,22 @@
   "asset_request_section",
   "asset_request_id",
   "column_break_5",
-  "employee_id",
-  "branch",
-  "district",
-  "sol_id",
-  "column_break_17",
   "support_system_email",
+  "section_break_fvya",
+  "employee_id",
+  "employee_name",
+  "designation",
+  "emp_department",
+  "division",
+  "column_break_ksez",
+  "branch",
+  "sol_id",
+  "zone",
+  "region",
+  "state",
+  "district",
+   "column_break_wkfx",
+   "assigned_to_name",
   "ticket_details_tab",
   "last_user",
   "column_break_4",
@@ -28,7 +38,6 @@
   "due_time",
   "total_hours",
   "section_break_p5rup",
-  "assigned_it",
   "status",
   "dept_name",
   "ticket_type",
@@ -49,7 +58,6 @@
   "reopen_remark",
   "ticket_assigned_details_section",
   "assigned_to",
-  "assigned_to_name",
   "ticket_resolved_details_section",
   "ticket_resolved_by",
   "ticket_resolved_user",
@@ -70,19 +78,7 @@
  ],
  "fields": [
   {
-   "depends_on": "eval:doc.dept_name==\"IT\"",
-   "fieldname": "assigned_it",
-   "fieldtype": "Select",
-   "label": "Assigned To Executive",
-   "options": "\nNone\nGondia Executive\nBhandara Executive - Devendra\nChandrapur Executive - Pravin\nNagpur Executive - Kunal\nGadhchiroli Executive - Sanghdeep",
-   "read_only_depends_on": "eval:doc.status==\"Cancelled\" "
-  },
-  {
    "fieldname": "column_break_5",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_17",
    "fieldtype": "Column Break"
   },
   {
@@ -171,7 +167,8 @@
    "fieldname": "total_days",
    "fieldtype": "Data",
    "label": "Ticket Age (Days)",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "collapsible": 1,
@@ -215,7 +212,8 @@
    "ignore_user_permissions": 1,
    "label": "Employee ID",
    "options": "Employee",
-   "read_only_depends_on": "eval:!frappe.user.has_role('System Manager')"
+   "read_only_depends_on": "eval:!frappe.user.has_role('System Manager')",
+   "search_index": 1
   },
   {
    "depends_on": "eval:doc.ticket_type",
@@ -260,7 +258,8 @@
    "fieldname": "tat",
    "fieldtype": "Data",
    "label": "TAT (Estimated Time for Resolution)",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "column_break_mbxv4",
@@ -424,42 +423,116 @@
    "fieldname": "assigned_to_name",
    "fieldtype": "Data",
    "label": "Assigned User Name",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fetch_from": "employee_id.branch",
    "fieldname": "branch",
-   "fieldtype": "Small Text",
+   "fieldtype": "Data",
    "in_global_search": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Branch"
+   "label": "Branch",
+   "search_index": 1
   },
   {
    "fetch_from": "employee_id.custom_district",
    "fieldname": "district",
-   "fieldtype": "Small Text",
+   "fieldtype": "Data",
    "in_standard_filter": 1,
-   "label": "District"
+   "label": "District",
+   "search_index": 1
   },
   {
    "fetch_from": "employee_id.sol_id",
    "fieldname": "sol_id",
-   "fieldtype": "Small Text",
+   "fieldtype": "Data",
    "in_standard_filter": 1,
    "label": "SOL ID",
-   "read_only": 1
+   "options": "Sahayog Branch",
+   "read_only": 1,
+   "search_index": 1
   },
   {
+   "depends_on": "eval:doc.dept_name ==\"Operations\"",
    "fieldname": "response_pending",
    "fieldtype": "Select",
    "label": "Response Pending",
    "options": "Pending Operations\nPending Branch\nResolved"
-  }
+  },
+  {
+   "fieldname": "section_break_fvya",
+   "fieldtype": "Section Break",
+   "label": "Employe Details"
+  },
+  {
+   "fieldname": "column_break_ksez",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_wkfx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "employee_id.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "employee_id.designation",
+   "fieldname": "designation",
+   "fieldtype": "Data",
+   "label": "Designation",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "employee_id.department",
+   "fieldname": "emp_department",
+   "fieldtype": "Data",
+   "label": "Employee Department",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "employee_id.custom_zone",
+   "fieldname": "zone",
+   "fieldtype": "Data",
+   "label": "Zone",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "employee_id.custom_region",
+   "fieldname": "region",
+   "fieldtype": "Data",
+   "label": "Region",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "employee_id.custom_division",
+    "fieldname": "division",
+    "fieldtype": "Data",
+    "label": "Division",
+    "read_only": 1,
+    "search_index": 1
+   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-17 16:53:52.345949",
+ "modified": "2026-07-28 12:39:22.879697",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
