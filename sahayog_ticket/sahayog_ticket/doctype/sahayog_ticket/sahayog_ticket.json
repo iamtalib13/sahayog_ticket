@@ -13,15 +13,27 @@
   "asset_request_id",
   "column_break_5",
   "support_system_email",
-  "column_break_17",
   "section_break_fvya",
   "employee_id",
-  "sol_id",
-  "column_break_cyht",
-  "branch",
+  "employee_name",
+  "designation",
+  "emp_department",
+  "division",
   "column_break_ksez",
+  "branch",
+  "sol_id",
+  "zone",
+  "region",
+  "state",
   "district",
   "column_break_wkfx",
+  "request_type",
+  "assigned_to_name",
+  "ticket_cycle",
+  "resolved_time",
+  "resolved_date",
+  "section_break_fuaw",
+  "full_remarks_history",
   "ticket_details_tab",
   "last_user",
   "column_break_4",
@@ -32,7 +44,6 @@
   "due_time",
   "total_hours",
   "section_break_p5rup",
-  "assigned_it",
   "status",
   "dept_name",
   "ticket_type",
@@ -69,37 +80,11 @@
   "priority_timer",
   "status_log_tab",
   "status_log_details_section",
-  "status_log",
-  "report_data_tab",
-  "employee_name",
-  "designation",
-  "emp_department",
-  "state",
-  "zone",
-  "region",
-  "division",
-  "assigned_to_name",
-  "request_type",
-  "ticket_cycle",
-  "resolved_date",
-  "resolved_time",
-  "full_remarks_history"
+  "status_log"
  ],
  "fields": [
   {
-   "depends_on": "eval:doc.dept_name==\"IT\"",
-   "fieldname": "assigned_it",
-   "fieldtype": "Select",
-   "label": "Assigned To Executive",
-   "options": "\nNone\nGondia Executive\nBhandara Executive - Devendra\nChandrapur Executive - Pravin\nNagpur Executive - Kunal\nGadhchiroli Executive - Sanghdeep",
-   "read_only_depends_on": "eval:doc.status==\"Cancelled\" "
-  },
-  {
    "fieldname": "column_break_5",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_17",
    "fieldtype": "Column Break"
   },
   {
@@ -446,7 +431,7 @@
   {
    "fetch_from": "employee_id.branch",
    "fieldname": "branch",
-   "fieldtype": "Small Text",
+   "fieldtype": "Data",
    "in_global_search": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
@@ -455,16 +440,17 @@
   {
    "fetch_from": "employee_id.custom_district",
    "fieldname": "district",
-   "fieldtype": "Small Text",
+   "fieldtype": "Data",
    "in_standard_filter": 1,
    "label": "District"
   },
   {
    "fetch_from": "employee_id.sol_id",
    "fieldname": "sol_id",
-   "fieldtype": "Small Text",
+   "fieldtype": "Data",
    "in_standard_filter": 1,
    "label": "SOL ID",
+   "options": "Sahayog Branch",
    "read_only": 1
   },
   {
@@ -475,11 +461,8 @@
   },
   {
    "fieldname": "section_break_fvya",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "column_break_cyht",
-   "fieldtype": "Column Break"
+   "fieldtype": "Section Break",
+   "label": "Employe Details"
   },
   {
    "fieldname": "column_break_ksez",
@@ -488,12 +471,6 @@
   {
    "fieldname": "column_break_wkfx",
    "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "eval:frappe.user.has_role('System Manager')",
-   "fieldname": "report_data_tab",
-   "fieldtype": "Tab Break",
-   "label": "Report Data"
   },
   {
    "fetch_from": "employee_id.employee_name",
@@ -572,11 +549,15 @@
    "fieldtype": "Text",
    "label": "Full Remarks History",
    "read_only": 1
+  },
+  {
+   "fieldname": "section_break_fuaw",
+   "fieldtype": "Section Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-07-27 16:33:28.254282",
+ "modified": "2026-07-28 11:01:24.361012",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
