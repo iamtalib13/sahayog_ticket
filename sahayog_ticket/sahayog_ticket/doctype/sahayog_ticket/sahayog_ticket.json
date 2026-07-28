@@ -26,12 +26,13 @@
   "region",
   "state",
   "district",
+  "section_break_mmeo",
   "column_break_wkfx",
-  "request_type",
   "assigned_to_name",
   "ticket_cycle",
   "resolved_time",
   "resolved_date",
+  "request_type",
   "section_break_fuaw",
   "full_remarks_history",
   "ticket_details_tab",
@@ -173,7 +174,8 @@
    "fieldname": "total_days",
    "fieldtype": "Data",
    "label": "Ticket Age (Days)",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "collapsible": 1,
@@ -217,7 +219,8 @@
    "ignore_user_permissions": 1,
    "label": "Employee ID",
    "options": "Employee",
-   "read_only_depends_on": "eval:!frappe.user.has_role('System Manager')"
+   "read_only_depends_on": "eval:!frappe.user.has_role('System Manager')",
+   "search_index": 1
   },
   {
    "depends_on": "eval:doc.ticket_type",
@@ -262,7 +265,8 @@
    "fieldname": "tat",
    "fieldtype": "Data",
    "label": "TAT (Estimated Time for Resolution)",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "column_break_mbxv4",
@@ -426,7 +430,8 @@
    "fieldname": "assigned_to_name",
    "fieldtype": "Data",
    "label": "Assigned User Name",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fetch_from": "employee_id.branch",
@@ -435,14 +440,16 @@
    "in_global_search": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Branch"
+   "label": "Branch",
+   "search_index": 1
   },
   {
    "fetch_from": "employee_id.custom_district",
    "fieldname": "district",
    "fieldtype": "Data",
    "in_standard_filter": 1,
-   "label": "District"
+   "label": "District",
+   "search_index": 1
   },
   {
    "fetch_from": "employee_id.sol_id",
@@ -451,9 +458,11 @@
    "in_standard_filter": 1,
    "label": "SOL ID",
    "options": "Sahayog Branch",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
+   "depends_on": "eval:doc.dept_name ==\"Operations\"",
    "fieldname": "response_pending",
    "fieldtype": "Select",
    "label": "Response Pending",
@@ -477,72 +486,83 @@
    "fieldname": "employee_name",
    "fieldtype": "Data",
    "label": "Employee Name",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fetch_from": "employee_id.designation",
    "fieldname": "designation",
    "fieldtype": "Data",
    "label": "Designation",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fetch_from": "employee_id.department",
    "fieldname": "emp_department",
    "fieldtype": "Data",
    "label": "Employee Department",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "state",
    "fieldtype": "Data",
    "label": "State",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fetch_from": "employee_id.custom_zone",
    "fieldname": "zone",
    "fieldtype": "Data",
    "label": "Zone",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fetch_from": "employee_id.custom_region",
    "fieldname": "region",
    "fieldtype": "Data",
    "label": "Region",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fetch_from": "employee_id.custom_division",
    "fieldname": "division",
    "fieldtype": "Data",
    "label": "Division",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "request_type",
    "fieldtype": "Data",
    "label": "Request Type",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "ticket_cycle",
    "fieldtype": "Int",
    "label": "Ticket Cycle",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "resolved_date",
    "fieldtype": "Date",
    "label": "Resolved Date",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "resolved_time",
    "fieldtype": "Time",
    "label": "Resolved Time",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "full_remarks_history",
@@ -553,11 +573,15 @@
   {
    "fieldname": "section_break_fuaw",
    "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_mmeo",
+   "fieldtype": "Section Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-07-28 11:01:24.361012",
+ "modified": "2026-07-28 12:27:29.915206",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
