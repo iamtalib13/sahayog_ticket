@@ -194,9 +194,50 @@ class SahayogTicket(Document):
                 self.state = state
 
     def validate(self):
+        self.fill_missing_fields()
         self.validate_request_detail()
         self.check_account_validation()
         self.validate_contact_number_update()
+
+    def fill_missing_fields(self):
+        if not self.employee_id:
+            return
+
+        emp = frappe.db.get_value(
+            "Employee", self.employee_id,
+            ["employee_name", "designation", "department", "custom_division",
+             "branch", "sol_id", "custom_zone", "custom_region", "custom_district"],
+            as_dict=True,
+        )
+        if not emp:
+            return
+
+        field_map = {
+            "employee_name": emp.employee_name,
+            "designation": emp.designation,
+            "emp_department": emp.department,
+            "division": emp.custom_division,
+            "branch": emp.branch,
+            "sol_id": emp.sol_id,
+            "zone": emp.custom_zone,
+            "region": emp.custom_region,
+            "district": emp.custom_district,
+        }
+        for field, value in field_map.items():
+            if not self.get(field) and value:
+                self.set(field, value)
+
+        # state from Sahayog Branch via sol_id
+        if not self.state and emp.sol_id:
+            state = frappe.db.get_value("Sahayog Branch", {"sol_id": emp.sol_id}, "state")
+            if state:
+                self.state = state
+
+        # assigned_to_name
+        if self.assigned_to and not self.assigned_to_name:
+            full_name = frappe.db.get_value("User", self.assigned_to, "full_name")
+            if full_name:
+                self.assigned_to_name = full_name
 
     
     def check_account_validation(self):

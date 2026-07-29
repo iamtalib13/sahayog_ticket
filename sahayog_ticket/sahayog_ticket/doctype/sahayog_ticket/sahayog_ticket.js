@@ -906,7 +906,15 @@ frappe.ui.form.on("Sahayog Ticket", {
   },
 
   assigned_to: function (frm) {
-    if (!frm.doc.assigned_to || frm.is_new()) return;
+    if (!frm.doc.assigned_to) return;
+
+    frappe.db.get_value("User", frm.doc.assigned_to, "full_name", (r) => {
+      if (r && r.full_name) {
+        frm.set_value("assigned_to_name", r.full_name);
+      }
+    });
+
+    if (frm.is_new()) return;
 
     frappe.call({
       method: "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.send_assignment_email",
