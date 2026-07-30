@@ -200,6 +200,10 @@ class SahayogTicket(Document):
         self.validate_contact_number_update()
 
     def fill_missing_fields(self):
+        # Set employee_id first if not already set (runs before before_save)
+        if not self.employee_id:
+            self.set_employee_id()
+
         if not self.employee_id:
             frappe.throw("Employee ID is required")
 
@@ -227,11 +231,14 @@ class SahayogTicket(Document):
             if not self.get(field) and value:
                 self.set(field, value)
 
-        # state from Sahayog Branch via sol_id
-        if not self.state and emp.sol_id:
-            state = frappe.db.get_value("Sahayog Branch", {"sol_id": emp.sol_id}, "state")
-            if state:
-                self.state = state
+        # branch & state fallback from Sahayog Branch via sol_id
+        if self.sol_id:
+            branch_data = frappe.db.get_value("Sahayog Branch", {"sol_id": self.sol_id}, ["branch", "state"], as_dict=True)
+            if branch_data:
+                if not self.branch and branch_data.branch:
+                    self.branch = branch_data.branch
+                if not self.state and branch_data.state:
+                    self.state = branch_data.state
 
         # assigned_to_name
         if self.assigned_to and not self.assigned_to_name:
