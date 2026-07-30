@@ -175,3 +175,5 @@ def execute():
     print(f"State Not Available               : {state_not_available}")
     print("=" * 65)
     print("Completed Successfully.")
+
+# This is a patch to fix the branch fields in ticket
