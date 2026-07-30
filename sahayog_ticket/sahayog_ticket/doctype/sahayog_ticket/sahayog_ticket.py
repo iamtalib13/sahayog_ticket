@@ -246,14 +246,15 @@ class SahayogTicket(Document):
             if full_name:
                 self.assigned_to_name = full_name
 
-        # Validate all 9 mandatory fields (state is exception)
-        mandatory_fields = [
-            "employee_name", "designation", "emp_department", "division",
-            "branch", "sol_id", "zone", "region", "district",
-        ]
-        missing = [f for f in mandatory_fields if not self.get(f)]
-        if missing:
-            frappe.throw(f"Please fill required fields: {', '.join(missing)}")
+        # Validate all 9 mandatory fields only on new record creation
+        if self.is_new():
+            mandatory_fields = [
+                "employee_name", "designation", "emp_department", "division",
+                "branch", "sol_id", "zone", "region", "district",
+            ]
+            missing = [f for f in mandatory_fields if not self.get(f)]
+            if missing:
+                frappe.throw(f"Please fill required fields: {', '.join(missing)}")
 
     
     def check_account_validation(self):
