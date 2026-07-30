@@ -201,7 +201,7 @@ class SahayogTicket(Document):
 
     def fill_missing_fields(self):
         if not self.employee_id:
-            return
+            frappe.throw("Employee ID is required")
 
         emp = frappe.db.get_value(
             "Employee", self.employee_id,
@@ -210,7 +210,7 @@ class SahayogTicket(Document):
             as_dict=True,
         )
         if not emp:
-            return
+            frappe.throw(f"Employee {self.employee_id} not found")
 
         field_map = {
             "employee_name": emp.employee_name,
@@ -238,6 +238,15 @@ class SahayogTicket(Document):
             full_name = frappe.db.get_value("User", self.assigned_to, "full_name")
             if full_name:
                 self.assigned_to_name = full_name
+
+        # Validate all 9 mandatory fields (state is exception)
+        mandatory_fields = [
+            "employee_name", "designation", "emp_department", "division",
+            "branch", "sol_id", "zone", "region", "district",
+        ]
+        missing = [f for f in mandatory_fields if not self.get(f)]
+        if missing:
+            frappe.throw(f"Please fill required fields: {', '.join(missing)}")
 
     
     def check_account_validation(self):
