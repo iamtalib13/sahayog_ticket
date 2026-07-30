@@ -1,75 +1,51 @@
 import frappe
 
+FIELDS = [
+    "employee_name",
+    "designation",
+    "emp_department",
+    "division",
+    "branch",
+    "sol_id",
+    "zone",
+    "region",
+    "district",
+    "state",
+]
 
-def execute():
-    FIELDS = [
-        "employee_name",
-        "designation",
-        "emp_department",
-        "division",
-        "branch",
-        "sol_id",
-        "zone",
-        "region",
-        "district",
-        "state",
-    ]
-
-    # -----------------------------
-    # Counters
-    # -----------------------------
-    total_tickets = 0
-    tickets_with_missing = 0
-    tickets_fixed = 0
-    nothing_to_update = 0
-    employee_not_found = 0
-    missing_employee_id = 0
-    missing_sol_id = 0
-    branch_not_found = 0
-    state_not_available = 0
-
-    print("Fetching Sahayog Tickets...")
-
-    tickets = frappe.get_all(
-        "Sahayog Ticket",
-        fields=["name", "employee_id"]
+def is_empty(value):
+    value = str(value or "").strip()
+    return value in (
+        "",
+        "None",
+        "None None",
+        "None None None",
+        "null",
+        "NULL",
     )
 
-    total_tickets = len(tickets)
+def execute():
+    tickets = frappe.get_all("Sahayog Ticket", pluck="name")
 
-    print(f"Total Tickets : {total_tickets}")
-    print("-" * 60)
+    updated = 0
+    skipped = 0
 
-    for idx, row in enumerate(tickets, start=1):
+    for ticket_name in tickets:
+        ticket = frappe.get_doc("Sahayog Ticket", ticket_name)
 
-        # Progress
-        if idx % 500 == 0:
-            print(f"Processed {idx}/{total_tickets}")
+        updates = {}
 
-        ticket = frappe.get_doc("Sahayog Ticket", row.name)
-
-        # Skip if all fields are already filled
-        if not any(not ticket.get(f) for f in FIELDS):
-            nothing_to_update += 1
-            continue
-
-        tickets_with_missing += 1
-
-        # ----------------------------------
-        # Employee ID Check
-        # ----------------------------------
         if not ticket.employee_id:
-            missing_employee_id += 1
+            skipped += 1
+            print(f"Skipped {ticket.name} - Employee ID missing")
             continue
 
-        # ----------------------------------
-        # Employee Details
-        # ----------------------------------
         emp = frappe.db.get_value(
             "Employee",
             ticket.employee_id,
             [
                 "employee_name",
+                "first_name",
                 "designation",
                 "department",
                 "custom_division",
@@ -82,16 +58,12 @@ def execute():
         )
 
         if not emp:
-            employee_not_found += 1
+            skipped += 1
+            print(f"Skipped {ticket.name} - Employee {ticket.employee_id} not found")
             continue
 
-        updates = {}
-
-        # ----------------------------------
-        # Employee Fields
-        # ----------------------------------
         mapping = {
-            "employee_name": emp.employee_name,
+            "employee_name": emp.employee_name or emp.first_name,
             "designation": emp.designation,
             "emp_department": emp.department,
             "division": emp.custom_division,
@@ -101,27 +73,18 @@ def execute():
         }
 
         for field, value in mapping.items():
-            if not ticket.get(field) and value:
+            if is_empty(ticket.get(field)) and value:
                 updates[field] = value
 
-        # ----------------------------------
         # SOL ID
-        # ----------------------------------
         sol_id = ticket.sol_id
 
-        if not sol_id:
+        if is_empty(sol_id) and emp.sol_id:
+            sol_id = emp.sol_id
+            updates["sol_id"] = sol_id
 
-            if emp.sol_id:
-                sol_id = emp.sol_id
-                updates["sol_id"] = sol_id
-            else:
-                missing_sol_id += 1
-
-        # ----------------------------------
         # Branch & State
-        # ----------------------------------
         if sol_id:
-
             branch = frappe.db.get_value(
                 "Sahayog Branch",
                 {"sol_id": sol_id},
@@ -130,50 +93,26 @@ def execute():
             )
 
             if branch:
-
-                if not ticket.get("branch") and branch.branch:
+                if is_empty(ticket.branch) and branch.branch:
                     updates["branch"] = branch.branch
 
-                if not ticket.get("state"):
+                if is_empty(ticket.state) and branch.state:
+                    updates["state"] = branch.state
 
-                    if branch.state:
-                        updates["state"] = branch.state
-                    else:
-                        state_not_available += 1
-
-            else:
-                branch_not_found += 1
-
-        # ----------------------------------
-        # Save
-        # ----------------------------------
         if updates:
-
             frappe.db.set_value(
                 "Sahayog Ticket",
                 ticket.name,
                 updates,
                 update_modified=False,
             )
-
-            tickets_fixed += 1
+            updated += 1
+            print(f"Updated: {ticket.name}")
 
     frappe.db.commit()
 
-    print("\n")
-    print("=" * 65)
-    print("           SAHAYOG TICKET DATA FIX SUMMARY")
-    print("=" * 65)
-    print(f"Total Tickets                     : {total_tickets}")
-    print(f"Tickets With Missing Fields        : {tickets_with_missing}")
-    print(f"Successfully Fixed                : {tickets_fixed}")
-    print(f"Already Complete                  : {nothing_to_update}")
-    print(f"Missing Employee ID               : {missing_employee_id}")
-    print(f"Employee Not Found                : {employee_not_found}")
-    print(f"Employee Missing SOL ID           : {missing_sol_id}")
-    print(f"Sahayog Branch Not Found          : {branch_not_found}")
-    print(f"State Not Available               : {state_not_available}")
-    print("=" * 65)
-    print("Completed Successfully.")
-
-# This is a patch to fix the branch fields in ticket
+    print("\n" + "=" * 60)
+    print(f"Total Tickets : {len(tickets)}")
+    print(f"Updated       : {updated}")
+    print(f"Skipped       : {skipped}")
+    print("=" * 60)
