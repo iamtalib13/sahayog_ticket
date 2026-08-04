@@ -252,6 +252,8 @@ class SahayogTicket(Document):
                 "employee_name", "designation", "emp_department", "division",
                 "branch", "sol_id", "zone", "region", "district",
             ]
+            if self.employee_id and re.match(r'^[A-Za-z]+\d+$', self.employee_id):
+                mandatory_fields = [f for f in mandatory_fields if f != "sol_id"]
             missing = [f for f in mandatory_fields if not self.get(f)]
             if missing:
                 frappe.throw(f"Please fill required fields: {', '.join(missing)}")
