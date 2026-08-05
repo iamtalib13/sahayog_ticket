@@ -153,6 +153,13 @@ frappe.ui.form.on("Sahayog Ticket", {
             }
         };
     }
+
+    // --- SET QUERY FOR dept_name TO FILTER OUT STATIONERY ---
+    frm.set_query("dept_name", function() {
+      return {
+        query: "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_filtered_departments"
+      };
+    });
   },
 
 

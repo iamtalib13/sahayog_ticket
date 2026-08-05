@@ -962,3 +962,40 @@ def get_recent_ticket_comments(limit=10):
         ORDER BY c.creation DESC
         LIMIT %s
     """, (user, limit), as_dict=True)
+
+
+@frappe.whitelist()
+def get_filtered_departments(doctype, txt, searchfield, start, page_len, filters):
+    """
+    Custom query function to filter out 'Stationery' department
+    when restrict_stationery_record_creation_on_the_sahayog_ticket is checked
+    in Sahayog Settings.
+    """
+    # Get the restriction setting from Sahayog Settings
+    restrict_stationery = frappe.db.get_single_value(
+        "Sahayog Settings", 
+        "restrict_stationery_record_creation_on_the_sahayog_ticket"
+    )
+    
+    # Build the base query
+    conditions = []
+    values = []
+    
+    if txt:
+        conditions.append("dept_name LIKE %s")
+        values.append(f"%{txt}%")
+    
+    # If restriction is enabled, exclude Stationery
+    if restrict_stationery:
+        conditions.append("dept_name != %s")
+        values.append("Stationery")
+    
+    where_clause = " AND ".join(conditions) if conditions else "1=1"
+    
+    return frappe.db.sql(f"""
+        SELECT dept_name
+        FROM `tabDepartsection`
+        WHERE {where_clause}
+        ORDER BY dept_name
+        LIMIT {start}, {page_len}
+    """, tuple(values))
