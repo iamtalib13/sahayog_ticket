@@ -825,7 +825,23 @@ def get_current_user_roles():
 
 @frappe.whitelist()
 def get_departments():
-    return frappe.get_all("Departsection", fields=["name"])
+    """
+    Get all departments, optionally filtering out 'Stationery'
+    if restrict_stationery_record_creation_on_the_sahayog_ticket is checked.
+    """
+    # Get the restriction setting from Sahayog Settings
+    restrict_stationery = frappe.db.get_single_value(
+        "Sahayog Settings", 
+        "restrict_stationery_record_creation_on_the_sahayog_ticket"
+    )
+    
+    filters = {}
+    
+    # If restriction is enabled, exclude Stationery
+    if restrict_stationery:
+        filters = {"name": ["!=", "Stationery"]}
+    
+    return frappe.get_all("Departsection", fields=["name"], filters=filters)
 
 @frappe.whitelist()
 def get_ticket_types(department):
