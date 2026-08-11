@@ -167,11 +167,14 @@ def get_employee_department(user=None):
     employee = frappe.db.get_value(
         "Employee",
         {"user_id": user},
-        ["department"],
+        ["department", "designation"],
         as_dict=True,
     )
-    if employee and employee.department:
-        return employee.department
+    if employee:
+        if employee.designation in ["IT MANAGER", "IT EXECUTIVE"]:
+            return "IT"
+        if employee.department:
+            return employee.department
     return None
 
 
