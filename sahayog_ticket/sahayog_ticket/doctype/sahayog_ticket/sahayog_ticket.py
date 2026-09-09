@@ -529,15 +529,23 @@ def _send_auto_close_notification(ticket):
 
 
 @frappe.whitelist()
-def get_counts(employee_id):
-    rows = frappe.db.sql(
-        """SELECT status, COUNT(*) as cnt
-           FROM `tabSahayog Ticket`
-           WHERE employee_id = %s
-           GROUP BY status""",
-        (employee_id,),
-        as_dict=True,
-    )
+def get_counts(employee_id=None):
+    if employee_id:
+        rows = frappe.db.sql(
+            """SELECT status, COUNT(*) as cnt
+               FROM `tabSahayog Ticket`
+               WHERE employee_id = %s
+               GROUP BY status""",
+            (employee_id,),
+            as_dict=True,
+        )
+    else:
+        rows = frappe.db.sql(
+            """SELECT status, COUNT(*) as cnt
+               FROM `tabSahayog Ticket`
+               GROUP BY status""",
+            as_dict=True,
+        )
     counts = {s.lower().replace("-", "_"): 0 for s in [
         "Open", "Read", "In-Progress", "On-Hold", "Re-Opened",
         "Resolved", "Closed", "Cancelled",
@@ -942,26 +950,96 @@ def reset_user_password(email, new_password):
         return {"message": f"error: {str(e)}"}
 
 @frappe.whitelist()
-def get_recent_ticket_comments(limit=10):
+def get_recent_ticket_comments(limit=20):
     limit = int(limit)
     user = frappe.session.user
 
-    return frappe.db.sql("""
-        SELECT
-            c.reference_name  AS ticket_name,
-            c.content         AS comment_content,
-            c.owner           AS commented_by,
-            c.creation        AS comment_time
-        FROM `tabComment` c
-        INNER JOIN `tabSahayog Ticket` t
-            ON t.name = c.reference_name
-        WHERE
-            c.reference_doctype = 'Sahayog Ticket'
-            AND c.comment_type = 'Comment'
-            AND t.owner = %s
-        ORDER BY c.creation DESC
-        LIMIT %s
-    """, (user, limit), as_dict=True)
+    if user == "Administrator":
+        return frappe.db.sql("""
+            SELECT
+                c.name            AS comment_id,
+                c.reference_name  AS ticket_name,
+                c.content         AS comment_content,
+                c.owner           AS commented_by,
+                COALESCE(u.full_name, c.comment_by, c.owner) AS commenter_name,
+                u.user_image      AS commenter_image,
+                c.creation        AS comment_time,
+                COALESCE(c.seen, 0) AS seen,
+                t.ticket_type     AS ticket_type,
+                t.status          AS ticket_status
+            FROM `tabComment` c
+            INNER JOIN `tabSahayog Ticket` t
+                ON t.name = c.reference_name
+            LEFT JOIN `tabUser` u
+                ON u.name = c.owner
+            WHERE
+                c.reference_doctype = 'Sahayog Ticket'
+                AND c.comment_type = 'Comment'
+            ORDER BY c.creation DESC
+            LIMIT %s
+        """, (limit,), as_dict=True)
+    else:
+        emp_match = user.split("@")[0]
+        return frappe.db.sql("""
+            SELECT
+                c.name            AS comment_id,
+                c.reference_name  AS ticket_name,
+                c.content         AS comment_content,
+                c.owner           AS commented_by,
+                COALESCE(u.full_name, c.comment_by, c.owner) AS commenter_name,
+                u.user_image      AS commenter_image,
+                c.creation        AS comment_time,
+                COALESCE(c.seen, 0) AS seen,
+                t.ticket_type     AS ticket_type,
+                t.status          AS ticket_status
+            FROM `tabComment` c
+            INNER JOIN `tabSahayog Ticket` t
+                ON t.name = c.reference_name
+            LEFT JOIN `tabUser` u
+                ON u.name = c.owner
+            WHERE
+                c.reference_doctype = 'Sahayog Ticket'
+                AND c.comment_type = 'Comment'
+                AND (t.owner = %s OR t.employee_id = %s)
+            ORDER BY c.creation DESC
+            LIMIT %s
+        """, (user, emp_match, limit), as_dict=True)
+
+
+@frappe.whitelist()
+def mark_comment_as_seen(comment_id):
+    if not comment_id:
+        return {"status": "error", "message": "comment_id required"}
+    frappe.db.set_value("Comment", comment_id, "seen", 1, update_modified=False)
+    frappe.db.commit()
+    return {"status": "ok"}
+
+
+@frappe.whitelist()
+def mark_all_comments_seen():
+    user = frappe.session.user
+    if user == "Administrator":
+        frappe.db.sql("""
+            UPDATE `tabComment` c
+            INNER JOIN `tabSahayog Ticket` t ON t.name = c.reference_name
+            SET c.seen = 1
+            WHERE c.reference_doctype = 'Sahayog Ticket'
+              AND c.comment_type = 'Comment'
+              AND c.seen = 0
+        """)
+    else:
+        emp_match = user.split("@")[0]
+        frappe.db.sql("""
+            UPDATE `tabComment` c
+            INNER JOIN `tabSahayog Ticket` t ON t.name = c.reference_name
+            SET c.seen = 1
+            WHERE c.reference_doctype = 'Sahayog Ticket'
+              AND c.comment_type = 'Comment'
+              AND (t.owner = %s OR t.employee_id = %s)
+              AND c.seen = 0
+        """, (user, emp_match))
+    frappe.db.commit()
+    return {"status": "ok"}
 
 
 @frappe.whitelist()
@@ -999,3 +1077,4 @@ def get_filtered_departments(doctype, txt, searchfield, start, page_len, filters
         ORDER BY dept_name
         LIMIT {start}, {page_len}
     """, tuple(values))
+
