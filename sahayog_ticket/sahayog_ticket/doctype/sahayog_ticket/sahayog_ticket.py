@@ -950,12 +950,14 @@ def reset_user_password(email, new_password):
         return {"message": f"error: {str(e)}"}
 
 @frappe.whitelist()
-def get_recent_ticket_comments(limit=20):
+def get_recent_ticket_comments(limit=20, only_unseen=1):
     limit = int(limit)
+    only_unseen = int(only_unseen)
     user = frappe.session.user
+    seen_filter = "AND COALESCE(c.seen, 0) = 0" if only_unseen else ""
 
     if user == "Administrator":
-        return frappe.db.sql("""
+        return frappe.db.sql(f"""
             SELECT
                 c.name            AS comment_id,
                 c.reference_name  AS ticket_name,
@@ -975,12 +977,13 @@ def get_recent_ticket_comments(limit=20):
             WHERE
                 c.reference_doctype = 'Sahayog Ticket'
                 AND c.comment_type = 'Comment'
+                {seen_filter}
             ORDER BY c.creation DESC
             LIMIT %s
         """, (limit,), as_dict=True)
     else:
         emp_match = user.split("@")[0]
-        return frappe.db.sql("""
+        return frappe.db.sql(f"""
             SELECT
                 c.name            AS comment_id,
                 c.reference_name  AS ticket_name,
@@ -1001,6 +1004,7 @@ def get_recent_ticket_comments(limit=20):
                 c.reference_doctype = 'Sahayog Ticket'
                 AND c.comment_type = 'Comment'
                 AND (t.owner = %s OR t.employee_id = %s)
+                {seen_filter}
             ORDER BY c.creation DESC
             LIMIT %s
         """, (user, emp_match, limit), as_dict=True)
