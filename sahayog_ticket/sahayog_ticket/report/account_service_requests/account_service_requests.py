@@ -14,6 +14,7 @@ def execute(filters=None):
 # ----------------------------------------
 def get_columns():
     return [
+        {"label": "Modified",         "fieldname": "modified_date",    "fieldtype": "Data",       "width": 150},
         {"label": "Creation Date",    "fieldname": "creation_date",    "fieldtype": "Date",       "width": 120},
         {"label": "Creation Time",    "fieldname": "creation_time",    "fieldtype": "Time",       "width": 120},
         {"label": "Ticket",           "fieldname": "ticket",           "fieldtype": "Link",       "options": "Sahayog Ticket", "width": 130},
@@ -92,6 +93,7 @@ def get_data(filters=None):
             st.resolved_remark,
             st.executive_remark,
             st.creation,
+            st.modified,
 
             -- request_type from child table request_detail (Ticket Item)
             (
@@ -114,7 +116,7 @@ def get_data(filters=None):
 
         FROM `tabSahayog Ticket` st
         {where_clause}
-        ORDER BY st.creation DESC
+        ORDER BY st.modified DESC
     """
 
     rows = frappe.db.sql(query, params, as_dict=True)
@@ -135,6 +137,7 @@ def get_data(filters=None):
 
         data.append({
             "ticket":           t.ticket,
+            "modified_date":    frappe.utils.get_datetime(t.modified).strftime("%d-%m-%Y %I:%M %p") if t.modified else "",
             "status":           t.status,
             "response_pending": t.response_pending,
             "ticket_type":      t.ticket_type,

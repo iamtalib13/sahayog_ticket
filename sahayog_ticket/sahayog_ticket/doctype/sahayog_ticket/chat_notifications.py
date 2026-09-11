@@ -14,6 +14,16 @@ def send_chat_notification(doc, method=None):
     if doc.comment_type not in ["Comment", "Attachment"]:
         return
     
+    # Update modified timestamp of the parent Sahayog Ticket
+    try:
+        from frappe.utils import now
+        frappe.db.sql(
+            "UPDATE `tabSahayog Ticket` SET modified = %s WHERE name = %s",
+            (now(), doc.reference_name)
+        )
+    except Exception as e:
+        frappe.log_error(f"Failed to update Sahayog Ticket modified timestamp: {str(e)}")
+    
     # Get ticket details
     ticket = frappe.db.get_value("Sahayog Ticket", doc.reference_name, ["owner", "assigned_to"], as_dict=True)
     
