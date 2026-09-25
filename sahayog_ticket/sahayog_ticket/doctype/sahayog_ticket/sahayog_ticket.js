@@ -174,6 +174,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     frm.trigger("custom_buttons");
     frm.trigger("reset_user_password");
     frm.trigger("status");
+    frm.trigger("toggle_password_field");
 
     // Check if the user is an employee and has a specific role
     if (frm.doc.status === "Closed") {
@@ -1269,6 +1270,28 @@ frappe.ui.form.on("Sahayog Ticket", {
   common_hidden_fields: function (frm) {
     frm.toggle_display("status", false);
     frm.toggle_display("assigned_it", false);
+  },
+
+  // password is shown only to assigned_to / show_password_to_employee
+  toggle_password_field: function (frm) {
+    const set_hidden = (hidden) => frm.set_df_property("password", "hidden", hidden);
+
+    if (frm.is_new()) {
+      set_hidden(0);
+      return;
+    }
+
+    set_hidden(1);
+    frappe.call({
+      method:
+        "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_password_field_visibility",
+      args: { ticket_name: frm.doc.name },
+      freeze: false,
+      callback: function (r) {
+        const visible = r.message && r.message.visible;
+        set_hidden(visible ? 0 : 1);
+      },
+    });
   },
 
   hide_timeline: function (frm) {
