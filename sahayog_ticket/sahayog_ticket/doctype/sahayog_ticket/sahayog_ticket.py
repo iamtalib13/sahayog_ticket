@@ -19,12 +19,47 @@ class SahayogTicket(Document):
         if self.status_log is None:
             self.status_log = []
 
-    def before_save(self):   
+    # password field is visible only to assigned_to and the employee
+    # selected in show_password_to_employee (nobody else, not even admin)
+    def get_password_viewers(self):
+        viewers = set()
+        if self.assigned_to:
+            viewers.add(self.assigned_to)
+        if self.show_password_to_employee:
+            emp_user = frappe.db.get_value(
+                "Employee", self.show_password_to_employee, "user_id"
+            )
+            if emp_user:
+                viewers.add(emp_user)
+        return viewers
+
+    def can_view_password(self):
+        return frappe.session.user in self.get_password_viewers()
+
+    def as_dict(self, *args, **kwargs):
+        doc = super().as_dict(*args, **kwargs)
+        if not self.can_view_password():
+            doc["password"] = None
+        return doc
+
+    # a user who cannot view the password must not wipe it on save
+    # (any user may still seed it while it is empty)
+    def protect_password(self):
+        if not self.name:
+            return
+        stored_password = frappe.db.get_value("Sahayog Ticket", self.name, "password")
+        if not stored_password:
+            return
+        if self.password != stored_password and not self.can_view_password():
+            self.password = stored_password
+
+    def before_save(self):
         #self.set_creation_time()
         self.track_status_change()
         self.set_employee_id()
         self.set_state_from_branch()
         self.notify_branch_on_resolution()
+        self.protect_password()
 
 # sends email notification to branch when ticket is marked as Resolved or Closed
 # with fallback logic to find branch email by sol_id or branch name.
@@ -933,6 +968,14 @@ def get_user_details(username):
         frappe.throw(f"No user found with username: {username}")
 
     return user
+
+@frappe.whitelist(allow_guest=False)
+def get_password_field_visibility(ticket_name):
+    doc = frappe.get_doc("Sahayog Ticket", ticket_name)
+    doc.check_permission("read")
+    # viewer always sees it, others only while no password is set yet (seeding)
+    return {"visible": bool(doc.can_view_password() or not doc.password)}
+
 
 @frappe.whitelist(allow_guest=False)
 def reset_user_password(email, new_password):
