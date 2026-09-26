@@ -537,11 +537,11 @@
    "label": "Show Password to Employee",
    "options": "Employee"
   },
-  {
-   "fieldname": "password",
-   "fieldtype": "Data",
-   "label": "Password"
-  }
+   {
+    "fieldname": "password",
+    "fieldtype": "Small Text",
+    "label": "Password"
+   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
