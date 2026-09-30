@@ -537,15 +537,15 @@
    "label": "Show Password to Employee",
    "options": "Employee"
   },
-   {
-    "fieldname": "password",
-    "fieldtype": "Small Text",
-    "label": "Password"
-   }
+  {
+   "fieldname": "password",
+   "fieldtype": "Small Text",
+   "label": "Password"
+  }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-25 15:25:50.571851",
+ "modified": "2026-09-30 16:58:06.377063",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
