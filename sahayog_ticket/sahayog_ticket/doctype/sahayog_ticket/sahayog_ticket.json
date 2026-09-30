@@ -532,6 +532,7 @@
    "search_index": 1
   },
   {
+   "depends_on": "eval:dept_name==\"CBS\"",
    "fieldname": "show_password_to_employee",
    "fieldtype": "Link",
    "label": "Show Password to Employee",
@@ -545,7 +546,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-30 16:58:06.377063",
+ "modified": "2026-09-30 17:04:25.632389",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Sahayog Ticket",
