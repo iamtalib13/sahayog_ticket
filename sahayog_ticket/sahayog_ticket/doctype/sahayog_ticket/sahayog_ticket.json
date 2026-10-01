@@ -532,7 +532,7 @@
    "search_index": 1
   },
   {
-   "depends_on": "eval:dept_name==\"CBS\"",
+   "depends_on": "eval:doc.dept_name==\"CBS\"",
    "fieldname": "show_password_to_employee",
    "fieldtype": "Link",
    "label": "Show Password to Employee",
