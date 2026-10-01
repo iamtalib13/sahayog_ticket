@@ -539,6 +539,7 @@
    "options": "Employee"
   },
   {
+   "depends_on": "eval:doc.dept_name==\"CBS\"",
    "fieldname": "password",
    "fieldtype": "Small Text",
    "label": "Password"
