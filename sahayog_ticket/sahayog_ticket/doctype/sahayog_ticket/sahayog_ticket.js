@@ -911,6 +911,26 @@ frappe.ui.form.on("Sahayog Ticket", {
 
   before_save: function (frm) {
     // Employee ID is set server-side in set_employee_id()
+    if (frm.is_new()) return;
+
+    // Re-sync `modified` with DB so comment/attachment activity bumps
+    // (chat_notifications) don't trigger TimestampMismatchError on save
+    try {
+      const r = frappe.call({
+        method: "frappe.client.get_value",
+        args: {
+          doctype: "Sahayog Ticket",
+          filters: { name: frm.doc.name },
+          fieldname: "modified",
+        },
+        async: false,
+      }).r;
+      if (r && r.message && r.message.modified) {
+        frm.doc.modified = r.message.modified;
+      }
+    } catch (e) {
+      // ignore - save proceeds with existing modified
+    }
   },
 
   assigned_to: function (frm) {
