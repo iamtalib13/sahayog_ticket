@@ -186,8 +186,14 @@ scheduler_events = {
 # # auth_hooks = [
 # # 	"sahayog_ticket.auth.validate"
 # # ]
-fixtures = [
-    {"dt": "Custom HTML Block", "filters": [
+# # Website
+# # --------
+
+website_route_rules = [
+    {"from_route": "/account_service/<path:app_path>", "to_route": "account_service"},
+]
+
+fixtures = [    {"dt": "Custom HTML Block", "filters": [
         [
             "name",
             "in",
