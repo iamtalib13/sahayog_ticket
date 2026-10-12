@@ -182,130 +182,216 @@ function close() {
 </script>
 
 <template>
-  <Dialog v-model:open="open" title="Raise Service Request" size="xl">
-    <p class="mb-4 text-sm text-ink-gray-5">Initiate account detail update or support ticket</p>
-    <ErrorMessage v-if="error" :message="error" class="mb-3" />
-    <div class="grid grid-cols-2 gap-4">
-      <!-- Left column -->
-      <div class="space-y-3">
-        <div class="flex items-end gap-2">
-          <TextInput
-            variant="outline"
-            v-model="form.account_number"
-            label="Customer Account No / ID"
-            placeholder="15-digit account no"
-            required
-            class="flex-1"
-          />
-          <Button label="Lookup" :loading="finacle.loading" @click="lookup" />
-        </div>
-        <TextInput variant="outline" v-model="form.customer_name" label="Customer Name" placeholder="Auto-filled on lookup" />
+  <Dialog
+    v-model:open="open"
+    size="5xl"
+    :show-close-button="false"
+  >
+    <!-- Custom Header with Title, Subtitle, and Top-Right Action/Close buttons -->
+    <template #title>
+      <div class="flex items-start justify-between border-b border-outline-gray-1 pb-4">
         <div>
-          <div class="mb-1 text-sm text-ink-gray-7">Request Remarks / Description</div>
-          <div class="rounded-6 border border-outline-gray-1">
-            <Editor v-model="remarks" :extensions="[CommentKit]" placeholder="Describe the change needed…">
-              <EditorFixedMenu :items="commentToolbar" />
-              <EditorContent class="min-h-28" />
-            </Editor>
-          </div>
+          <h2 class="text-xl font-semibold text-ink-gray-9">Raise Service Request</h2>
+          <p class="mt-0.5 text-xs text-ink-gray-5">Initiate account detail update or support ticket</p>
         </div>
-      </div>
-      <!-- Right column -->
-      <div class="space-y-3">
-        <Select variant="outline"
-          v-model="form.department"
-          label="Department"
-          :options="departments.map((d) => ({ label: d, value: d }))"
-        />
-        <Select variant="outline"
-          v-model="form.request_type"
-          label="Request Type"
-          :options="serviceTypes.map((t) => ({ label: t, value: t }))"
-        />
-        <div class="grid grid-cols-2 gap-3">
-          <Select variant="outline" v-model="form.status" label="Status" :options="[{ label: 'Open', value: 'Open' }]" disabled />
-          <Select variant="outline"
-            v-model="form.priority"
-            label="Priority"
-            :options="['High', 'Medium', 'Low'].map((p) => ({ label: p, value: p }))"
-          />
-        </div>
-        <Select variant="outline"
-          v-model="form.assigned_to"
-          label="Assigned Agent / Guided By"
-          :options="[{ label: 'Unassigned', value: '' }, ...agents.map((a) => ({ label: `${a.name} (${a.email})`, value: a.email }))]"
-        />
-        <div class="grid grid-cols-2 gap-3">
-          <TextInput variant="outline" v-model="form.start_date" label="Start Date" type="date" />
-          <TextInput variant="outline" v-model="form.target_sla_date" label="Target SLA Date" type="date" />
-        </div>
-        <div>
-          <div class="mb-1 text-sm text-ink-gray-7">Attachments</div>
-          <div
-            v-for="f in uploads"
-            :key="f.file_url"
-            class="mb-1 flex items-center gap-2 rounded-6 border border-outline-gray-1 px-3 py-1.5 text-sm text-ink-gray-7"
-          >
-            <span class="lucide-paperclip size-4 text-ink-gray-5" aria-hidden="true" />
-            <span class="truncate">{{ f.file_name }}</span>
-          </div>
-          <FileUploader @success="onUpload">
-            <template #default="{ uploading, progress, error: upErr, openFileSelector }">
-              <Button
-                variant="ghost"
-                icon-left="lucide-plus"
-                :loading="uploading"
-                :loading-text="`Uploading ${progress}%`"
-                label="Attach file"
-                @click="openFileSelector"
-              />
-              <ErrorMessage v-if="upErr" :message="upErr" class="mt-1" />
+        <div class="flex items-center gap-3">
+          <Button variant="solid" label="Submit Request" :loading="submitting" @click="submit" />
+          <Button variant="ghost" class="p-1 text-ink-gray-5 hover:text-ink-gray-8" @click="close">
+            <template #icon>
+              <span class="lucide-x size-4.5" />
             </template>
-          </FileUploader>
+          </Button>
         </div>
       </div>
-    </div>
-    <div class="mt-4 rounded-6 border border-outline-gray-1 p-3">
-      <div class="text-base-medium text-ink-gray-8">New / Updated Details</div>
-      <p class="mb-2 text-xs text-ink-gray-5">
-        Ye fields <b>{{ form.request_type }}</b> ke hisaab se hai — sab bharna zaroori hai.
-      </p>
-      <div class="grid grid-cols-2 gap-3">
-        <template v-for="fld in ALL_UPDATE_FIELDS" :key="fld.key">
-          <template v-if="visibleFields.includes(fld.key)">
-          <Textarea
-            v-if="fld.type === 'textarea'"
-            variant="outline"
-            v-model="form[fld.key]"
-            :label="FIELD_LABELS[fld.key]"
-            :description="fld.desc"
-            required
-          />
-          <Select
-            v-else-if="fld.type === 'select'"
-            variant="outline"
-            v-model="form[fld.key]"
-            :label="FIELD_LABELS[fld.key]"
-            :description="fld.desc"
-            :options="[{ label: 'Select…', value: '' }, ...(fld.options || []).map((o) => ({ label: o, value: o }))]"
-            required
-          />
+    </template>
+
+    <div class="pt-2">
+      <ErrorMessage v-if="error" :message="error" class="mb-4" />
+
+      <!-- Main 2-Column Horizontal Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        
+        <!-- LEFT COLUMN -->
+        <div class="flex flex-col gap-4">
+          <!-- Customer Account No / ID Input with inline Lookup button -->
+          <div>
+            <div class="mb-1 text-xs font-medium text-ink-gray-7">
+              Customer Account No / ID <span class="text-red-500">*</span>
+            </div>
+            <div class="flex items-stretch gap-2">
+              <TextInput
+                variant="outline"
+                v-model="form.account_number"
+                placeholder="15-digit account no"
+                class="flex-1"
+                @keyup.enter="lookup"
+              />
+              <Button
+                variant="solid"
+                label="Lookup"
+                :loading="finacle.loading"
+                @click="lookup"
+              />
+            </div>
+          </div>
+
+          <!-- Customer Name Input -->
           <TextInput
-            v-else
             variant="outline"
-            v-model="form[fld.key]"
-            :label="FIELD_LABELS[fld.key]"
-            :description="fld.desc"
-            :type="fld.type === 'date' ? 'date' : 'text'"
-            required
+            v-model="form.customer_name"
+            label="Customer Name"
+            placeholder="Auto-filled on lookup"
           />
-          </template>
-        </template>
+
+          <!-- Request Remarks / Description -->
+          <div>
+            <div class="mb-1 text-xs font-medium text-ink-gray-7">Request Remarks / Description</div>
+            <div class="rounded-lg border border-outline-gray-1 overflow-hidden focus-within:border-primary-500">
+              <Editor v-model="remarks" :extensions="[CommentKit]" placeholder="Describe the change needed…">
+                <EditorFixedMenu :items="commentToolbar" />
+                <EditorContent class="min-h-24 max-h-36 overflow-y-auto px-2 py-1" />
+              </Editor>
+            </div>
+          </div>
+
+          <!-- New / Updated Details dynamic section at bottom of left column -->
+          <div v-if="visibleFields.length" class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3.5 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="text-xs font-semibold text-ink-gray-8 uppercase tracking-wider">
+                New / Updated Details
+              </div>
+              <span class="text-[11px] text-ink-gray-5">
+                Required for {{ form.request_type }}
+              </span>
+            </div>
+
+            <div class="space-y-3">
+              <template v-for="fld in ALL_UPDATE_FIELDS" :key="fld.key">
+                <template v-if="visibleFields.includes(fld.key)">
+                  <Textarea
+                    v-if="fld.type === 'textarea'"
+                    variant="outline"
+                    v-model="form[fld.key]"
+                    :label="FIELD_LABELS[fld.key]"
+                    :description="fld.desc"
+                    :rows="2"
+                    required
+                  />
+                  <Select
+                    v-else-if="fld.type === 'select'"
+                    variant="outline"
+                    v-model="form[fld.key]"
+                    :label="FIELD_LABELS[fld.key]"
+                    :description="fld.desc"
+                    :options="[{ label: 'Select…', value: '' }, ...(fld.options || []).map((o) => ({ label: o, value: o }))]"
+                    required
+                  />
+                  <TextInput
+                    v-else
+                    variant="outline"
+                    v-model="form[fld.key]"
+                    :label="FIELD_LABELS[fld.key]"
+                    :description="fld.desc"
+                    :type="fld.type === 'date' ? 'date' : 'text'"
+                    required
+                  />
+                </template>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="flex flex-col gap-4">
+          <!-- Row 1: Department | Request Type -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Select
+              variant="outline"
+              v-model="form.department"
+              label="Department"
+              :options="departments.map((d) => ({ label: d, value: d }))"
+            />
+            <Select
+              variant="outline"
+              v-model="form.request_type"
+              label="Request Type"
+              :options="serviceTypes.map((t) => ({ label: t, value: t }))"
+            />
+          </div>
+
+          <!-- Row 2: Status | Priority -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Select
+              variant="outline"
+              v-model="form.status"
+              label="Status"
+              :options="[{ label: 'Open', value: 'Open' }]"
+              disabled
+            />
+            <Select
+              variant="outline"
+              v-model="form.priority"
+              label="Priority"
+              :options="['High', 'Medium', 'Low'].map((p) => ({ label: p, value: p }))"
+            />
+          </div>
+
+          <!-- Row 3: Assigned Agent / Guided By (Full width of right column) -->
+          <Select
+            variant="outline"
+            v-model="form.assigned_to"
+            label="Assigned Agent / Guided By"
+            :options="[{ label: 'Unassigned', value: '' }, ...agents.map((a) => ({ label: `${a.name} (${a.email})`, value: a.email }))]"
+          />
+
+          <!-- Row 4: Start Date | Target SLA Date -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <TextInput
+              variant="outline"
+              v-model="form.start_date"
+              label="Start Date"
+              type="date"
+            />
+            <TextInput
+              variant="outline"
+              v-model="form.target_sla_date"
+              label="Target SLA Date"
+              type="date"
+            />
+          </div>
+
+          <!-- Row 5: Attachments Field -->
+          <div class="rounded-lg border border-outline-gray-1 p-3">
+            <div class="mb-1.5 text-xs font-medium text-ink-gray-7">Attachments</div>
+            <div
+              v-for="f in uploads"
+              :key="f.file_url"
+              class="mb-2 flex items-center justify-between rounded-md border border-outline-gray-1 bg-surface-gray-2 px-3 py-1.5 text-xs text-ink-gray-7"
+            >
+              <div class="flex items-center gap-2 truncate">
+                <span class="lucide-paperclip size-3.5 text-ink-gray-5 flex-shrink-0" />
+                <span class="truncate">{{ f.file_name }}</span>
+              </div>
+            </div>
+            <FileUploader @success="onUpload">
+              <template #default="{ uploading, progress, error: upErr, openFileSelector }">
+                <Button
+                  variant="subtle"
+                  icon-left="lucide-plus"
+                  :loading="uploading"
+                  :loading-text="`Uploading ${progress}%`"
+                  label="Attach file"
+                  class="w-full justify-center"
+                  @click="openFileSelector"
+                />
+                <ErrorMessage v-if="upErr" :message="upErr" class="mt-1" />
+              </template>
+            </FileUploader>
+          </div>
+        </div>
+
       </div>
     </div>
-    <template #actions>
-      <Button label="Cancel" @click="close" />
-      <Button variant="solid" label="Submit Request" :loading="submitting" @click="submit" />
-    </template>
+
   </Dialog>
 </template>

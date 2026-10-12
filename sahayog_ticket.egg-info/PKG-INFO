@@ -1,6 +1,9 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: sahayog_ticket
 Version: 0.0.1
 Summary: Tickets
 Author: Talib Sheikh
 Author-email: talib.s@sahayogmultistate.com
+Dynamic: author
+Dynamic: author-email
+Dynamic: summary
