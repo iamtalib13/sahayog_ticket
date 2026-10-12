@@ -18,7 +18,8 @@ def execute():
         "Facility Support Executive",
         "Facility Support Manager",
         "Loan Support Executive",
-        "Loan Support Manager"
+        "Loan Support Manager",
+        "Contact Service"
     ]
 
     print("✅Sahayog Ticket Roles creation patch Started.")
