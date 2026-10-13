@@ -108,11 +108,13 @@ def sahayog_ticket_permission_query(user):
 
     user = frappe.db.escape(user)
 
+    is_cpc = "cpc loan user" in [r.lower() for r in roles]
+
     # --------------------------------------------------
     # CASE 0: NORMAL EMPLOYEE
     # (Only Employee role, no IT, no Manager, no Executive)
     # --------------------------------------------------
-    if not ticket_department and not is_manager and not is_executive:
+    if not ticket_department and not is_manager and not is_executive and not is_cpc:
         return f"""
             (
                 `tabSahayog Ticket`.owner = {user}
@@ -147,6 +149,20 @@ def sahayog_ticket_permission_query(user):
                         OR `tabSahayog Ticket`.assigned_to = ''
                     )
                 )
+            )
+        """
+
+    # --------------------------------------------------
+    # CASE CPC: pure CPC Loan User sees the Operations pool
+    # (Branch creates -> CPC pool -> workflow Take & Start).
+    # Manager/Executive CPC users are already covered above.
+    # --------------------------------------------------
+    if is_cpc:
+        return f"""
+            (
+                `tabSahayog Ticket`.dept_name = 'Operations'
+                OR `tabSahayog Ticket`.owner = {user}
+                OR `tabSahayog Ticket`.assigned_to = {user}
             )
         """
 
