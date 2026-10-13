@@ -195,7 +195,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     frm.page.wrapper.find(".ops-dual-indicator").remove();
 
     if (st === "Open") {
-      frm.page.set_indicator(__("Open"), "blue");
+      frm.page.set_indicator(__("Open"), "red");
     } else if (st === "In-Progress" && (rp === "Pending Operations" || rp === "Pending Branch")) {
       // Dual capsules: rp pill + In-Progress pill with distinct colors
       frm.page.set_indicator(__("In-Progress"), "blue");
