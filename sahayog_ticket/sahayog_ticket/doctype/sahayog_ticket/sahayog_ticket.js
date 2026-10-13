@@ -200,13 +200,11 @@ frappe.ui.form.on("Sahayog Ticket", {
       // Dual capsules: rp pill + In-Progress pill with distinct colors
       frm.page.set_indicator(__("In-Progress"), "blue");
 
-      // Pending Operations → Amber | Pending Branch → Blue
-      const rpStyle = rp === "Pending Operations"
-        ? "background:#fef3c7;color:#b45309;border:1px solid #fcd34d;"   // amber
-        : "background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;";  // blue
+      // Pending Operations → Blue | Pending Branch → Blue
+      const rpStyle = "background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;";  // blue
 
-      // In-Progress always purple
-      const ipStyle = "background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;";
+      // In-Progress → Amber
+      const ipStyle = "background:#fef3c7;color:#b45309;border:1px solid #fcd34d;";
 
       const capsule = (text, style) =>
         `<span style="display:inline-flex;align-items:center;padding:2px 10px;
