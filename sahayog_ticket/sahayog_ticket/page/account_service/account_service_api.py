@@ -77,7 +77,11 @@ def _fetch_tickets(where, vals, limit=50):
             (SELECT ti.account_number FROM `tabTicket Item` ti
               WHERE ti.parent = st.name LIMIT 1) AS account_number,
             (SELECT ti.customer_name FROM `tabTicket Item` ti
-              WHERE ti.parent = st.name LIMIT 1) AS customer_name
+              WHERE ti.parent = st.name LIMIT 1) AS customer_name,
+            (SELECT tsl.status_change_by FROM `tabTicket Status Log` tsl
+              WHERE tsl.parent = st.name ORDER BY tsl.status_change_on DESC LIMIT 1) AS last_action_by,
+            (SELECT tsl.status_change_on FROM `tabTicket Status Log` tsl
+              WHERE tsl.parent = st.name ORDER BY tsl.status_change_on DESC LIMIT 1) AS last_action_on
         FROM `tabSahayog Ticket` st
         WHERE {where}
         ORDER BY st.modified DESC
@@ -91,8 +95,25 @@ def _fetch_tickets(where, vals, limit=50):
         d = dict(r)
         d["breached"] = _tat_breached(r.get("total_days"), r.get("tat"))
         d["step"] = _step_for(r)
+        turn, turn_label = _turn_for(r)
+        d["turn"] = turn
+        d["turn_label"] = turn_label
         out.append(d)
     return out
+
+
+def _turn_for(t):
+    """Whose turn is it? branch | cpc | helpdesk | done."""
+    status = t.get("status")
+    if status == "Closed":
+        return ("done", "Done")
+    if status == "Resolved":
+        return ("branch", "Branch User")
+    if not t.get("assigned_to"):
+        return ("helpdesk", "Contact Service")
+    if t.get("response_pending") == "Pending Branch":
+        return ("branch", "Branch User")
+    return ("cpc", "CPC User")
 
 
 def _step_for(t):
