@@ -204,5 +204,14 @@ fixtures = [    {"dt": "Custom HTML Block", "filters": [
 			}
         ]
     ]},
-
+    {"dt": "Workflow State", "filters": [
+        ["name", "in", ["Open", "In-Progress", "Resolved"]]
+    ]},
+    {"dt": "Workflow Action Master", "filters": [
+        ["name", "in", ["Send to CPC", "Send to Branch",
+                        "Mark Resolved", "Verify & Close", "Reopen"]]
+    ]},
+    {"dt": "Workflow", "filters": [
+        ["name", "in", ["Sahayog Ticket Operations Workflow"]]
+    ]},
 ]
