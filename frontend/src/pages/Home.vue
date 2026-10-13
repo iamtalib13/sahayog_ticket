@@ -86,11 +86,22 @@ function fmtDate(dt: string): string {
   if (d.length !== 3) return String(dt).slice(0, 10)
   return `${d[2]}-${d[1]}-${d[0]}` // dd-mm-yyyy
 }
+function relTime(dt: string): string {
+  if (!dt) return '—'
+  const mins = Math.max(1, Math.round((Date.now() - new Date(String(dt).replace(' ', 'T')).getTime()) / 60000))
+  if (mins < 60) return `${mins}m ago`
+  const h = Math.round(mins / 60)
+  if (h < 48) return `${h}h ago`
+  return `${Math.round(h / 24)}d ago`
+}
 const rows = computed(() =>
   tickets.value.map((t: any) => ({
     ...t,
     customerLine: t.customer_name || t.employee_name || '',
     slaDue: t.due_time ? fmtDate(t.due_time) : `TAT ${t.tat || '-'}`,
+    lastAction: t.last_action_by
+      ? `${String(t.last_action_by).split('@')[0]} · ${relTime(t.last_action_on)}`
+      : '',
   })),
 )
 
@@ -101,34 +112,37 @@ const statusDot: Record<string, string> = {
   Closed: 'bg-surface-gray-4',
 }
 function pendingFrom(t: any): { label: string; theme: any } | null {
-  if (t.status === 'Resolved' || t.status === 'Closed') return null
-  if (t.response_pending === 'Pending Branch') return { label: 'Branch User', theme: 'amber' }
-  if (t.response_pending === 'Pending Operations') return { label: 'CPC User', theme: 'blue' }
-  return null
+  if (t.turn === 'done') return { label: 'Done', theme: 'gray' }
+  if (t.turn === 'helpdesk') return { label: 'Contact Service', theme: 'violet' }
+  if (t.turn === 'branch') return { label: 'Branch User', theme: 'amber' }
+  return { label: 'CPC User', theme: 'blue' }
 }
 
 const selection = ref<any[]>([])
 
-// ---- one primary action per role+state ----
+// ---- buttons only for the turn holder (no confusion) ----
 function actionsFor(t: any): { key: string; label: string; solid?: boolean }[] {
   if (t.status === 'Closed') return []
-  const pb = t.response_pending === 'Pending Branch'
+  const mine = role.value === t.turn
   if (role.value === 'branch') {
+    if (!mine) return []
     if (t.status === 'Resolved') return [{ key: 'close', label: 'Verify & Close', solid: true }]
-    if (pb) return [{ key: 'submit_info', label: 'Submit Info', solid: true }]
+    if (t.response_pending === 'Pending Branch') return [{ key: 'submit_info', label: 'Submit Info', solid: true }]
     return []
   }
   if (role.value === 'cpc') {
     if (t.status === 'Resolved') return []
-    if (!t.assigned_to) return [{ key: 'take', label: 'Take & Start', solid: true }]
-    if (pb) return []
+    if (t.turn === 'helpdesk') return [{ key: 'take', label: 'Take & Start', solid: true }]
+    if (!mine) return []
+    if (t.response_pending === 'Pending Branch') return []
     return [
       { key: 'resolve', label: 'Resolve', solid: true },
       { key: 'need_info', label: 'Need Branch Info' },
     ]
   }
+  // helpdesk: triage unassigned + supervisor close on resolved
   if (t.status === 'Resolved') return [{ key: 'close', label: 'Close', solid: true }]
-  if (!t.assigned_to) return [{ key: 'assign', label: 'Assign', solid: true }]
+  if (t.turn === 'helpdesk') return [{ key: 'assign', label: 'Assign', solid: true }]
   return []
 }
 
@@ -347,14 +361,23 @@ function goLogin() {
               <ListHeaderCell>Status</ListHeaderCell>
               <ListHeaderCell>Priority</ListHeaderCell>
               <ListHeaderCell>Assigned To</ListHeaderCell>
-              <ListHeaderCell>Pending With</ListHeaderCell>
+              <ListHeaderCell>Turn With</ListHeaderCell>
               <ListHeaderCell>Date</ListHeaderCell>
               <ListHeaderCell>Action</ListHeaderCell>
             </ListHeader>
             <ListRows :items="rows" v-slot="{ item: t, value }">
               <ListRow :value="value">
                 <ListCell><span /></ListCell>
-                <ListCell><span class="truncate font-mono text-[13px] text-ink-gray-8" :title="t.name">{{ t.name }}</span></ListCell>
+                <ListCell>
+                  <a
+                    class="truncate font-mono text-[13px] text-ink-blue-5 hover:underline"
+                    :title="t.name"
+                    :href="`/app/sahayog-ticket/${t.name}`"
+                    target="_blank"
+                  >
+                    {{ t.name }}
+                  </a>
+                </ListCell>
                 <ListCell><span class="truncate text-[13px] text-ink-gray-7" :title="t.request_type || ''">{{ t.request_type || '—' }}</span></ListCell>
                 <ListCell>
                   <div class="min-w-0">
@@ -378,8 +401,12 @@ function goLogin() {
                   </div>
                 </ListCell>
                 <ListCell>
-                  <Badge v-if="pendingFrom(t)" :theme="pendingFrom(t)!.theme" :label="pendingFrom(t)!.label" />
-                  <span v-else class="text-ink-gray-4">—</span>
+                  <div>
+                    <Badge :theme="pendingFrom(t)!.theme" :label="pendingFrom(t)!.label" />
+                    <div v-if="t.lastAction" class="mt-0.5 truncate text-[11px] text-ink-gray-5" :title="`Last action by ${t.last_action_by}`">
+                      {{ t.lastAction }}
+                    </div>
+                  </div>
                 </ListCell>
                 <ListCell>
                   <span
