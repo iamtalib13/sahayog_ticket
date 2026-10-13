@@ -190,12 +190,38 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
     const rp = frm.doc.response_pending || "";
     const st = frm.doc.status || "";
+
+    // Remove any previously injected dual capsules
+    frm.page.wrapper.find(".ops-dual-indicator").remove();
+
     if (st === "Open") {
       frm.page.set_indicator(__("Open"), "blue");
-    } else if (st === "In-Progress" && rp === "Pending Operations") {
-      frm.page.set_indicator(__("Pending Operations · In-Progress"), "orange");
-    } else if (st === "In-Progress" && rp === "Pending Branch") {
-      frm.page.set_indicator(__("Pending Branch · In-Progress"), "orange");
+    } else if (st === "In-Progress" && (rp === "Pending Operations" || rp === "Pending Branch")) {
+      // Hide default indicator, inject dual capsules instead
+      frm.page.set_indicator(__("In-Progress"), "blue");
+      const rpColor = rp === "Pending Operations" ? "#d97706" : "#2563eb";
+      const rpBg    = rp === "Pending Operations" ? "#fef3c7" : "#dbeafe";
+      const rpBorder= rp === "Pending Operations" ? "#fcd34d" : "#93c5fd";
+      const dualHtml = `
+        <span class="ops-dual-indicator" style="display:inline-flex;align-items:center;gap:5px;margin-left:6px;vertical-align:middle;">
+          <span style="
+            display:inline-flex;align-items:center;gap:4px;
+            padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;
+            background:${rpBg};color:${rpColor};border:1px solid ${rpBorder};
+            white-space:nowrap;
+          ">${__(rp)}</span>
+          <span style="
+            display:inline-flex;align-items:center;gap:4px;
+            padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;
+            background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;
+            white-space:nowrap;
+          ">${__("In-Progress")}</span>
+        </span>`;
+      frm.page.wrapper.find(".title-area .indicator-pill, .page-head .indicator-pill").last().after(dualHtml);
+      // Hide the plain "In-Progress" pill we just set
+      frm.page.wrapper.find(".indicator-pill").filter(function() {
+        return $(this).text().trim() === __("In-Progress");
+      }).hide();
     } else if (st === "Resolved") {
       frm.page.set_indicator(__("Resolved"), "green");
     } else if (st === "Closed") {
