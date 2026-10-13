@@ -1,0 +1,37 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-13 06:10:00.000000",
+  "name": "Send to CPC",
+  "workflow_action_name": "Send to CPC"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-13 06:10:00.000000",
+  "name": "Send to Branch",
+  "workflow_action_name": "Send to Branch"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-13 06:10:00.000000",
+  "name": "Mark Resolved",
+  "workflow_action_name": "Mark Resolved"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-13 06:10:00.000000",
+  "name": "Verify & Close",
+  "workflow_action_name": "Verify & Close"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-13 06:10:00.000000",
+  "name": "Reopen",
+  "workflow_action_name": "Reopen"
+ }
+]
