@@ -197,28 +197,29 @@ frappe.ui.form.on("Sahayog Ticket", {
     if (st === "Open") {
       frm.page.set_indicator(__("Open"), "blue");
     } else if (st === "In-Progress" && (rp === "Pending Operations" || rp === "Pending Branch")) {
-      // Hide default indicator, inject dual capsules instead
+      // Dual capsules: rp pill + In-Progress pill with distinct colors
       frm.page.set_indicator(__("In-Progress"), "blue");
-      const rpColor = rp === "Pending Operations" ? "#d97706" : "#2563eb";
-      const rpBg    = rp === "Pending Operations" ? "#fef3c7" : "#dbeafe";
-      const rpBorder= rp === "Pending Operations" ? "#fcd34d" : "#93c5fd";
+
+      // Pending Operations → Amber | Pending Branch → Blue
+      const rpStyle = rp === "Pending Operations"
+        ? "background:#fef3c7;color:#b45309;border:1px solid #fcd34d;"   // amber
+        : "background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;";  // blue
+
+      // In-Progress always purple
+      const ipStyle = "background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;";
+
+      const capsule = (text, style) =>
+        `<span style="display:inline-flex;align-items:center;padding:2px 10px;
+          border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;${style}"
+        >${__(text)}</span>`;
+
       const dualHtml = `
         <span class="ops-dual-indicator" style="display:inline-flex;align-items:center;gap:5px;margin-left:6px;vertical-align:middle;">
-          <span style="
-            display:inline-flex;align-items:center;gap:4px;
-            padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;
-            background:${rpBg};color:${rpColor};border:1px solid ${rpBorder};
-            white-space:nowrap;
-          ">${__(rp)}</span>
-          <span style="
-            display:inline-flex;align-items:center;gap:4px;
-            padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;
-            background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;
-            white-space:nowrap;
-          ">${__("In-Progress")}</span>
+          ${capsule(rp, rpStyle)}
+          ${capsule("In-Progress", ipStyle)}
         </span>`;
+
       frm.page.wrapper.find(".title-area .indicator-pill, .page-head .indicator-pill").last().after(dualHtml);
-      // Hide the plain "In-Progress" pill we just set
       frm.page.wrapper.find(".indicator-pill").filter(function() {
         return $(this).text().trim() === __("In-Progress");
       }).hide();
