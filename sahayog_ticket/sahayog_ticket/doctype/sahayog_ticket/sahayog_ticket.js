@@ -189,15 +189,16 @@ frappe.ui.form.on("Sahayog Ticket", {
       frm.layout.message.find(".ops-holder-intro").remove();
     }
     const rp = frm.doc.response_pending || "";
-    if (frm.doc.status === "Open") {
-      frm.page.set_indicator(__(rp || "Branch"), rp ? "orange" : "blue");
-    } else if (frm.doc.status === "In-Progress" && rp === "Pending Operations") {
-      frm.page.set_indicator(__("Pending Operations"), "orange");
-    } else if (frm.doc.status === "In-Progress" && rp === "Pending Branch") {
-      frm.page.set_indicator(__("Pending Branch"), "orange");
-    } else if (frm.doc.status === "Resolved") {
+    const st = frm.doc.status || "";
+    if (st === "Open") {
+      frm.page.set_indicator(__("Open"), "blue");
+    } else if (st === "In-Progress" && rp === "Pending Operations") {
+      frm.page.set_indicator(__("Pending Operations · In-Progress"), "orange");
+    } else if (st === "In-Progress" && rp === "Pending Branch") {
+      frm.page.set_indicator(__("Pending Branch · In-Progress"), "orange");
+    } else if (st === "Resolved") {
       frm.page.set_indicator(__("Resolved"), "green");
-    } else if (frm.doc.status === "Closed") {
+    } else if (st === "Closed") {
       frm.page.set_indicator(__("Closed"), "green");
     }
   },
