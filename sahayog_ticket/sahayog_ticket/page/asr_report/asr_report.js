@@ -471,10 +471,10 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					})()}
 				</td>
 				<td style="${tdBase}font-size:11.5px;color:#475569;">${frappe.utils.escape_html(r.remark || "—")}</td>
-				<td style="${tdBase}font-size:11.5px;color:#475569;" title="${frappe.utils.escape_html((r.last_comment_by ? r.last_comment_by + ": " : "") + (r.last_comment || ""))}">
+				<td style="${tdBase}font-size:11.5px;color:#475569;white-space:nowrap;" title="${frappe.utils.escape_html((r.last_comment_by ? r.last_comment_by + ": " : "") + (r.last_comment || ""))}">
 					${r.comments_count
-						? `<span style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:6px;">${r.comments_count}</span><span>${frappe.utils.escape_html((r.last_comment || "").slice(0, 40))}${(r.last_comment || "").length > 40 ? "…" : ""}</span>
-						<button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="View all comments" style="margin-left:6px;padding:1px 7px;">
+						? `<span style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:6px;">${r.comments_count}</span>
+						<button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="View all comments" style="padding:1px 7px;">
 							<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 						</button>`
 						: "—"}
