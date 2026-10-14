@@ -473,7 +473,10 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				<td style="${tdBase}font-size:11.5px;color:#475569;">${frappe.utils.escape_html(r.remark || "—")}</td>
 				<td style="${tdBase}font-size:11.5px;color:#475569;" title="${frappe.utils.escape_html((r.last_comment_by ? r.last_comment_by + ": " : "") + (r.last_comment || ""))}">
 					${r.comments_count
-						? `<span style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:6px;">${r.comments_count}</span><span>${frappe.utils.escape_html((r.last_comment || "").slice(0, 60))}${(r.last_comment || "").length > 60 ? "…" : ""}</span>`
+						? `<span style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:6px;">${r.comments_count}</span><span>${frappe.utils.escape_html((r.last_comment || "").slice(0, 40))}${(r.last_comment || "").length > 40 ? "…" : ""}</span>
+						<button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="View all comments" style="margin-left:6px;padding:1px 7px;">
+							<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+						</button>`
 						: "—"}
 				</td>
 				<td style="padding:9px 12px;overflow:hidden;border-left:1px solid #e2e8f0;">
@@ -488,8 +491,38 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				$(this).css("background", bg);
 			});
 			$tr.on("click", () => frappe.set_route("Form", "Sahayog Ticket", r.ticket));
+			$tr.find(".asr-cmt-btn").on("click", function (e) {
+				e.stopPropagation();
+				showComments($(this).data("ticket"));
+			});
 
 			$tbody.append($tr);
+		});
+	}
+
+	// ── All-comments popup ───────────────────────────────────────────────────
+	function showComments(ticket) {
+		frappe.call({
+			method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
+			args: { ticket: ticket },
+			callback(r) {
+				const list = r.message || [];
+				const body = list.length
+					? list.map(c => `
+						<div style="border-bottom:1px solid #f1f5f9;padding:8px 0;">
+							<div style="font-size:11px;color:#94a3b8;margin-bottom:2px;">
+								<b style="color:#475569;">${frappe.utils.escape_html(c.by || "—")}</b>
+								${c.on ? " · " + frappe.utils.escape_html(c.on.slice(0, 16)) : ""}
+							</div>
+							<div style="font-size:13px;color:#1e293b;white-space:pre-wrap;">${frappe.utils.escape_html(c.text || "")}</div>
+						</div>`).join("")
+					: `<div style="color:#94a3b8;">No comments yet.</div>`;
+				new frappe.ui.Dialog({
+					title: __("Comments — {0}", [ticket]),
+					size: "large",
+					fields: [{ fieldtype: "HTML", options: `<div style="max-height:60vh;overflow:auto;">${body}</div>` }],
+				}).show();
+			},
 		});
 	}
 
