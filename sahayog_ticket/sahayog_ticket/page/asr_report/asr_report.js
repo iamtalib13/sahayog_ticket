@@ -177,7 +177,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	// ── Table wrapper ────────────────────────────────────────────────────────
 	const $tableWrap = $(`
 		<div id="asr-table-wrap" style="flex:1 1 auto;min-height:0;min-width:0;width:100%;overflow:auto;border:1px solid #e2e8f0;border-radius:0 0 8px 8px;background:#fff;">
-			<table id="asr-table" style="border-collapse:collapse;font-size:12.5px;width:1800px;min-width:1800px;table-layout:fixed;">
+			<table id="asr-table" style="border-collapse:collapse;font-size:12.5px;width:2050px;min-width:2050px;table-layout:fixed;">
 				<thead style="position:sticky;top:0;z-index:3;">
 					<tr style="background:#f8fafc;border-bottom:2px solid rgba(65,124,125,0.2);">
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:110px;">Ticket</th>
@@ -196,6 +196,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:110px;">Resolved By</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:120px;">Resolved Date</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:160px;">Remark</th>
+						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:180px;">Comments</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:130px;">Last Modified</th>
 					</tr>
 				</thead>
@@ -470,6 +471,11 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					})()}
 				</td>
 				<td style="${tdBase}font-size:11.5px;color:#475569;">${frappe.utils.escape_html(r.remark || "—")}</td>
+				<td style="${tdBase}font-size:11.5px;color:#475569;" title="${frappe.utils.escape_html((r.last_comment_by ? r.last_comment_by + ": " : "") + (r.last_comment || ""))}">
+					${r.comments_count
+						? `<span style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:6px;">${r.comments_count}</span><span>${frappe.utils.escape_html((r.last_comment || "").slice(0, 60))}${(r.last_comment || "").length > 60 ? "…" : ""}</span>`
+						: "—"}
+				</td>
 				<td style="padding:9px 12px;overflow:hidden;border-left:1px solid #e2e8f0;">
 					${mod.html}
 				</td>
