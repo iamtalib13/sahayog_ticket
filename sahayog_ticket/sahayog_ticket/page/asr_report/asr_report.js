@@ -13,6 +13,15 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		total:    0,
 		loading:  false,
 		done:     false,
+		mainTab:   "all",   // all | pending | completed
+		subStatus: "",      // "" or one of Open/In-Progress/Closed/Resolved
+		summary:   {},      // global status counts (ignores status filter)
+	};
+
+	// Taskflow-style groups: Pending = Open+In-Progress, Completed = Closed+Resolved.
+	const TAB_GROUPS = {
+		pending:   ["Open", "In-Progress"],
+		completed: ["Closed", "Resolved"],
 	};
 
 	// ── Status colors ────────────────────────────────────────────────────────
@@ -79,24 +88,25 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 	// ── Page toolbar buttons ─────────────────────────────────────────────────
 	page.add_button(__("Refresh"), () => resetAndLoad(), { icon: "refresh" });
+	page.set_primary_action(__("Export CSV"), () => exportCSV(), "download");
 
 	// ── Filter bar HTML ──────────────────────────────────────────────────────
 	const $filterBar = $(`
 		<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
 			padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;
-			border-radius:8px 8px 0 0;">
+			border:1px solid #e2e8f0;border-top:none;">
 
-			<div style="display:flex;flex-direction:column;gap:3px;">
-				<label style="font-size:11px;font-weight:600;color:#64748b;">Status</label>
-				<select id="asr-filter-status" style="height:32px;border:1px solid #cbd5e1;
-					border-radius:6px;padding:0 8px;font-size:12px;min-width:130px;background:#fff;">
-					<option value="">All</option>
-					<option value="Open">Open</option>
-					<option value="In-Progress">In-Progress</option>
-					<option value="Resolved">Resolved</option>
-					<option value="Closed">Closed</option>
-				</select>
-			</div>
+		<div style="display:flex;flex-direction:column;gap:3px;">
+			<label style="font-size:11px;font-weight:600;color:#64748b;">Status</label>
+			<select id="asr-filter-status" style="height:32px;border:1px solid #cbd5e1;
+				border-radius:6px;padding:0 8px;font-size:12px;min-width:130px;background:#fff;">
+				<option value="">All</option>
+				<option value="Open">Open</option>
+				<option value="In-Progress">In-Progress</option>
+				<option value="Resolved">Resolved</option>
+				<option value="Closed">Closed</option>
+			</select>
+		</div>
 
 			<div style="display:flex;flex-direction:column;gap:3px;">
 				<label style="font-size:11px;font-weight:600;color:#64748b;">Response Pending</label>
@@ -146,25 +156,28 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					border-radius:6px;font-size:16px;cursor:pointer;padding:0;">
 					↺
 				</button>
-				<button id="asr-export-btn" title="Export CSV"
-					style="height:32px;padding:0 14px;display:inline-flex;align-items:center;gap:6px;
-					background:#417c7d;color:#fff;border:none;border-radius:6px;
-					font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">
-					⬇ Export CSV
-				</button>
 			</div>
 		</div>
 	`).appendTo(page.main);
 
-	// ── Fix page overflow so only table scrolls ─────────────────────────────
-	$(wrapper).closest(".layout-main-section").css("overflow", "hidden");
-	$(wrapper).closest(".page-content").css("overflow", "hidden");
+	// ── Page layout: main = flex column, exact viewport height ─────────────
+	// NOTE: page.main KHUD .layout-main-section hai (direct ref). Purani
+	// $(wrapper).closest(...) lines silent no-op thi (section wrapper ka
+	// descendant hai, ancestor nahi) — isliye height/chain kabhi lagi hi nahi.
+	$("body").css("overflow", "hidden");
+	const $main = $(page.main);
+	$main.css({
+		display: "flex",
+		"flex-direction": "column",
+		"min-width": "0",
+		"max-width": "100%",
+		overflow: "hidden",
+	});
 
 	// ── Table wrapper ────────────────────────────────────────────────────────
 	const $tableWrap = $(`
-		<div id="asr-table-wrap" style="overflow:auto;border:1px solid #e2e8f0;border-radius:0 0 8px 8px;background:#fff;
-			height:calc(100vh - 200px);">
-			<table id="asr-table" style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:1400px;table-layout:fixed;">
+		<div id="asr-table-wrap" style="flex:1 1 auto;min-height:0;min-width:0;width:100%;overflow:auto;border:1px solid #e2e8f0;border-radius:0 0 8px 8px;background:#fff;">
+			<table id="asr-table" style="border-collapse:collapse;font-size:12.5px;width:1800px;min-width:1800px;table-layout:fixed;">
 				<thead style="position:sticky;top:0;z-index:3;">
 					<tr style="background:#f8fafc;border-bottom:2px solid rgba(65,124,125,0.2);">
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:110px;">Ticket</th>
@@ -194,6 +207,23 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		</div>
 	`).appendTo(page.main);
 
+	// ── Fit main to remaining viewport height (settled layout + resize) ────
+	// Wrap flex:1 se bachi jagah lega — na katagea, na khaali chhodega.
+	// Bars squeeze na hon: flex none.
+	$filterBar.css("flex", "0 0 auto");
+	$("#asr-tabs-row").css("flex", "0 0 auto");
+	const fitPage = () => {
+		const mainEl = $main && $main[0];
+		if (!mainEl) return;
+		const top = mainEl.getBoundingClientRect().top || 0;
+		$main.css("height", Math.max(300, window.innerHeight - top - 12) + "px");
+	};
+	requestAnimationFrame(() => {
+		fitPage();
+		setTimeout(fitPage, 300);
+	});
+	$(window).off("resize.asr").on("resize.asr", fitPage);
+
 	// ── Load filter options ──────────────────────────────────────────────────
 	frappe.call({
 		method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_filter_options",
@@ -210,10 +240,85 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		},
 	});
 
+	// ── Taskflow-style status tabs row (extra row; Status dropdown as-is) ────
+	// Left: All | Pending | Completed. Right (same row): sub-status badges.
+	const MAIN_TABS = [
+		{ key: "all",       label: "All" },
+		{ key: "pending",   label: "Pending" },
+		{ key: "completed", label: "Completed" },
+	];
+	$(`
+		<div id="asr-tabs-row" style="display:flex;align-items:center;gap:8px;width:100%;
+			padding:8px 16px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;">
+			<div id="asr-main-tabs" style="display:inline-flex;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:2px;gap:2px;"></div>
+			<div id="asr-sub-tabs" style="display:inline-flex;gap:6px;margin-left:auto;flex-wrap:wrap;"></div>
+		</div>
+	`).insertBefore($filterBar);
+	function tabCounts() {
+		const s = state.summary || {};
+		return {
+			all:       s.Total || 0,
+			pending:   (s.Open || 0) + (s["In-Progress"] || 0),
+			completed: (s.Closed || 0) + (s.Resolved || 0),
+		};
+	}
+	function renderTabs() {
+		const counts = tabCounts();
+		const $main = $("#asr-main-tabs");
+		$main.empty();
+		MAIN_TABS.forEach(t => {
+			const active = state.mainTab === t.key;
+			$main.append(`
+				<button data-tab="${t.key}" style="border:none;cursor:pointer;
+					padding:4px 14px;border-radius:6px;font-size:12px;font-weight:600;
+					${active ? "background:#417c7d;color:#fff;" : "background:transparent;color:#475569;"}">
+					${t.label} (${counts[t.key]})
+				</button>`);
+		});
+		$main.find("button").on("click", function () {
+			state.mainTab = $(this).data("tab");
+			state.subStatus = "";
+			$("#asr-filter-status").val("");
+			renderTabs();
+			applyFilters();
+		});
+		const $sub = $("#asr-sub-tabs");
+		$sub.empty();
+		(TAB_GROUPS[state.mainTab] || []).forEach(s => {
+			const active = state.subStatus === s;
+			$sub.append(`
+				<button data-sub="${s}" style="cursor:pointer;
+					padding:3px 12px;border-radius:999px;font-size:11.5px;font-weight:600;
+					${active
+						? "background:#e6f2f2;border:1px solid #417c7d;color:#1f5c5d;"
+						: "background:#fff;border:1px solid #cbd5e1;color:#64748b;"}">
+					${s}
+				</button>`);
+		});
+		$sub.find("button").on("click", function () {
+			const s = $(this).data("sub");
+			state.subStatus = (state.subStatus === s) ? "" : s;
+			$("#asr-filter-status").val("");
+			renderTabs();
+			applyFilters();
+		});
+	}
+	renderTabs();
+
 	// ── Event bindings ───────────────────────────────────────────────────────
+	function statusList() {
+		if (state.subStatus) return [state.subStatus];
+		return TAB_GROUPS[state.mainTab] || [];
+	}
 	function applyFilters() {
+	 // Tabs win when set; else fall back to the Status dropdown (as-is).
+		let statuses = statusList();
+		if (!statuses.length) {
+			const s = $("#asr-filter-status").val();
+			if (s) statuses = [s];
+		}
 		state.filters = {
-			status:           $("#asr-filter-status").val(),
+			statuses:         statuses,
 			response_pending: $("#asr-filter-rp").val(),
 			request_type:     $("#asr-filter-rt").val(),
 			sol_id:           $("#asr-filter-sol").val(),
@@ -223,17 +328,24 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		resetAndLoad();
 	}
 
-	$("#asr-filter-status, #asr-filter-rp, #asr-filter-rt, #asr-filter-sol").on("change", applyFilters);
+	$("#asr-filter-status").on("change", () => {
+		state.mainTab = "all";
+		state.subStatus = "";
+		renderTabs();
+		applyFilters();
+	});
+	$("#asr-filter-rp, #asr-filter-rt, #asr-filter-sol").on("change", applyFilters);
 	$("#asr-filter-from, #asr-filter-to").on("change", applyFilters);
 
 	$("#asr-clear-btn").on("click", () => {
 		$("#asr-filter-status,#asr-filter-rp,#asr-filter-rt,#asr-filter-sol").val("");
 		$("#asr-filter-from,#asr-filter-to").val("");
+		state.mainTab = "all";
+		state.subStatus = "";
+		renderTabs();
 		state.filters = {};
 		resetAndLoad();
 	});
-
-	$("#asr-export-btn").on("click", () => exportCSV());
 
 	// ── Infinite scroll via IntersectionObserver ─────────────────────────────
 	const sentinel = document.getElementById("asr-scroll-sentinel");
@@ -273,6 +385,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				const res  = r.message || {};
 				const rows = res.data || [];
 				state.total = res.total || 0;
+				state.summary = res.summary || {};
+				renderTabs();
 
 				if (rows.length === 0 && state.offset === 0) {
 					$("#asr-empty").show();
@@ -447,5 +561,19 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	}
 
 	// ── Initial load ─────────────────────────────────────────────────────────
-	setTimeout(() => resetAndLoad(), 50);
+	function setTableHeight() {
+		const navbarH    = $(".navbar").outerHeight(true) || 60;
+		const pageHeadH  = $(wrapper).closest(".page-wrapper").find(".page-head").outerHeight(true) || 50;
+		const summaryH   = 0; // summary chips removed
+		const filterH    = $filterBar.outerHeight(true) || 0;
+		const available  = window.innerHeight - navbarH - pageHeadH - summaryH - filterH - 2;
+		$("#asr-table-wrap").css("height", available + "px");
+	}
+
+	$(window).on("resize", setTableHeight);
+
+	setTimeout(() => {
+		setTableHeight();
+		resetAndLoad();
+	}, 50);
 };
