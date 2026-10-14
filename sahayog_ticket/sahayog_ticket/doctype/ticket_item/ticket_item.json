@@ -153,7 +153,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Response Pending",
-   "options": "\nPending Operations\nPending Branch\nResolved",
+   "options": "Pending Operations\nPending Branch\nResolved",
    "hidden": 1
   },
   {
