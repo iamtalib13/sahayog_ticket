@@ -275,15 +275,15 @@ frappe.ui.form.on("Sahayog Ticket", {
     // Free lane (non Operations+ASR): same moves + remarks as the old
     // Status buttons (In-Progress/Resolve/Re-Open/Close).
     const need = isOps ? {
-      "Mark Resolved": { field: "resolved_remark", title: __("Enter Resolve Remark"), label: __("Resolve Remark"), stampResolve: true },
-      "Send to Branch": { field: "executive_remark", title: __("Enter Remark for Branch"), label: __("Branch Remark"), setRP: "Pending Branch" },
-      "Send to CPC": { field: "executive_remark", title: __("Enter Info Provided"), label: __("Info for CPC"), setRP: "Pending Operations", noPromptOn: ["Open"] },
-      "Reopen": { field: "reopen_remark", title: __("Enter Re-Open Remark"), label: __("Re-Open Remark") },
+      "Mark Resolved": { field: "resolved_remark", title: __("Enter Resolve Remark"), label: __("Resolve Remark"), stampResolve: true, forceField: true },
+      "Send to Branch": { field: "executive_remark", title: __("Enter Remark for Branch"), label: __("Branch Remark"), setRP: "Pending Branch", commentAfter: true },
+      "Send to CPC": { field: "executive_remark", title: __("Enter Info Provided"), label: __("Info for CPC"), setRP: "Pending Operations", noPromptOn: ["Open"], commentAfter: true },
+      "Reopen": { field: "reopen_remark", title: __("Enter Re-Open Remark"), label: __("Re-Open Remark"), forceField: true },
     }[action] : {
-      "In-Progress": { field: "executive_remark", title: __("Enter In-Progress Remark"), label: __("In-Progress Remark"), assignSelf: true },
-      "Resolve": { field: "resolved_remark", title: __("Enter Resolve Remark"), label: __("Resolve Remark"), stampResolve: true, assignSelf: true },
-      "Re-Open": { field: "reopen_remark", title: __("Enter Re-Open Remark"), label: __("Re-Open Remark"), clearResolve: true },
-      "Close": { field: "close_remark", title: __("Enter Close Remark"), label: __("Close Remark") },
+      "In-Progress": { field: "executive_remark", title: __("Enter In-Progress Remark"), label: __("In-Progress Remark"), assignSelf: true, forceField: true },
+      "Resolve": { field: "resolved_remark", title: __("Enter Resolve Remark"), label: __("Resolve Remark"), stampResolve: true, assignSelf: true, forceField: true },
+      "Re-Open": { field: "reopen_remark", title: __("Enter Re-Open Remark"), label: __("Re-Open Remark"), clearResolve: true, forceField: true },
+      "Close": { field: "close_remark", title: __("Enter Close Remark"), label: __("Close Remark"), forceField: true },
     }[action];
 
     const confirmOnly = () => {
@@ -320,8 +320,11 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
     return new Promise((resolve, reject) => {
       let done = false;
+      // First remark goes to the field; later ones go to timeline Comments
+      // so chat history is never overwritten.
+      const toComment = need.commentAfter && frm.doc[need.field];
       const d = new frappe.ui.Dialog({
-        title: need.title,
+        title: need.title + (toComment ? __(" (Comment)") : ""),
         fields: [
           {
             label: need.label,
@@ -336,6 +339,38 @@ frappe.ui.form.on("Sahayog Ticket", {
           const val = d.fields_dict.remark.get_value();
           if (!val) {
             frappe.msgprint(__("Please provide remark."));
+            return;
+          }
+          if (toComment) {
+            // Thread continues in Comments (history preserved).
+            // Order: save FIRST (holder flip), then comment. Comment insert
+            // bumps the ticket timestamp, so saving after it would throw
+            // "Document has been modified".
+            if (need.setRP) {
+              frm.set_value("response_pending", need.setRP);
+            }
+            done = true;
+            d.hide();
+            frm.save().then(
+              () => {
+                frappe.call({
+                  method: "frappe.client.insert",
+                  args: {
+                doc: {
+                  doctype: "Comment",
+                  comment_type: "Comment",
+                  comment_by: frappe.session.user_fullname,
+                  reference_doctype: frm.doctype,
+                  reference_name: frm.docname,
+                  content: val,
+                },
+                  },
+                  callback: () => resolve(),
+                  error: () => { frappe.validated = false; reject(); },
+                });
+              },
+              () => { frappe.validated = false; reject(); }
+            );
             return;
           }
           frm.set_value(need.field, val);
