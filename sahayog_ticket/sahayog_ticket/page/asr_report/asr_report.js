@@ -501,6 +501,20 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	}
 
 	// ── All-comments popup ───────────────────────────────────────────────────
+	// "2026-10-14 15:37:51" -> "14-10-26 03:37 PM".
+	function fmtCmtDt(s) {
+		if (!s) return "";
+		const parts = String(s).split(" ");
+		if (parts.length < 2) return s;
+		const d = parts[0].split("-");
+		if (d.length !== 3) return s;
+		const t = parts[1].slice(0, 5).split(":");
+		let h = parseInt(t[0], 10);
+		const mi = t[1] || "00";
+		const ampm = h >= 12 ? "PM" : "AM";
+		h = h % 12 || 12;
+		return `${d[2]}-${d[1]}-${d[0].slice(2)} ${String(h).padStart(2, "0")}:${mi} ${ampm}`;
+	}
 	function showComments(ticket) {
 		frappe.call({
 			method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
@@ -512,7 +526,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						<div style="border-bottom:1px solid #f1f5f9;padding:8px 0;">
 							<div style="font-size:11px;color:#94a3b8;margin-bottom:2px;">
 								<b style="color:#475569;">${frappe.utils.escape_html(c.by || "—")}</b>
-								${c.on ? " · " + frappe.utils.escape_html(c.on.slice(0, 16)) : ""}
+								${c.on ? " · " + frappe.utils.escape_html(fmtCmtDt(c.on)) : ""}
 							</div>
 							<div style="font-size:13px;color:#1e293b;white-space:pre-wrap;">${frappe.utils.escape_html(c.text || "")}</div>
 						</div>`).join("")
