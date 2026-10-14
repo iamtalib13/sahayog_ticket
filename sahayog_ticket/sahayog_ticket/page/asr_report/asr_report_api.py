@@ -240,3 +240,22 @@ def get_filter_options():
         "sol_ids": frappe.get_all("Sahayog Branch", fields=["sol_id", "branch"],
                                   order_by="sol_id asc", limit=500),
     }
+
+
+@frappe.whitelist()
+def add_ticket_comment(ticket, text):
+    """Add a comment to a Sahayog Ticket from the ASR report."""
+    text = (text or "").strip()
+    if not text:
+        frappe.throw("Comment cannot be empty.")
+
+    frappe.get_doc({
+        "doctype":            "Comment",
+        "comment_type":       "Comment",
+        "reference_doctype":  "Sahayog Ticket",
+        "reference_name":     ticket,
+        "content":            frappe.utils.escape_html(text),
+        "comment_by":         frappe.session.user,
+    }).insert(ignore_permissions=True)
+
+    return {"status": "ok"}
