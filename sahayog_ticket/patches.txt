@@ -1,2 +1,3 @@
 sahayog_ticket.sahayog_ticket.patches.update_ticket_missing_fields
 sahayog_ticket.sahayog_ticket.patches.add_comment_perm_for_branch_cpc
+sahayog_ticket.sahayog_ticket.patches.update_account_service_workspace
