@@ -85,17 +85,11 @@ def get_report_data(filters=None, page_no=1, page_size=20):
 
     data = []
     for t in rows:
-        remarks = []
-        if (t.get("executive_remark") or "").strip():
-            remarks.append(f"Executive Remark: {t.executive_remark.strip()}")
-        if (t.get("resolved_remark") or "").strip():
-            remarks.append(f"Resolved Remark: {t.resolved_remark.strip()}")
-
         data.append({
             "ticket":           t.ticket,
             "creation_date":    str(getdate(t.creation)) if t.creation else "",
             "creation_time":    str(get_time(t.creation)) if t.creation else "",
-            "modified":         frappe.utils.get_datetime(t.modified).strftime("%d-%m-%Y %I:%M %p") if t.modified else "",
+            "modified":         str(t.modified) if t.modified else "",
             "status":           t.status or "",
             "response_pending": t.response_pending or "",
             "ticket_type":      t.ticket_type or "",
@@ -112,7 +106,7 @@ def get_report_data(filters=None, page_no=1, page_size=20):
             "resolved_by":      t.resolved_by or "",
             "resolved_date":    str(t.resolved_date) if t.resolved_date else "",
             "resolved_time":    str(t.resolved_time) if t.resolved_time else "",
-            "remark":           "\n".join(remarks),
+            "remark":           (t.get("resolved_remark") or "").strip(),
         })
 
     # Summary counts by status
