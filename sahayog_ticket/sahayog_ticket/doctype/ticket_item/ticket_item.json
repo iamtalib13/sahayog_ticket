@@ -153,7 +153,8 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Response Pending",
-   "options": "Pending Operations\nPending Branch\nResolved"
+   "options": "\nPending Operations\nPending Branch\nResolved",
+   "hidden": 1
   },
   {
    "depends_on": "eval:doc.request_type ==\"Name Change\"",
