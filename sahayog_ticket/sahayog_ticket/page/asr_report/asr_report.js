@@ -516,35 +516,75 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		return `${d[2]}-${d[1]}-${d[0].slice(2)} ${String(h).padStart(2, "0")}:${mi} ${ampm}`;
 	}
 	function showComments(ticket) {
+		function openDialog(existingList) {
+			const initial = (n) => (n || "?").trim().charAt(0).toUpperCase();
+
+			const commentsHtml = existingList.length
+				? existingList.map(c => `
+					<div style="display:flex;gap:8px;margin-bottom:10px;">
+						<div style="width:30px;height:30px;border-radius:50%;flex-shrink:0;
+							background:linear-gradient(135deg,#00b09b,#028a7a);color:#fff;
+							display:flex;align-items:center;justify-content:center;
+							font-size:13px;font-weight:700;">${frappe.utils.escape_html(initial(c.by))}</div>
+						<div style="background:#fff;border:1px solid #e2e8f0;border-radius:4px 14px 14px 14px;
+							padding:8px 12px;box-shadow:0 2px 6px rgba(0,0,0,0.06);flex:1;">
+							<div style="font-size:11px;color:#64748b;margin-bottom:3px;">
+								<b style="color:#0f766e;">${frappe.utils.escape_html(c.by || "—")}</b>
+								${c.on ? " · " + frappe.utils.escape_html(fmtCmtDt(c.on)) : ""}
+							</div>
+							<div style="font-size:13px;color:#1e293b;white-space:pre-wrap;">${frappe.utils.escape_html(c.text || "")}</div>
+						</div>
+					</div>`).join("")
+				: `<div style="color:#94a3b8;font-size:13px;padding:8px 0;">No comments yet.</div>`;
+
+			const d = new frappe.ui.Dialog({
+				title: __("Comments — {0}", [ticket]),
+				size: "large",
+				fields: [
+					{
+						fieldtype: "HTML",
+						options: `<div id="asr-cmt-list" style="max-height:45vh;overflow-y:auto;
+							background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:12px;">
+							${commentsHtml}
+						</div>`,
+					},
+					{
+						fieldtype: "Small Text",
+						fieldname: "new_comment",
+						label: "Add Comment",
+						placeholder: "Type your comment here...",
+					},
+				],
+				primary_action_label: __("Post Comment"),
+				primary_action(values) {
+					const text = (values.new_comment || "").trim();
+					if (!text) {
+						frappe.msgprint(__("Please write a comment."));
+						return;
+					}
+					frappe.call({
+						method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
+						args: { ticket: ticket, text: text },
+						callback(r) {
+							if (r.exc) return;
+							d.hide();
+							// reopen with fresh comments
+							frappe.call({
+								method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
+								args: { ticket: ticket },
+								callback(r2) { openDialog(r2.message || []); },
+							});
+						},
+					});
+				},
+			});
+			d.show();
+		}
+
 		frappe.call({
 			method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
 			args: { ticket: ticket },
-			callback(r) {
-				const list = r.message || [];
-				const initial = (n) => (n || "?").trim().charAt(0).toUpperCase();
-				const body = list.length
-					? list.map(c => `
-						<div style="display:flex;gap:8px;margin-bottom:10px;">
-							<div style="width:30px;height:30px;border-radius:50%;flex-shrink:0;
-								background:linear-gradient(135deg,#00b09b,#028a7a);color:#fff;
-								display:flex;align-items:center;justify-content:center;
-								font-size:13px;font-weight:700;">${frappe.utils.escape_html(initial(c.by))}</div>
-							<div style="background:#fff;border:1px solid #e2e8f0;border-radius:4px 14px 14px 14px;
-								padding:8px 12px;box-shadow:0 2px 6px rgba(0,0,0,0.06);max-width:100%;">
-								<div style="font-size:11px;color:#64748b;margin-bottom:2px;">
-									<b style="color:#0f766e;">${frappe.utils.escape_html(c.by || "—")}</b>
-									${c.on ? " · " + frappe.utils.escape_html(fmtCmtDt(c.on)) : ""}
-								</div>
-								<div style="font-size:13px;color:#1e293b;white-space:pre-wrap;">${frappe.utils.escape_html(c.text || "")}</div>
-							</div>
-						</div>`).join("")
-					: `<div style="color:#94a3b8;">No comments yet.</div>`;
-				new frappe.ui.Dialog({
-					title: __("Comments — {0}", [ticket]),
-					size: "large",
-					fields: [{ fieldtype: "HTML", options: `<div style="max-height:60vh;overflow:auto;background:#f8fafc;border-radius:12px;padding:12px;">${body}</div>` }],
-				}).show();
-			},
+			callback(r) { openDialog(r.message || []); },
 		});
 	}
 
