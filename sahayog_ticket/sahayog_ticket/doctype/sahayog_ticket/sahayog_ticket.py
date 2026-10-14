@@ -240,13 +240,17 @@ class SahayogTicket(Document):
         # Status path: Open -> In-Progress -> Resolved -> Closed -> Open.
         # The CPC<->Branch ping-pong keeps status In-Progress; only
         # response_pending flips (holder), set by the UI/API before save.
+        # Fresh ticket: Operations starts life pending with CPC.
+        if self.is_new() and self.dept_name == "Operations" and not self.response_pending:
+            self.response_pending = "Pending Operations"
         if self.is_new() or self.dept_name != "Operations":
             return
         old = self._doc_before_save
         if not old:
             return
-        # First push: Branch sends fresh ticket to CPC.
-        if old.status == "Open" and self.status == "In-Progress":
+        # First push: Branch sends fresh ticket to CPC. Only default when
+        # holder is empty (CPC may act directly on Open with its own holder).
+        if old.status == "Open" and self.status == "In-Progress" and not self.response_pending:
             self.response_pending = "Pending Operations"
         # Fresh cycle after reopen.
         if old.status == "Closed" and self.status == "Open":
