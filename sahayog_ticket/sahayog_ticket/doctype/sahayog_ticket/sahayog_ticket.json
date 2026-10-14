@@ -461,7 +461,7 @@
    "fieldname": "response_pending",
    "fieldtype": "Select",
    "label": "Response Pending",
-   "options": "\nPending Operations\nPending Branch\nResolved"
+   "options": "Pending Operations\nPending Branch\nResolved"
   },
   {
    "fieldname": "section_break_fvya",
