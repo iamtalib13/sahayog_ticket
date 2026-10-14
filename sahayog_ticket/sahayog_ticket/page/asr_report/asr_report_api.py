@@ -109,8 +109,10 @@ def get_report_data(filters=None, page_no=1, page_size=20):
             "remark":           (t.get("resolved_remark") or "").strip(),
         })
 
-    # Summary counts by status
-    summary = _get_summary(conditions, params)
+    # Summary counts by status (ignores the status filter so the
+    # All/Pending/Completed tab counts stay global).
+    sum_conditions, sum_params = _build_conditions(filters, exclude_status=True)
+    summary = _get_summary(sum_conditions, sum_params)
 
     return {
         "data":     data,
@@ -121,11 +123,18 @@ def get_report_data(filters=None, page_no=1, page_size=20):
     }
 
 
-def _build_conditions(filters):
+def _build_conditions(filters, exclude_status=False):
     conditions = ["st.ticket_type = 'Account Service Request'"]
     params = []
 
-    if filters.get("status"):
+    allowed_statuses = ("Open", "In-Progress", "Resolved", "Closed")
+    if not exclude_status and filters.get("statuses"):
+        vals = [s for s in filters["statuses"] if s in allowed_statuses]
+        if vals:
+            conditions.append("st.status IN ({})".format(", ".join(["%s"] * len(vals))))
+            params.extend(vals)
+
+    if not exclude_status and filters.get("status") and filters["status"] in allowed_statuses:
         conditions.append("st.status = %s")
         params.append(filters["status"])
 
