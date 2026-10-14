@@ -214,4 +214,7 @@ fixtures = [    {"dt": "Custom HTML Block", "filters": [
     {"dt": "Workflow", "filters": [
         ["name", "in", ["Sahayog Ticket Operations Workflow"]]
     ]},
+    {"dt": "Workspace", "filters": [
+        ["name", "in", ["Account Service Requests"]]
+    ]},
 ]
