@@ -286,13 +286,14 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		$sub.empty();
 		(TAB_GROUPS[state.mainTab] || []).forEach(s => {
 			const active = state.subStatus === s;
+			const cnt = (state.summary || {})[s] || 0;
 			$sub.append(`
 				<button data-sub="${s}" style="cursor:pointer;
 					padding:3px 12px;border-radius:999px;font-size:11.5px;font-weight:600;
 					${active
 						? "background:#e6f2f2;border:1px solid #417c7d;color:#1f5c5d;"
 						: "background:#fff;border:1px solid #cbd5e1;color:#64748b;"}">
-					${s}
+					${s} (${cnt})
 				</button>`);
 		});
 		$sub.find("button").on("click", function () {
