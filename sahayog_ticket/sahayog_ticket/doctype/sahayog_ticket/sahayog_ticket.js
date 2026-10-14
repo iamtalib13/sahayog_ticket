@@ -265,20 +265,25 @@ frappe.ui.form.on("Sahayog Ticket", {
     }, 500);
   },
 
-  // Operations workflow (mirrors Loan Application before_workflow_action):
+  // Workflow action remarks (mirrors Loan Application before_workflow_action):
   // Frappe Workflow drives status via actions; capture mandatory remarks
   // with the same prompt UX as the old Status buttons.
   before_workflow_action: function (frm) {
     frappe.dom.unfreeze();
-    if (frm.doc.dept_name !== "Operations") {
-      return Promise.resolve();
-    }
     const action = frm.selected_workflow_action;
-    const need = {
+    const isOps = frm.doc.dept_name === "Operations";
+    // Free lane (non Operations+ASR): same moves + remarks as the old
+    // Status buttons (In-Progress/Resolve/Re-Open/Close).
+    const need = isOps ? {
       "Mark Resolved": { field: "resolved_remark", title: __("Enter Resolve Remark"), label: __("Resolve Remark"), stampResolve: true },
       "Send to Branch": { field: "executive_remark", title: __("Enter Remark for Branch"), label: __("Branch Remark"), setRP: "Pending Branch" },
       "Send to CPC": { field: "executive_remark", title: __("Enter Info Provided"), label: __("Info for CPC"), setRP: "Pending Operations", noPromptOn: ["Open"] },
       "Reopen": { field: "reopen_remark", title: __("Enter Re-Open Remark"), label: __("Re-Open Remark") },
+    }[action] : {
+      "In-Progress": { field: "executive_remark", title: __("Enter In-Progress Remark"), label: __("In-Progress Remark"), assignSelf: true },
+      "Resolve": { field: "resolved_remark", title: __("Enter Resolve Remark"), label: __("Resolve Remark"), stampResolve: true, assignSelf: true },
+      "Re-Open": { field: "reopen_remark", title: __("Enter Re-Open Remark"), label: __("Re-Open Remark"), clearResolve: true },
+      "Close": { field: "close_remark", title: __("Enter Close Remark"), label: __("Close Remark") },
     }[action];
 
     const confirmOnly = () => {
@@ -340,6 +345,14 @@ frappe.ui.form.on("Sahayog Ticket", {
           if (need.stampResolve) {
             frm.set_value("ticket_resolved_by", frappe.session.user);
             frm.set_value("ticket_resolved_on", frappe.datetime.now_datetime());
+          }
+          if (need.assignSelf) {
+            frm.set_value("assigned_to", frappe.session.user);
+          }
+          if (need.clearResolve) {
+            frm.set_value("ticket_resolved_by", "");
+            frm.set_value("ticket_resolved_user", "");
+            frm.set_value("ticket_resolved_on", "");
           }
           done = true;
           d.hide();
@@ -404,9 +417,10 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
 
     if (!frm.is_new()) {
-      // Operations tickets: status is driven by Frappe Workflow actions,
-      // so the old direct Status buttons are hidden to avoid dual UI.
-      const ops_workflow = frm.doc.dept_name === "Operations";
+      // Status moves (In-Progress/Resolve/Re-Open/Close) are driven by Frappe
+      // Workflow actions for ALL tickets now (free lane covers non-Operations),
+      // so the old direct Status buttons stay hidden to avoid dual UI.
+      // assign_to + Set Executive Remark buttons remain (no status change).
       if (
         frappe.user.has_role("IT Support Executive") ||
         frappe.user.has_role("Admin Support Executive") ||
@@ -419,30 +433,14 @@ frappe.ui.form.on("Sahayog Ticket", {
         frappe.user.has_role("CBS Support Executive")
       ) {
 
-        if (frm.doc.status === "Open") {
-          if (!ops_workflow) {
-            frm.trigger("In_Progress_button");
-            frm.trigger("resolve_button");
-          }
-        } else if (frm.doc.status === "In-Progress") {
+        if (frm.doc.status === "In-Progress") {
           frm.trigger("assign_to_button");
-          if (!ops_workflow) {
-            frm.trigger("resolve_button");
-          }
           frm.trigger("executive_remark");
         }
       }
 
       if (frappe.user.has_role("System Manager")) {
       } else if (frappe.user.has_role("Employee")) {
-        if (
-          frm.doc.status === "Resolved" &&
-          frm.doc.owner === frappe.session.user &&
-          !ops_workflow
-        ) {
-          frm.trigger("reopen_button");
-          frm.trigger("close_button");
-        }
       } else {
         if (frappe.user.has_role("CTO")) {
           frm.disable_save();
