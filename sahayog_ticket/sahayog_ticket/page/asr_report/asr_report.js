@@ -71,15 +71,14 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		const hh   = String(h).padStart(2, "0");
 
 		return {
-			html: `<span style="white-space:nowrap;color:#475569;">${d}/${mo}/${y}</span>
-				<span style="display:block;font-size:10.5px;color:#94a3b8;white-space:nowrap;">${hh}:${mi} ${ampm}</span>`,
+			html: `<div style="white-space:nowrap;color:#475569;">${d}-${mo}-${y}</div>
+				<div style="font-size:10.5px;color:#94a3b8;white-space:nowrap;">${hh}:${mi} ${ampm}</div>`,
 			isRecent: false,
 		};
 	}
 
 	// ── Page toolbar buttons ─────────────────────────────────────────────────
 	page.add_button(__("Refresh"), () => resetAndLoad(), { icon: "refresh" });
-	page.add_button(__("Export CSV"), () => exportCSV(), { icon: "download" });
 
 	// ── Filter bar HTML ──────────────────────────────────────────────────────
 	const $filterBar = $(`
@@ -147,14 +146,24 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					border-radius:6px;font-size:16px;cursor:pointer;padding:0;">
 					↺
 				</button>
+				<button id="asr-export-btn" title="Export CSV"
+					style="height:32px;padding:0 14px;display:inline-flex;align-items:center;gap:6px;
+					background:#417c7d;color:#fff;border:none;border-radius:6px;
+					font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">
+					⬇ Export CSV
+				</button>
 			</div>
 		</div>
 	`).appendTo(page.main);
 
+	// ── Fix page overflow so only table scrolls ─────────────────────────────
+	$(wrapper).closest(".layout-main-section").css("overflow", "hidden");
+	$(wrapper).closest(".page-content").css("overflow", "hidden");
+
 	// ── Table wrapper ────────────────────────────────────────────────────────
 	const $tableWrap = $(`
 		<div id="asr-table-wrap" style="overflow:auto;border:1px solid #e2e8f0;border-radius:0 0 8px 8px;background:#fff;
-			height:calc(100vh - 160px);">
+			height:calc(100vh - 200px);">
 			<table id="asr-table" style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:1400px;table-layout:fixed;">
 				<thead style="position:sticky;top:0;z-index:3;">
 					<tr style="background:#f8fafc;border-bottom:2px solid rgba(65,124,125,0.2);">
@@ -167,9 +176,12 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:160px;">Response Pending</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:50px;">Cycle</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:130px;">Employee</th>
-						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:90px;">District</th>
+						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:90px;">State</th>
+						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:90px;">Zone</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:90px;">Region</th>
+						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:90px;">District</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:110px;">Resolved By</th>
+						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:120px;">Resolved Date</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:160px;">Remark</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:130px;">Last Modified</th>
 					</tr>
@@ -220,6 +232,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		state.filters = {};
 		resetAndLoad();
 	});
+
+	$("#asr-export-btn").on("click", () => exportCSV());
 
 	// ── Infinite scroll via IntersectionObserver ─────────────────────────────
 	const sentinel = document.getElementById("asr-scroll-sentinel");
@@ -294,8 +308,16 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			const $tr = $(`<tr style="cursor:pointer;border-bottom:1px solid #f1f5f9;background:${bg};transition:background 0.1s ease;">
 				<td style="${tdBase}font-weight:600;color:#417c7d;">${frappe.utils.escape_html(r.ticket)}</td>
 				<td ${tdGray}>
-					${r.creation_date || "—"}
-					<span style="display:block;font-size:10.5px;color:#94a3b8;">${r.creation_time ? r.creation_time.slice(0,8) : ""}</span>
+					${r.creation_date ? r.creation_date.split("-").reverse().join("-") : "—"}
+					<span style="display:block;font-size:10.5px;color:#94a3b8;">${(function(){
+						if (!r.creation_time) return "";
+						const parts = r.creation_time.slice(0,8).split(":");
+						let h = parseInt(parts[0]);
+						const mi = parts[1];
+						const ampm = h >= 12 ? "PM" : "AM";
+						h = h % 12 || 12;
+						return String(h).padStart(2,"0") + ":" + mi + " " + ampm;
+					})()}</span>
 				</td>
 				<td ${tdGray}>${frappe.utils.escape_html(r.request_type || "—")}</td>
 				<td ${tdGray}>${frappe.utils.escape_html(r.sol_id || "—")}</td>
@@ -307,11 +329,26 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					<span style="font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;">${frappe.utils.escape_html(r.employee_name || "—")}</span>
 					<span style="font-size:10.5px;color:#94a3b8;display:block;overflow:hidden;text-overflow:ellipsis;">${frappe.utils.escape_html(r.employee_id || "")}</span>
 				</td>
-				<td ${tdGray}>${frappe.utils.escape_html(r.district || "—")}</td>
+				<td ${tdGray}>${frappe.utils.escape_html(r.state || "—")}</td>
+				<td ${tdGray}>${frappe.utils.escape_html(r.zone || "—")}</td>
 				<td ${tdGray}>${frappe.utils.escape_html(r.region || "—")}</td>
+				<td ${tdGray}>${frappe.utils.escape_html(r.district || "—")}</td>
 				<td ${tdGray}>${frappe.utils.escape_html(r.resolved_by || "—")}</td>
+				<td style="padding:9px 12px;overflow:hidden;">
+					${(function() {
+						if (!r.resolved_date) return "—";
+						const d = r.resolved_date.split("-").reverse().join("-");
+						if (!r.resolved_time) return d;
+						const parts = r.resolved_time.slice(0,5).split(":");
+						let h = parseInt(parts[0]);
+						const mi = parts[1];
+						const ampm = h >= 12 ? "PM" : "AM";
+						h = h % 12 || 12;
+						return `<div style="white-space:nowrap;color:#475569;">${d}</div><div style="font-size:10.5px;color:#94a3b8;white-space:nowrap;">${String(h).padStart(2,"0")}:${mi} ${ampm}</div>`;
+					})()}
+				</td>
 				<td style="${tdBase}font-size:11.5px;color:#475569;">${frappe.utils.escape_html(r.remark || "—")}</td>
-				<td style="${tdBase}border-left:1px solid #e2e8f0;">
+				<td style="padding:9px 12px;overflow:hidden;border-left:1px solid #e2e8f0;">
 					${mod.html}
 				</td>
 			</tr>`);
@@ -330,32 +367,75 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 	// ── Export CSV ───────────────────────────────────────────────────────────
 	function exportCSV() {
-		const $rows = $("#asr-tbody tr");
-		if (!$rows.length) { frappe.msgprint(__("No data to export.")); return; }
+		if (!state.total) { frappe.msgprint(__("No data to export.")); return; }
 
 		frappe.call({
 			method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_report_data",
 			args: { filters: state.filters, page_no: 1, page_size: state.total || 9999 },
 			callback(r) {
 				const data = (r.message || {}).data || [];
-				const cols = [
-					"modified","ticket","creation_date","creation_time","request_type","sol_id","branch",
-					"status","response_pending","ticket_cycle","employee_id","employee_name",
-					"state","zone","region","district","resolved_by","resolved_date","resolved_time","remark",
-				];
+				if (!data.length) { frappe.msgprint(__("No data to export.")); return; }
+
+				// helper: "YYYY-MM-DD" → "DD-MM-YYYY"
+				function fmtDate(d) {
+					if (!d) return "";
+					return d.split("-").reverse().join("-");
+				}
+
+				// helper: "HH:MM:SS" or "HH:MM" → "hh:mm AM/PM"
+				function fmtTime(t) {
+					if (!t) return "";
+					const parts = t.slice(0, 5).split(":");
+					let h = parseInt(parts[0]);
+					const mi = parts[1];
+					const ampm = h >= 12 ? "PM" : "AM";
+					h = h % 12 || 12;
+					return String(h).padStart(2, "0") + ":" + mi + " " + ampm;
+				}
+
+				// helper: raw modified "YYYY-MM-DD HH:MM:SS" → "DD-MM-YYYY hh:mm AM/PM"
+				function fmtModified(m) {
+					if (!m) return "";
+					const [datePart, timePart] = m.split(" ");
+					return fmtDate(datePart) + " " + fmtTime(timePart);
+				}
+
 				const headers = [
-					"Last Modified","Ticket","Creation Date","Creation Time","Request Type","SOL ID","Branch",
-					"Status","Response Pending","Ticket Cycle","Employee ID","Employee Name",
-					"State","Zone","Region","District","Resolved By","Resolved Date","Resolved Time","Remark",
+					"Last Modified", "Ticket", "Creation Date", "Creation Time",
+					"Request Type", "SOL ID", "Branch", "Status", "Response Pending",
+					"Ticket Cycle", "Employee ID", "Employee Name",
+					"State", "Zone", "Region", "District",
+					"Resolved By", "Resolved Date", "Resolved Time", "Remark",
 				];
+
 				const csvRows = [headers.join(",")];
 				data.forEach(row => {
-					csvRows.push(cols.map(c => {
-						const val = (row[c] ?? "").toString().replace(/"/g, '""');
-						return `"${val}"`;
-					}).join(","));
+					const vals = [
+						fmtModified(row.modified),
+						row.ticket,
+						fmtDate(row.creation_date),
+						fmtTime(row.creation_time),
+						row.request_type,
+						row.sol_id,
+						row.branch,
+						row.status,
+						row.response_pending,
+						row.ticket_cycle,
+						row.employee_id,
+						row.employee_name,
+						row.state,
+						row.zone,
+						row.region,
+						row.district,
+						row.resolved_by,
+						fmtDate(row.resolved_date),
+						fmtTime(row.resolved_time),
+						row.remark,
+					];
+					csvRows.push(vals.map(v => `"${(v ?? "").toString().replace(/"/g, '""')}"`).join(","));
 				});
-				const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+
+				const blob = new Blob(["\uFEFF" + csvRows.join("\n"), ], { type: "text/csv;charset=utf-8;" });
 				const url  = URL.createObjectURL(blob);
 				const a    = document.createElement("a");
 				a.href     = url;
