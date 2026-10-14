@@ -180,6 +180,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			<table id="asr-table" style="border-collapse:collapse;font-size:12.5px;width:1960px;min-width:1960px;table-layout:fixed;">
 				<thead style="position:sticky;top:0;z-index:3;">
 					<tr style="background:#f8fafc;border-bottom:2px solid rgba(65,124,125,0.2);">
+						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:100px;position:sticky;left:0;z-index:5;background:#f8fafc;border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);">Comments</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:110px;">Ticket</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:100px;">Creation Date</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:160px;">Request Type</th>
@@ -196,8 +197,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:110px;">Resolved By</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:120px;">Resolved Date</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:160px;">Remark</th>
-						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:90px;">Comments</th>
-						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:130px;">Last Modified</th>
+						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:130px;position:sticky;right:0;z-index:5;background:#f8fafc;border-left:1px solid #e2e8f0;box-shadow:-2px 0 4px rgba(0,0,0,0.06);">Last Modified</th>
 					</tr>
 				</thead>
 				<tbody id="asr-tbody"></tbody>
@@ -429,6 +429,11 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			const mod    = formatModified(r.modified);
 
 			const $tr = $(`<tr style="cursor:pointer;border-bottom:1px solid #f1f5f9;background:${bg};transition:background 0.1s ease;">
+				<td style="${tdBase}position:sticky;left:0;z-index:2;background:${bg};border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);" title="${frappe.utils.escape_html((r.last_comment_by ? r.last_comment_by + ': ' : '') + (r.last_comment || ''))}">
+					${r.comments_count
+						? `<span style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:4px;">${r.comments_count}</span><button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="View comments" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`
+						: `<button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="Add comment" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`}
+				</td>
 				<td style="${tdBase}font-weight:600;color:#417c7d;">${frappe.utils.escape_html(r.ticket)}</td>
 				<td ${tdGray}>
 					${r.creation_date ? r.creation_date.split("-").reverse().join("-") : "—"}
@@ -471,24 +476,18 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					})()}
 				</td>
 				<td style="${tdBase}font-size:11.5px;color:#475569;">${frappe.utils.escape_html(r.remark || "—")}</td>
-				<td style="${tdBase}font-size:11.5px;color:#475569;white-space:nowrap;" title="${frappe.utils.escape_html((r.last_comment_by ? r.last_comment_by + ": " : "") + (r.last_comment || ""))}">
-					${r.comments_count
-						? `<span style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:6px;">${r.comments_count}</span>
-						<button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="View all comments" style="padding:1px 7px;">
-							<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-						</button>`
-						: "—"}
-				</td>
-				<td style="padding:9px 12px;overflow:hidden;border-left:1px solid #e2e8f0;">
+				<td style="padding:9px 12px;overflow:hidden;border-left:1px solid #e2e8f0;position:sticky;right:0;z-index:2;background:${bg};box-shadow:-2px 0 4px rgba(0,0,0,0.06);">
 					${mod.html}
 				</td>
 			</tr>`);
 
 			$tr.on("mouseenter", function () {
-				$(this).css("background", "rgba(65,124,125,0.05)");
+				$(this).css("background", "#f0f9f9");
+				$(this).find("td[style*='position:sticky']").css("background", "#f0f9f9");
 			});
 			$tr.on("mouseleave", function () {
 				$(this).css("background", bg);
+				$(this).find("td[style*='position:sticky']").css("background", bg);
 			});
 			$tr.on("click", () => frappe.set_route("Form", "Sahayog Ticket", r.ticket));
 			$tr.find(".asr-cmt-btn").on("click", function (e) {
@@ -516,75 +515,264 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		return `${d[2]}-${d[1]}-${d[0].slice(2)} ${String(h).padStart(2, "0")}:${mi} ${ampm}`;
 	}
 	function showComments(ticket) {
-		function openDialog(existingList) {
-			const initial = (n) => (n || "?").trim().charAt(0).toUpperCase();
+		const d = new frappe.ui.Dialog({
+			title: "",
+			size:  "large",
+			fields: [{ fieldtype: "HTML", fieldname: "chat_html", options: "" }],
+		});
+		d.show();
+		d.$wrapper.find(".modal-footer").hide();
+		d.$wrapper.find(".modal-header").css({"border-bottom":"none","padding":"10px 16px 0"});
+		d.$wrapper.find(".modal-body").css("padding","0");
+		// Compact modal width
+		d.$wrapper.find(".modal-dialog").css({"max-width":"580px","width":"580px"});
 
-			const commentsHtml = existingList.length
-				? existingList.map(c => `
-					<div style="display:flex;gap:8px;margin-bottom:10px;">
-						<div style="width:30px;height:30px;border-radius:50%;flex-shrink:0;
-							background:linear-gradient(135deg,#00b09b,#028a7a);color:#fff;
-							display:flex;align-items:center;justify-content:center;
-							font-size:13px;font-weight:700;">${frappe.utils.escape_html(initial(c.by))}</div>
-						<div style="background:#fff;border:1px solid #e2e8f0;border-radius:4px 14px 14px 14px;
-							padding:8px 12px;box-shadow:0 2px 6px rgba(0,0,0,0.06);flex:1;">
-							<div style="font-size:11px;color:#64748b;margin-bottom:3px;">
-								<b style="color:#0f766e;">${frappe.utils.escape_html(c.by || "—")}</b>
-								${c.on ? " · " + frappe.utils.escape_html(fmtCmtDt(c.on)) : ""}
+		// Show loading immediately so no blank flash
+		d.fields_dict.chat_html.$wrapper.html(`
+			<div style="display:flex;align-items:center;justify-content:center;
+				height:200px;gap:8px;color:#94a3b8;font-size:13px;">
+				<div style="width:16px;height:16px;border:2px solid #e2e8f0;
+					border-top-color:#417c7d;border-radius:50%;
+					animation:asr-spin 0.7s linear infinite;"></div>
+				Loading...
+			</div>
+			<style>
+				@keyframes asr-spin { to { transform: rotate(360deg); } }
+			</style>
+		`);
+
+		const me = frappe.session.user;
+
+		const initial = n => (n || "?").trim().charAt(0).toUpperCase();
+		const avatarColor = n => {
+			const colors = ["#0f766e","#1d4ed8","#7e22ce","#b45309","#b91c1c","#047857","#0369a1"];
+			let h = 0;
+			for (let i = 0; i < (n||"").length; i++) h = n.charCodeAt(i) + ((h << 5) - h);
+			return colors[Math.abs(h) % colors.length];
+		};
+
+		function fmtTime(s) {
+			if (!s) return "";
+			const dt = new Date(s.replace(" ", "T"));
+			if (isNaN(dt)) return "";
+			let h = dt.getHours(), mi = String(dt.getMinutes()).padStart(2,"0");
+			const ap = h >= 12 ? "PM" : "AM";
+			h = h % 12 || 12;
+			return `${String(h).padStart(2,"0")}:${mi} ${ap}`;
+		}
+
+		function fmtDateKey(s) {
+			if (!s) return "";
+			const dt = new Date(s.replace(" ", "T"));
+			if (isNaN(dt)) return "";
+			const today = new Date();
+			const yesterday = new Date(); yesterday.setDate(today.getDate() - 1);
+			const isSame = (a, b) => a.toDateString() === b.toDateString();
+			if (isSame(dt, today)) return "Today";
+			if (isSame(dt, yesterday)) return "Yesterday";
+			const d = String(dt.getDate()).padStart(2,"0");
+			const m = String(dt.getMonth()+1).padStart(2,"0");
+			return `${d}/${m}/${dt.getFullYear()}`;
+		}
+
+		let activeTab = "chat";
+
+		function renderMessages(list) {
+			const $area = d.$wrapper.find("#asr-chat-messages");
+			$area.empty();
+
+			if (!list.length) {
+				$area.html(`
+					<div style="display:flex;flex-direction:column;align-items:center;
+						justify-content:center;height:100%;gap:10px;">
+						<svg width="44" height="44" viewBox="0 0 24 24" fill="none"
+							stroke="#cbd5e1" stroke-width="1.2">
+							<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+						</svg>
+						<span style="font-size:13px;color:#94a3b8;">No messages yet</span>
+					</div>`);
+				return;
+			}
+
+			let lastDateKey = "";
+			list.forEach(c => {
+				const isMine  = c.by === me;
+				const color   = avatarColor(c.by);
+				const dateKey = fmtDateKey(c.on);
+				const timeStr = fmtTime(c.on);
+				const shortBy = (c.by || "").split("@")[0];
+
+				// ── Date divider ──
+				if (dateKey && dateKey !== lastDateKey) {
+					lastDateKey = dateKey;
+					$area.append(`
+						<div style="display:flex;align-items:center;gap:8px;margin:10px 0 8px;">
+							<div style="flex:1;height:1px;background:#e2e8f0;"></div>
+							<span style="font-size:10.5px;color:#94a3b8;font-weight:500;
+								background:#f8fafc;padding:1px 8px;border-radius:999px;
+								border:1px solid #e2e8f0;">${frappe.utils.escape_html(dateKey)}</span>
+							<div style="flex:1;height:1px;background:#e2e8f0;"></div>
+						</div>`);
+				}
+
+				if (isMine) {
+					// ── Sent — right ──
+					$area.append(`
+						<div style="display:flex;justify-content:flex-end;align-items:flex-end;gap:6px;margin-bottom:4px;">
+							<div style="max-width:72%;display:flex;flex-direction:column;align-items:flex-end;">
+								<div style="background:#e2f0d9;color:#1a3a1a;border-radius:12px 12px 3px 12px;padding:6px 11px;font-size:13px;line-height:1.45;text-align:left;word-break:break-word;white-space:pre-wrap;width:fit-content;max-width:100%;">${frappe.utils.escape_html(c.text)}</div>
+								<span style="font-size:10px;color:#94a3b8;margin-top:2px;">${frappe.utils.escape_html(timeStr)}</span>
 							</div>
-							<div style="font-size:13px;color:#1e293b;white-space:pre-wrap;">${frappe.utils.escape_html(c.text || "")}</div>
-						</div>
-					</div>`).join("")
-				: `<div style="color:#94a3b8;font-size:13px;padding:8px 0;">No comments yet.</div>`;
-
-			const d = new frappe.ui.Dialog({
-				title: __("Comments — {0}", [ticket]),
-				size: "large",
-				fields: [
-					{
-						fieldtype: "HTML",
-						options: `<div id="asr-cmt-list" style="max-height:45vh;overflow-y:auto;
-							background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:12px;">
-							${commentsHtml}
-						</div>`,
-					},
-					{
-						fieldtype: "Small Text",
-						fieldname: "new_comment",
-						label: "Add Comment",
-						placeholder: "Type your comment here...",
-					},
-				],
-				primary_action_label: __("Post Comment"),
-				primary_action(values) {
-					const text = (values.new_comment || "").trim();
-					if (!text) {
-						frappe.msgprint(__("Please write a comment."));
-						return;
-					}
-					frappe.call({
-						method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
-						args: { ticket: ticket, text: text },
-						callback(r) {
-							if (r.exc) return;
-							d.hide();
-							// reopen with fresh comments
-							frappe.call({
-								method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
-								args: { ticket: ticket },
-								callback(r2) { openDialog(r2.message || []); },
-							});
-						},
-					});
-				},
+						</div>`);
+				} else {
+					// ── Received — left ──
+					$area.append(`
+						<div style="display:flex;justify-content:flex-start;align-items:flex-end;gap:6px;margin-bottom:4px;">
+							<div style="width:24px;height:24px;border-radius:50%;flex-shrink:0;background:${color};color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">${frappe.utils.escape_html(initial(c.by))}</div>
+							<div style="max-width:72%;display:flex;flex-direction:column;align-items:flex-start;">
+								<span style="font-size:10.5px;color:${color};font-weight:600;margin-bottom:2px;">${frappe.utils.escape_html(shortBy)}</span>
+								<div style="background:#f1f5f9;color:#1e293b;border-radius:12px 12px 12px 3px;padding:6px 11px;font-size:13px;line-height:1.45;text-align:left;word-break:break-word;white-space:pre-wrap;width:fit-content;max-width:100%;">${frappe.utils.escape_html(c.text)}</div>
+								<span style="font-size:10px;color:#94a3b8;margin-top:2px;">${frappe.utils.escape_html(timeStr)}</span>
+							</div>
+						</div>`);
+				}
 			});
-			d.show();
+
+			const el = $area[0];
+			el.scrollTop = el.scrollHeight;
+		}
+
+		function buildUI(list) {
+			const chatCount = list.length;
+
+			// ── Modal title ──
+			d.$wrapper.find(".modal-title").html(`
+				<div style="display:flex;align-items:center;gap:8px;">
+					<div style="width:32px;height:32px;border-radius:50%;
+						background:linear-gradient(135deg,#417c7d,#0f766e);
+						color:#fff;font-size:13px;font-weight:700;
+						display:flex;align-items:center;justify-content:center;">
+						${frappe.utils.escape_html(initial(ticket))}
+					</div>
+					<div>
+						<div style="font-size:14px;font-weight:700;color:#0f172a;line-height:1.2;">
+							${frappe.utils.escape_html(ticket)}
+						</div>
+						<div style="font-size:11px;color:#64748b;">Sahayog Ticket</div>
+					</div>
+				</div>`);
+
+			d.fields_dict.chat_html.$wrapper.html(`
+				<div style="display:flex;flex-direction:column;height:500px;border-radius:0 0 8px 8px;overflow:hidden;">
+
+					<!-- Tabs -->
+					<div style="display:flex;border-bottom:2px solid #e2e8f0;background:#fff;padding:0 16px;">
+						<button data-tab="chat" style="padding:10px 16px;border:none;background:none;
+							cursor:pointer;font-size:13px;font-weight:600;display:inline-flex;
+							align-items:center;gap:6px;border-bottom:2px solid #417c7d;
+							margin-bottom:-2px;color:#417c7d;">
+							<svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+								stroke="currentColor" stroke-width="2">
+								<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+							</svg>
+							Chat
+							${chatCount ? `<span style="background:#417c7d;color:#fff;border-radius:999px;
+								font-size:10px;font-weight:700;padding:1px 7px;">${chatCount}</span>` : ""}
+						</button>
+					</div>
+
+					<!-- Messages -->
+					<div id="asr-chat-messages" style="flex:1;overflow-y:auto;
+						padding:12px 16px;background:#fff;"></div>
+
+					<!-- Input -->
+					<div style="border-top:1px solid #e2e8f0;padding:10px 14px 8px;background:#fff;">
+						<div id="asr-input-wrap" style="display:flex;align-items:flex-end;gap:6px;
+							border:1.5px solid #cbd5e1;border-radius:10px;
+							padding:6px 10px;background:#fff;transition:border-color 0.15s;">
+							<button id="asr-attach-btn" title="Attach file"
+								style="border:none;background:none;cursor:pointer;
+								padding:3px;color:#94a3b8;flex-shrink:0;
+								display:flex;align-items:center;">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+									stroke="currentColor" stroke-width="2"
+									stroke-linecap="round" stroke-linejoin="round">
+									<path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49
+										l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19
+										a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+								</svg>
+							</button>
+							<textarea id="asr-msg-input" rows="1"
+								placeholder="Message... (@ to mention)"
+								style="flex:1;border:none;outline:none;resize:none;
+								font-size:13px;color:#1e293b;background:transparent;
+								line-height:1.5;max-height:96px;overflow-y:auto;
+								padding:2px 0;font-family:inherit;"></textarea>
+							<button id="asr-send-btn"
+								style="border:none;background:#417c7d;cursor:pointer;
+								padding:6px 9px;border-radius:7px;flex-shrink:0;
+								display:flex;align-items:center;color:#fff;">
+								<svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+									stroke="currentColor" stroke-width="2.5"
+									stroke-linecap="round" stroke-linejoin="round">
+									<line x1="22" y1="2" x2="11" y2="13"/>
+									<polygon points="22 2 15 22 11 13 2 9 22 2"/>
+								</svg>
+							</button>
+						</div>
+						<div style="font-size:10.5px;color:#94a3b8;margin-top:5px;padding:0 4px;">
+							Enter to send &nbsp;·&nbsp; Shift+Enter for a new line
+						</div>
+					</div>
+				</div>
+			`);
+
+			renderMessages(list);
+
+			// ── Auto-resize textarea ──
+			const $ta = d.$wrapper.find("#asr-msg-input");
+			$ta.on("input", function() {
+				this.style.height = "auto";
+				this.style.height = Math.min(this.scrollHeight, 96) + "px";
+			});
+			$ta.on("focus", () => d.$wrapper.find("#asr-input-wrap").css("border-color","#417c7d"));
+			$ta.on("blur",  () => d.$wrapper.find("#asr-input-wrap").css("border-color","#cbd5e1"));
+
+			// ── Enter to send ──
+			$ta.on("keydown", function(e) {
+				if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+			});
+			d.$wrapper.find("#asr-send-btn").on("click", sendMsg);
+
+			function sendMsg() {
+				const text = ($ta.val() || "").trim();
+				if (!text) return;
+				$ta.val("").css("height","auto");
+				d.$wrapper.find("#asr-send-btn").prop("disabled", true);
+
+				frappe.call({
+					method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
+					args:   { ticket, text },
+					callback(r) {
+						d.$wrapper.find("#asr-send-btn").prop("disabled", false);
+						if (r.exc) return;
+						frappe.call({
+							method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
+							args:   { ticket },
+							callback(r2) {
+								list = r2.message || [];
+								renderMessages(list);
+							},
+						});
+					},
+				});
+			}
 		}
 
 		frappe.call({
 			method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
-			args: { ticket: ticket },
-			callback(r) { openDialog(r.message || []); },
+			args:   { ticket },
+			callback(r) { buildUI(r.message || []); },
 		});
 	}
 
@@ -629,6 +817,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					"Ticket Cycle", "Employee ID", "Employee Name",
 					"State", "Zone", "Region", "District",
 					"Resolved By", "Resolved Date", "Resolved Time", "Remark",
+					"Last Comment By", "Last Comment",
 				];
 
 				const csvRows = [headers.join(",")];
@@ -654,6 +843,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						fmtDate(row.resolved_date),
 						fmtTime(row.resolved_time),
 						row.remark,
+						row.last_comment_by,
+						row.last_comment,
 					];
 					csvRows.push(vals.map(v => `"${(v ?? "").toString().replace(/"/g, '""')}"`).join(","));
 				});
