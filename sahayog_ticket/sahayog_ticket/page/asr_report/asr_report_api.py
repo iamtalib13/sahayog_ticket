@@ -215,6 +215,24 @@ def _get_summary(conditions, params):
 
 
 @frappe.whitelist()
+def get_ticket_comments(ticket):
+    """All user comments of one ticket for the report popup."""
+    rows = frappe.db.sql(
+        """SELECT comment_by, content, creation FROM tabComment
+           WHERE reference_doctype = 'Sahayog Ticket'
+             AND reference_name = %s
+             AND comment_type = 'Comment'
+           ORDER BY creation DESC""",
+        (ticket,), as_dict=True,
+    )
+    return [{
+        "by":   r.comment_by or "",
+        "text": _strip_html(r.content or ""),
+        "on":   str(r.creation) if r.creation else "",
+    } for r in rows]
+
+
+@frappe.whitelist()
 def get_filter_options():
     """Return dropdown options for Request Type and SOL ID."""
     return {
