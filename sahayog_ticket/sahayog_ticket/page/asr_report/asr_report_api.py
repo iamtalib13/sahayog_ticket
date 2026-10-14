@@ -8,6 +8,13 @@ from frappe.utils import getdate, get_time
 
 TICKET_TYPE = "Account Service Request"
 
+
+def _strip_html(html):
+    """Plain text from comment HTML for the report table."""
+    import re
+    text = re.sub(r"<[^>]+>", " ", html or "")
+    return re.sub(r"\s+", " ", text).strip()
+
 REQUEST_TYPES = [
     "Activation of Dormant account",
     "Change of Address",
@@ -74,6 +81,26 @@ def get_report_data(filters=None, page_no=1, page_size=20):
                 SELECT COUNT(*) FROM `tabTicket Status Log` tsl
                 WHERE tsl.parent = st.name
             ) AS ticket_cycle,
+            (
+                SELECT COUNT(*) FROM tabComment c
+                WHERE c.reference_doctype = 'Sahayog Ticket'
+                  AND c.reference_name = st.name
+                  AND c.comment_type = 'Comment'
+            ) AS comments_count,
+            (
+                SELECT c.content FROM tabComment c
+                WHERE c.reference_doctype = 'Sahayog Ticket'
+                  AND c.reference_name = st.name
+                  AND c.comment_type = 'Comment'
+                ORDER BY c.creation DESC LIMIT 1
+            ) AS last_comment,
+            (
+                SELECT c.comment_by FROM tabComment c
+                WHERE c.reference_doctype = 'Sahayog Ticket'
+                  AND c.reference_name = st.name
+                  AND c.comment_type = 'Comment'
+                ORDER BY c.creation DESC LIMIT 1
+            ) AS last_comment_by,
             DATE(st.ticket_resolved_on) AS resolved_date,
             TIME(st.ticket_resolved_on) AS resolved_time
         FROM `tabSahayog Ticket` st
@@ -107,6 +134,9 @@ def get_report_data(filters=None, page_no=1, page_size=20):
             "resolved_date":    str(t.resolved_date) if t.resolved_date else "",
             "resolved_time":    str(t.resolved_time) if t.resolved_time else "",
             "remark":           (t.get("resolved_remark") or "").strip(),
+            "comments_count":   t.comments_count or 0,
+            "last_comment":     _strip_html(t.last_comment or ""),
+            "last_comment_by":  t.last_comment_by or "",
         })
 
     # Summary counts by status (ignores the status filter so the
