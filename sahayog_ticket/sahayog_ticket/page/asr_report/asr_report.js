@@ -736,6 +736,17 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							<div style="font-size:10.5px;color:#64748b;margin-bottom:2px;">${l}</div>
 							<div style="font-size:12.5px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:5px 10px;">${frappe.utils.escape_html(v || "—")}</div>
 						</div>`).join("")}
+					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">UPDATES</div>
+					${((row.updates && row.updates.length ? row.updates : [{ title: row.request_type || "Item", lines: [] }])).map((u) => `
+						<div style="margin-bottom:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
+							<div style="font-size:12px;font-weight:700;color:#0f766e;margin-bottom:4px;">${frappe.utils.escape_html(u.title || "")}</div>
+							${(u.lines && u.lines.length ? u.lines : []).map((ln) => `
+								<div style="font-size:12px;color:#1e293b;margin-bottom:2px;">
+									<span style="color:#64748b;">${frappe.utils.escape_html(ln.label || "")}: </span>
+									${ln.old ? `<span style="text-decoration:line-through;color:#94a3b8;">${frappe.utils.escape_html(ln.old)}</span> <span style="color:#94a3b8;">→</span> ` : ""}
+									<b>${frappe.utils.escape_html(ln.new || "")}</b>
+								</div>`).join("") || `<div style="font-size:11.5px;color:#94a3b8;">No change fields</div>`}
+						</div>`).join("")}
 					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">REMARKS</div>
 					${[
 						["Executive Remark", row.executive_remark],
