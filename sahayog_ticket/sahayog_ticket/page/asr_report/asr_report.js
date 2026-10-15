@@ -821,25 +821,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				</div>`);
 
 			d.fields_dict.chat_html.$wrapper.html(`
-				${wfActions.length ? `
-				<div style="display:flex;align-items:center;gap:8px;
-					padding:10px 16px;background:#fff;border-bottom:1px solid #e2e8f0;">
-					<span style="font-size:10.5px;font-weight:700;color:#94a3b8;letter-spacing:.05em;">ACTIONS</span>
-					${wfActions.map((a, i) => `
-					<button data-wf-idx="${i}" style="cursor:pointer;border-radius:7px;
-						padding:5px 14px;font-size:12.5px;font-weight:600;
-						display:inline-flex;align-items:center;gap:6px;
-						${i === 0
-							? "background:#417c7d;color:#fff;border:1px solid #417c7d;"
-							: "background:#fff;color:#1f5c5d;border:1px solid #417c7d;"}">
-						<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-							stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-							<line x1="22" y1="2" x2="11" y2="13"/>
-							<polygon points="22 2 15 22 11 13 2 9 22 2"/>
-						</svg>
-						${a.key}
-					</button>`).join("")}
-				</div>` : ""}
 				<div style="display:flex;height:560px;border-radius:0 0 8px 8px;overflow:hidden;">
 
 				<!-- LEFT: ticket details (read-only) -->
@@ -1000,6 +981,25 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				}
 			});
 
+			// ── Action buttons left of the dialog X (compact pills) ──
+			// Header ko flex rakho warna X neeche gir jata hai.
+			d.$wrapper.find(".modal-header").css({ display: "flex", "align-items": "center" });
+			d.$wrapper.find(".modal-title").css({ flex: "1", "min-width": "0" });
+			d.$wrapper.find(".asr-hdr-act").remove();
+			if (wfActions.length) {
+				const $close = d.$wrapper.find(".modal-header .btn-modal-close");
+				$close.before(`
+					<div class="asr-hdr-act" style="display:flex;gap:6px;align-items:center;margin-left:auto;margin-right:8px;">
+						${wfActions.map((a, i) => `
+						<button data-wf-idx="${i}" style="cursor:pointer;border-radius:999px;
+							padding:3px 12px;font-size:11.5px;font-weight:600;white-space:nowrap;
+							${i === 0
+								? "background:#417c7d;color:#fff;border:1px solid #417c7d;"
+								: "background:#fff;color:#1f5c5d;border:1px solid #417c7d;"}">
+							${a.key}
+						</button>`).join("")}
+					</div>`);
+			}
 			// Top action buttons -> remark prompt -> workflow action.
 			d.$wrapper.find("[data-wf-idx]").on("click", function () {
 				doWfAction(wfActions[+$(this).data("wf-idx")]);
