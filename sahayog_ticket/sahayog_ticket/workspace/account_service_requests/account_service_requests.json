@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h4\\\">Account Service Requests</span>\"\n  },\n  \"id\": \"UtWP4xiEf5\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Account Service Report\"\n  },\n  \"id\": \"Wq67rgfX1U\",\n  \"type\": \"shortcut\"\n }\n]",
+ "content": "[\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h4\\\">Account Service Requests</span>\"\n  },\n  \"id\": \"UtWP4xiEf5\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Account Service Request\"\n  },\n  \"id\": \"Wq67rgfX1U\",\n  \"type\": \"shortcut\"\n }\n]",
  "creation": "2025-11-18 00:19:47.572772",
  "custom_blocks": [],
  "docstatus": 0,
@@ -13,7 +13,7 @@
  "is_hidden": 0,
  "label": "Account Service Requests",
  "links": [],
- "modified": "2026-10-14 15:26:38.759487",
+ "modified": "2026-10-15 12:53:57.489976",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Account Service Requests",
@@ -28,7 +28,7 @@
   {
    "color": "Grey",
    "doc_view": "",
-   "label": "Account Service Report",
+   "label": "Account Service Request",
    "link_to": "asr-report",
    "type": "Page"
   }
