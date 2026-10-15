@@ -933,6 +933,62 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 					<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
 
+					<!-- ── RAISED BY ── -->
+					<div style="padding:10px 16px;">
+						<div style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">Raised By</div>
+						<div style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
+							<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;">
+								<span style="font-size:12.5px;font-weight:700;color:#0f172a;">${frappe.utils.escape_html((dt.employee && dt.employee.employee_name) || row.employee_name || "—")}</span>
+								<span style="font-size:11px;color:#64748b;">${frappe.utils.escape_html(row.employee_id || "")}</span>
+							</div>
+							${[
+								["Designation", dt.employee && dt.employee.designation],
+								["Department", dt.employee && dt.employee.department],
+								["Branch", (dt.employee && dt.employee.branch) || row.branch],
+								["Mobile", dt.employee && dt.employee.cell_number],
+								["Email", (dt.employee && (dt.employee.company_email || dt.employee.personal_email))],
+							].filter(([l, v]) => v).map(([l, v]) => `
+								<div style="font-size:11.5px;color:#64748b;margin-top:2px;">${l}: <span style="color:#1e293b;">${frappe.utils.escape_html(v)}</span></div>`).join("")}
+						</div>
+					</div>
+
+					<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
+
+					<!-- ── ASSIGN TO ── -->
+					<div style="padding:10px 16px;">
+						<div style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">Assign To</div>
+						${row.assigned_to ? `
+						<div id="asr-current-assign" style="display:flex;align-items:center;justify-content:space-between;
+							background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:5px 10px;">
+							<span style="font-size:12px;color:#15803d;font-weight:600;">
+								${frappe.utils.escape_html(row.assigned_to_name || row.assigned_to)}
+								<span style="font-size:10.5px;color:#64748b;font-weight:400;margin-left:4px;">(current)</span>
+							</span>
+							<button id="asr-unassign-btn" title="Remove assignment"
+								style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 2px;line-height:1;">✕</button>
+						</div>` : `
+						<div id="asr-assign-row" style="display:flex;gap:6px;">
+							<select id="asr-assign-sel" style="flex:1;min-width:0;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;">
+								<option value="">Select user…</option>
+								${((dt.assignees && dt.assignees.length) ? dt.assignees : []).map((u) => `
+									<option value="${frappe.utils.escape_html(u.value || "")}">
+										${frappe.utils.escape_html(u.label || u.value || "")}
+									</option>`).join("")}
+							</select>
+							<button id="asr-assign-btn" style="border:1px solid #417c7d;background:#417c7d;color:#fff;cursor:pointer;border-radius:6px;padding:0 12px;font-size:12px;font-weight:600;flex-shrink:0;">Assign</button>
+						</div>`}
+					</div>
+
+					${dt.resolver ? `
+					<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
+					<div style="padding:10px 16px 14px;">
+						<div style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">Resolved By</div>
+						<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px 10px;">
+							<div style="font-size:12.5px;font-weight:700;color:#15803d;">${frappe.utils.escape_html(dt.resolver.name || "")}</div>
+							<div style="font-size:11.5px;color:#64748b;">${frappe.utils.escape_html(dt.resolver.on || "")}${dt.resolver.designation ? " · " + frappe.utils.escape_html(dt.resolver.designation) : ""}${dt.resolver.branch ? " · " + frappe.utils.escape_html(dt.resolver.branch) : ""}</div>
+						</div>
+					</div>` : ""}
+
 				</div>
 
 				<!-- MIDDLE: chat -->
