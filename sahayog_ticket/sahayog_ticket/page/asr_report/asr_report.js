@@ -626,11 +626,12 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 			let lastDateKey = "";
 			list.forEach(c => {
+				const dispName = c.name || (c.by || "").split("@")[0];
 				const isMine  = c.by === me;
-				const color   = avatarColor(c.by);
+				const color   = avatarColor(dispName);
 				const dateKey = fmtDateKey(c.on);
 				const timeStr = fmtTime(c.on);
-				const shortBy = (c.by || "").split("@")[0];
+				const shortBy = dispName;
 
 				// ── Date divider ──
 				if (dateKey && dateKey !== lastDateKey) {
@@ -652,7 +653,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							<div style="max-width:72%;display:flex;flex-direction:column;align-items:flex-end;">
 								<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;">
 									<span style="font-size:10.5px;color:#0f766e;font-weight:600;">You</span>
-									<div style="width:18px;height:18px;border-radius:50%;flex-shrink:0;background:${color};color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;">${frappe.utils.escape_html(initial(c.by))}</div>
+									<div style="width:18px;height:18px;border-radius:50%;flex-shrink:0;background:${color};color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;">${frappe.utils.escape_html(initial(dispName))}</div>
 								</div>
 								<div style="background:#e2f0d9;color:#1a3a1a;border-radius:12px 12px 3px 12px;padding:6px 11px;font-size:13px;line-height:1.45;text-align:left;word-break:break-word;white-space:pre-wrap;width:fit-content;max-width:100%;">${frappe.utils.escape_html(c.text)}</div>
 								<span style="font-size:10px;color:#94a3b8;margin-top:2px;">${frappe.utils.escape_html(timeStr)}</span>
@@ -664,7 +665,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						<div style="display:flex;justify-content:flex-start;align-items:flex-end;gap:6px;margin-bottom:4px;">
 							<div style="max-width:72%;display:flex;flex-direction:column;align-items:flex-start;">
 								<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;">
-									<div style="width:18px;height:18px;border-radius:50%;flex-shrink:0;background:${color};color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;">${frappe.utils.escape_html(initial(c.by))}</div>
+									<div style="width:18px;height:18px;border-radius:50%;flex-shrink:0;background:${color};color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;">${frappe.utils.escape_html(initial(dispName))}</div>
 									<span style="font-size:10.5px;color:${color};font-weight:600;">${frappe.utils.escape_html(c.by || "")}</span>
 								</div>
 								<div style="background:#f1f5f9;color:#1e293b;border-radius:12px 12px 12px 3px;padding:6px 11px;font-size:13px;line-height:1.45;text-align:left;word-break:break-word;white-space:pre-wrap;width:fit-content;max-width:100%;">${frappe.utils.escape_html(c.text)}</div>
