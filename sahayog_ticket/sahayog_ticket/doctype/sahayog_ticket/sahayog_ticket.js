@@ -2523,4 +2523,16 @@ frappe.ui.form.on("Ticket Item", {
       },
     });
   },
+
+  // File attach auto-posts a timeline comment which bumps the ticket's
+  // modified timestamp; a later Save would throw "Document has been
+  // modified". Sync only the timestamp (all unsaved edits preserved).
+  attatchment: function (frm) {
+    if (frm.is_new() || !frm.docname) return;
+    frappe.db.get_value("Sahayog Ticket", frm.docname, "modified", (r) => {
+      const m = r && r.message;
+      const fresh = m && typeof m === "object" ? m.modified : m;
+      if (fresh) frm.doc.modified = fresh;
+    });
+  },
 });
