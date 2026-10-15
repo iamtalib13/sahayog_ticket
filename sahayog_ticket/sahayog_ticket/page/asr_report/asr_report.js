@@ -744,7 +744,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 								</svg>
 							</button>
 							<textarea id="asr-msg-input" rows="1"
-								placeholder="Message... (@ to mention)"
+								placeholder="Add comment"
 								style="flex:1;border:none;outline:none;resize:none;
 								font-size:13px;color:#1e293b;background:transparent;
 								line-height:1.5;max-height:96px;overflow-y:auto;
@@ -824,6 +824,31 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					return;
 				}
 				sendMsg();
+			});
+
+			// Attach: file ticket pe attach + chat me note (timeline jaisa).
+			d.$wrapper.find("#asr-attach-btn").on("click", function () {
+				new frappe.ui.FileUploader({
+					doctype: "Sahayog Ticket",
+					docname: ticket,
+					on_success: (file) => {
+						const fname = (file && file.file_name) || "file";
+						frappe.call({
+							method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
+							args: { ticket: ticket, text: "Attached: " + fname },
+							callback: () => {
+								frappe.call({
+									method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
+									args: { ticket: ticket },
+									callback(r2) {
+										list = r2.message || [];
+										renderMessages(list);
+									},
+								});
+							},
+						});
+					},
+				});
 			});
 
 			// Chat text reused as action remark (type once -> send -> act).
