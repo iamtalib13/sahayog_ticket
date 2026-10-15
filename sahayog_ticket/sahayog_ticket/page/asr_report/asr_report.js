@@ -933,129 +933,9 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 					<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
 
-					<!-- ── ACCOUNT HOLDER DETAILS ── -->
-					<div style="padding:10px 16px;">
-						<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-							<span style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;">Account Holder Details</span>
-							<div style="flex:1;height:1px;background:#e2e8f0;"></div>
-						</div>
-						<div style="display:grid;grid-template-columns:1fr;gap:2px;">
-							${_detailRow("Customer ID (CIF)", cifVal, { mono: true })}
-							${_detailRow("Account Number", acctNumber, { mono: true })}
-							${_detailRow("Customer Name", custName)}
-							${_detailRow("Account Type", acctType)}
-							${_detailRow("Email", emailVal)}
-							${_detailRow("Contact Number", contactVal)}
-						</div>
-
-						<!-- Attachments inside Account Holder Details -->
-						${files.length ? `
-						<div style="margin-top:10px;">
-							<div style="font-size:10.5px;color:#94a3b8;font-weight:500;margin-bottom:5px;letter-spacing:.02em;">Attachments</div>
-							<div style="display:flex;flex-direction:column;gap:4px;">
-								${files.map(f => {
-									const fname = frappe.utils.escape_html(f.file_name || "file");
-									const furl  = frappe.utils.escape_html(f.file_url || "");
-									const ext   = (f.file_name || "").split(".").pop().toLowerCase();
-									const isImg = ["jpg","jpeg","png","gif","webp","svg","bmp"].includes(ext);
-									const isPdf = ext === "pdf";
-									const icon  = isImg ? "🖼️" : isPdf ? "📄" : "📎";
-									return `<div style="display:flex;align-items:center;gap:6px;
-										background:#fff;border:1px solid #e2e8f0;border-radius:6px;
-										padding:5px 9px;">
-										<span style="font-size:13px;flex-shrink:0;">${icon}</span>
-										<a href="${furl}" target="_blank" title="${fname}"
-											style="flex:1;font-size:12px;color:#417c7d;text-decoration:none;
-											overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-											${fname}
-										</a>
-										<a href="${furl}" download target="_blank" title="Download"
-											style="flex-shrink:0;color:#94a3b8;text-decoration:none;
-											font-size:11px;border:1px solid #e2e8f0;border-radius:4px;
-											padding:1px 5px;line-height:1.6;">↓</a>
-									</div>`;
-								}).join("")}
-							</div>
-						</div>` : ""}
-					</div>
-
-					<!-- ── NEW INFORMATION ── (only if any new_* fields filled) -->
-					${newLines.length ? `
-					<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
-					<div style="padding:10px 16px 14px;">
-						<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-							<span style="font-size:10.5px;font-weight:700;color:#0f766e;letter-spacing:.06em;text-transform:uppercase;">Requested Updates</span>
-							<div style="flex:1;height:1px;background:#e2e8f0;"></div>
-						</div>
-						<div style="display:flex;flex-direction:column;gap:0;">
-							${newLines.map((ln) => {
-								const escaped = frappe.utils.escape_html(ln.value || "");
-								// Detect date values (YYYY-MM-DD) and reformat to DD-MM-YYYY.
-								const isDate = /^\d{4}-\d{2}-\d{2}$/.test((ln.value || "").trim());
-								const display = isDate
-									? ln.value.trim().split("-").reverse().join("-")
-									: escaped;
-								// Long text (address, name) gets wrap; short values get mono.
-								const isLong = (ln.value || "").length > 40;
-								return `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">
-									<div style="font-size:10.5px;color:#94a3b8;font-weight:500;margin-bottom:2px;">${frappe.utils.escape_html(ln.label || "")}</div>
-									<div style="${isLong ? "white-space:pre-wrap;word-break:break-word;" : ""}font-size:12.5px;color:#0f172a;font-weight:600;">${isDate ? frappe.utils.escape_html(display) : escaped}</div>
-								</div>`;
-							}).join("")}
-						</div>
-					</div>` : ""}
-
 				</div>
 
-				<!-- MIDDLE: raised-by, assign, resolver (read-only + assign) -->
-				<div style="width:270px;flex-shrink:0;background:#fff;border-right:1px solid #e2e8f0;
-					padding:14px 16px;overflow-y:auto;">
-					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin-bottom:10px;">RAISED BY</div>
-					<div style="margin-bottom:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
-						<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;">
-							<span style="font-size:12.5px;font-weight:700;color:#0f172a;">${frappe.utils.escape_html((dt.employee && dt.employee.employee_name) || row.employee_name || "—")}</span>
-							<span style="font-size:11px;color:#64748b;">${frappe.utils.escape_html(row.employee_id || "")}</span>
-						</div>
-						${[
-							["Designation", dt.employee && dt.employee.designation],
-							["Department", dt.employee && dt.employee.department],
-							["Branch", (dt.employee && dt.employee.branch) || row.branch],
-							["Mobile", dt.employee && dt.employee.cell_number],
-							["Email", (dt.employee && (dt.employee.company_email || dt.employee.personal_email))],
-						].filter(([l, v]) => v).map(([l, v]) => `
-							<div style="font-size:11.5px;color:#64748b;margin-top:2px;">${l}: <span style="color:#1e293b;">${frappe.utils.escape_html(v)}</span></div>`).join("")}
-					</div>
-					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">ASSIGN TO</div>
-					${row.assigned_to ? `
-					<div id="asr-current-assign" style="display:flex;align-items:center;justify-content:space-between;
-						background:#f0fdf4;border:1px solid #86efac;border-radius:6px;
-						padding:5px 10px;">
-						<span style="font-size:12px;color:#15803d;font-weight:600;">
-							${frappe.utils.escape_html(row.assigned_to_name || row.assigned_to)}
-							<span style="font-size:10.5px;color:#64748b;font-weight:400;margin-left:4px;">(current)</span>
-						</span>
-						<button id="asr-unassign-btn" title="Remove assignment"
-							style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 2px;line-height:1;">✕</button>
-					</div>` : `
-					<div id="asr-assign-row" style="display:flex;gap:6px;">
-						<select id="asr-assign-sel" style="flex:1;min-width:0;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;">
-							<option value="">Select user…</option>
-							${((dt.assignees && dt.assignees.length) ? dt.assignees : []).map((u) => `
-								<option value="${frappe.utils.escape_html(u.value || "")}">
-									${frappe.utils.escape_html(u.label || u.value || "")}
-								</option>`).join("")}
-						</select>
-						<button id="asr-assign-btn" style="border:1px solid #417c7d;background:#417c7d;color:#fff;cursor:pointer;border-radius:6px;padding:0 12px;font-size:12px;font-weight:600;flex-shrink:0;">Assign</button>
-					</div>`}
-					${dt.resolver ? `
-					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">RESOLVED BY</div>
-					<div style="margin-bottom:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px 10px;">
-						<div style="font-size:12.5px;font-weight:700;color:#15803d;">${frappe.utils.escape_html(dt.resolver.name || "")}</div>
-						<div style="font-size:11.5px;color:#64748b;">${frappe.utils.escape_html(dt.resolver.on || "")}${dt.resolver.designation ? " · " + frappe.utils.escape_html(dt.resolver.designation) : ""}${dt.resolver.branch ? " · " + frappe.utils.escape_html(dt.resolver.branch) : ""}</div>
-					</div>` : ""}
-				</div>
-
-				<!-- RIGHT: chat (as-is) -->
+				<!-- MIDDLE: chat -->
 				<div style="flex:1;display:flex;flex-direction:column;min-width:0;">
 
 					<!-- Tabs -->
@@ -1130,7 +1010,85 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							Enter to send &nbsp;·&nbsp; Shift+Enter for a new line
 						</div>
 					</div>
-				</div><!-- /right chat column -->
+				</div><!-- /middle chat column -->
+
+				<!-- RIGHT: account holder details + requested updates + attachments -->
+				<div style="width:290px;flex-shrink:0;background:#f8fafc;border-left:1px solid #e2e8f0;
+					padding:0;overflow-y:auto;display:flex;flex-direction:column;">
+
+					<!-- ── ACCOUNT HOLDER DETAILS ── -->
+					<div style="padding:14px 16px 10px;">
+						<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+							<span style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;">Account Holder Details</span>
+							<div style="flex:1;height:1px;background:#e2e8f0;"></div>
+						</div>
+						<div style="display:grid;grid-template-columns:1fr;gap:2px;">
+							${_detailRow("Customer ID (CIF)", cifVal, { mono: true })}
+							${_detailRow("Account Number", acctNumber, { mono: true })}
+							${_detailRow("Customer Name", custName)}
+							${_detailRow("Account Type", acctType)}
+							${_detailRow("Email", emailVal)}
+							${_detailRow("Contact Number", contactVal)}
+						</div>
+					</div>
+
+					<!-- ── REQUESTED UPDATES ── -->
+					${newLines.length ? `
+					<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
+					<div style="padding:10px 16px;">
+						<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+							<span style="font-size:10.5px;font-weight:700;color:#0f766e;letter-spacing:.06em;text-transform:uppercase;">Requested Updates</span>
+							<div style="flex:1;height:1px;background:#e2e8f0;"></div>
+						</div>
+						<div style="display:flex;flex-direction:column;gap:0;">
+							${newLines.map((ln) => {
+								const escaped = frappe.utils.escape_html(ln.value || "");
+								const isDate = /^\d{4}-\d{2}-\d{2}$/.test((ln.value || "").trim());
+								const display = isDate ? ln.value.trim().split("-").reverse().join("-") : escaped;
+								const isLong = (ln.value || "").length > 40;
+								return `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">
+									<div style="font-size:10.5px;color:#94a3b8;font-weight:500;margin-bottom:2px;">${frappe.utils.escape_html(ln.label || "")}</div>
+									<div style="${isLong ? "white-space:pre-wrap;word-break:break-word;" : ""}font-size:12.5px;color:#0f172a;font-weight:600;">${isDate ? frappe.utils.escape_html(display) : escaped}</div>
+								</div>`;
+							}).join("")}
+						</div>
+					</div>` : ""}
+
+					<!-- ── ATTACHMENTS ── -->
+					${files.length ? `
+					<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
+					<div style="padding:10px 16px 14px;">
+						<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+							<span style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;">Attachments</span>
+							<div style="flex:1;height:1px;background:#e2e8f0;"></div>
+						</div>
+						<div style="display:flex;flex-direction:column;gap:4px;">
+							${files.map(f => {
+								const fname = frappe.utils.escape_html(f.file_name || "file");
+								const furl  = frappe.utils.escape_html(f.file_url || "");
+								const ext   = (f.file_name || "").split(".").pop().toLowerCase();
+								const isImg = ["jpg","jpeg","png","gif","webp","svg","bmp"].includes(ext);
+								const isPdf = ext === "pdf";
+								const icon  = isImg ? "🖼️" : isPdf ? "📄" : "📎";
+								return `<div style="display:flex;align-items:center;gap:6px;
+									background:#fff;border:1px solid #e2e8f0;border-radius:6px;
+									padding:5px 9px;">
+									<span style="font-size:13px;flex-shrink:0;">${icon}</span>
+									<a href="${furl}" target="_blank" title="${fname}"
+										style="flex:1;font-size:12px;color:#417c7d;text-decoration:none;
+										overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+										${fname}
+									</a>
+									<a href="${furl}" download target="_blank" title="Download"
+										style="flex-shrink:0;color:#94a3b8;text-decoration:none;
+										font-size:11px;border:1px solid #e2e8f0;border-radius:4px;
+										padding:1px 5px;line-height:1.6;">↓</a>
+								</div>`;
+							}).join("")}
+						</div>
+					</div>` : ""}
+
+				</div>
 				</div>
 			`);
 
