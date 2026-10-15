@@ -565,7 +565,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		d.$wrapper.find(".modal-header").css({"border-bottom":"none","padding":"10px 16px 0"});
 		d.$wrapper.find(".modal-body").css("padding","0");
 		// Compact modal width
-		d.$wrapper.find(".modal-dialog").css({"max-width":"580px","width":"580px"});
+		d.$wrapper.find(".modal-dialog").css({"max-width":"1020px","width":"1020px"});
 
 		// Show loading immediately so no blank flash
 		d.fields_dict.chat_html.$wrapper.html(`
@@ -714,7 +714,41 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				</div>`);
 
 			d.fields_dict.chat_html.$wrapper.html(`
-				<div style="display:flex;flex-direction:column;height:500px;border-radius:0 0 8px 8px;overflow:hidden;">
+				<div style="display:flex;height:560px;border-radius:0 0 8px 8px;overflow:hidden;">
+
+				<!-- LEFT: ticket details (read-only) -->
+				<div style="width:340px;flex-shrink:0;background:#f8fafc;border-right:1px solid #e2e8f0;
+					padding:14px 16px;overflow-y:auto;">
+					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin-bottom:10px;">TICKET DETAILS</div>
+					${[
+						["Ticket No", (row.ticket || "").split("-").slice(-2).join("-") || row.ticket],
+						["Request Type", row.request_type],
+						["Account Number", row.account_number],
+						["Status", row.status],
+						["Response Pending", row.response_pending || "—"],
+						["Branch", row.branch],
+						["SOL ID", row.sol_id],
+						["Employee", row.employee_name],
+						["Raised On", row.creation_date ? row.creation_date.split("-").reverse().join("-") : ""],
+						["Resolved By", row.resolved_by],
+					].map(([l, v]) => `
+						<div style="margin-bottom:8px;">
+							<div style="font-size:10.5px;color:#64748b;margin-bottom:2px;">${l}</div>
+							<div style="font-size:12.5px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:5px 10px;">${frappe.utils.escape_html(v || "—")}</div>
+						</div>`).join("")}
+					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">REMARKS</div>
+					${[
+						["Executive Remark", row.executive_remark],
+						["Resolve Remark", row.remark],
+					].map(([l, v]) => `
+						<div style="margin-bottom:8px;">
+							<div style="font-size:10.5px;color:#64748b;margin-bottom:2px;">${l}</div>
+							<div style="font-size:12.5px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:5px 10px;white-space:pre-wrap;word-break:break-word;">${frappe.utils.escape_html(v || "—")}</div>
+						</div>`).join("")}
+				</div>
+
+				<!-- RIGHT: chat (as-is) -->
+				<div style="flex:1;display:flex;flex-direction:column;min-width:0;">
 
 					<!-- Tabs -->
 					<div style="display:flex;border-bottom:2px solid #e2e8f0;background:#fff;padding:0 16px;">
@@ -807,6 +841,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							Enter to send &nbsp;·&nbsp; Shift+Enter for a new line
 						</div>
 					</div>
+				</div><!-- /right chat column -->
 				</div>
 			`);
 
