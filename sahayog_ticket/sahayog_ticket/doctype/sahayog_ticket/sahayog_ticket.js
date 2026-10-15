@@ -359,7 +359,7 @@ frappe.ui.form.on("Sahayog Ticket", {
                 doc: {
                   doctype: "Comment",
                   comment_type: "Comment",
-                  comment_by: frappe.session.user_fullname,
+                  comment_by: frappe.session.user,
                   reference_doctype: frm.doctype,
                   reference_name: frm.docname,
                   content: val,
