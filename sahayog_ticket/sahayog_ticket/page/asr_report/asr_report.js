@@ -1028,25 +1028,24 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					${row.assigned_to ? `
 					<div id="asr-current-assign" style="display:flex;align-items:center;justify-content:space-between;
 						background:#f0fdf4;border:1px solid #86efac;border-radius:6px;
-						padding:5px 10px;margin-bottom:6px;">
+						padding:5px 10px;">
 						<span style="font-size:12px;color:#15803d;font-weight:600;">
 							${frappe.utils.escape_html(row.assigned_to_name || row.assigned_to)}
 							<span style="font-size:10.5px;color:#64748b;font-weight:400;margin-left:4px;">(current)</span>
 						</span>
 						<button id="asr-unassign-btn" title="Remove assignment"
 							style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 2px;line-height:1;">✕</button>
-					</div>` : ""}
-					<div style="display:flex;gap:6px;">
+					</div>` : `
+					<div id="asr-assign-row" style="display:flex;gap:6px;">
 						<select id="asr-assign-sel" style="flex:1;min-width:0;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;">
 							<option value="">Select user…</option>
 							${((dt.assignees && dt.assignees.length) ? dt.assignees : []).map((u) => `
-								<option value="${frappe.utils.escape_html(u.value || "")}"
-									${u.value === row.assigned_to ? "selected" : ""}>
+								<option value="${frappe.utils.escape_html(u.value || "")}">
 									${frappe.utils.escape_html(u.label || u.value || "")}
 								</option>`).join("")}
 						</select>
-						<button id="asr-assign-btn" style="border:1px solid #417c7d;background:#417c7d;color:#fff;cursor:pointer;border-radius:6px;padding:0 12px;font-size:12px;font-weight:600;flex-shrink:0;">Apply</button>
-					</div>
+						<button id="asr-assign-btn" style="border:1px solid #417c7d;background:#417c7d;color:#fff;cursor:pointer;border-radius:6px;padding:0 12px;font-size:12px;font-weight:600;flex-shrink:0;">Assign</button>
+					</div>`}
 					${dt.resolver ? `
 					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">RESOLVED BY</div>
 					<div style="margin-bottom:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px 10px;">
@@ -1214,33 +1213,24 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					frappe.msgprint(__("Select a user first."));
 					return;
 				}
-				// Get display label from the selected option.
 				const uLabel = d.$wrapper.find("#asr-assign-sel option:selected").text().trim();
 				frappe.call({
 					method: "frappe.client.set_value",
 					args: { doctype: "Sahayog Ticket", name: ticket, fieldname: "assigned_to", value: u },
 					callback: () => {
-						// Update the current-assign card inline without closing dialog.
 						row.assigned_to = u;
 						row.assigned_to_name = uLabel;
-						const $card = d.$wrapper.find("#asr-current-assign");
-						const cardHtml = `
+						// Replace dropdown row with assigned card.
+						d.$wrapper.find("#asr-assign-row").replaceWith(`
 							<div id="asr-current-assign" style="display:flex;align-items:center;justify-content:space-between;
-								background:#f0fdf4;border:1px solid #86efac;border-radius:6px;
-								padding:5px 10px;margin-bottom:6px;">
+								background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:5px 10px;">
 								<span style="font-size:12px;color:#15803d;font-weight:600;">
 									${frappe.utils.escape_html(uLabel)}
 									<span style="font-size:10.5px;color:#64748b;font-weight:400;margin-left:4px;">(current)</span>
 								</span>
 								<button id="asr-unassign-btn" title="Remove assignment"
 									style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 2px;line-height:1;">✕</button>
-							</div>`;
-						if ($card.length) {
-							$card.replaceWith(cardHtml);
-						} else {
-							d.$wrapper.find("#asr-assign-sel").closest("div").before(cardHtml);
-						}
-						d.$wrapper.find("#asr-assign-sel").val("");
+							</div>`);
 						bindUnassign();
 						resetAndLoad();
 					},
@@ -1256,7 +1246,44 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						callback: () => {
 							row.assigned_to = "";
 							row.assigned_to_name = "";
-							d.$wrapper.find("#asr-current-assign").remove();
+							// Replace card with dropdown.
+							d.$wrapper.find("#asr-current-assign").replaceWith(`
+								<div id="asr-assign-row" style="display:flex;gap:6px;">
+									<select id="asr-assign-sel" style="flex:1;min-width:0;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;">
+										<option value="">Select user…</option>
+										${((dt.assignees && dt.assignees.length) ? dt.assignees : []).map((u) =>
+											`<option value="${frappe.utils.escape_html(u.value || "")}">${frappe.utils.escape_html(u.label || u.value || "")}</option>`
+										).join("")}
+									</select>
+									<button id="asr-assign-btn" style="border:1px solid #417c7d;background:#417c7d;color:#fff;cursor:pointer;border-radius:6px;padding:0 12px;font-size:12px;font-weight:600;flex-shrink:0;">Assign</button>
+								</div>`);
+							// Re-bind assign button on the newly injected dropdown.
+							d.$wrapper.find("#asr-assign-btn").off("click").on("click", function () {
+								const u2 = d.$wrapper.find("#asr-assign-sel").val();
+								if (!u2) { frappe.msgprint(__("Select a user first.")); return; }
+								const uLabel2 = d.$wrapper.find("#asr-assign-sel option:selected").text().trim();
+								frappe.call({
+									method: "frappe.client.set_value",
+									args: { doctype: "Sahayog Ticket", name: ticket, fieldname: "assigned_to", value: u2 },
+									callback: () => {
+										row.assigned_to = u2;
+										row.assigned_to_name = uLabel2;
+										d.$wrapper.find("#asr-assign-row").replaceWith(`
+											<div id="asr-current-assign" style="display:flex;align-items:center;justify-content:space-between;
+												background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:5px 10px;">
+												<span style="font-size:12px;color:#15803d;font-weight:600;">
+													${frappe.utils.escape_html(uLabel2)}
+													<span style="font-size:10.5px;color:#64748b;font-weight:400;margin-left:4px;">(current)</span>
+												</span>
+												<button id="asr-unassign-btn" title="Remove assignment"
+													style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 2px;line-height:1;">✕</button>
+											</div>`);
+										bindUnassign();
+										resetAndLoad();
+									},
+									error: () => frappe.msgprint(__("Could not assign.")),
+								});
+							});
 							resetAndLoad();
 						},
 						error: () => frappe.msgprint(__("Could not remove assignment.")),
