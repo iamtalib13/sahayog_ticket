@@ -902,6 +902,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 			const cifVal      = _groupVal(_grpRoot, "Customer ID");
 			const custName    = _groupVal(_grpAcct, "Customer Name");
+			const acctNumber  = _groupVal(_grpAcct, "Account Number") || row.account_number;
 			const acctType    = _groupVal(_grpAcct, "Account Type");
 			const emailVal    = _groupVal(_grpAcct, "Email");   // account email (not new)
 			const contactVal  = _groupVal(_grpAcct, "Contact Number");
@@ -927,7 +928,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						</div>
 						<div style="display:grid;grid-template-columns:1fr;gap:2px;">
 							${_detailRow("Request Type", row.request_type)}
-							${_detailRow("Account Number", row.account_number, { mono: true })}
 						</div>
 					</div>
 
@@ -941,6 +941,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						</div>
 						<div style="display:grid;grid-template-columns:1fr;gap:2px;">
 							${_detailRow("Customer ID (CIF)", cifVal, { mono: true })}
+							${_detailRow("Account Number", acctNumber, { mono: true })}
 							${_detailRow("Customer Name", custName)}
 							${_detailRow("Account Type", acctType)}
 							${_detailRow("Email", emailVal)}
