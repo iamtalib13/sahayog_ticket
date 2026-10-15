@@ -739,8 +739,10 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						</div>`).join("") || `<div style="font-size:11.5px;color:#94a3b8;margin-bottom:8px;">No updates</div>`}
 					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">EMPLOYEE</div>
 					<div style="margin-bottom:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
-						<div style="font-size:12.5px;font-weight:700;color:#0f172a;">${frappe.utils.escape_html(row.employee_name || "—")}</div>
-						<div style="font-size:11.5px;color:#64748b;">${frappe.utils.escape_html(row.employee_id || "")}</div>
+						<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;">
+							<span style="font-size:12.5px;font-weight:700;color:#0f172a;">${frappe.utils.escape_html(row.employee_name || "—")}</span>
+							<span style="font-size:11px;color:#64748b;">${frappe.utils.escape_html(row.employee_id || "")}</span>
+						</div>
 						<div style="font-size:11.5px;color:#64748b;margin-top:2px;">${frappe.utils.escape_html(row.branch || "")}${row.sol_id ? " · " + frappe.utils.escape_html("Code: " + row.sol_id) : ""}</div>
 					</div>
 					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">REMARKS</div>
