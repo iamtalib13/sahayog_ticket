@@ -14,13 +14,13 @@ def execute():
     ws.set("shortcuts", [])
     ws.append("shortcuts", {
         "color": "Grey",
-        "label": "Account Service Report",
+        "label": "Account Service Request",
         "link_to": "asr-report",
         "type": "Page",
     })
     content = frappe.parse_json(ws.content or "[]")
     for block in content:
         if block.get("type") == "shortcut":
-            block["data"]["shortcut_name"] = "Account Service Report"
+            block["data"]["shortcut_name"] = "Account Service Request"
     ws.content = frappe.as_json(content)
     ws.save(ignore_permissions=True)
