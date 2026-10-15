@@ -17,35 +17,41 @@ def _strip_html(html):
 
 
 def _ticket_updates(ticket):
-    """What was requested/updated: per-item old -> new pairs (non-empty only)."""
-    fields = ["request_type", "account_number", "customer_name", "cif",
-              "contact_number", "new_contact_number", "email", "new_email",
-              "new_address", "existing_branch", "new_branch", "new_name",
-              "new_kyc_no", "new_pan_no", "updated_dob", "nomination_opration"]
-    items = frappe.get_all("Ticket Item", {"parent": ticket}, fields, order_by="idx")
+    """Child-table mirror, grouped exactly like its sections."""
+    sections = [
+        ("", [("request_type", "Request Type"), ("cif", "Customer ID"),
+              ("attatchment", "Attatchment")]),
+        ("Request Type", []),
+        ("Account Holder Details", [
+            ("account_type", "Account Type"), ("customer_name", "Customer Name"),
+            ("account_number", "Account Number"), ("contact_number", "Contact Number")]),
+        ("New Information", [
+            ("new_address", "New Address"), ("new_contact_number", "New Contact Number"),
+            ("new_kyc_no", "New KYC No"), ("new_pan_no", "New PAN No"),
+            ("email", "Email"), ("new_email", "New Email"),
+            ("new_name", "Enter New Name"), ("nomination_opration", "Nomination Opration"),
+            ("existing_branch", "Existing Branch"), ("new_branch", "New Branch"),
+            ("updated_dob", "Updated DOB")]),
+    ]
+    keys = [k for _, pairs in sections for k, _ in pairs]
+    items = frappe.get_all("Ticket Item", {"parent": ticket}, ["name"] + keys, order_by="idx")
     out = []
     for it in items:
-        head = " / ".join(x for x in (it.request_type, it.account_number) if x) or "Item"
-        lines = []
-        pairs = [
-            ("Contact Number", it.contact_number, it.new_contact_number),
-            ("Email", it.email, it.new_email),
-            ("Branch", it.existing_branch, it.new_branch),
-        ]
-        for label, old, new in pairs:
-            if new:
-                lines.append({"label": label, "old": old or "—", "new": new})
-        for label, key in [("Address", "new_address"), ("Name", "new_name"),
-                           ("KYC No", "new_kyc_no"), ("PAN No", "new_pan_no"),
-                           ("DOB", "updated_dob"), ("Nomination", "nomination_opration")]:
-            if it.get(key):
-                v = it[key]
-                lines.append({"label": label, "old": "", "new": str(v)})
-        if it.customer_name:
-            lines.append({"label": "Customer", "old": "", "new": it.customer_name})
-        if it.cif:
-            lines.append({"label": "CIF", "old": "", "new": it.cif})
-        out.append({"title": head, "lines": lines})
+        groups = []
+        for sec, pairs in sections:
+            lines = []
+            for key, label in pairs:
+                v = it.get(key)
+                if v is None:
+                    continue
+                v = str(v).strip()
+                if v and not (sec == "" and key == "request_type"):
+                    lines.append({"label": label, "value": v})
+            if lines:
+                groups.append({"section": sec, "lines": lines})
+        if groups:
+            head = " / ".join(x for x in (it.request_type, it.account_number) if x) or "Item"
+            out.append({"title": head, "groups": groups})
     return out
 
 REQUEST_TYPES = [
@@ -291,6 +297,45 @@ def _display_name(by, cache):
 
 
 @frappe.whitelist()
+def get_ticket_detail(ticket):
+    """Raised-by employee, resolver, files and assignees for the dialog."""
+    t = frappe.get_doc("Sahayog Ticket", ticket)
+    emp = None
+    if t.employee_id and frappe.db.exists("Employee", t.employee_id):
+        emp = frappe.db.get_value(
+            "Employee", t.employee_id,
+            ["employee_name", "designation", "department", "branch",
+             "cell_number", "personal_email", "company_email"], as_dict=True)
+    resolver = None
+    if t.ticket_resolved_by:
+        name_cache = {}
+        rname = _display_name(t.ticket_resolved_by, name_cache)
+        rdesg = rbranch = ""
+        emp_id = frappe.db.get_value("Employee", {"user_id": t.ticket_resolved_by}, "name")
+        if emp_id:
+            rdesg = frappe.db.get_value("Employee", emp_id, "designation") or ""
+            rbranch = frappe.db.get_value("Employee", emp_id, "branch") or ""
+        resolver = {
+            "name": rname,
+            "on": str(t.ticket_resolved_on) if t.ticket_resolved_on else "",
+            "remark": (t.resolved_remark or "").strip(),
+            "designation": rdesg,
+            "branch": rbranch,
+        }
+    files = frappe.get_all(
+        "File",
+        {"attached_to_doctype": "Sahayog Ticket", "attached_to_name": ticket},
+        ["file_name", "file_url"], order_by="creation")
+    assignees = frappe.db.sql(
+        """SELECT u.name AS value,
+                  CONCAT_WS(' ', NULLIF(u.first_name, ''), NULLIF(u.last_name, '')) AS label
+           FROM tabUser u INNER JOIN `tabHas Role` r ON r.parent = u.name
+           WHERE r.role = 'CPC Loan User' AND u.enabled = 1 AND u.name NOT LIKE '%administrator%'
+           GROUP BY u.name ORDER BY label""", as_dict=True)
+    return {"employee": emp, "resolver": resolver, "files": files, "assignees": assignees}
+
+
+@frappe.whitelist()
 def get_filter_options():
     """Return dropdown options for Request Type and SOL ID."""
     return {
@@ -317,3 +362,43 @@ def add_ticket_comment(ticket, text):
     }).insert(ignore_permissions=True)
 
     return {"status": "ok"}
+
+
+@frappe.whitelist()
+def attach_file_to_ticket(ticket, file_url):
+    """Link an already-uploaded File doc to a Sahayog Ticket and post a comment.
+
+    Called from the ASR report dialog after frappe.ui.FileUploader completes.
+    Avoids passing doctype/docname to FileUploader (which triggers an internal
+    frappe.client.save and causes a document-modified conflict error when the
+    ticket was recently updated).
+    """
+    file_url = (file_url or "").strip()
+    if not file_url:
+        frappe.throw("file_url is required.")
+
+    # Find the File doc by URL and re-link it to this ticket.
+    file_name = frappe.db.get_value("File", {"file_url": file_url}, "name")
+    if file_name:
+        frappe.db.set_value(
+            "File", file_name,
+            {
+                "attached_to_doctype": "Sahayog Ticket",
+                "attached_to_name":    ticket,
+                "is_private":          0,
+            },
+            update_modified=False,   # don't touch the Ticket's modified stamp
+        )
+
+    # Post a comment so the chat shows the attachment.
+    display = frappe.db.get_value("File", {"file_url": file_url}, "file_name") or file_url
+    frappe.get_doc({
+        "doctype":           "Comment",
+        "comment_type":      "Comment",
+        "reference_doctype": "Sahayog Ticket",
+        "reference_name":    ticket,
+        "content":           frappe.utils.escape_html("Attached: " + display),
+        "comment_by":        frappe.session.user,
+    }).insert(ignore_permissions=True)
+
+    return {"status": "ok", "file_name": display}
