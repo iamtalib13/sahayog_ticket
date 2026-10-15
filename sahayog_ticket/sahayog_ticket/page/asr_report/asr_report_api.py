@@ -227,11 +227,26 @@ def get_ticket_comments(ticket):
            ORDER BY creation ASC""",
         (ticket,), as_dict=True,
     )
+    name_cache = {}
     return [{
         "by":   r.comment_by or "",
+        "name": _display_name(r.comment_by, name_cache),
         "text": _strip_html(r.content or ""),
         "on":   str(r.creation) if r.creation else "",
     } for r in rows]
+
+
+def _display_name(by, cache):
+    """Email -> User full name for display (storage stays as-is)."""
+    if not by:
+        return ""
+    if "@" not in by:
+        return by
+    if by not in cache:
+        u = frappe.db.get_value("User", by, ["first_name", "last_name"], as_dict=True)
+        full = " ".join(x for x in ((u.first_name if u else ""), (u.last_name if u else "")) if x).strip()
+        cache[by] = full or by.split("@")[0]
+    return cache[by]
 
 
 @frappe.whitelist()
