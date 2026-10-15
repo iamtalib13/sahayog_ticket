@@ -224,7 +224,7 @@ def get_ticket_comments(ticket):
            WHERE reference_doctype = 'Sahayog Ticket'
              AND reference_name = %s
              AND comment_type = 'Comment'
-           ORDER BY creation DESC""",
+           ORDER BY creation ASC""",
         (ticket,), as_dict=True,
     )
     return [{
