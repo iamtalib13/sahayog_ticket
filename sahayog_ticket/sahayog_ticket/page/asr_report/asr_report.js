@@ -982,14 +982,14 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			});
 
 			// ── Action buttons left of the dialog X (compact pills) ──
-			// Header ko flex rakho warna X neeche gir jata hai.
-			d.$wrapper.find(".modal-header").css({ display: "flex", "align-items": "center" });
-			d.$wrapper.find(".modal-title").css({ flex: "1", "min-width": "0" });
+			// X .modal-actions div ke andar hai (non-flex) — usko flex row
+			// banao taaki buttons aur X bagal me rahein.
+			d.$wrapper.find(".modal-actions").css({ display: "flex", "align-items": "center", gap: "6px" });
 			d.$wrapper.find(".asr-hdr-act").remove();
 			if (wfActions.length) {
 				const $close = d.$wrapper.find(".modal-header .btn-modal-close");
 				$close.before(`
-					<div class="asr-hdr-act" style="display:flex;gap:6px;align-items:center;margin-left:auto;margin-right:8px;">
+					<div class="asr-hdr-act" style="display:flex;gap:6px;align-items:center;">
 						${wfActions.map((a, i) => `
 						<button data-wf-idx="${i}" style="cursor:pointer;border-radius:999px;
 							padding:3px 12px;font-size:11.5px;font-weight:600;white-space:nowrap;
