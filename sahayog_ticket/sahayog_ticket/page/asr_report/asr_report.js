@@ -1,7 +1,7 @@
 frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	const page = frappe.ui.make_app_page({
 		parent: wrapper,
-		title: "Account Service Report",
+		title: "Account Service Request",
 		single_column: true,
 	});
 
