@@ -827,11 +827,17 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			});
 
 			// Attach: file ticket pe attach + chat me note (timeline jaisa).
+			// Uploader ke upar pichhla dialog blur (dialog-over-dialog ajib lagta hai).
 			d.$wrapper.find("#asr-attach-btn").on("click", function () {
-				new frappe.ui.FileUploader({
+				const $content = d.$wrapper.find(".modal-content");
+				$content.css("filter", "blur(2px)");
+				const clearBlur = () => $content.css("filter", "");
+				const up = new frappe.ui.FileUploader({
 					doctype: "Sahayog Ticket",
 					docname: ticket,
+					on_failure: () => clearBlur(),
 					on_success: (file) => {
+						clearBlur();
 						const fname = (file && file.file_name) || "file";
 						frappe.call({
 							method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
@@ -849,6 +855,9 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						});
 					},
 				});
+				if (up && up.dialog && up.dialog.$wrapper) {
+					up.dialog.$wrapper.on("hide.bs.modal", clearBlur);
+				}
 			});
 
 			// Chat text reused as action remark (type once -> send -> act).
