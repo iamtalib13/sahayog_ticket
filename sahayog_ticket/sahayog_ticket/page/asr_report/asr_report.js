@@ -434,7 +434,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						? `<span style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:4px;">${r.comments_count}</span><button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="View comments" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`
 						: `<button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="Add comment" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`}
 				</td>
-				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${frappe.utils.escape_html(r.ticket)}">${frappe.utils.escape_html((r.ticket || "").split("-").pop() || r.ticket)}</td>
+				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${frappe.utils.escape_html(r.ticket)}">${frappe.utils.escape_html((r.ticket || "").split("-").slice(-2).join("-") || r.ticket)}</td>
 				<td ${tdGray}>
 					${r.creation_date ? r.creation_date.split("-").reverse().join("-") : "—"}
 					<span style="display:block;font-size:10.5px;color:#94a3b8;">${(function(){
