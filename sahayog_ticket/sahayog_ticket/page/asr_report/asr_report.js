@@ -768,8 +768,10 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 								border:1px solid #e2e8f0;border-radius:10px;
 								box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:6px;
 								min-width:200px;z-index:50;">
-								<div style="font-size:10px;color:#94a3b8;font-weight:700;
-									letter-spacing:.05em;padding:4px 8px 6px;">WORKFLOW</div>
+								<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px 6px;">
+									<span style="font-size:10px;color:#94a3b8;font-weight:700;letter-spacing:.05em;">WORKFLOW</span>
+									<button class="asr-wf-close" title="Close" style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;line-height:1;padding:0 2px;">×</button>
+								</div>
 								${wfActions.map((a, i) => `
 								<button data-wf-idx="${i}" style="display:flex;width:100%;
 									text-align:left;gap:8px;align-items:center;background:#fff;
@@ -831,6 +833,10 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				const p = chatPreset;
 				chatPreset = null;
 				doWfAction(wfActions[+$(this).data("wf-idx")], p);
+			});
+			d.$wrapper.find(".asr-wf-close").on("click", function () {
+				chatPreset = null;
+				d.$wrapper.find(".asr-wf-menu").hide();
 			});
 
 			// ── Workflow action from dialog (same rules as the form) ──
