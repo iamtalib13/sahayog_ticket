@@ -913,11 +913,11 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			const files = (dt.files && dt.files.length) ? dt.files : [];
 
 			d.fields_dict.chat_html.$wrapper.html(`
-				<div style="display:flex;height:auto;max-height:85vh;border-radius:0 0 8px 8px;overflow:hidden;align-items:stretch;">
+				<div style="display:flex;height:560px;border-radius:0 0 8px 8px;overflow:hidden;align-items:stretch;">
 
 				<!-- LEFT: ticket details (read-only, natural scroll) -->
 				<div style="width:340px;flex-shrink:0;background:#f8fafc;border-right:1px solid #e2e8f0;
-					padding:0;overflow-y:auto;display:flex;flex-direction:column;max-height:85vh;">
+					padding:0;overflow-y:auto;display:flex;flex-direction:column;">
 
 					<!-- ── TICKET DETAILS ── -->
 					<div style="padding:14px 16px 10px;">
@@ -1055,7 +1055,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				</div>
 
 				<!-- RIGHT: chat (as-is) -->
-				<div style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:340px;">
+				<div style="flex:1;display:flex;flex-direction:column;min-width:0;">
 
 					<!-- Tabs -->
 					<div style="display:flex;border-bottom:2px solid #e2e8f0;background:#fff;padding:0 16px;">
