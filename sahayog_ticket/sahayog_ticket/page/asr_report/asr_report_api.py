@@ -15,6 +15,39 @@ def _strip_html(html):
     text = re.sub(r"<[^>]+>", " ", html or "")
     return re.sub(r"\s+", " ", text).strip()
 
+
+def _ticket_updates(ticket):
+    """What was requested/updated: per-item old -> new pairs (non-empty only)."""
+    fields = ["request_type", "account_number", "customer_name", "cif",
+              "contact_number", "new_contact_number", "email", "new_email",
+              "new_address", "existing_branch", "new_branch", "new_name",
+              "new_kyc_no", "new_pan_no", "updated_dob", "nomination_opration"]
+    items = frappe.get_all("Ticket Item", {"parent": ticket}, fields, order_by="idx")
+    out = []
+    for it in items:
+        head = " / ".join(x for x in (it.request_type, it.account_number) if x) or "Item"
+        lines = []
+        pairs = [
+            ("Contact Number", it.contact_number, it.new_contact_number),
+            ("Email", it.email, it.new_email),
+            ("Branch", it.existing_branch, it.new_branch),
+        ]
+        for label, old, new in pairs:
+            if new:
+                lines.append({"label": label, "old": old or "—", "new": new})
+        for label, key in [("Address", "new_address"), ("Name", "new_name"),
+                           ("KYC No", "new_kyc_no"), ("PAN No", "new_pan_no"),
+                           ("DOB", "updated_dob"), ("Nomination", "nomination_opration")]:
+            if it.get(key):
+                v = it[key]
+                lines.append({"label": label, "old": "", "new": str(v)})
+        if it.customer_name:
+            lines.append({"label": "Customer", "old": "", "new": it.customer_name})
+        if it.cif:
+            lines.append({"label": "CIF", "old": "", "new": it.cif})
+        out.append({"title": head, "lines": lines})
+    return out
+
 REQUEST_TYPES = [
     "Activation of Dormant account",
     "Change of Address",
@@ -146,6 +179,7 @@ def get_report_data(filters=None, page_no=1, page_size=20):
             "comments_count":   t.comments_count or 0,
             "last_comment":     _strip_html(t.last_comment or ""),
             "last_comment_by":  t.last_comment_by or "",
+            "updates":          _ticket_updates(t.ticket),
         })
 
     # Summary counts by status (ignores the status filter so the
