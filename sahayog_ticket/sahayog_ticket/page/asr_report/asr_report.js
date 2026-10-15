@@ -689,8 +689,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							<span style="font-size:14px;font-weight:700;color:#0f172a;line-height:1.2;">
 								${frappe.utils.escape_html(ticket)}
 							</span>
-							${badge(row.status, STATUS_STYLE[row.status]).replace("font-size:11.5px", "font-size:10px").replace("padding:2px 10px", "padding:1px 8px")}
-							${row.response_pending ? badge(row.response_pending, RP_STYLE[row.response_pending]).replace("font-size:11.5px", "font-size:10px").replace("padding:2px 10px", "padding:1px 8px") : ""}
+							${badge(row.status, STATUS_STYLE[row.status]).replace("font-size:11.5px", "font-size:9px").replace("padding:2px 10px", "padding:0 6px")}
+							${row.response_pending ? badge(row.response_pending, RP_STYLE[row.response_pending]).replace("font-size:11.5px", "font-size:9px").replace("padding:2px 10px", "padding:0 6px") : ""}
 						</div>
 						<div style="font-size:11px;color:#64748b;">Sahayog Ticket</div>
 					</div>
