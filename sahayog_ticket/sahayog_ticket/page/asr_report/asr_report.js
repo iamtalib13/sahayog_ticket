@@ -429,7 +429,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			const mod    = formatModified(r.modified);
 
 			const $tr = $(`<tr style="cursor:pointer;border-bottom:1px solid #f1f5f9;background:${bg};transition:background 0.1s ease;">
-				<td style="${tdBase}position:sticky;left:0;z-index:2;background:${bg};border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);" title="${frappe.utils.escape_html((r.last_comment_by ? r.last_comment_by + ': ' : '') + (r.last_comment || ''))}">
+				<td class="asr-cmt-cell" style="${tdBase}position:sticky;left:0;z-index:2;background:${bg};border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);cursor:default;" title="${frappe.utils.escape_html((r.last_comment_by ? r.last_comment_by + ': ' : '') + (r.last_comment || ''))}">
 					${r.comments_count
 						? `<span class="asr-cmt-count" style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:4px;cursor:default;">${r.comments_count}</span><button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="View comments" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`
 						: `<button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="Add comment" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`}
@@ -497,6 +497,12 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			$tr.find(".asr-cmt-btn").on("click", function (e) {
 				e.stopPropagation();
 				showComments($(this).data("ticket"), r);
+			});
+			// Comments cell: anywhere click = dialog only, never the form.
+			$tr.find(".asr-cmt-cell").on("click", function (e) {
+				if ($(e.target).closest(".asr-cmt-btn").length) return;
+				e.stopPropagation();
+				showComments(r.ticket, r);
 			});
 
 			$tbody.append($tr);
