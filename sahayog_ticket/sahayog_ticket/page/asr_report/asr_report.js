@@ -1025,11 +1025,25 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							<div style="font-size:11.5px;color:#64748b;margin-top:2px;">${l}: <span style="color:#1e293b;">${frappe.utils.escape_html(v)}</span></div>`).join("")}
 					</div>
 					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">ASSIGN TO</div>
+					${row.assigned_to ? `
+					<div id="asr-current-assign" style="display:flex;align-items:center;justify-content:space-between;
+						background:#f0fdf4;border:1px solid #86efac;border-radius:6px;
+						padding:5px 10px;margin-bottom:6px;">
+						<span style="font-size:12px;color:#15803d;font-weight:600;">
+							${frappe.utils.escape_html(row.assigned_to_name || row.assigned_to)}
+							<span style="font-size:10.5px;color:#64748b;font-weight:400;margin-left:4px;">(current)</span>
+						</span>
+						<button id="asr-unassign-btn" title="Remove assignment"
+							style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 2px;line-height:1;">✕</button>
+					</div>` : ""}
 					<div style="display:flex;gap:6px;">
 						<select id="asr-assign-sel" style="flex:1;min-width:0;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;">
-							<option value="">Select user</option>
+							<option value="">Select user…</option>
 							${((dt.assignees && dt.assignees.length) ? dt.assignees : []).map((u) => `
-								<option value="${frappe.utils.escape_html(u.value || "")}">${frappe.utils.escape_html(u.label || u.value || "")}</option>`).join("")}
+								<option value="${frappe.utils.escape_html(u.value || "")}"
+									${u.value === row.assigned_to ? "selected" : ""}>
+									${frappe.utils.escape_html(u.label || u.value || "")}
+								</option>`).join("")}
 						</select>
 						<button id="asr-assign-btn" style="border:1px solid #417c7d;background:#417c7d;color:#fff;cursor:pointer;border-radius:6px;padding:0 12px;font-size:12px;font-weight:600;flex-shrink:0;">Apply</button>
 					</div>
@@ -1200,16 +1214,56 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					frappe.msgprint(__("Select a user first."));
 					return;
 				}
+				// Get display label from the selected option.
+				const uLabel = d.$wrapper.find("#asr-assign-sel option:selected").text().trim();
 				frappe.call({
 					method: "frappe.client.set_value",
 					args: { doctype: "Sahayog Ticket", name: ticket, fieldname: "assigned_to", value: u },
 					callback: () => {
-						frappe.msgprint(__("Assigned to {0}.", [u]));
+						// Update the current-assign card inline without closing dialog.
+						row.assigned_to = u;
+						row.assigned_to_name = uLabel;
+						const $card = d.$wrapper.find("#asr-current-assign");
+						const cardHtml = `
+							<div id="asr-current-assign" style="display:flex;align-items:center;justify-content:space-between;
+								background:#f0fdf4;border:1px solid #86efac;border-radius:6px;
+								padding:5px 10px;margin-bottom:6px;">
+								<span style="font-size:12px;color:#15803d;font-weight:600;">
+									${frappe.utils.escape_html(uLabel)}
+									<span style="font-size:10.5px;color:#64748b;font-weight:400;margin-left:4px;">(current)</span>
+								</span>
+								<button id="asr-unassign-btn" title="Remove assignment"
+									style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 2px;line-height:1;">✕</button>
+							</div>`;
+						if ($card.length) {
+							$card.replaceWith(cardHtml);
+						} else {
+							d.$wrapper.find("#asr-assign-sel").closest("div").before(cardHtml);
+						}
+						d.$wrapper.find("#asr-assign-sel").val("");
+						bindUnassign();
 						resetAndLoad();
 					},
 					error: () => frappe.msgprint(__("Could not assign. Please open the ticket and try from the form.")),
 				});
 			});
+
+			function bindUnassign() {
+				d.$wrapper.find("#asr-unassign-btn").off("click").on("click", function () {
+					frappe.call({
+						method: "frappe.client.set_value",
+						args: { doctype: "Sahayog Ticket", name: ticket, fieldname: "assigned_to", value: "" },
+						callback: () => {
+							row.assigned_to = "";
+							row.assigned_to_name = "";
+							d.$wrapper.find("#asr-current-assign").remove();
+							resetAndLoad();
+						},
+						error: () => frappe.msgprint(__("Could not remove assignment.")),
+					});
+				});
+			}
+			bindUnassign();
 
 			// Top action buttons: pass last chat text (maybe "") as preset.
 			d.$wrapper.find("[data-wf-idx]").on("click", function () {
