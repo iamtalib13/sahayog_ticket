@@ -444,54 +444,80 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		return out;
 	}
 
-	function runWfAction(ticket, a, afterOk) {
+	function runWfAction(ticket, a, preset, afterOk) {
 		if (!a) return;
+		// preset = chat text (dialog sends): resolve saves it into
+		// resolved_remark; sends fill an empty executive_remark only
+		// (already posted, never re-post). No preset -> remark prompt.
+		// Prompt stays ONLY for Mark Resolved without chat text.
+		const runWithRemark = (doc, remark, toComment, setField) => {
+			if (setField) doc[a.field] = remark;
+			if (a.rp) doc.response_pending = a.rp;
+			if (a.stampResolve) {
+				doc.ticket_resolved_by = frappe.session.user;
+				doc.ticket_resolved_on = frappe.datetime.now_datetime();
+			}
+			frappe.call({ method: "frappe.client.save", args: { doc: doc },
+				callback: () => {
+					const afterSave = () => frappe.call({
+						method: "frappe.model.workflow.apply_workflow",
+						args: { doc: { doctype: "Sahayog Ticket", name: ticket }, action: a.key },
+						callback: () => {
+							frappe.msgprint(__("{0} done.", [a.key]));
+							afterOk && afterOk();
+						},
+						error: () => frappe.msgprint(__("Action failed. Please open the ticket and try from the form.")),
+					});
+					if (toComment) {
+						frappe.call({
+							method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
+							args: { ticket: ticket, text: remark },
+							callback: afterSave,
+							error: () => frappe.msgprint(__("Could not save remark.")),
+						});
+					} else {
+						afterSave();
+					}
+				},
+				error: () => frappe.msgprint(__("Could not save ticket.")),
+			});
+		};
 		frappe.call({ method: "frappe.client.get",
 			args: { doctype: "Sahayog Ticket", name: ticket },
 			callback(r2) {
 				const doc = r2.message;
 				if (!doc) { frappe.msgprint(__("Ticket not found.")); return; }
-				const toComment = !a.forceField && !!doc[a.field];
+				// Row popup (preset undefined, no chat box): prompt, field-or-comment rule.
+				if (preset === undefined) {
+					const toComment = !a.forceField && !!doc[a.field];
+					frappe.prompt(
+						{ label: a.label, fieldname: "remark", fieldtype: "Small Text", reqd: 1 },
+						(vals) => {
+							const remark = (((vals || {}).remark) || "").trim();
+							if (!remark) return;
+							runWithRemark(doc, remark, toComment, !toComment);
+						},
+						__(a.title + (toComment ? " (Comment)" : "")), __("Submit")
+					);
+					return;
+				}
+				// Dialog (preset = last chat text, maybe "").
+				if (preset) {
+					runWithRemark(doc, preset, false, a.forceField || !doc[a.field]);
+					return;
+				}
+				if (a.key !== "Mark Resolved") {
+					frappe.msgprint(__("Type your message in chat first, then choose the action."));
+					return;
+				}
 				frappe.prompt(
 					{ label: a.label, fieldname: "remark", fieldtype: "Small Text", reqd: 1 },
 					(vals) => {
 						const remark = (((vals || {}).remark) || "").trim();
 						if (!remark) return;
-						const runWithRemark = (toC, setF) => {
-							if (setF) doc[a.field] = remark;
-							if (a.rp) doc.response_pending = a.rp;
-							if (a.stampResolve) {
-								doc.ticket_resolved_by = frappe.session.user;
-								doc.ticket_resolved_on = frappe.datetime.now_datetime();
-							}
-							frappe.call({ method: "frappe.client.save", args: { doc: doc },
-								callback: () => {
-									const afterSave = () => frappe.call({
-										method: "frappe.model.workflow.apply_workflow",
-										args: { doc: { doctype: "Sahayog Ticket", name: ticket }, action: a.key },
-										callback: () => {
-											frappe.msgprint(__("{0} done.", [a.key]));
-											afterOk && afterOk();
-										},
-										error: () => frappe.msgprint(__("Action failed. Please open the ticket and try from the form.")),
-									});
-									if (toC) {
-										frappe.call({
-											method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
-											args: { ticket: ticket, text: remark },
-											callback: afterSave,
-											error: () => frappe.msgprint(__("Could not save remark.")),
-										});
-									} else {
-										afterSave();
-									}
-								},
-								error: () => frappe.msgprint(__("Could not save ticket.")),
-							});
-						};
-						runWithRemark(toComment, !toComment);
+						runWithRemark(doc, remark, false, true);
 					},
-					__(a.title + (toComment ? " (Comment)" : "")), __("Submit")
+					__(a.title), __("Submit")
 				);
 			},
 			error: () => frappe.msgprint(__("You do not have access to update this ticket. Please open it from the list.")),
@@ -1000,14 +1026,16 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						</button>`).join("")}
 					</div>`);
 			}
-			// Top action buttons -> remark prompt -> workflow action.
+			// Top action buttons: pass last chat text (maybe "") as preset.
 			d.$wrapper.find("[data-wf-idx]").on("click", function () {
-				doWfAction(wfActions[+$(this).data("wf-idx")]);
+				const L = (typeof list !== "undefined" && list) || [];
+				const lastText = L.length ? ((L[L.length - 1] || {}).text || "") : "";
+				doWfAction(wfActions[+$(this).data("wf-idx")], lastText);
 			});
 
 			// ── Workflow action from dialog (shared runner + close dialog) ──
-			function doWfAction(a) {
-				runWfAction(ticket, a, () => { d.hide(); resetAndLoad(); });
+			function doWfAction(a, preset) {
+				runWfAction(ticket, a, preset, () => { d.hide(); resetAndLoad(); });
 			}
 
 			function sendMsg() {
