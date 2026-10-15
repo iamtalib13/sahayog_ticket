@@ -450,78 +450,90 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		// resolved_remark; sends fill an empty executive_remark only
 		// (already posted, never re-post). No preset -> remark prompt.
 		// Prompt stays ONLY for Mark Resolved without chat text.
-		const runWithRemark = (doc, remark, toComment, setField) => {
-			if (setField) doc[a.field] = remark;
-			if (a.rp) doc.response_pending = a.rp;
+		// Use set_value instead of get+save to avoid document-modified conflict.
+		// set_value patches only the specified fields without a full doc round-trip.
+		const runWithRemark = (remark, toComment, setField) => {
+			const updates = {};
+			if (setField) updates[a.field] = remark;
+			if (a.rp)     updates.response_pending = a.rp;
 			if (a.stampResolve) {
-				doc.ticket_resolved_by = frappe.session.user;
-				doc.ticket_resolved_on = frappe.datetime.now_datetime();
+				updates.ticket_resolved_by = frappe.session.user;
+				updates.ticket_resolved_on = frappe.datetime.now_datetime();
 			}
-			frappe.call({ method: "frappe.client.save", args: { doc: doc },
-				callback: () => {
-					const afterSave = () => frappe.call({
-						method: "frappe.model.workflow.apply_workflow",
-						args: { doc: { doctype: "Sahayog Ticket", name: ticket }, action: a.key },
-						callback: () => {
-							frappe.msgprint(__("{0} done.", [a.key]));
-							afterOk && afterOk();
-						},
-						error: () => frappe.msgprint(__("Action failed. Please open the ticket and try from the form.")),
-					});
-					if (toComment) {
-						frappe.call({
-							method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
-							args: { ticket: ticket, text: remark },
-							callback: afterSave,
-							error: () => frappe.msgprint(__("Could not save remark.")),
-						});
-					} else {
-						afterSave();
-					}
-				},
-				error: () => frappe.msgprint(__("Could not save ticket.")),
+
+			const applyWf = () => frappe.call({
+				method: "frappe.model.workflow.apply_workflow",
+				args: { doc: { doctype: "Sahayog Ticket", name: ticket }, action: a.key },
+				callback: () => { frappe.msgprint(__("{0} done.", [a.key])); afterOk && afterOk(); },
+				error:    () => frappe.msgprint(__("Action failed. Please open the ticket and try from the form.")),
 			});
+
+			const postCommentThenWf = () => {
+				if (toComment) {
+					frappe.call({
+						method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
+						args: { ticket: ticket, text: remark },
+						callback: applyWf,
+						error: () => frappe.msgprint(__("Could not save remark.")),
+					});
+				} else {
+					applyWf();
+				}
+			};
+
+			if (Object.keys(updates).length) {
+				frappe.call({
+					method: "frappe.client.set_value",
+					args: { doctype: "Sahayog Ticket", name: ticket, fieldname: updates },
+					callback: postCommentThenWf,
+					error: () => frappe.msgprint(__("Could not update ticket.")),
+				});
+			} else {
+				postCommentThenWf();
+			}
 		};
-		frappe.call({ method: "frappe.client.get",
-			args: { doctype: "Sahayog Ticket", name: ticket },
-			callback(r2) {
-				const doc = r2.message;
-				if (!doc) { frappe.msgprint(__("Ticket not found.")); return; }
-				// Row popup (preset undefined, no chat box): prompt, field-or-comment rule.
-				if (preset === undefined) {
-					const toComment = !a.forceField && !!doc[a.field];
+
+		// For row popup (preset===undefined) we need the current field value to
+		// decide comment-vs-field. For dialog path we skip the extra get call.
+		if (preset === undefined) {
+			frappe.call({
+				method: "frappe.client.get_value",
+				args: { doctype: "Sahayog Ticket", fieldname: a.field, filters: { name: ticket } },
+				callback(r2) {
+					const existing = ((r2 && r2.message) || {})[a.field] || "";
+					const toComment = !a.forceField && !!existing;
 					frappe.prompt(
 						{ label: a.label, fieldname: "remark", fieldtype: "Small Text", reqd: 1 },
 						(vals) => {
 							const remark = (((vals || {}).remark) || "").trim();
 							if (!remark) return;
-							runWithRemark(doc, remark, toComment, !toComment);
+							runWithRemark(remark, toComment, !toComment);
 						},
 						__(a.title + (toComment ? " (Comment)" : "")), __("Submit")
 					);
-					return;
-				}
-				// Dialog (preset = last chat text, maybe "").
-				if (preset) {
-					runWithRemark(doc, preset, false, a.forceField || !doc[a.field]);
-					return;
-				}
-				if (a.key !== "Mark Resolved") {
-					frappe.msgprint(__("Type your message in chat first, then choose the action."));
-					return;
-				}
-				frappe.prompt(
-					{ label: a.label, fieldname: "remark", fieldtype: "Small Text", reqd: 1 },
-					(vals) => {
-						const remark = (((vals || {}).remark) || "").trim();
-						if (!remark) return;
-						runWithRemark(doc, remark, false, true);
-					},
-					__(a.title), __("Submit")
-				);
+				},
+				error: () => frappe.msgprint(__("You do not have access to update this ticket. Please open it from the list.")),
+			});
+			return;
+		}
+		// Dialog path: preset = last chat text (may be "").
+		if (preset) {
+			runWithRemark(preset, false, a.forceField);
+			return;
+		}
+		if (a.key !== "Mark Resolved") {
+			frappe.msgprint(__("Type your message in chat first, then choose the action."));
+			return;
+		}
+		frappe.prompt(
+			{ label: a.label, fieldname: "remark", fieldtype: "Small Text", reqd: 1 },
+			(vals) => {
+				const remark = (((vals || {}).remark) || "").trim();
+				if (!remark) return;
+				runWithRemark(remark, false, true);
 			},
-			error: () => frappe.msgprint(__("You do not have access to update this ticket. Please open it from the list.")),
-		});
+			__(a.title), __("Submit")
+		);
 	}
 
 	// Small floating popup (like the old send-icon menu).
@@ -698,7 +710,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		d.$wrapper.find(".modal-header").css({"border-bottom":"none","padding":"10px 16px 0"});
 		d.$wrapper.find(".modal-body").css("padding","0");
 		// Compact modal width
-		d.$wrapper.find(".modal-dialog").css({"max-width":"1020px","width":"1020px"});
+		d.$wrapper.find(".modal-dialog").css({"max-width":"1180px","width":"1180px"});
 
 		// Show loading immediately so no blank flash
 		d.fields_dict.chat_html.$wrapper.html(`
@@ -822,7 +834,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			el.scrollTop = el.scrollHeight;
 		}
 
-		function buildUI(list) {
+		function buildUI(list, dt) {
+			dt = dt || {};
 			const chatCount = list.length;
 
 			// ── Modal title ──
@@ -846,47 +859,186 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					</div>
 				</div>`);
 
-			d.fields_dict.chat_html.$wrapper.html(`
-				<div style="display:flex;height:560px;border-radius:0 0 8px 8px;overflow:hidden;">
+			// ── Left panel helpers ────────────────────────────────────────────────
+			// Pull a single named group from row.updates[] (first item, first match).
+			function _getGroup(sectionName) {
+				const ups = row.updates || [];
+				for (const u of ups) {
+					for (const g of (u.groups || [])) {
+						if (g.section === sectionName) return g;
+					}
+				}
+				return null;
+			}
+			// Return value by label inside a group.
+			function _groupVal(g, label) {
+				if (!g) return "";
+				const ln = (g.lines || []).find(l => l.label === label);
+				return (ln && ln.value) ? ln.value : "";
+			}
+			// Build one label+value row for the details panel.
+			function _detailRow(label, value, opts) {
+				opts = opts || {};
+				if (!value) return "";
+				const escaped = frappe.utils.escape_html(value);
+				const valStyle = opts.mono
+					? "font-family:monospace;font-size:12.5px;color:#0f172a;font-weight:600;"
+					: "font-size:12.5px;color:#1e293b;";
+				const wrap = opts.wrap
+					? "white-space:pre-wrap;word-break:break-word;"
+					: "overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+				return `
+					<div style="margin-bottom:7px;">
+						<div style="font-size:10.5px;color:#94a3b8;font-weight:500;margin-bottom:2px;letter-spacing:.02em;">${frappe.utils.escape_html(label)}</div>
+						<div style="${valStyle}${wrap}">${escaped}</div>
+					</div>`;
+			}
 
-				<!-- LEFT: ticket details (read-only) -->
+			// Gather Account Holder Details from updates (section='Account Holder Details')
+			// AND CIF / attatchment from section='' group.
+			const _grpRoot   = _getGroup("");
+			const _grpAcct   = _getGroup("Account Holder Details");
+			const _grpNew    = _getGroup("New Information");
+
+			const cifVal      = _groupVal(_grpRoot, "Customer ID");
+			const custName    = _groupVal(_grpAcct, "Customer Name");
+			const acctType    = _groupVal(_grpAcct, "Account Type");
+			const emailVal    = _groupVal(_grpAcct, "Email");   // account email (not new)
+			const contactVal  = _groupVal(_grpAcct, "Contact Number");
+
+			// New Information lines (only filled, any request type).
+			const newLines    = (_grpNew && _grpNew.lines) ? _grpNew.lines : [];
+
+			// Attachments from dt.files (ticket-level) — inline in Account Holder section.
+			const files = (dt.files && dt.files.length) ? dt.files : [];
+
+			d.fields_dict.chat_html.$wrapper.html(`
+				<div style="display:flex;height:560px;border-radius:0 0 8px 8px;overflow:hidden;align-items:stretch;">
+
+				<!-- LEFT: ticket details (read-only, natural scroll) -->
 				<div style="width:340px;flex-shrink:0;background:#f8fafc;border-right:1px solid #e2e8f0;
+					padding:0;overflow-y:auto;display:flex;flex-direction:column;">
+
+					<!-- ── TICKET DETAILS ── -->
+					<div style="padding:14px 16px 10px;">
+						<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+							<span style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;">Ticket Details</span>
+							<div style="flex:1;height:1px;background:#e2e8f0;"></div>
+						</div>
+						<div style="display:grid;grid-template-columns:1fr;gap:2px;">
+							${_detailRow("Request Type", row.request_type)}
+							${_detailRow("Account Number", row.account_number, { mono: true })}
+						</div>
+					</div>
+
+					<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
+
+					<!-- ── ACCOUNT HOLDER DETAILS ── -->
+					<div style="padding:10px 16px;">
+						<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+							<span style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;">Account Holder Details</span>
+							<div style="flex:1;height:1px;background:#e2e8f0;"></div>
+						</div>
+						<div style="display:grid;grid-template-columns:1fr;gap:2px;">
+							${_detailRow("Customer ID (CIF)", cifVal, { mono: true })}
+							${_detailRow("Customer Name", custName)}
+							${_detailRow("Account Type", acctType)}
+							${_detailRow("Email", emailVal)}
+							${_detailRow("Contact Number", contactVal)}
+						</div>
+
+						<!-- Attachments inside Account Holder Details -->
+						${files.length ? `
+						<div style="margin-top:10px;">
+							<div style="font-size:10.5px;color:#94a3b8;font-weight:500;margin-bottom:5px;letter-spacing:.02em;">Attachments</div>
+							<div style="display:flex;flex-direction:column;gap:4px;">
+								${files.map(f => {
+									const fname = frappe.utils.escape_html(f.file_name || "file");
+									const furl  = frappe.utils.escape_html(f.file_url || "");
+									const ext   = (f.file_name || "").split(".").pop().toLowerCase();
+									const isImg = ["jpg","jpeg","png","gif","webp","svg","bmp"].includes(ext);
+									const isPdf = ext === "pdf";
+									const icon  = isImg ? "🖼️" : isPdf ? "📄" : "📎";
+									return `<div style="display:flex;align-items:center;gap:6px;
+										background:#fff;border:1px solid #e2e8f0;border-radius:6px;
+										padding:5px 9px;">
+										<span style="font-size:13px;flex-shrink:0;">${icon}</span>
+										<a href="${furl}" target="_blank" title="${fname}"
+											style="flex:1;font-size:12px;color:#417c7d;text-decoration:none;
+											overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+											${fname}
+										</a>
+										<a href="${furl}" download target="_blank" title="Download"
+											style="flex-shrink:0;color:#94a3b8;text-decoration:none;
+											font-size:11px;border:1px solid #e2e8f0;border-radius:4px;
+											padding:1px 5px;line-height:1.6;">↓</a>
+									</div>`;
+								}).join("")}
+							</div>
+						</div>` : ""}
+					</div>
+
+					<!-- ── NEW INFORMATION ── (only if any new_* fields filled) -->
+					${newLines.length ? `
+					<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
+					<div style="padding:10px 16px 14px;">
+						<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+							<span style="font-size:10.5px;font-weight:700;color:#0f766e;letter-spacing:.06em;text-transform:uppercase;">Requested Updates</span>
+							<div style="flex:1;height:1px;background:#e2e8f0;"></div>
+						</div>
+						<div style="display:flex;flex-direction:column;gap:0;">
+							${newLines.map((ln) => {
+								const escaped = frappe.utils.escape_html(ln.value || "");
+								// Detect date values (YYYY-MM-DD) and reformat to DD-MM-YYYY.
+								const isDate = /^\d{4}-\d{2}-\d{2}$/.test((ln.value || "").trim());
+								const display = isDate
+									? ln.value.trim().split("-").reverse().join("-")
+									: escaped;
+								// Long text (address, name) gets wrap; short values get mono.
+								const isLong = (ln.value || "").length > 40;
+								return `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">
+									<div style="font-size:10.5px;color:#94a3b8;font-weight:500;margin-bottom:2px;">${frappe.utils.escape_html(ln.label || "")}</div>
+									<div style="${isLong ? "white-space:pre-wrap;word-break:break-word;" : ""}font-size:12.5px;color:#0f172a;font-weight:600;">${isDate ? frappe.utils.escape_html(display) : escaped}</div>
+								</div>`;
+							}).join("")}
+						</div>
+					</div>` : ""}
+
+				</div>
+
+				<!-- MIDDLE: raised-by, assign, resolver (read-only + assign) -->
+				<div style="width:270px;flex-shrink:0;background:#fff;border-right:1px solid #e2e8f0;
 					padding:14px 16px;overflow-y:auto;">
-					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin-bottom:10px;">TICKET DETAILS</div>
-					${[
-						["Ticket No", (row.ticket || "").split("-").slice(-2).join("-") || row.ticket],
-						["Request Type", row.request_type],
-						["Account Number", row.account_number],
-						["Raised On", row.creation_date ? row.creation_date.split("-").reverse().join("-") : ""],
-						["Resolved By", row.resolved_by],
-					].map(([l, v]) => `
-						<div style="margin-bottom:8px;">
-							<div style="font-size:10.5px;color:#64748b;margin-bottom:2px;">${l}</div>
-							<div style="font-size:12.5px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:5px 10px;">${frappe.utils.escape_html(v || "—")}</div>
-						</div>`).join("")}
-					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">UPDATES</div>
-					${(row.updates || []).flatMap((u) => (u.lines || [])).map((ln) => `
-						<div style="margin-bottom:8px;">
-							<div style="font-size:10.5px;color:#64748b;margin-bottom:2px;">New ${frappe.utils.escape_html(ln.label || "")}</div>
-							<div style="font-size:12.5px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:5px 10px;word-break:break-word;"><b>${frappe.utils.escape_html(ln.new || "")}</b></div>
-						</div>`).join("") || `<div style="font-size:11.5px;color:#94a3b8;margin-bottom:8px;">No updates</div>`}
-					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">EMPLOYEE</div>
-					<div style="margin-bottom:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
+					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin-bottom:10px;">RAISED BY</div>
+					<div style="margin-bottom:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
 						<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;">
-							<span style="font-size:12.5px;font-weight:700;color:#0f172a;">${frappe.utils.escape_html(row.employee_name || "—")}</span>
+							<span style="font-size:12.5px;font-weight:700;color:#0f172a;">${frappe.utils.escape_html((dt.employee && dt.employee.employee_name) || row.employee_name || "—")}</span>
 							<span style="font-size:11px;color:#64748b;">${frappe.utils.escape_html(row.employee_id || "")}</span>
 						</div>
-						<div style="font-size:11.5px;color:#64748b;margin-top:2px;">${frappe.utils.escape_html(row.branch || "")}${row.sol_id ? " · " + frappe.utils.escape_html("Code: " + row.sol_id) : ""}</div>
+						${[
+							["Designation", dt.employee && dt.employee.designation],
+							["Department", dt.employee && dt.employee.department],
+							["Branch", (dt.employee && dt.employee.branch) || row.branch],
+							["Mobile", dt.employee && dt.employee.cell_number],
+							["Email", (dt.employee && (dt.employee.company_email || dt.employee.personal_email))],
+						].filter(([l, v]) => v).map(([l, v]) => `
+							<div style="font-size:11.5px;color:#64748b;margin-top:2px;">${l}: <span style="color:#1e293b;">${frappe.utils.escape_html(v)}</span></div>`).join("")}
 					</div>
-					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">REMARKS</div>
-					${[
-						["Executive Remark", row.executive_remark],
-						["Resolve Remark", row.remark],
-					].map(([l, v]) => `
-						<div style="margin-bottom:8px;">
-							<div style="font-size:10.5px;color:#64748b;margin-bottom:2px;">${l}</div>
-							<div style="font-size:12.5px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:5px 10px;white-space:pre-wrap;word-break:break-word;">${frappe.utils.escape_html(v || "—")}</div>
-						</div>`).join("")}
+					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">ASSIGN TO</div>
+					<div style="display:flex;gap:6px;">
+						<select id="asr-assign-sel" style="flex:1;min-width:0;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;">
+							<option value="">Select user</option>
+							${((dt.assignees && dt.assignees.length) ? dt.assignees : []).map((u) => `
+								<option value="${frappe.utils.escape_html(u.value || "")}">${frappe.utils.escape_html(u.label || u.value || "")}</option>`).join("")}
+						</select>
+						<button id="asr-assign-btn" style="border:1px solid #417c7d;background:#417c7d;color:#fff;cursor:pointer;border-radius:6px;padding:0 12px;font-size:12px;font-weight:600;flex-shrink:0;">Apply</button>
+					</div>
+					${dt.resolver ? `
+					<div style="font-size:11px;color:#0f172a;font-weight:700;letter-spacing:.05em;margin:12px 0 10px;">RESOLVED BY</div>
+					<div style="margin-bottom:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px 10px;">
+						<div style="font-size:12.5px;font-weight:700;color:#15803d;">${frappe.utils.escape_html(dt.resolver.name || "")}</div>
+						<div style="font-size:11.5px;color:#64748b;">${frappe.utils.escape_html(dt.resolver.on || "")}${dt.resolver.designation ? " · " + frappe.utils.escape_html(dt.resolver.designation) : ""}${dt.resolver.branch ? " · " + frappe.utils.escape_html(dt.resolver.branch) : ""}</div>
+					</div>` : ""}
 				</div>
 
 				<!-- RIGHT: chat (as-is) -->
@@ -907,6 +1059,19 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							font-size:10px;font-weight:700;padding:1px 7px;">${chatCount}</span>` : ""}
 					</button>
 				</div>
+
+				<!-- Pinned remarks (read-only, from record) -->
+				${(row.executive_remark || (dt.resolver && dt.resolver.remark)) ? `
+				<div style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 16px;display:flex;flex-direction:column;gap:6px;">
+					${row.executive_remark ? `
+					<div style="font-size:12px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-left:3px solid #417c7d;border-radius:6px;padding:5px 10px;">
+						<span style="font-size:10.5px;color:#417c7d;font-weight:700;">FIRST REMARK · </span>${frappe.utils.escape_html(row.executive_remark)}
+					</div>` : ""}
+					${(dt.resolver && dt.resolver.remark) ? `
+					<div style="font-size:12px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-left:3px solid #16a34a;border-radius:6px;padding:5px 10px;">
+						<span style="font-size:10.5px;color:#15803d;font-weight:700;">RESOLUTION · </span>${frappe.utils.escape_html(dt.resolver.remark)}
+					</div>` : ""}
+				</div>` : ""}
 
 				<!-- Messages -->
 				<div id="asr-chat-messages" style="flex:1;overflow-y:auto;
@@ -980,15 +1145,17 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				$content.css("filter", "blur(2px)");
 				const clearBlur = () => $content.css("filter", "");
 				const up = new frappe.ui.FileUploader({
-					doctype: "Sahayog Ticket",
-					docname: ticket,
+					// No doctype/docname here — passing them causes Frappe to internally
+					// call frappe.client.save which triggers a document-modified conflict
+					// when the ticket was recently updated. We link the file manually via
+					// attach_file_to_ticket after upload completes.
 					on_failure: () => clearBlur(),
 					on_success: (file) => {
 						clearBlur();
-						const fname = (file && file.file_name) || "file";
+						const furl = (file && file.file_url) || "";
 						frappe.call({
-							method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
-							args: { ticket: ticket, text: "Attached: " + fname },
+							method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.attach_file_to_ticket",
+							args: { ticket: ticket, file_url: furl },
 							callback: () => {
 								frappe.call({
 									method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
@@ -1026,6 +1193,24 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						</button>`).join("")}
 					</div>`);
 			}
+			// Assign from dialog (plain field save, no workflow involved).
+			d.$wrapper.find("#asr-assign-btn").on("click", function () {
+				const u = d.$wrapper.find("#asr-assign-sel").val();
+				if (!u) {
+					frappe.msgprint(__("Select a user first."));
+					return;
+				}
+				frappe.call({
+					method: "frappe.client.set_value",
+					args: { doctype: "Sahayog Ticket", name: ticket, fieldname: "assigned_to", value: u },
+					callback: () => {
+						frappe.msgprint(__("Assigned to {0}.", [u]));
+						resetAndLoad();
+					},
+					error: () => frappe.msgprint(__("Could not assign. Please open the ticket and try from the form.")),
+				});
+			});
+
 			// Top action buttons: pass last chat text (maybe "") as preset.
 			d.$wrapper.find("[data-wf-idx]").on("click", function () {
 				const L = (typeof list !== "undefined" && list) || [];
@@ -1067,7 +1252,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
 			args:   { ticket },
 			callback(r) {
-				// Fresh ticket state (table row may be stale) -> recompute menu.
+				// Fresh ticket state (table row may be stale) + detail pane data.
 				frappe.call({ method: "frappe.client.get",
 					args: { doctype: "Sahayog Ticket", name: ticket },
 					callback(r2) {
@@ -1075,10 +1260,17 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						if (fresh.status) row.status = fresh.status;
 						if (fresh.response_pending !== undefined) row.response_pending = fresh.response_pending || "";
 						if (fresh.dept_name) row.dept_name = fresh.dept_name;
+						if (fresh.executive_remark !== undefined) row.executive_remark = fresh.executive_remark || "";
+						if (fresh.resolved_remark !== undefined) row.remark = fresh.resolved_remark || "";
 						computeActions();
-						buildUI(r.message || []);
+						frappe.call({
+							method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_detail",
+							args: { ticket: ticket },
+							callback(r3) { buildUI(r.message || [], r3.message || {}); },
+							error: () => buildUI(r.message || [], {}),
+						});
 					},
-					error: () => buildUI(r.message || []),
+					error: () => buildUI(r.message || [], {}),
 				});
 			},
 		});
