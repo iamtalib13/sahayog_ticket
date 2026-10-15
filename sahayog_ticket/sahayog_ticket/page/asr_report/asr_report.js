@@ -714,6 +714,25 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				</div>`);
 
 			d.fields_dict.chat_html.$wrapper.html(`
+				${wfActions.length ? `
+				<div style="display:flex;align-items:center;gap:8px;
+					padding:10px 16px;background:#fff;border-bottom:1px solid #e2e8f0;">
+					<span style="font-size:10.5px;font-weight:700;color:#94a3b8;letter-spacing:.05em;">ACTIONS</span>
+					${wfActions.map((a, i) => `
+					<button data-wf-idx="${i}" style="cursor:pointer;border-radius:7px;
+						padding:5px 14px;font-size:12.5px;font-weight:600;
+						display:inline-flex;align-items:center;gap:6px;
+						${i === 0
+							? "background:#417c7d;color:#fff;border:1px solid #417c7d;"
+							: "background:#fff;color:#1f5c5d;border:1px solid #417c7d;"}">
+						<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+							stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<line x1="22" y1="2" x2="11" y2="13"/>
+							<polygon points="22 2 15 22 11 13 2 9 22 2"/>
+						</svg>
+						${a.key}
+					</button>`).join("")}
+				</div>` : ""}
 				<div style="display:flex;height:560px;border-radius:0 0 8px 8px;overflow:hidden;">
 
 				<!-- LEFT: ticket details (read-only) -->
@@ -802,7 +821,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 								font-size:13px;color:#1e293b;background:transparent;
 								line-height:1.5;max-height:96px;overflow-y:auto;
 								padding:2px 0;font-family:inherit;"></textarea>
-							<div class="asr-send-wrap" style="position:relative;display:flex;align-items:center;flex-shrink:0;">
 							<button id="asr-send-btn"
 								style="border:none;background:#417c7d;cursor:pointer;
 								padding:6px 9px;border-radius:7px;flex-shrink:0;
@@ -814,37 +832,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 									<polygon points="22 2 15 22 11 13 2 9 22 2"/>
 								</svg>
 							</button>
-							${wfActions.length ? `
-							<style>.asr-send-wrap:hover .asr-wf-menu{display:block;}</style>
-							<div class="asr-wf-menu" style="display:none;position:absolute;
-								bottom:100%;right:0;background:#fff;
-								border:1px solid #e2e8f0;border-radius:10px;
-								box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:6px;
-								min-width:200px;z-index:50;">
-								<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px 6px;">
-									<span style="font-size:10px;color:#94a3b8;font-weight:700;letter-spacing:.05em;">WORKFLOW</span>
-									<button class="asr-wf-close" title="Close" style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;line-height:1;padding:0 2px;">×</button>
-								</div>
-								${wfActions.map((a, i) => `
-								<button data-wf-idx="${i}" style="display:flex;width:100%;
-									text-align:left;gap:8px;align-items:center;background:#fff;
-									cursor:pointer;border:none;border-radius:7px;
-									padding:7px 8px;font-size:12.5px;font-weight:600;color:#0f172a;"
-									onmouseover="this.style.background='#f1f5f9'"
-									onmouseout="this.style.background='#fff'">
-									<span style="width:24px;height:24px;border-radius:50%;flex-shrink:0;
-										background:#e6f2f2;color:#1f5c5d;
-										display:flex;align-items:center;justify-content:center;">
-										<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-											stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-											<line x1="22" y1="2" x2="11" y2="13"/>
-											<polygon points="22 2 15 22 11 13 2 9 22 2"/>
-										</svg>
-									</span>
-									${a.key}
-								</button>`).join("")}
-							</div>` : ""}
-							</div>
 						</div>
 						<div style="font-size:10.5px;color:#94a3b8;margin-top:5px;padding:0 4px;">
 							Enter to send &nbsp;·&nbsp; Shift+Enter for a new line
@@ -869,16 +856,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			$ta.on("keydown", function(e) {
 				if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); }
 			});
-			// Send icon: text hai to chat bhejo, khaali hai to workflow menu toggle.
-			d.$wrapper.find("#asr-send-btn").off("click").on("click", function () {
-				const hasText = (($ta.val() || "").trim() !== "");
-				const $m = d.$wrapper.find(".asr-wf-menu");
-				if (!hasText && $m.length) {
-					$m.toggle($m.css("display") === "none");
-					return;
-				}
-				sendMsg();
-			});
+			// Send icon: sirf chat bhejo (actions upar buttons se).
+			d.$wrapper.find("#asr-send-btn").off("click").on("click", sendMsg);
 
 			// Attach: file ticket pe attach + chat me note (timeline jaisa).
 			// Uploader ke upar pichhla dialog blur (dialog-over-dialog ajib lagta hai).
@@ -914,29 +893,16 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				}
 			});
 
-			// Chat text reused as action remark (type once -> send -> act).
-			let chatPreset = null;
+			// Top action buttons -> remark prompt -> workflow action.
 			d.$wrapper.find("[data-wf-idx]").on("click", function () {
-				d.$wrapper.find(".asr-wf-menu").hide();
-				const p = chatPreset;
-				chatPreset = null;
-				doWfAction(wfActions[+$(this).data("wf-idx")], p);
-			});
-			d.$wrapper.find(".asr-wf-close").on("click", function () {
-				chatPreset = null;
-				d.$wrapper.find(".asr-wf-menu").hide();
+				doWfAction(wfActions[+$(this).data("wf-idx")]);
 			});
 
 			// ── Workflow action from dialog (same rules as the form) ──
 			// Sends: first remark -> executive_remark field, later -> comment.
 			// Mark Resolved: always resolved_remark field + resolved stamps.
-			// preset = chat text (skip re-typing): sends use it as-is (already
-			// posted), resolve saves it into resolved_remark.
-			function doWfAction(a, preset) {
+			function doWfAction(a) {
 				if (!a) return;
-				// runWithRemark: setField writes the field; toComment posts a
-				// timeline comment. Chat-preset text is already posted, so it
-				// only fills an empty field, never re-posts.
 				const runWithRemark = (doc, remark, toComment, setField) => {
 					if (setField) doc[a.field] = remark;
 					if (a.rp) doc.response_pending = a.rp;
@@ -956,7 +922,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 								},
 								error: () => frappe.msgprint(__("Action failed. Please open the ticket and try from the form.")),
 							});
-							if (toComment && !preset) {
+							if (toComment) {
 								frappe.call({
 									method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
 									args: { ticket: ticket, text: remark },
@@ -975,10 +941,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					callback(r2) {
 						const doc = r2.message;
 						if (!doc) { frappe.msgprint(__("Ticket not found.")); return; }
-						if (preset) {
-							runWithRemark(doc, preset, false, a.forceField || !doc[a.field]);
-							return;
-						}
 						const toComment = !a.forceField && !!doc[a.field];
 						frappe.prompt(
 							{ label: a.label, fieldname: "remark", fieldtype: "Small Text", reqd: 1 },
@@ -1012,12 +974,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							callback(r2) {
 								list = r2.message || [];
 								renderMessages(list);
-								// Comment + action ek sath: typed text preset karke
-								// workflow menu turant dikhao (dobara type nahi).
-								if (wfActions.length) {
-									chatPreset = text;
-									d.$wrapper.find(".asr-wf-menu").show();
-								}
 							},
 						});
 					},
