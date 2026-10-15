@@ -370,6 +370,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	function resetAndLoad() {
 		state.offset = 0;
 		state.done   = false;
+		state.byTicket = {};
 		$("#asr-tbody").empty();
 		$("#asr-empty").hide();
 		loadMore();
@@ -416,8 +417,130 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		});
 	}
 
+	// ── Shared workflow actions (row popup + dialog, same rules as form) ────
+	function wfActionsFor(row) {
+		const out = [];
+		row = row || {};
+		if ((row.dept_name || "") !== "Operations") return out;
+		const st = row.status || "";
+		const rp = row.response_pending || "";
+		const cpc = frappe.user.has_role("CPC Loan User");
+		const br = frappe.user.has_role("Branch User");
+		if (cpc && (st === "Open" || st === "In-Progress") && rp !== "Pending Branch") {
+			out.push({ key: "Send to Branch", rp: "Pending Branch",
+				field: "executive_remark", commentAfter: true,
+				title: "Enter Remark for Branch", label: "Branch Remark" });
+		}
+		if (br && st === "In-Progress" && rp !== "Pending Operations") {
+			out.push({ key: "Send to CPC", rp: "Pending Operations",
+				field: "executive_remark", commentAfter: true,
+				title: "Enter Info Provided", label: "Info for CPC" });
+		}
+		if ((cpc && (st === "Open" || st === "In-Progress")) || (br && st === "In-Progress")) {
+			out.push({ key: "Mark Resolved",
+				field: "resolved_remark", stampResolve: true, forceField: true,
+				title: "Enter Resolve Remark", label: "Resolve Remark" });
+		}
+		return out;
+	}
+
+	function runWfAction(ticket, a, afterOk) {
+		if (!a) return;
+		frappe.call({ method: "frappe.client.get",
+			args: { doctype: "Sahayog Ticket", name: ticket },
+			callback(r2) {
+				const doc = r2.message;
+				if (!doc) { frappe.msgprint(__("Ticket not found.")); return; }
+				const toComment = !a.forceField && !!doc[a.field];
+				frappe.prompt(
+					{ label: a.label, fieldname: "remark", fieldtype: "Small Text", reqd: 1 },
+					(vals) => {
+						const remark = (((vals || {}).remark) || "").trim();
+						if (!remark) return;
+						const runWithRemark = (toC, setF) => {
+							if (setF) doc[a.field] = remark;
+							if (a.rp) doc.response_pending = a.rp;
+							if (a.stampResolve) {
+								doc.ticket_resolved_by = frappe.session.user;
+								doc.ticket_resolved_on = frappe.datetime.now_datetime();
+							}
+							frappe.call({ method: "frappe.client.save", args: { doc: doc },
+								callback: () => {
+									const afterSave = () => frappe.call({
+										method: "frappe.model.workflow.apply_workflow",
+										args: { doc: { doctype: "Sahayog Ticket", name: ticket }, action: a.key },
+										callback: () => {
+											frappe.msgprint(__("{0} done.", [a.key]));
+											afterOk && afterOk();
+										},
+										error: () => frappe.msgprint(__("Action failed. Please open the ticket and try from the form.")),
+									});
+									if (toC) {
+										frappe.call({
+											method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
+											args: { ticket: ticket, text: remark },
+											callback: afterSave,
+											error: () => frappe.msgprint(__("Could not save remark.")),
+										});
+									} else {
+										afterSave();
+									}
+								},
+								error: () => frappe.msgprint(__("Could not save ticket.")),
+							});
+						};
+						runWithRemark(toComment, !toComment);
+					},
+					__(a.title + (toComment ? " (Comment)" : "")), __("Submit")
+				);
+			},
+			error: () => frappe.msgprint(__("You do not have access to update this ticket. Please open it from the list.")),
+		});
+	}
+
+	// Small floating popup (like the old send-icon menu).
+	function openWfPopup(ticket, actions, x, y) {
+		$(".asr-wf-float").remove();
+		if (!actions.length) return;
+		const $p = $(`
+			<div class="asr-wf-float" style="position:fixed;z-index:2000;background:#fff;
+				border:1px solid #e2e8f0;border-radius:10px;
+				box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:6px;min-width:200px;">
+				<div style="font-size:10px;color:#94a3b8;font-weight:700;
+					letter-spacing:.05em;padding:4px 8px 6px;">WORKFLOW</div>
+				${actions.map((a, i) => `
+				<button data-idx="${i}" style="display:flex;width:100%;
+					text-align:left;gap:8px;align-items:center;background:#fff;
+					cursor:pointer;border:none;border-radius:7px;
+					padding:7px 8px;font-size:12.5px;font-weight:600;color:#0f172a;">
+					<span style="width:24px;height:24px;border-radius:50%;flex-shrink:0;
+						background:#e6f2f2;color:#1f5c5d;
+						display:flex;align-items:center;justify-content:center;">
+						<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+							stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<line x1="22" y1="2" x2="11" y2="13"/>
+							<polygon points="22 2 15 22 11 13 2 9 22 2"/>
+						</svg>
+					</span>
+					${a.key}
+				</button>`).join("")}
+			</div>`);
+		const w = 220, h = 60 + actions.length * 44;
+		$p.css({ left: Math.max(8, Math.min(x, window.innerWidth - w)) + "px",
+			top: Math.max(8, Math.min(y, window.innerHeight - h)) + "px" });
+		$p.find("[data-idx]").on("click", function () {
+			const a = actions[+$(this).data("idx")];
+			$p.remove();
+			runWfAction(ticket, a, () => resetAndLoad());
+		});
+		$(document).one("click", () => $p.remove());
+		$("body").append($p);
+	}
+
 	// ── Append rows ──────────────────────────────────────────────────────────
 	function appendRows(rows) {
+		state.byTicket = state.byTicket || {};
+		rows.forEach(rr => { state.byTicket[rr.ticket] = rr; });
 		const $tbody  = $("#asr-tbody");
 		const tdBase  = `padding:9px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`;
 		const tdGray  = `style="${tdBase}color:#475569;"`;
@@ -434,7 +557,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						? `<span class="asr-cmt-count" style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:4px;cursor:default;">${r.comments_count}</span><button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="View comments" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`
 						: `<button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="Add comment" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`}
 				</td>
-				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${frappe.utils.escape_html(r.ticket)}">${frappe.utils.escape_html((r.ticket || "").split("-").slice(-2).join("-") || r.ticket)}</td>
+				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${frappe.utils.escape_html(r.ticket)}">${frappe.utils.escape_html((r.ticket || "").split("-").slice(-2).join("-") || r.ticket)}${wfActionsFor(r).length ? ` <button class="asr-row-act" title="Workflow actions" style="border:1px solid #cbd5e1;background:#fff;cursor:pointer;border-radius:6px;padding:0 6px;margin-left:4px;font-size:11px;color:#417c7d;font-weight:700;">›</button>` : ""}</td>
 				<td ${tdGray}>
 					${r.creation_date ? r.creation_date.split("-").reverse().join("-") : "—"}
 					<span style="display:block;font-size:10.5px;color:#94a3b8;">${(function(){
@@ -498,6 +621,11 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				e.stopPropagation();
 				showComments($(this).data("ticket"), r);
 			});
+			// Row action trigger: small popup (like old send-icon menu).
+			$tr.find(".asr-row-act").on("click", function (e) {
+				e.stopPropagation();
+				openWfPopup(r.ticket, wfActionsFor(r), e.clientX, e.clientY);
+			});
 			// Comments cell: anywhere click = dialog only, never the form.
 			$tr.find(".asr-cmt-cell").on("click", function (e) {
 				if ($(e.target).closest(".asr-cmt-btn").length) return;
@@ -526,33 +654,12 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	}
 	function showComments(ticket, row) {
 		row = row || {};
-		// Minimal workflow actions: same visibility as the ticket form
-		// (role + status + holder). Real workflow transitions, not portal APIs.
-		// Sends flip holder; Mark Resolved stamps + closes the thread.
-		// Recomputed on fresh doc below (table row may be stale).
+		// Same visibility as the form (shared helper). Recomputed on
+		// fresh doc below (table row may be stale).
 		const wfActions = [];
 		const computeActions = () => {
 			wfActions.length = 0;
-			if ((row.dept_name || "") !== "Operations") return;
-			const st = row.status || "";
-			const rp = row.response_pending || "";
-			const cpc = frappe.user.has_role("CPC Loan User");
-			const br = frappe.user.has_role("Branch User");
-			if (cpc && (st === "Open" || st === "In-Progress") && rp !== "Pending Branch") {
-				wfActions.push({ key: "Send to Branch", rp: "Pending Branch",
-					field: "executive_remark", commentAfter: true,
-					title: "Enter Remark for Branch", label: "Branch Remark" });
-			}
-			if (br && st === "In-Progress" && rp !== "Pending Operations") {
-				wfActions.push({ key: "Send to CPC", rp: "Pending Operations",
-					field: "executive_remark", commentAfter: true,
-					title: "Enter Info Provided", label: "Info for CPC" });
-			}
-			if ((cpc && (st === "Open" || st === "In-Progress")) || (br && st === "In-Progress")) {
-				wfActions.push({ key: "Mark Resolved",
-					field: "resolved_remark", stampResolve: true, forceField: true,
-					title: "Enter Resolve Remark", label: "Resolve Remark" });
-			}
+			wfActions.push(...wfActionsFor(row));
 		};
 		computeActions();
 		const d = new frappe.ui.Dialog({
@@ -898,62 +1005,9 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				doWfAction(wfActions[+$(this).data("wf-idx")]);
 			});
 
-			// ── Workflow action from dialog (same rules as the form) ──
-			// Sends: first remark -> executive_remark field, later -> comment.
-			// Mark Resolved: always resolved_remark field + resolved stamps.
+			// ── Workflow action from dialog (shared runner + close dialog) ──
 			function doWfAction(a) {
-				if (!a) return;
-				const runWithRemark = (doc, remark, toComment, setField) => {
-					if (setField) doc[a.field] = remark;
-					if (a.rp) doc.response_pending = a.rp;
-					if (a.stampResolve) {
-						doc.ticket_resolved_by = frappe.session.user;
-						doc.ticket_resolved_on = frappe.datetime.now_datetime();
-					}
-					frappe.call({ method: "frappe.client.save", args: { doc: doc },
-						callback: () => {
-							const afterSave = () => frappe.call({
-								method: "frappe.model.workflow.apply_workflow",
-								args: { doc: { doctype: "Sahayog Ticket", name: ticket }, action: a.key },
-								callback: () => {
-									frappe.msgprint(__("{0} done.", [a.key]));
-									d.hide();
-									resetAndLoad();
-								},
-								error: () => frappe.msgprint(__("Action failed. Please open the ticket and try from the form.")),
-							});
-							if (toComment) {
-								frappe.call({
-									method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
-									args: { ticket: ticket, text: remark },
-									callback: afterSave,
-									error: () => frappe.msgprint(__("Could not save remark.")),
-								});
-							} else {
-								afterSave();
-							}
-						},
-						error: () => frappe.msgprint(__("Could not save ticket.")),
-					});
-				};
-				frappe.call({ method: "frappe.client.get",
-					args: { doctype: "Sahayog Ticket", name: ticket },
-					callback(r2) {
-						const doc = r2.message;
-						if (!doc) { frappe.msgprint(__("Ticket not found.")); return; }
-						const toComment = !a.forceField && !!doc[a.field];
-						frappe.prompt(
-							{ label: a.label, fieldname: "remark", fieldtype: "Small Text", reqd: 1 },
-							(vals) => {
-								const remark = (((vals || {}).remark) || "").trim();
-								if (!remark) return;
-								runWithRemark(doc, remark, toComment, !toComment);
-							},
-							__(a.title + (toComment ? " (Comment)" : "")), __("Submit")
-						);
-					},
-					error: () => frappe.msgprint(__("You do not have access to update this ticket. Please open it from the list.")),
-				});
+				runWfAction(ticket, a, () => { d.hide(); resetAndLoad(); });
 			}
 
 			function sendMsg() {
