@@ -79,6 +79,11 @@ def get_report_data(filters=None, page_no=1, page_size=20):
                 WHERE ti.parent = st.name LIMIT 1
             ) AS request_type,
             (
+                SELECT ti.account_number FROM `tabTicket Item` ti
+                WHERE ti.parent = st.name LIMIT 1
+            ) AS account_number,
+            st.executive_remark,
+            (
                 SELECT COUNT(*) FROM `tabTicket Status Log` tsl
                 WHERE tsl.parent = st.name
             ) AS ticket_cycle,
@@ -123,6 +128,8 @@ def get_report_data(filters=None, page_no=1, page_size=20):
             "response_pending": t.response_pending or "",
             "ticket_type":      t.ticket_type or "",
             "request_type":     t.request_type or "",
+            "account_number":   t.account_number or "",
+            "executive_remark": (t.get("executive_remark") or "").strip(),
             "employee_id":      t.employee_id or "",
             "employee_name":    t.employee_name or "",
             "sol_id":           t.sol_id or "",
