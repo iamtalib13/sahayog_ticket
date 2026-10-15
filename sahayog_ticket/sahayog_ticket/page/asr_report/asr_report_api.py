@@ -57,6 +57,7 @@ def get_report_data(filters=None, page_no=1, page_size=20):
         SELECT
             st.name                 AS ticket,
             st.status,
+            st.dept_name,
             st.response_pending,
             st.ticket_type,
             st.employee_id,
@@ -118,6 +119,7 @@ def get_report_data(filters=None, page_no=1, page_size=20):
             "creation_time":    str(get_time(t.creation)) if t.creation else "",
             "modified":         str(t.modified) if t.modified else "",
             "status":           t.status or "",
+            "dept_name":        t.dept_name or "",
             "response_pending": t.response_pending or "",
             "ticket_type":      t.ticket_type or "",
             "request_type":     t.request_type or "",
