@@ -329,9 +329,11 @@ def get_ticket_detail(ticket):
     assignees = frappe.db.sql(
         """SELECT u.name AS value,
                   CONCAT_WS(' ', NULLIF(u.first_name, ''), NULLIF(u.last_name, '')) AS label
-           FROM tabUser u INNER JOIN `tabHas Role` r ON r.parent = u.name
-           WHERE r.role = 'CPC Loan User' AND u.enabled = 1 AND u.name NOT LIKE '%administrator%'
-           GROUP BY u.name ORDER BY label""", as_dict=True)
+           FROM tabUser u
+           WHERE u.enabled = 1
+             AND u.user_type = 'System User'
+             AND u.name NOT IN ('Guest', 'Administrator')
+           ORDER BY label""", as_dict=True)
     return {"employee": emp, "resolver": resolver, "files": files, "assignees": assignees}
 
 
