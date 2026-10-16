@@ -1494,7 +1494,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					"Ticket Cycle", "Employee ID", "Employee Name",
 					"State", "Zone", "Region", "District",
 					"Resolved By", "Resolved Date", "Resolved Time", "Remark",
-					"Last Comment By", "Last Comment",
+					"Operations Comment By", "Operations Comments",
 				];
 
 				const csvRows = [headers.join(",")];
@@ -1519,10 +1519,10 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						row.resolved_by,
 						fmtDate(row.resolved_date),
 						fmtTime(row.resolved_time),
-						row.remark,
-						row.last_comment_by,
-						row.last_comment,
-					];
+					row.remark,
+					row.ops_comments_by,
+					row.ops_comments,
+				];
 					csvRows.push(vals.map(v => `"${(v ?? "").toString().replace(/"/g, '""')}"`).join(","));
 				});
 
