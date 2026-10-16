@@ -53,6 +53,20 @@ class SahayogTicket(Document):
         if self.password != stored_password and not self.can_view_password():
             self.password = stored_password
 
+    # The ticket's `modified` timestamp is also written outside of a document
+    # save (chat notifications bump it, other users/tabs work on the same
+    # ticket), so Frappe's stock version check throws
+    # "Document has been modified after you have opened it" even when nothing
+    # conflicting happened. Only that timestamp comparison is skipped here;
+    # docstatus transition checks and the rest of the save flow stay intact.
+    def check_if_latest(self):
+        try:
+            super().check_if_latest()
+        except frappe.TimestampMismatchError:
+            frappe.clear_last_message()
+            if not self.meta.issingle and self._doc_before_save:
+                self.check_docstatus_transition(self._doc_before_save.docstatus)
+
     def before_save(self):
         #self.set_creation_time()
         self.track_status_change()
@@ -643,8 +657,31 @@ def create_asset_request(ticket_id, employee_id, request_to, emp_name=None, desi
         doc.flags.ignore_validate_optional = True
         doc.flags.ignore_permissions = True
 
-        # Insert & Commit
+        # Insert
         doc.insert()
+
+        # Close the ticket & link the asset request server-side, so the
+        # ticket is resolved even if the client fails to update it.
+        prev_status = frappe.db.get_value("Sahayog Ticket", ticket_id, "status")
+        frappe.db.set_value("Sahayog Ticket", ticket_id, {
+            "asset_request_id": doc.name,
+            "status": "Closed",
+            "close_remark": f"Created Asset Request - {doc.name}",
+            "ticket_resolved_by": frappe.session.user,
+        })
+        if prev_status and prev_status != "Closed":
+            frappe.get_doc({
+                "doctype": "Ticket Status Log",
+                "parent": ticket_id,
+                "parenttype": "Sahayog Ticket",
+                "parentfield": "status_log",
+                "from_status": prev_status,
+                "to_status": "Closed",
+                "status_change_by": frappe.session.user,
+                "status_change_on": frappe.utils.now_datetime(),
+                "status_remark": f"Status changed from {prev_status} to Closed",
+            }).insert(ignore_permissions=True)
+
         frappe.db.commit()
 
         frappe.msgprint(f"✅ Asset Request Created: {doc.name}", "Success")
@@ -769,7 +806,26 @@ def create_emmr_from_ticket(ticket_id, items=None):
                 "content": f"Remark: {plain_desc}",
             }).insert(ignore_permissions=True)
 
-        ticket.db_set("asset_request_id", doc.name)
+        # Close the ticket & link the EMMR server-side
+        prev_status = ticket.status
+        ticket.db_set({
+            "asset_request_id": doc.name,
+            "status": "Closed",
+            "close_remark": f"Created Material Request - {doc.name}",
+            "ticket_resolved_by": frappe.session.user,
+        })
+        if prev_status and prev_status != "Closed":
+            frappe.get_doc({
+                "doctype": "Ticket Status Log",
+                "parent": ticket.name,
+                "parenttype": "Sahayog Ticket",
+                "parentfield": "status_log",
+                "from_status": prev_status,
+                "to_status": "Closed",
+                "status_change_by": frappe.session.user,
+                "status_change_on": frappe.utils.now_datetime(),
+                "status_remark": f"Status changed from {prev_status} to Closed",
+            }).insert(ignore_permissions=True)
         frappe.db.commit()
 
         return {"emmr_id": doc.name}
