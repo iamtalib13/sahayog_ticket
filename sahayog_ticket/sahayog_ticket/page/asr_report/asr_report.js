@@ -424,8 +424,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		if ((row.dept_name || "") !== "Operations") return out;
 		const st = row.status || "";
 		const rp = row.response_pending || "";
-		const cpc = frappe.user.has_role("CPC Loan User");
-		const br = frappe.user.has_role("Branch User");
+		const cpc = frappe.user.has_role("Operations Support Executive") || frappe.user.has_role("CPC Loan User");
+		const br = frappe.user.has_role("Employee") || frappe.user.has_role("Branch User");
 		if (cpc && (st === "Open" || st === "In-Progress") && rp !== "Pending Branch") {
 			out.push({ key: "Send to Branch", rp: "Pending Branch",
 				field: "executive_remark", commentAfter: true,
