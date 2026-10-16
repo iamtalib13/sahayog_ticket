@@ -1327,6 +1327,9 @@ frappe.ui.form.on("Sahayog Ticket", {
                     freeze_message: "Creating Employee Material Request...",
                     callback: function (res) {
                       if (res.message && res.message.emmr_id) {
+                        // status / close_remark / asset_request_id are now
+                        // set server-side inside create_emmr_from_ticket
+                        frm.reload_doc();
                         frappe.show_alert({
                           message: __("EMMR created: " + res.message.emmr_id),
                           indicator: "green",
@@ -1354,7 +1357,6 @@ frappe.ui.form.on("Sahayog Ticket", {
               request_department = "Stationery";
             }
 
-            let user = frappe.session.user;
             frappe.confirm(
               __("Are you sure you want to create Asset Request?"),
               function () {
@@ -1369,19 +1371,9 @@ frappe.ui.form.on("Sahayog Ticket", {
                   },
                   callback: function (response) {
                     if (response.message && response.message.asset_request_id) {
-                      frm.set_value(
-                        "asset_request_id",
-                        response.message.asset_request_id,
-                      );
-                      frm.refresh_field("asset_request_id");
-                      frm.set_value("ticket_resolved_by", user);
-                      frm.set_value("status", "Closed");
-                      frm.refresh_field("status");
-                      frm.set_value(
-                        "close_remark",
-                        `Created Asset Request - ${response.message.asset_request_id}`,
-                      );
-                      frm.save();
+                      // status / close_remark / asset_request_id are now
+                      // set server-side inside create_asset_request
+                      frm.reload_doc();
                       frappe.show_alert(
                         {
                           message: __("Asset Request created successfully"),

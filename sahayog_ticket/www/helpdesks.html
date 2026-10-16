@@ -2309,24 +2309,8 @@
               const assetId = data.message.asset_request_id;
               const remark = `Created Asset Request - ${assetId}`;
 
-              // Standard behavior: Close ticket with remark
-              await fetch("/api/method/frappe.client.set_value", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Accept: "application/json",
-                  "X-Frappe-CSRF-Token": this.getCsrfToken(),
-                },
-                body: JSON.stringify({
-                  doctype: "Sahayog Ticket",
-                  name: this.activeTicket.name,
-                  fieldname: {
-                    status: "Closed",
-                    close_remark: remark,
-                    asset_request_id: assetId,
-                  },
-                }),
-              });
+              // Ticket status/asset_request_id are now set server-side
+              // inside create_asset_request; only post the comment here.
 
               // Post comment
               await fetch("/api/method/frappe.desk.form.utils.add_comment", {
