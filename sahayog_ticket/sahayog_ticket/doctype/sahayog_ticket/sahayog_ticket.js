@@ -1611,7 +1611,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
   // assign to button with user fetch from server side based on department & roles
   assign_to_button: function (frm) {
-    frm.add_custom_button(__("Assign to"), async function () {
+    const btn = frm.add_custom_button(__("Assign to"), async function () {
       if (!frm.doc.dept_name) {
         frappe.msgprint(__("Please select a Department first."));
         return;
@@ -1656,6 +1656,11 @@ frappe.ui.form.on("Sahayog Ticket", {
         },
       });
     });
+    // Show first in its button group (minimal move, nothing else touched).
+    try {
+      const $b = $(btn);
+      $b.prependTo($b.parent());
+    } catch (e) {}
   },
 
   // in progress button with remark dialog box :it will set the status to in progress with executive remark
