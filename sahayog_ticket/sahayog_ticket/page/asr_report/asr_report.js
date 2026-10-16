@@ -351,7 +351,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	const COL_SEARCH_COLS = [
 		{ key: null, label: "" },
 		{ key: "ticket", label: "Ticket" },
-		{ key: null, label: "" },
+		{ key: "creation_date", label: "Creation Date" },
 		{ key: "request_type", label: "Request Type" },
 		{ key: "sol_id", label: "SOL ID" },
 		{ key: "branch", label: "Branch" },
