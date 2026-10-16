@@ -456,7 +456,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       // Workflow actions for ALL tickets now (free lane covers non-Operations),
       // so the old direct Status buttons stay hidden to avoid dual UI.
       // assign_to + Set Executive Remark buttons remain (no status change).
-      if (
+      const assignRoleOk = (
         frappe.user.has_role("IT Support Executive") ||
         frappe.user.has_role("Admin Support Executive") ||
         frappe.user.has_role("Operations Support Executive") ||
@@ -466,11 +466,30 @@ frappe.ui.form.on("Sahayog Ticket", {
         frappe.user.has_role("Facility Support Executive") ||
         frappe.user.has_role("Loan Support Executive") ||
         frappe.user.has_role("CBS Support Executive")
-      ) {
-
+      );
+      if (assignRoleOk) {
+        // Assign To shows in every state (assignment is not status-bound).
+        frm.trigger("assign_to_button");
         if (frm.doc.status === "In-Progress") {
-          frm.trigger("assign_to_button");
           frm.trigger("executive_remark");
+        }
+      }
+      // Designation top-up (cached per session): designation ending with
+      // Executive/Manager can also assign. Skipped when role gate already
+      // fired (no duplicate button).
+      if (!assignRoleOk && !frappe.user.has_role("System Manager") && !frappe.user.has_role("CTO")) {
+        if (window._asgDesig === true) {
+          frm.trigger("assign_to_button");
+        } else if (window._asgDesig === undefined) {
+          frappe.call({
+            method: "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.can_assign_by_designation",
+            callback: (r) => {
+              window._asgDesig = !!(r && r.message);
+              if (window._asgDesig) {
+                frm.trigger("assign_to_button");
+              }
+            },
+          });
         }
       }
 

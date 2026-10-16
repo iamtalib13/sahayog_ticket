@@ -450,6 +450,17 @@ class SahayogTicket(Document):
 
 
 @frappe.whitelist()
+def can_assign_by_designation():
+    """Assign To visibility: designation ending with Executive/Manager."""
+    emp = frappe.db.get_value(
+        "Employee", {"user_id": frappe.session.user}, "designation")
+    if not emp:
+        return False
+    d = emp.strip().lower()
+    return d.endswith("executive") or d.endswith("manager")
+
+
+@frappe.whitelist()
 def send_assignment_email(ticket_name, assigned_to):
     emp = frappe.db.get_value("Employee", {"user_id": assigned_to}, "company_email")
     if not emp:
