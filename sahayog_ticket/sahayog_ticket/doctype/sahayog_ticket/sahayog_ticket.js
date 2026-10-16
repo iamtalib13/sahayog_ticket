@@ -165,7 +165,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     // Core form.js har refresh ke END me "This form is not editable due to a
     // Workflow." headline same box me likhta hai (hamara banner mit jata tha).
     // Sirf is form ke liye us function ko no-op karte hain. Form read-only hi
-    // rehta hai (allow_edit sirf Branch User), sirf message nahi aayega.
+    // rehta hai (allow_edit All now; Operations edit rule lives in workflow roles), sirf message nahi aayega.
     frm.show_workflow_read_only_banner = function () {};
   },
 
@@ -1611,7 +1611,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
   // assign to button with user fetch from server side based on department & roles
   assign_to_button: function (frm) {
-    frm.add_custom_button(__("Assign to"), async function () {
+    const btn = frm.add_custom_button(__("Assign to"), async function () {
       if (!frm.doc.dept_name) {
         frappe.msgprint(__("Please select a Department first."));
         return;
@@ -1656,6 +1656,11 @@ frappe.ui.form.on("Sahayog Ticket", {
         },
       });
     });
+    // Show first in its button group (minimal move, nothing else touched).
+    try {
+      const $b = $(btn);
+      $b.prependTo($b.parent());
+    } catch (e) {}
   },
 
   // in progress button with remark dialog box :it will set the status to in progress with executive remark

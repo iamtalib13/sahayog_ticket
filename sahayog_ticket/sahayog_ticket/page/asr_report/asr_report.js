@@ -16,6 +16,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		mainTab:   "all",   // all | pending | completed
 		subStatus: "",      // "" or one of Open/In-Progress/Closed/Resolved
 		summary:   {},      // global status counts (ignores status filter)
+		colSearch: {},      // per-column text search {key: text}
 	};
 
 	// Taskflow-style groups: Pending = Open+In-Progress, Completed = Closed+Resolved.
@@ -177,10 +178,11 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	// ── Table wrapper ────────────────────────────────────────────────────────
 	const $tableWrap = $(`
 		<div id="asr-table-wrap" style="flex:1 1 auto;min-height:0;min-width:0;width:100%;overflow:auto;border:1px solid #e2e8f0;border-radius:0 0 8px 8px;background:#fff;">
-			<table id="asr-table" style="border-collapse:collapse;font-size:12.5px;width:1960px;min-width:1960px;table-layout:fixed;">
+			<table id="asr-table" style="border-collapse:collapse;font-size:12.5px;width:2010px;min-width:2010px;table-layout:fixed;">
 				<thead style="position:sticky;top:0;z-index:3;">
 					<tr style="background:#f8fafc;border-bottom:2px solid rgba(65,124,125,0.2);">
-						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:100px;position:sticky;left:0;z-index:5;background:#f8fafc;border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);">Comments</th>
+						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:50px;">S.No</th>
+						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:88px;position:sticky;left:0;z-index:5;background:#f8fafc;border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);">Comments</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:110px;">Ticket</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:100px;">Creation Date</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:160px;">Request Type</th>
@@ -199,6 +201,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:160px;">Remark</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:130px;position:sticky;right:0;z-index:5;background:#f8fafc;border-left:1px solid #e2e8f0;box-shadow:-2px 0 4px rgba(0,0,0,0.06);">Last Modified</th>
 					</tr>
+					<tr id="asr-filter-row" style="background:#fff;border-bottom:2px solid rgba(65,124,125,0.2);"></tr>
 				</thead>
 				<tbody id="asr-tbody"></tbody>
 			</table>
@@ -333,6 +336,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			sol_id:           $("#asr-filter-sol").val(),
 			from_date:        $("#asr-filter-from").val(),
 			to_date:          $("#asr-filter-to").val(),
+			column_search:    state.colSearch || {},
 		};
 		resetAndLoad();
 	}
@@ -343,12 +347,87 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		renderTabs();
 		applyFilters();
 	});
+	// ── Per-column search (only where needed; server filters) ──────────────
+	// Order = thead order (empty cell keeps alignment).
+	const COL_SEARCH_COLS = [
+		{ key: null, label: "" },
+		{ key: "ticket", label: "Ticket" },
+		{ key: "creation_date", label: "Creation Date" },
+		{ key: "request_type", label: "Request Type" },
+		{ key: "sol_id", label: "SOL ID" },
+		{ key: "branch", label: "Branch" },
+		{ key: null, label: "" },
+		{ key: null, label: "" },
+		{ key: null, label: "" },
+		{ key: "employee", label: "Employee" },
+		{ key: "state", label: "State" },
+		{ key: "zone", label: "Zone" },
+		{ key: "region", label: "Region" },
+		{ key: "district", label: "District" },
+		{ key: "resolved_by", label: "Resolved By" },
+		{ key: "resolved_date", label: "Resolved Date" },
+		{ key: null, label: "" },
+		{ key: null, label: "" },
+	];
+	(function buildColumnFilters() {
+		const $row = $("#asr-filter-row");
+		if (!$row.length) return;
+		$row.append(`<td style="padding:4px 6px;background:#f8fafc;"></td>`);
+		COL_SEARCH_COLS.forEach((c, i) => {
+			const first = i === 0, last = i === COL_SEARCH_COLS.length - 1;
+			const sticky = first
+				? "position:sticky;left:0;z-index:5;border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);"
+				: last
+					? "position:sticky;right:0;z-index:5;border-left:1px solid #e2e8f0;box-shadow:-2px 0 4px rgba(0,0,0,0.06);"
+					: "";
+			if (!c.key) {
+				$row.append(`<td style="padding:4px 6px;background:#f8fafc;${sticky}"></td>`);
+				return;
+			}
+			$row.append(`
+				<td style="padding:4px 6px;background:#f8fafc;${sticky}">
+					<div style="position:relative;">
+						<span style="position:absolute;left:6px;top:50%;transform:translateY(-50%);
+							color:#94a3b8;display:flex;pointer-events:none;">
+							<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+								stroke="currentColor" stroke-width="2" stroke-linecap="round">
+								<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>
+							</svg>
+						</span>
+						<input class="asr-col-search" data-col="${c.key}" placeholder="${c.label}"
+							style="width:100%;height:26px;border:1px solid #e2e8f0;border-radius:5px;
+							padding:0 6px 0 24px;font-size:11px;color:#1e293b;background:#f8fafc;outline:none;" />
+					</div>
+				</td>`);
+		});
+	})();
+	let colTimer = null;
+	$("#asr-table-wrap").on("input", ".asr-col-search", function () {
+		clearTimeout(colTimer);
+		colTimer = setTimeout(() => {
+			const q = {};
+			$(".asr-col-search").each(function () {
+				const v = ($(this).val() || "").trim();
+				if (v) q[$(this).data("col")] = v;
+			});
+			state.colSearch = q;
+			applyFilters();
+		}, 400);
+	});
+	$("#asr-table-wrap").on("focus", ".asr-col-search", function () {
+		$(this).css({ "border-color": "#417c7d", background: "#fff" });
+	});
+	$("#asr-table-wrap").on("blur", ".asr-col-search", function () {
+		$(this).css({ "border-color": "#e2e8f0", background: "#f8fafc" });
+	});
 	$("#asr-filter-rp, #asr-filter-rt, #asr-filter-sol").on("change", applyFilters);
 	$("#asr-filter-from, #asr-filter-to").on("change", applyFilters);
 
 	$("#asr-clear-btn").on("click", () => {
 		$("#asr-filter-status,#asr-filter-rp,#asr-filter-rt,#asr-filter-sol").val("");
 		$("#asr-filter-from,#asr-filter-to").val("");
+		$(".asr-col-search").val("");
+		state.colSearch = {};
 		state.mainTab = "all";
 		state.subStatus = "";
 		renderTabs();
@@ -424,8 +503,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		if ((row.dept_name || "") !== "Operations") return out;
 		const st = row.status || "";
 		const rp = row.response_pending || "";
-		const cpc = frappe.user.has_role("CPC Loan User");
-		const br = frappe.user.has_role("Branch User");
+		const cpc = frappe.user.has_role("Operations Support Executive") || frappe.user.has_role("CPC Loan User");
+		const br = frappe.user.has_role("Employee") || frappe.user.has_role("Branch User");
 		if (cpc && (st === "Open" || st === "In-Progress") && rp !== "Pending Branch") {
 			out.push({ key: "Send to Branch", rp: "Pending Branch",
 				field: "executive_remark", commentAfter: true,
@@ -580,16 +659,18 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		state.byTicket = state.byTicket || {};
 		rows.forEach(rr => { state.byTicket[rr.ticket] = rr; });
 		const $tbody  = $("#asr-tbody");
+		const baseIdx = $tbody.children().length;
 		const tdBase  = `padding:9px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`;
 		const tdGray  = `style="${tdBase}color:#475569;"`;
 		const tdPlain = `style="${tdBase}"`;
 
 		rows.forEach((r, idx) => {
-			const rowIdx = $tbody.children().length + idx;
+			const rowIdx = baseIdx + idx;
 			const bg     = rowIdx % 2 === 0 ? "#fff" : "#fafafa";
 			const mod    = formatModified(r.modified);
 
 			const $tr = $(`<tr style="cursor:pointer;border-bottom:1px solid #f1f5f9;background:${bg};transition:background 0.1s ease;">
+				<td style="${tdBase}color:#94a3b8;">${rowIdx + 1}</td>
 				<td class="asr-cmt-cell" style="${tdBase}position:sticky;left:0;z-index:2;background:${bg};border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);cursor:default;" title="${frappe.utils.escape_html((r.last_comment_by ? r.last_comment_by + ': ' : '') + (r.last_comment || ''))}">
 					${r.comments_count
 						? `<span class="asr-cmt-count" style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:4px;cursor:default;">${r.comments_count}</span><button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="View comments" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`
@@ -1413,7 +1494,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					"Ticket Cycle", "Employee ID", "Employee Name",
 					"State", "Zone", "Region", "District",
 					"Resolved By", "Resolved Date", "Resolved Time", "Remark",
-					"Last Comment By", "Last Comment",
+					"Operations Comment By", "Operations Comments",
 				];
 
 				const csvRows = [headers.join(",")];
@@ -1438,10 +1519,10 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						row.resolved_by,
 						fmtDate(row.resolved_date),
 						fmtTime(row.resolved_time),
-						row.remark,
-						row.last_comment_by,
-						row.last_comment,
-					];
+					row.remark,
+					row.ops_comments_by,
+					row.ops_comments,
+				];
 					csvRows.push(vals.map(v => `"${(v ?? "").toString().replace(/"/g, '""')}"`).join(","));
 				});
 

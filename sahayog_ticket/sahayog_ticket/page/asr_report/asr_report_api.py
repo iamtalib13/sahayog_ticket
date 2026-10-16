@@ -234,6 +234,9 @@ def get_report_data(filters=None, page_no=1, page_size=20):
     sum_conditions, sum_params = _build_conditions(filters, exclude_status=True)
     summary = _get_summary(sum_conditions, sum_params)
 
+    # Operations-side comments for the CSV export (all of them, oldest first).
+    _attach_ops_comments(data)
+
     return {
         "data":     data,
         "total":    total,
@@ -241,6 +244,53 @@ def get_report_data(filters=None, page_no=1, page_size=20):
         "page_size":page_size,
         "summary":  summary,
     }
+
+
+def _attach_ops_comments(data):
+    """All comments by Operations Support Executive holders, per ticket."""
+    for d in data:
+        d["ops_comments"] = ""
+        d["ops_comments_by"] = ""
+    if not data:
+        return
+    ops_users = [r[0] for r in frappe.db.sql(
+        """SELECT parent FROM `tabHas Role`
+           WHERE role = 'Operations Support Executive' AND parenttype = 'User'""")]
+    if not ops_users:
+        return
+    names = [d["ticket"] for d in data]
+    ph_t = ", ".join(["%s"] * len(names))
+    ph_u = ", ".join(["%s"] * len(ops_users))
+    crows = frappe.db.sql(
+        f"""SELECT reference_name, comment_by, content FROM tabComment
+            WHERE reference_doctype = 'Sahayog Ticket'
+              AND reference_name IN ({ph_t})
+              AND comment_type = 'Comment' AND comment_by IN ({ph_u})
+            ORDER BY creation ASC""",
+        tuple(names) + tuple(ops_users), as_dict=True)
+    grouped = {}
+    for c in crows:
+        grouped.setdefault(c.reference_name, []).append(c)
+    name_cache = {}
+    for d in data:
+        items = grouped.get(d["ticket"], [])
+        if not items:
+            continue
+        bys = []
+        parts = []
+        for c in items:
+            nm = _display_name(c.comment_by, name_cache)
+            if nm not in bys:
+                bys.append(nm)
+            parts.append(_strip_html(c.content or ""))
+        d["ops_comments_by"] = ", ".join(bys)
+        words = ["first", "second", "third", "fourth", "fifth", "sixth",
+                 "seventh", "eighth", "ninth", "tenth"]
+        numbered = []
+        for i, p in enumerate([x for x in parts if x]):
+            w = words[i] if i < len(words) else "%dth" % (i + 1)
+            numbered.append("%s comment : %s" % (w, p))
+        d["ops_comments"] = ", ".join(numbered)
 
 
 def _build_conditions(filters, exclude_status=False):
@@ -282,6 +332,61 @@ def _build_conditions(filters, exclude_status=False):
     if filters.get("to_date"):
         conditions.append("DATE(st.creation) <= %s")
         params.append(filters["to_date"])
+
+    # Per-column text search (keys whitelisted; values parameterized).
+    col_search = filters.get("column_search") or {}
+    if isinstance(col_search, dict):
+        simple_cols = {
+            "ticket": "st.name", "sol_id": "st.sol_id", "branch": "st.branch",
+            "status": "st.status", "response_pending": "st.response_pending",
+            "state": "st.state", "zone": "st.zone", "region": "st.region",
+            "district": "st.district",
+        }
+        for key, raw in col_search.items():
+            val = (raw or "").strip()
+            if not val:
+                continue
+            like = "%" + val + "%"
+            if key in simple_cols:
+                conditions.append(f"{simple_cols[key]} LIKE %s")
+                params.append(like)
+            elif key == "employee":
+                conditions.append("(st.employee_name LIKE %s OR st.employee_id LIKE %s)")
+                params.extend([like, like])
+            elif key == "request_type":
+                conditions.append("""EXISTS (
+                    SELECT 1 FROM `tabTicket Item` ti
+                    WHERE ti.parent = st.name AND ti.request_type LIKE %s
+                )""")
+                params.append(like)
+            elif key == "resolved_by":
+                conditions.append("st.ticket_resolved_user LIKE %s")
+                params.append(like)
+            elif key == "remark":
+                conditions.append("st.resolved_remark LIKE %s")
+                params.append(like)
+            elif key == "comments":
+                conditions.append("""EXISTS (
+                    SELECT 1 FROM tabComment c
+                    WHERE c.reference_doctype = 'Sahayog Ticket'
+                      AND c.reference_name = st.name
+                      AND c.comment_type = 'Comment' AND c.content LIKE %s
+                )""")
+                params.append(like)
+            elif key in ("creation_date", "resolved_date"):
+                col = "st.creation" if key == "creation_date" else "st.ticket_resolved_on"
+                conditions.append(
+                    f"(DATE_FORMAT({col}, '%%d-%%m-%%Y') LIKE %s OR DATE({col}) LIKE %s)")
+                params.extend([like, like])
+            elif key == "modified":
+                conditions.append("st.modified LIKE %s")
+                params.append(like)
+            elif key == "cycle":
+                conditions.append("""(
+                    SELECT COUNT(*) FROM `tabTicket Status Log` tsl
+                    WHERE tsl.parent = st.name
+                ) LIKE %s""")
+                params.append(like)
 
     return conditions, params
 
@@ -378,7 +483,7 @@ def get_ticket_detail(ticket):
         """SELECT u.name AS value,
                   CONCAT_WS(' ', NULLIF(u.first_name, ''), NULLIF(u.last_name, '')) AS label
            FROM tabUser u INNER JOIN `tabHas Role` r ON r.parent = u.name
-           WHERE r.role = 'CPC Loan User' AND u.enabled = 1 AND u.name NOT LIKE '%administrator%'
+            WHERE r.role IN ('CPC Loan User', 'Operations Support Executive') AND u.enabled = 1 AND u.name NOT LIKE '%administrator%'
            GROUP BY u.name ORDER BY label""", as_dict=True)
     return {"employee": emp, "resolver": resolver, "files": files, "assignees": assignees}
 

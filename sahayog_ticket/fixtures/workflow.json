@@ -66,7 +66,7 @@
    {
     "action": "Send to Branch",
     "allow_self_approval": 1,
-    "allowed": "CPC Loan User",
+    "allowed": "Operations Support Executive",
     "condition": "doc.dept_name==\"Operations\" and doc.ticket_type==\"Account Service Request\"",
     "next_state": "In-Progress",
     "send_email_to_creator": 0,
@@ -76,7 +76,7 @@
    {
     "action": "Send to CPC",
     "allow_self_approval": 1,
-    "allowed": "Branch User",
+    "allowed": "Employee",
     "condition": "doc.dept_name==\"Operations\" and doc.ticket_type==\"Account Service Request\"",
     "next_state": "In-Progress",
     "send_email_to_creator": 0,
@@ -86,7 +86,7 @@
    {
     "action": "Mark Resolved",
     "allow_self_approval": 1,
-    "allowed": "CPC Loan User",
+    "allowed": "Operations Support Executive",
     "condition": "doc.dept_name==\"Operations\" and doc.ticket_type==\"Account Service Request\"",
     "next_state": "Resolved",
     "send_email_to_creator": 0,
@@ -96,7 +96,7 @@
    {
     "action": "Mark Resolved",
     "allow_self_approval": 1,
-    "allowed": "Branch User",
+    "allowed": "Employee",
     "condition": "doc.dept_name==\"Operations\" and doc.ticket_type==\"Account Service Request\"",
     "next_state": "Resolved",
     "send_email_to_creator": 0,
@@ -106,7 +106,7 @@
    {
     "action": "Reopen",
     "allow_self_approval": 1,
-    "allowed": "Branch User",
+    "allowed": "Employee",
     "condition": "doc.dept_name==\"Operations\" and doc.ticket_type==\"Account Service Request\"",
     "next_state": "Open",
     "send_email_to_creator": 0,
@@ -116,7 +116,7 @@
    {
     "action": "Send to Branch",
     "allow_self_approval": 1,
-    "allowed": "CPC Loan User",
+    "allowed": "Operations Support Executive",
     "condition": "doc.dept_name==\"Operations\" and doc.ticket_type==\"Account Service Request\"",
     "next_state": "In-Progress",
     "send_email_to_creator": 0,
@@ -226,7 +226,7 @@
    {
     "action": "Mark Resolved",
     "allow_self_approval": 1,
-    "allowed": "CPC Loan User",
+    "allowed": "Operations Support Executive",
     "condition": "doc.dept_name==\"Operations\" and doc.ticket_type==\"Account Service Request\"",
     "next_state": "Resolved",
     "send_email_to_creator": 0,
