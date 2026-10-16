@@ -282,9 +282,9 @@ def _attach_ops_comments(data):
             nm = _display_name(c.comment_by, name_cache)
             if nm not in bys:
                 bys.append(nm)
-            parts.append("%s: %s" % (nm, _strip_html(c.content or "")))
+            parts.append(_strip_html(c.content or ""))
         d["ops_comments_by"] = ", ".join(bys)
-        d["ops_comments"] = " | ".join(parts)
+        d["ops_comments"] = " : ".join(p for p in parts if p)
 
 
 def _build_conditions(filters, exclude_status=False):
