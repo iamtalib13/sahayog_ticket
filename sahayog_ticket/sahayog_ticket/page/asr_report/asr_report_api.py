@@ -234,6 +234,9 @@ def get_report_data(filters=None, page_no=1, page_size=20):
     sum_conditions, sum_params = _build_conditions(filters, exclude_status=True)
     summary = _get_summary(sum_conditions, sum_params)
 
+    # Operations-side comments for the CSV export (all of them, oldest first).
+    _attach_ops_comments(data)
+
     return {
         "data":     data,
         "total":    total,
@@ -241,6 +244,47 @@ def get_report_data(filters=None, page_no=1, page_size=20):
         "page_size":page_size,
         "summary":  summary,
     }
+
+
+def _attach_ops_comments(data):
+    """All comments by Operations Support Executive holders, per ticket."""
+    for d in data:
+        d["ops_comments"] = ""
+        d["ops_comments_by"] = ""
+    if not data:
+        return
+    ops_users = [r[0] for r in frappe.db.sql(
+        """SELECT parent FROM `tabHas Role`
+           WHERE role = 'Operations Support Executive' AND parenttype = 'User'""")]
+    if not ops_users:
+        return
+    names = [d["ticket"] for d in data]
+    ph_t = ", ".join(["%s"] * len(names))
+    ph_u = ", ".join(["%s"] * len(ops_users))
+    crows = frappe.db.sql(
+        f"""SELECT reference_name, comment_by, content FROM tabComment
+            WHERE reference_doctype = 'Sahayog Ticket'
+              AND reference_name IN ({ph_t})
+              AND comment_type = 'Comment' AND comment_by IN ({ph_u})
+            ORDER BY creation ASC""",
+        tuple(names) + tuple(ops_users), as_dict=True)
+    grouped = {}
+    for c in crows:
+        grouped.setdefault(c.reference_name, []).append(c)
+    name_cache = {}
+    for d in data:
+        items = grouped.get(d["ticket"], [])
+        if not items:
+            continue
+        bys = []
+        parts = []
+        for c in items:
+            nm = _display_name(c.comment_by, name_cache)
+            if nm not in bys:
+                bys.append(nm)
+            parts.append("%s: %s" % (nm, _strip_html(c.content or "")))
+        d["ops_comments_by"] = ", ".join(bys)
+        d["ops_comments"] = " | ".join(parts)
 
 
 def _build_conditions(filters, exclude_status=False):
