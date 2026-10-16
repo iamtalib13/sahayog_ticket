@@ -16,6 +16,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		mainTab:   "all",   // all | pending | completed
 		subStatus: "",      // "" or one of Open/In-Progress/Closed/Resolved
 		summary:   {},      // global status counts (ignores status filter)
+		colSearch: {},      // per-column text search {key: text}
 	};
 
 	// Taskflow-style groups: Pending = Open+In-Progress, Completed = Closed+Resolved.
@@ -199,6 +200,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:160px;">Remark</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:130px;position:sticky;right:0;z-index:5;background:#f8fafc;border-left:1px solid #e2e8f0;box-shadow:-2px 0 4px rgba(0,0,0,0.06);">Last Modified</th>
 					</tr>
+					<tr id="asr-filter-row" style="background:#fff;border-bottom:2px solid rgba(65,124,125,0.2);"></tr>
 				</thead>
 				<tbody id="asr-tbody"></tbody>
 			</table>
@@ -333,6 +335,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			sol_id:           $("#asr-filter-sol").val(),
 			from_date:        $("#asr-filter-from").val(),
 			to_date:          $("#asr-filter-to").val(),
+			column_search:    state.colSearch || {},
 		};
 		resetAndLoad();
 	}
@@ -343,12 +346,56 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		renderTabs();
 		applyFilters();
 	});
+	// ── Per-column search (keys match thead order; server filters) ──────────
+	const COL_SEARCH_KEYS = ["comments", "ticket", "creation_date", "request_type",
+		"sol_id", "branch", "status", "response_pending", "cycle", "employee",
+		"state", "zone", "region", "district", "resolved_by", "resolved_date",
+		"remark", "modified"];
+	(function buildColumnFilters() {
+		const $row = $("#asr-filter-row");
+		if (!$row.length) return;
+		COL_SEARCH_KEYS.forEach((k, i) => {
+			const first = i === 0, last = i === COL_SEARCH_KEYS.length - 1;
+			const sticky = first
+				? "position:sticky;left:0;z-index:5;background:#fff;border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);"
+				: last
+					? "position:sticky;right:0;z-index:5;background:#fff;border-left:1px solid #e2e8f0;box-shadow:-2px 0 4px rgba(0,0,0,0.06);"
+					: "";
+			$row.append(`
+				<td style="padding:4px 6px;${sticky}">
+					<input class="asr-col-search" data-col="${k}" placeholder="Search"
+						style="width:100%;height:26px;border:1px solid #e2e8f0;border-radius:5px;
+						padding:0 6px;font-size:11px;color:#1e293b;background:#f8fafc;outline:none;" />
+				</td>`);
+		});
+	})();
+	let colTimer = null;
+	$("#asr-table-wrap").on("input", ".asr-col-search", function () {
+		clearTimeout(colTimer);
+		colTimer = setTimeout(() => {
+			const q = {};
+			$(".asr-col-search").each(function () {
+				const v = ($(this).val() || "").trim();
+				if (v) q[$(this).data("col")] = v;
+			});
+			state.colSearch = q;
+			applyFilters();
+		}, 400);
+	});
+	$("#asr-table-wrap").on("focus", ".asr-col-search", function () {
+		$(this).css({ "border-color": "#417c7d", background: "#fff" });
+	});
+	$("#asr-table-wrap").on("blur", ".asr-col-search", function () {
+		$(this).css({ "border-color": "#e2e8f0", background: "#f8fafc" });
+	});
 	$("#asr-filter-rp, #asr-filter-rt, #asr-filter-sol").on("change", applyFilters);
 	$("#asr-filter-from, #asr-filter-to").on("change", applyFilters);
 
 	$("#asr-clear-btn").on("click", () => {
 		$("#asr-filter-status,#asr-filter-rp,#asr-filter-rt,#asr-filter-sol").val("");
 		$("#asr-filter-from,#asr-filter-to").val("");
+		$(".asr-col-search").val("");
+		state.colSearch = {};
 		state.mainTab = "all";
 		state.subStatus = "";
 		renderTabs();
