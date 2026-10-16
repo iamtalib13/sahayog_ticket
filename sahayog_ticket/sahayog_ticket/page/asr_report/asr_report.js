@@ -659,12 +659,13 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		state.byTicket = state.byTicket || {};
 		rows.forEach(rr => { state.byTicket[rr.ticket] = rr; });
 		const $tbody  = $("#asr-tbody");
+		const baseIdx = $tbody.children().length;
 		const tdBase  = `padding:9px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`;
 		const tdGray  = `style="${tdBase}color:#475569;"`;
 		const tdPlain = `style="${tdBase}"`;
 
 		rows.forEach((r, idx) => {
-			const rowIdx = $tbody.children().length + idx;
+			const rowIdx = baseIdx + idx;
 			const bg     = rowIdx % 2 === 0 ? "#fff" : "#fafafa";
 			const mod    = formatModified(r.modified);
 
