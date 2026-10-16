@@ -108,7 +108,9 @@ def sahayog_ticket_permission_query(user):
 
     user = frappe.db.escape(user)
 
-    is_cpc = "cpc loan user" in [r.lower() for r in roles]
+    rl = [r.lower() for r in roles]
+    # CPC side = Operations Support Executive (earlier CPC Loan User, kept for transition).
+    is_cpc = "cpc loan user" in rl or "operations support executive" in rl
 
     # --------------------------------------------------
     # CASE 0: NORMAL EMPLOYEE
@@ -153,7 +155,7 @@ def sahayog_ticket_permission_query(user):
         """
 
     # --------------------------------------------------
-    # CASE CPC: pure CPC Loan User sees the Operations pool
+    # CASE CPC: pure operations-side user sees the Operations pool
     # (Branch creates -> CPC pool -> workflow Take & Start).
     # Manager/Executive CPC users are already covered above.
     # --------------------------------------------------
