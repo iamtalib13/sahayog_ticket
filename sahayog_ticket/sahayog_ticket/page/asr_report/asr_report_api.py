@@ -16,6 +16,31 @@ def _strip_html(html):
     return re.sub(r"\s+", " ", text).strip()
 
 
+# Password-field parity: comments mentioning secrets are visible only to
+# password viewers (assigned_to / show_password_to_employee), like the
+# password field itself. Only on CBS tickets (the password field's scope).
+SENSITIVE_KEYWORDS = ("password", "passwd", "pwd", "otp", "one-time",
+                      "one time", "credential")
+
+
+def _is_sensitive(text):
+    t = _strip_html(text or "").lower()
+    return any(k in t for k in SENSITIVE_KEYWORDS)
+
+
+def _can_view_ticket_password(ticket):
+    """Mirror SahayogTicket.can_view_password without loading the full doc."""
+    assigned = frappe.db.get_value("Sahayog Ticket", ticket, "assigned_to")
+    if assigned and frappe.session.user == assigned:
+        return True
+    emp = frappe.db.get_value("Sahayog Ticket", ticket, "show_password_to_employee")
+    if emp:
+        emp_user = frappe.db.get_value("Employee", emp, "user_id")
+        if emp_user and frappe.session.user == emp_user:
+            return True
+    return False
+
+
 def _ticket_updates(ticket):
     """Child-table mirror, grouped exactly like its sections."""
     sections = [
@@ -97,6 +122,10 @@ def get_report_data(filters=None, page_no=1, page_size=20):
             st.name                 AS ticket,
             st.status,
             st.dept_name,
+            (
+                SELECT e.user_id FROM tabEmployee e
+                WHERE e.name = st.show_password_to_employee LIMIT 1
+            ) AS spw_user,
             st.response_pending,
             st.ticket_type,
             st.employee_id,
@@ -166,6 +195,7 @@ def get_report_data(filters=None, page_no=1, page_size=20):
             "modified":         str(t.modified) if t.modified else "",
             "status":           t.status or "",
             "dept_name":        t.dept_name or "",
+            "spw_user":         t.spw_user or "",
             "response_pending": t.response_pending or "",
             "ticket_type":      t.ticket_type or "",
             "request_type":     t.request_type or "",
@@ -189,8 +219,14 @@ def get_report_data(filters=None, page_no=1, page_size=20):
             "comments_count":   t.comments_count or 0,
             "last_comment":     _strip_html(t.last_comment or ""),
             "last_comment_by":  t.last_comment_by or "",
-            "updates":          _ticket_updates(t.ticket),
         })
+        # Password parity on CBS tickets: mask secret-mentioning preview.
+        if (d.get("dept_name") or "") == "CBS":
+            viewers = {x for x in (t.assigned_to, t.spw_user) if x}
+            if _is_sensitive(d["last_comment"]) and frappe.session.user not in viewers:
+                d["last_comment"] = ""
+                d["last_comment_by"] = ""
+        data.append(d)
 
     # Summary counts by status (ignores the status filter so the
     # All/Pending/Completed tab counts stay global).
@@ -278,13 +314,20 @@ def get_ticket_comments(ticket):
            ORDER BY creation ASC""",
         (ticket,), as_dict=True,
     )
+    out = []
     name_cache = {}
-    return [{
-        "by":   r.comment_by or "",
-        "name": _display_name(r.comment_by, name_cache),
-        "text": _strip_html(r.content or ""),
-        "on":   str(r.creation) if r.creation else "",
-    } for r in rows]
+    for r in rows:
+        out.append({
+            "by":   r.comment_by or "",
+            "name": _display_name(r.comment_by, name_cache),
+            "text": _strip_html(r.content or ""),
+            "on":   str(r.creation) if r.creation else "",
+        })
+    # Password parity: hide secret-mentioning comments from non-viewers.
+    dept = frappe.db.get_value("Sahayog Ticket", ticket, "dept_name")
+    if dept == "CBS" and not _can_view_ticket_password(ticket):
+        out = [c for c in out if not _is_sensitive(c["text"])]
+    return out
 
 
 def _display_name(by, cache):
