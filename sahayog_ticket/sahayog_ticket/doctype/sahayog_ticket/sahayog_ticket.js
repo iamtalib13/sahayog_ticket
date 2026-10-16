@@ -165,7 +165,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     // Core form.js har refresh ke END me "This form is not editable due to a
     // Workflow." headline same box me likhta hai (hamara banner mit jata tha).
     // Sirf is form ke liye us function ko no-op karte hain. Form read-only hi
-    // rehta hai (allow_edit sirf Branch User), sirf message nahi aayega.
+    // rehta hai (allow_edit All now; Operations edit rule lives in workflow roles), sirf message nahi aayega.
     frm.show_workflow_read_only_banner = function () {};
   },
 
