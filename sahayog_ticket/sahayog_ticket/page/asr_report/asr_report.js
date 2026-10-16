@@ -374,9 +374,9 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		COL_SEARCH_COLS.forEach((c, i) => {
 			const first = i === 0, last = i === COL_SEARCH_COLS.length - 1;
 			const sticky = first
-				? "position:sticky;left:0;z-index:5;background:#fff;border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);"
+				? "position:sticky;left:0;z-index:5;border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);"
 				: last
-					? "position:sticky;right:0;z-index:5;background:#fff;border-left:1px solid #e2e8f0;box-shadow:-2px 0 4px rgba(0,0,0,0.06);"
+					? "position:sticky;right:0;z-index:5;border-left:1px solid #e2e8f0;box-shadow:-2px 0 4px rgba(0,0,0,0.06);"
 					: "";
 			if (!c.key) {
 				$row.append(`<td style="padding:4px 6px;background:#f8fafc;${sticky}"></td>`);
