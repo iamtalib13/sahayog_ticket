@@ -365,7 +365,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		{ key: "district", label: "District" },
 		{ key: "resolved_by", label: "Resolved By" },
 		{ key: "resolved_date", label: "Resolved Date" },
-		{ key: "remark", label: "Remark" },
+		{ key: null, label: "" },
 		{ key: null, label: "" },
 	];
 	(function buildColumnFilters() {
