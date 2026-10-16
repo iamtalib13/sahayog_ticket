@@ -283,6 +283,61 @@ def _build_conditions(filters, exclude_status=False):
         conditions.append("DATE(st.creation) <= %s")
         params.append(filters["to_date"])
 
+    # Per-column text search (keys whitelisted; values parameterized).
+    col_search = filters.get("column_search") or {}
+    if isinstance(col_search, dict):
+        simple_cols = {
+            "ticket": "st.name", "sol_id": "st.sol_id", "branch": "st.branch",
+            "status": "st.status", "response_pending": "st.response_pending",
+            "state": "st.state", "zone": "st.zone", "region": "st.region",
+            "district": "st.district",
+        }
+        for key, raw in col_search.items():
+            val = (raw or "").strip()
+            if not val:
+                continue
+            like = "%" + val + "%"
+            if key in simple_cols:
+                conditions.append(f"{simple_cols[key]} LIKE %s")
+                params.append(like)
+            elif key == "employee":
+                conditions.append("(st.employee_name LIKE %s OR st.employee_id LIKE %s)")
+                params.extend([like, like])
+            elif key == "request_type":
+                conditions.append("""EXISTS (
+                    SELECT 1 FROM `tabTicket Item` ti
+                    WHERE ti.parent = st.name AND ti.request_type LIKE %s
+                )""")
+                params.append(like)
+            elif key == "resolved_by":
+                conditions.append("st.ticket_resolved_user LIKE %s")
+                params.append(like)
+            elif key == "remark":
+                conditions.append("st.resolved_remark LIKE %s")
+                params.append(like)
+            elif key == "comments":
+                conditions.append("""EXISTS (
+                    SELECT 1 FROM tabComment c
+                    WHERE c.reference_doctype = 'Sahayog Ticket'
+                      AND c.reference_name = st.name
+                      AND c.comment_type = 'Comment' AND c.content LIKE %s
+                )""")
+                params.append(like)
+            elif key in ("creation_date", "resolved_date"):
+                col = "st.creation" if key == "creation_date" else "st.ticket_resolved_on"
+                conditions.append(
+                    f"(DATE_FORMAT({col}, '%%d-%%m-%%Y') LIKE %s OR DATE({col}) LIKE %s)")
+                params.extend([like, like])
+            elif key == "modified":
+                conditions.append("st.modified LIKE %s")
+                params.append(like)
+            elif key == "cycle":
+                conditions.append("""(
+                    SELECT COUNT(*) FROM `tabTicket Status Log` tsl
+                    WHERE tsl.parent = st.name
+                ) LIKE %s""")
+                params.append(like)
+
     return conditions, params
 
 
