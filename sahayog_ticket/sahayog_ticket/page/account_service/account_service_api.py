@@ -2,7 +2,7 @@
 
 Only Account Service Request tickets. Reuses Sahayog Ticket controller
 (validations, status log, mails) by saving via Document API — no bypass.
-Roles reused from system: Branch User, CPC Loan User, Helpdesk Contact.
+Roles reused from system: Branch User / Employee, Operations Support Executive (earlier CPC Loan User), Helpdesk Contact.
 """
 
 import frappe
@@ -30,9 +30,9 @@ def _my_role():
     roles = set(frappe.get_roles(frappe.session.user))
     if "Contact Service" in roles or "Helpdesk Contact" in roles or frappe.session.user == "Administrator":
         return "helpdesk"
-    if "CPC Loan User" in roles:
+    if "CPC Loan User" in roles or "Operations Support Executive" in roles:
         return "cpc"
-    return "branch"  # default: Branch User / normal employee
+    return "branch"  # default: Branch User / Employee / normal employee
 
 
 def _tat_breached(total_days, tat):
@@ -404,13 +404,13 @@ def mark_resolved(ticket, remark):
 
 @frappe.whitelist()
 def list_cpc_users():
-    """Enabled users holding the CPC Loan User role (assign dropdown)."""
+    """Enabled users holding the operations-side role (assign dropdown)."""
     rows = frappe.db.sql(
         """
         SELECT DISTINCT u.name, u.full_name
         FROM tabUser u
         INNER JOIN `tabHas Role` hr ON hr.parent = u.name AND hr.parenttype = 'User'
-        WHERE hr.role = 'CPC Loan User' AND u.enabled = 1 AND u.name NOT IN ('Guest', 'Administrator')
+        WHERE hr.role IN ('CPC Loan User', 'Operations Support Executive') AND u.enabled = 1 AND u.name NOT IN ('Guest', 'Administrator')
         ORDER BY u.full_name
         """
     )
