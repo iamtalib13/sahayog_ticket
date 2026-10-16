@@ -284,7 +284,13 @@ def _attach_ops_comments(data):
                 bys.append(nm)
             parts.append(_strip_html(c.content or ""))
         d["ops_comments_by"] = ", ".join(bys)
-        d["ops_comments"] = " : ".join(p for p in parts if p)
+        words = ["first", "second", "third", "fourth", "fifth", "sixth",
+                 "seventh", "eighth", "ninth", "tenth"]
+        numbered = []
+        for i, p in enumerate([x for x in parts if x]):
+            w = words[i] if i < len(words) else "%dth" % (i + 1)
+            numbered.append("%s comment : %s" % (w, p))
+        d["ops_comments"] = ", ".join(numbered)
 
 
 def _build_conditions(filters, exclude_status=False):
