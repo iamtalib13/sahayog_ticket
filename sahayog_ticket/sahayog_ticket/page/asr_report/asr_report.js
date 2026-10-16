@@ -383,7 +383,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				return;
 			}
 			$row.append(`
-				<td style="padding:4px 6px;${sticky}">
+				<td style="padding:4px 6px;background:#f8fafc;${sticky}">
 					<div style="position:relative;">
 						<span style="position:absolute;left:6px;top:50%;transform:translateY(-50%);
 							color:#94a3b8;display:flex;pointer-events:none;">
