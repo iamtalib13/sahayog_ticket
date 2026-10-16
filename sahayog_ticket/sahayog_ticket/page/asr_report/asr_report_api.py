@@ -219,6 +219,7 @@ def get_report_data(filters=None, page_no=1, page_size=20):
             "comments_count":   t.comments_count or 0,
             "last_comment":     _strip_html(t.last_comment or ""),
             "last_comment_by":  t.last_comment_by or "",
+            "updates":          _ticket_updates(t.ticket),
         }
         # Password parity on CBS tickets: mask secret-mentioning preview.
         if (d.get("dept_name") or "") == "CBS":
