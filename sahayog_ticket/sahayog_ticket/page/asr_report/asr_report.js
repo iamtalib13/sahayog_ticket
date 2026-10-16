@@ -178,9 +178,10 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	// ── Table wrapper ────────────────────────────────────────────────────────
 	const $tableWrap = $(`
 		<div id="asr-table-wrap" style="flex:1 1 auto;min-height:0;min-width:0;width:100%;overflow:auto;border:1px solid #e2e8f0;border-radius:0 0 8px 8px;background:#fff;">
-			<table id="asr-table" style="border-collapse:collapse;font-size:12.5px;width:1960px;min-width:1960px;table-layout:fixed;">
+			<table id="asr-table" style="border-collapse:collapse;font-size:12.5px;width:2010px;min-width:2010px;table-layout:fixed;">
 				<thead style="position:sticky;top:0;z-index:3;">
 					<tr style="background:#f8fafc;border-bottom:2px solid rgba(65,124,125,0.2);">
+						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:50px;">S.No</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:100px;position:sticky;left:0;z-index:5;background:#f8fafc;border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);">Comments</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:110px;">Ticket</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:100px;">Creation Date</th>
@@ -371,6 +372,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	(function buildColumnFilters() {
 		const $row = $("#asr-filter-row");
 		if (!$row.length) return;
+		$row.append(`<td style="padding:4px 6px;background:#f8fafc;"></td>`);
 		COL_SEARCH_COLS.forEach((c, i) => {
 			const first = i === 0, last = i === COL_SEARCH_COLS.length - 1;
 			const sticky = first
@@ -667,6 +669,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			const mod    = formatModified(r.modified);
 
 			const $tr = $(`<tr style="cursor:pointer;border-bottom:1px solid #f1f5f9;background:${bg};transition:background 0.1s ease;">
+				<td style="${tdBase}color:#94a3b8;">${rowIdx + 1}</td>
 				<td class="asr-cmt-cell" style="${tdBase}position:sticky;left:0;z-index:2;background:${bg};border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);cursor:default;" title="${frappe.utils.escape_html((r.last_comment_by ? r.last_comment_by + ': ' : '') + (r.last_comment || ''))}">
 					${r.comments_count
 						? `<span class="asr-cmt-count" style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:4px;cursor:default;">${r.comments_count}</span><button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="View comments" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`
