@@ -346,26 +346,56 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		renderTabs();
 		applyFilters();
 	});
-	// ── Per-column search (keys match thead order; server filters) ──────────
-	const COL_SEARCH_KEYS = ["comments", "ticket", "creation_date", "request_type",
-		"sol_id", "branch", "status", "response_pending", "cycle", "employee",
-		"state", "zone", "region", "district", "resolved_by", "resolved_date",
-		"remark", "modified"];
+	// ── Per-column search (only where needed; server filters) ──────────────
+	// Order = thead order (empty cell keeps alignment).
+	const COL_SEARCH_COLS = [
+		{ key: null, label: "" },
+		{ key: "ticket", label: "Ticket" },
+		{ key: null, label: "" },
+		{ key: "request_type", label: "Request Type" },
+		{ key: "sol_id", label: "SOL ID" },
+		{ key: "branch", label: "Branch" },
+		{ key: null, label: "" },
+		{ key: null, label: "" },
+		{ key: null, label: "" },
+		{ key: "employee", label: "Employee" },
+		{ key: "state", label: "State" },
+		{ key: "zone", label: "Zone" },
+		{ key: "region", label: "Region" },
+		{ key: "district", label: "District" },
+		{ key: "resolved_by", label: "Resolved By" },
+		{ key: "resolved_date", label: "Resolved Date" },
+		{ key: "remark", label: "Remark" },
+		{ key: null, label: "" },
+	];
 	(function buildColumnFilters() {
 		const $row = $("#asr-filter-row");
 		if (!$row.length) return;
-		COL_SEARCH_KEYS.forEach((k, i) => {
-			const first = i === 0, last = i === COL_SEARCH_KEYS.length - 1;
+		COL_SEARCH_COLS.forEach((c, i) => {
+			const first = i === 0, last = i === COL_SEARCH_COLS.length - 1;
 			const sticky = first
 				? "position:sticky;left:0;z-index:5;background:#fff;border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);"
 				: last
 					? "position:sticky;right:0;z-index:5;background:#fff;border-left:1px solid #e2e8f0;box-shadow:-2px 0 4px rgba(0,0,0,0.06);"
 					: "";
+			if (!c.key) {
+				$row.append(`<td style="padding:4px 6px;${sticky}"></td>`);
+				return;
+			}
 			$row.append(`
 				<td style="padding:4px 6px;${sticky}">
-					<input class="asr-col-search" data-col="${k}" placeholder="Search"
-						style="width:100%;height:26px;border:1px solid #e2e8f0;border-radius:5px;
-						padding:0 6px;font-size:11px;color:#1e293b;background:#f8fafc;outline:none;" />
+					<div style="position:relative;">
+						<span style="position:absolute;left:6px;top:50%;transform:translateY(-50%);
+							color:#94a3b8;display:flex;pointer-events:none;">
+							<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+								stroke="currentColor" stroke-width="2" stroke-linecap="round">
+								<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>
+							</svg>
+						</span>
+						<input class="asr-col-search" data-col="${c.key}" placeholder="${c.label}"
+							style="width:100%;height:26px;border:1px solid #e2e8f0;border-radius:5px;
+							padding:0 6px 0 24px;font-size:11px;color:#1e293b;background:#f8fafc;outline:none;" />
+					</div>
 				</td>`);
 		});
 	})();
