@@ -378,7 +378,7 @@ def get_ticket_detail(ticket):
         """SELECT u.name AS value,
                   CONCAT_WS(' ', NULLIF(u.first_name, ''), NULLIF(u.last_name, '')) AS label
            FROM tabUser u INNER JOIN `tabHas Role` r ON r.parent = u.name
-           WHERE r.role = 'CPC Loan User' AND u.enabled = 1 AND u.name NOT LIKE '%administrator%'
+            WHERE r.role IN ('CPC Loan User', 'Operations Support Executive') AND u.enabled = 1 AND u.name NOT LIKE '%administrator%'
            GROUP BY u.name ORDER BY label""", as_dict=True)
     return {"employee": emp, "resolver": resolver, "files": files, "assignees": assignees}
 
