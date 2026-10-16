@@ -10,16 +10,6 @@ def send_chat_notification(doc, method=None):
     if doc.reference_doctype != "Sahayog Ticket":
         return
 
-    frappe.db.set_value(
-        "Sahayog Ticket",
-        doc.reference_name,
-        {
-            "modified": frappe.utils.now_datetime(),
-            "modified_by": doc.owner,
-        },
-        update_modified=False,
-    )
-    
     # Only for Comment and Attachment types
     if doc.comment_type not in ["Comment", "Attachment"]:
         return

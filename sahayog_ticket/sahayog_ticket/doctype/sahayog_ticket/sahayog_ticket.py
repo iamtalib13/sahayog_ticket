@@ -229,10 +229,46 @@ class SahayogTicket(Document):
                 self.state = state
 
     def validate(self):
+        self.validate_workflow_requirements()
         self.fill_missing_fields()
         self.validate_request_detail()
         self.check_account_validation()
         self.validate_contact_number_update()
+
+    def validate_workflow_requirements(self):
+        # Operations workflow guards (mirrors Loan Application pattern).
+        # Status path: Open -> In-Progress -> Resolved -> Closed -> Open.
+        # The CPC<->Branch ping-pong keeps status In-Progress; only
+        # response_pending flips (holder), set by the UI/API before save.
+        # Fresh ticket: Operations starts life pending with CPC.
+        if self.is_new() and self.dept_name == "Operations" and not self.response_pending:
+            self.response_pending = "Pending Operations"
+        if self.is_new() or self.dept_name != "Operations":
+            return
+        old = self._doc_before_save
+        if not old:
+            return
+        # First push: Branch sends fresh ticket to CPC. Only default when
+        # holder is empty (CPC may act directly on Open with its own holder).
+        if old.status == "Open" and self.status == "In-Progress" and not self.response_pending:
+            self.response_pending = "Pending Operations"
+        # Fresh cycle after reopen.
+        if old.status == "Closed" and self.status == "Open":
+            self.response_pending = ""
+            self.ticket_resolved_by = None
+            self.ticket_resolved_user = None
+            self.ticket_resolved_on = None
+            if not (self.reopen_remark or "").strip():
+                frappe.throw(_("Re-open remark is mandatory when reopening."))
+        # Stamp resolved fields server-side: apply_workflow reloads
+        # from DB, so client-set values may not survive.
+        if self.status == "Resolved" and old.status != "Resolved":
+            if not self.ticket_resolved_by:
+                self.ticket_resolved_by = frappe.session.user
+            if not self.ticket_resolved_on:
+                self.ticket_resolved_on = now_datetime()
+        if self.status == "Resolved" and not (self.resolved_remark or "").strip():
+            frappe.throw(_("Resolution remark is mandatory before resolving."))
 
     def fill_missing_fields(self):
         # Set employee_id first if not already set (runs before before_save)

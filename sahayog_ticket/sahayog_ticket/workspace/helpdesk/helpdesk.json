@@ -15,12 +15,12 @@
  "icon": "share-people",
  "idx": 0,
  "is_hidden": 0,
- "label": "HR Tickets",
+ "label": "Helpdesk",
  "links": [],
- "modified": "2025-11-18 00:20:26.189415",
+ "modified": "2026-10-12 13:34:02.808709",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
- "name": "HR Tickets",
+ "name": "Helpdesk",
  "number_cards": [],
  "owner": "Administrator",
  "parent_page": "My Tickets",
@@ -70,5 +70,5 @@
    "type": "DocType"
   }
  ],
- "title": "HR Tickets"
+ "title": "Helpdesk"
 }

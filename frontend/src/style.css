@@ -1,0 +1,10 @@
+@import 'frappe-ui/style.css';
+
+/* Modal & Dialog Backdrop Blur */
+.dialog-overlay,
+[data-slot="overlay"],
+[data-radix-dialog-overlay] {
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  background-color: rgba(0, 0, 0, 0.45) !important;
+}

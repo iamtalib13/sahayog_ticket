@@ -186,8 +186,14 @@ scheduler_events = {
 # # auth_hooks = [
 # # 	"sahayog_ticket.auth.validate"
 # # ]
-fixtures = [
-    {"dt": "Custom HTML Block", "filters": [
+# # Website
+# # --------
+
+website_route_rules = [
+    {"from_route": "/account_service/<path:app_path>", "to_route": "account_service"},
+]
+
+fixtures = [    {"dt": "Custom HTML Block", "filters": [
         [
             "name",
             "in",
@@ -198,5 +204,17 @@ fixtures = [
 			}
         ]
     ]},
-
+    {"dt": "Workflow State", "filters": [
+        ["name", "in", ["Open", "In-Progress", "Resolved"]]
+    ]},
+    {"dt": "Workflow Action Master", "filters": [
+        ["name", "in", ["Send to CPC", "Send to Branch",
+                        "Mark Resolved", "Verify & Close", "Reopen"]]
+    ]},
+    {"dt": "Workflow", "filters": [
+        ["name", "in", ["Sahayog Ticket Operations Workflow"]]
+    ]},
+    {"dt": "Workspace", "filters": [
+        ["name", "in", ["Account Service Requests"]]
+    ]},
 ]

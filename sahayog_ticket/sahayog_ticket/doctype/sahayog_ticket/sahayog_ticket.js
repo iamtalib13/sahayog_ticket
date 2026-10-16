@@ -160,8 +160,254 @@ frappe.ui.form.on("Sahayog Ticket", {
         query: "sahayog_ticket.sahayog_ticket.doctype.sahayog_ticket.sahayog_ticket.get_filtered_departments"
       };
     });
+
+    // --- NEUTER CORE WORKFLOW READ-ONLY HEADLINE ---
+    // Core form.js har refresh ke END me "This form is not editable due to a
+    // Workflow." headline same box me likhta hai (hamara banner mit jata tha).
+    // Sirf is form ke liye us function ko no-op karte hain. Form read-only hi
+    // rehta hai (allow_edit sirf Branch User), sirf message nahi aayega.
+    frm.show_workflow_read_only_banner = function () {};
   },
 
+
+  // Operations workflow: sirf status dot me holder dikhao
+  // (Pending Operations / Pending Branch / Resolved / Closed).
+  // Message line user ke kahe pe hatayi — intro box untouched.
+  // Only Operations + Account Service.
+  ops_holder_banner: function (frm) {
+    if (frm.is_new()) {
+      return;
+    }
+    const in_scope =
+      frm.doc.dept_name === "Operations" &&
+      frm.doc.ticket_type === "Account Service Request";
+    if (!in_scope) {
+      return;
+    }
+    // Pehle ki lagayi line bachi ho to hata do.
+    if (frm.layout && frm.layout.message) {
+      frm.layout.message.find(".ops-holder-intro").remove();
+    }
+    const rp = frm.doc.response_pending || "";
+    const st = frm.doc.status || "";
+
+    // Remove any previously injected dual capsules
+    frm.page.wrapper.find(".ops-dual-indicator").remove();
+
+    if (st === "Open") {
+      frm.page.set_indicator(__("Open"), "red");
+    } else if (st === "In-Progress" && (rp === "Pending Operations" || rp === "Pending Branch")) {
+      // Dual capsules: rp pill + In-Progress pill with distinct colors
+      frm.page.set_indicator(__("In-Progress"), "blue");
+
+      // Pending Operations → Purple | Pending Branch → Blue
+      const rpStyle = rp === "Pending Operations"
+        ? "background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;"   // purple
+        : "background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;";  // blue
+
+      // In-Progress → Amber
+      const ipStyle = "background:#fef3c7;color:#b45309;border:1px solid #fcd34d;";
+
+      const capsule = (text, style) =>
+        `<span style="display:inline-flex;align-items:center;padding:2px 10px;
+          border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;${style}"
+        >${__(text)}</span>`;
+
+      const dualHtml = `
+        <span class="ops-dual-indicator" style="display:inline-flex;align-items:center;gap:5px;margin-left:6px;vertical-align:middle;">
+          ${capsule(rp, rpStyle)}
+          ${capsule("In-Progress", ipStyle)}
+        </span>`;
+
+      frm.page.wrapper.find(".title-area .indicator-pill, .page-head .indicator-pill").last().after(dualHtml);
+      frm.page.wrapper.find(".indicator-pill").filter(function() {
+        return $(this).text().trim() === __("In-Progress");
+      }).hide();
+    } else if (st === "Resolved") {
+      frm.page.set_indicator(__("Resolved"), "green");
+    } else if (st === "Closed") {
+      frm.page.set_indicator(__("Closed"), "green");
+    }
+  },
+
+  // Frappe core har workflow ke Actions menu me "Help" item lagata hai
+  // (workflow.js setup_help). Core file chhede bina sirf is form se hatate hain.
+  // Core Help ko refresh ke baad banata hai, isliye chhota timeout rakha hai.
+  remove_workflow_help: function (frm) {
+    if (frm.is_new()) {
+      return;
+    }
+    setTimeout(() => {
+      if (!frm.page || !frm.page.actions) {
+        return;
+      }
+      frm.page.actions
+        .find(".menu-item-label")
+        .filter((i, el) => $(el).text().trim() === __("Help"))
+        .closest("li")
+        .remove();
+    }, 100);
+  },
+
+  // Hamara holder banner (set_intro) same box me likha jata hai; refresh ke
+  // baad koi aur cheez box overwrite kar jaye to banner dobara laga do.
+  // (clear_headline() use NAHI karna — wo shared box khaali karke hamara
+  // banner bhi mita deta hai.)
+  hide_workflow_readonly_banner: function (frm) {
+    if (frm.is_new()) {
+      return;
+    }
+    setTimeout(() => {
+      if (!frm.doc || frm.doc.dept_name !== "Operations") {
+        return;
+      }
+      frm.trigger("ops_holder_banner");
+    }, 500);
+  },
+
+  // Workflow action remarks (mirrors Loan Application before_workflow_action):
+  // Frappe Workflow drives status via actions; capture mandatory remarks
+  // with the same prompt UX as the old Status buttons.
+  before_workflow_action: function (frm) {
+    frappe.dom.unfreeze();
+    const action = frm.selected_workflow_action;
+    const isOps = frm.doc.dept_name === "Operations";
+    // Free lane (non Operations+ASR): same moves + remarks as the old
+    // Status buttons (In-Progress/Resolve/Re-Open/Close).
+    const need = isOps ? {
+      "Mark Resolved": { field: "resolved_remark", title: __("Enter Resolve Remark"), label: __("Resolve Remark"), stampResolve: true, forceField: true },
+      "Send to Branch": { field: "executive_remark", title: __("Enter Remark for Branch"), label: __("Branch Remark"), setRP: "Pending Branch", commentAfter: true },
+      "Send to CPC": { field: "executive_remark", title: __("Enter Info Provided"), label: __("Info for CPC"), setRP: "Pending Operations", noPromptOn: ["Open"], commentAfter: true },
+      "Reopen": { field: "reopen_remark", title: __("Enter Re-Open Remark"), label: __("Re-Open Remark"), forceField: true },
+    }[action] : {
+      "In-Progress": { field: "executive_remark", title: __("Enter In-Progress Remark"), label: __("In-Progress Remark"), assignSelf: true, forceField: true },
+      "Resolve": { field: "resolved_remark", title: __("Enter Resolve Remark"), label: __("Resolve Remark"), stampResolve: true, assignSelf: true, forceField: true },
+      "Re-Open": { field: "reopen_remark", title: __("Enter Re-Open Remark"), label: __("Re-Open Remark"), clearResolve: true, forceField: true },
+      "Close": { field: "close_remark", title: __("Enter Close Remark"), label: __("Close Remark"), forceField: true },
+    }[action];
+
+    const confirmOnly = () => {
+      // No other workflow actions exist; safety net with confirm.
+      return new Promise((resolve, reject) => {
+        frappe.confirm(__("Are you sure you want to proceed with {0}?", [action]),
+          () => resolve(),
+          () => { frappe.validated = false; reject(); });
+      });
+    };
+
+    if (!need) {
+      return confirmOnly();
+    }
+
+    const rpDone = !need.setRP || frm.doc.response_pending === need.setRP;
+    // Holder guard: ticket already with the target side, nothing to send.
+    if (action === "Send to Branch" && frm.doc.response_pending === "Pending Branch") {
+      frappe.msgprint(__("Ticket is already with Branch."));
+      frappe.validated = false;
+      return Promise.reject();
+    }
+    if (action === "Send to CPC" && frm.doc.status === "In-Progress" && frm.doc.response_pending === "Pending Operations") {
+      frappe.msgprint(__("Ticket is already with CPC."));
+      frappe.validated = false;
+      return Promise.reject();
+    }
+    if (frm.doc[need.field] && rpDone) {
+      return Promise.resolve();
+    }
+    // First push (Open -> In-Progress) needs no remark; server sets holder.
+    if (need.noPromptOn && need.noPromptOn.includes(frm.doc.status)) {
+      return confirmOnly();
+    }
+    return new Promise((resolve, reject) => {
+      let done = false;
+      // First remark goes to the field; later ones go to timeline Comments
+      // so chat history is never overwritten.
+      const toComment = need.commentAfter && frm.doc[need.field];
+      const d = new frappe.ui.Dialog({
+        title: need.title + (toComment ? __(" (Comment)") : ""),
+        fields: [
+          {
+            label: need.label,
+            fieldname: "remark",
+            fieldtype: "Small Text",
+            reqd: 1,
+          },
+        ],
+        size: "small",
+        primary_action_label: __("Submit"),
+        primary_action: function () {
+          const val = d.fields_dict.remark.get_value();
+          if (!val) {
+            frappe.msgprint(__("Please provide remark."));
+            return;
+          }
+          if (toComment) {
+            // Thread continues in Comments (history preserved).
+            // Order: save FIRST (holder flip), then comment. Comment insert
+            // bumps the ticket timestamp, so saving after it would throw
+            // "Document has been modified".
+            if (need.setRP) {
+              frm.set_value("response_pending", need.setRP);
+            }
+            done = true;
+            d.hide();
+            frm.save().then(
+              () => {
+                frappe.call({
+                  method: "frappe.client.insert",
+                  args: {
+                doc: {
+                  doctype: "Comment",
+                  comment_type: "Comment",
+                  comment_by: frappe.session.user,
+                  reference_doctype: frm.doctype,
+                  reference_name: frm.docname,
+                  content: val,
+                },
+                  },
+                  callback: () => resolve(),
+                  error: () => { frappe.validated = false; reject(); },
+                });
+              },
+              () => { frappe.validated = false; reject(); }
+            );
+            return;
+          }
+          frm.set_value(need.field, val);
+          if (need.setRP) {
+            frm.set_value("response_pending", need.setRP);
+          }
+          if (need.stampResolve) {
+            frm.set_value("ticket_resolved_by", frappe.session.user);
+            frm.set_value("ticket_resolved_on", frappe.datetime.now_datetime());
+          }
+          if (need.assignSelf) {
+            frm.set_value("assigned_to", frappe.session.user);
+          }
+          if (need.clearResolve) {
+            frm.set_value("ticket_resolved_by", "");
+            frm.set_value("ticket_resolved_user", "");
+            frm.set_value("ticket_resolved_on", "");
+          }
+          done = true;
+          d.hide();
+          // apply_workflow discards unsaved values (load_from_db), so the
+          // remark must be saved BEFORE the workflow action runs.
+          frm.save().then(
+            () => resolve(),
+            () => { frappe.validated = false; reject(); }
+          );
+        },
+      });
+      d.$wrapper.on("hide.bs.modal", () => {
+        if (!done) {
+          frappe.validated = false;
+          reject();
+        }
+      });
+      d.show();
+    });
+  },
 
   refresh: function (frm) {
     // Ensure CSS class is applied on reload
@@ -175,6 +421,9 @@ frappe.ui.form.on("Sahayog Ticket", {
     frm.trigger("reset_user_password");
     frm.trigger("status");
     frm.trigger("toggle_password_field");
+    frm.trigger("ops_holder_banner");
+    frm.trigger("remove_workflow_help");
+    frm.trigger("hide_workflow_readonly_banner");
 
     // Check if the user is an employee and has a specific role
     if (frm.doc.status === "Closed") {
@@ -203,6 +452,10 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
 
     if (!frm.is_new()) {
+      // Status moves (In-Progress/Resolve/Re-Open/Close) are driven by Frappe
+      // Workflow actions for ALL tickets now (free lane covers non-Operations),
+      // so the old direct Status buttons stay hidden to avoid dual UI.
+      // assign_to + Set Executive Remark buttons remain (no status change).
       if (
         frappe.user.has_role("IT Support Executive") ||
         frappe.user.has_role("Admin Support Executive") ||
@@ -215,25 +468,14 @@ frappe.ui.form.on("Sahayog Ticket", {
         frappe.user.has_role("CBS Support Executive")
       ) {
 
-        if (frm.doc.status === "Open") {
-          frm.trigger("In_Progress_button");
-          frm.trigger("resolve_button");
-        } else if (frm.doc.status === "In-Progress") {
+        if (frm.doc.status === "In-Progress") {
           frm.trigger("assign_to_button");
-          frm.trigger("resolve_button");
           frm.trigger("executive_remark");
         }
       }
 
       if (frappe.user.has_role("System Manager")) {
       } else if (frappe.user.has_role("Employee")) {
-        if (
-          frm.doc.status === "Resolved" &&
-          frm.doc.owner === frappe.session.user
-        ) {
-          frm.trigger("reopen_button");
-          frm.trigger("close_button");
-        }
       } else {
         if (frappe.user.has_role("CTO")) {
           frm.disable_save();
@@ -2279,6 +2521,18 @@ frappe.ui.form.on("Ticket Item", {
           });
         }
       },
+    });
+  },
+
+  // File attach auto-posts a timeline comment which bumps the ticket's
+  // modified timestamp; a later Save would throw "Document has been
+  // modified". Sync only the timestamp (all unsaved edits preserved).
+  attatchment: function (frm) {
+    if (frm.is_new() || !frm.docname) return;
+    frappe.db.get_value("Sahayog Ticket", frm.docname, "modified", (r) => {
+      const m = r && r.message;
+      const fresh = m && typeof m === "object" ? m.modified : m;
+      if (fresh) frm.doc.modified = fresh;
     });
   },
 });
