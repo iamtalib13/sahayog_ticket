@@ -293,6 +293,149 @@ def _attach_ops_comments(data):
         d["ops_comments"] = ", ".join(numbered)
 
 
+# ── CSV export (sync for small data, background job for large data) ──
+SYNC_EXPORT_LIMIT = 2000  # rows handled synchronously; more → frappe.enqueue
+
+CSV_HEADERS = [
+    "Last Modified", "Ticket", "Creation Date", "Creation Time",
+    "Request Type", "SOL ID", "Branch", "Status", "Response Pending",
+    "Ticket Cycle", "Employee ID", "Employee Name",
+    "State", "Zone", "Region", "District",
+    "Resolved By", "Resolved Date", "Resolved Time", "Remark",
+    "Operations Comment By", "Operations Comments",
+]
+
+
+def _fmt_date(d):
+    d = str(d or "")
+    if not d:
+        return ""
+    return "-".join(d.split("-")[::-1])
+
+
+def _fmt_time(t):
+    t = str(t or "")
+    if not t:
+        return ""
+    parts = t[:5].split(":")
+    h = int(parts[0])
+    mi = parts[1]
+    ampm = "PM" if h >= 12 else "AM"
+    h = h % 12 or 12
+    return "%02d:%s %s" % (h, mi, ampm)
+
+
+def _fmt_modified(m):
+    m = str(m or "")
+    if not m:
+        return ""
+    date_part, _, time_part = m.partition(" ")
+    return (_fmt_date(date_part) + " " + _fmt_time(time_part)).strip()
+
+
+def _build_export_csv(data):
+    import io
+
+    buf = io.StringIO()
+    buf.write(",".join(CSV_HEADERS) + "\n")
+    for row in data:
+        vals = [
+            _fmt_modified(row.get("modified")),
+            row.get("ticket"),
+            _fmt_date(row.get("creation_date")),
+            _fmt_time(row.get("creation_time")),
+            row.get("request_type"),
+            row.get("sol_id"),
+            row.get("branch"),
+            row.get("status"),
+            row.get("response_pending"),
+            row.get("ticket_cycle"),
+            row.get("employee_id"),
+            row.get("employee_name"),
+            row.get("state"),
+            row.get("zone"),
+            row.get("region"),
+            row.get("district"),
+            row.get("resolved_by"),
+            _fmt_date(row.get("resolved_date")),
+            _fmt_time(row.get("resolved_time")),
+            row.get("remark"),
+            row.get("ops_comments_by"),
+            row.get("ops_comments"),
+        ]
+        line = ",".join('"%s"' % str(v if v is not None else "").replace('"', '""') for v in vals)
+        buf.write(line + "\n")
+    return "﻿" + buf.getvalue()  # BOM so Excel opens it correctly
+
+
+def _export_filename():
+    from frappe.utils import nowdate
+    return "Account_Service_Report_%s.csv" % nowdate()
+
+
+@frappe.whitelist()
+def export_report(filters=None):
+    """Small export → CSV content returned directly.
+    Large export → background job; user gets realtime + email with the file."""
+    if isinstance(filters, str):
+        import json
+        filters = json.loads(filters)
+    filters = filters or {}
+
+    conditions, params = _build_conditions(filters)
+    where_clause = "WHERE " + " AND ".join(conditions)
+    cnt = frappe.db.sql(
+        f"SELECT COUNT(*) FROM `tabSahayog Ticket` st {where_clause}", params)
+    total = cnt[0][0] if cnt else 0
+
+    if total <= SYNC_EXPORT_LIMIT:
+        data = get_report_data(filters=filters, page_no=1, page_size=max(total, 1))["data"]
+        return {"mode": "sync", "content": _build_export_csv(data),
+                "filename": _export_filename()}
+
+    frappe.enqueue(
+        export_report_job,
+        filters=filters,
+        user=frappe.session.user,
+        queue="long",
+        job_id="asr_export_%s" % frappe.session.user,
+        deduplicate=True,
+    )
+    return {"mode": "queued", "total": total}
+
+
+def export_report_job(filters, user):
+    """Background CSV build: saves the file, notifies user (realtime + email)."""
+    data = get_report_data(filters=filters, page_no=1, page_size=10 ** 6)["data"]
+    content = _build_export_csv(data)
+
+    file_doc = frappe.get_doc({
+        "doctype": "File",
+        "file_name": _export_filename(),
+        "is_private": 1,
+        "content": content,
+    }).insert(ignore_permissions=True)
+    frappe.db.commit()
+
+    file_url = file_doc.file_url
+    link = frappe.utils.get_url(file_url)
+
+    frappe.publish_realtime(
+        "asr_export_ready",
+        {"file_url": file_url, "file_name": file_doc.file_name, "rows": len(data)},
+        user=user,
+    )
+    try:
+        frappe.sendmail(
+            recipients=[user],
+            subject="Account Service Report export is ready (%s rows)" % len(data),
+            message='Your Account Service Report export is ready.<br><br>'
+                    '<a href="%s">Download %s</a>' % (link, file_doc.file_name),
+        )
+    except Exception:
+        frappe.log_error("ASR export email failed", title="ASR export email failed")
+
+
 def _build_conditions(filters, exclude_status=False):
     conditions = ["st.ticket_type = 'Account Service Request'"]
     params = []
