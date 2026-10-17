@@ -247,6 +247,16 @@ class SahayogTicket(Document):
         self.validate_request_detail()
         self.check_account_validation()
         self.validate_contact_number_update()
+        self.validate_close_remark()
+
+    def validate_close_remark(self):
+        # Closing Remark is mandatory whenever a ticket transitions to Closed
+        if self.status != "Closed" or (self.close_remark or "").strip():
+            return
+
+        prev_status = self._doc_before_save.status if self._doc_before_save else None
+        if self.is_new() or prev_status != "Closed":
+            frappe.throw("Closing Remark is required to close the Ticket.")
 
     def fill_missing_fields(self):
         # Set employee_id first if not already set (runs before before_save)
@@ -510,7 +520,7 @@ def auto_close_resolved_tickets():
     if ticket_names:
         frappe.db.sql(
             """UPDATE `tabSahayog Ticket`
-               SET status = 'Closed'
+               SET status = 'Closed', close_remark = 'Auto-closed after 48 hours'
                WHERE name IN %s AND status = 'Resolved'""",
             (tuple(ticket_names),)
         )
