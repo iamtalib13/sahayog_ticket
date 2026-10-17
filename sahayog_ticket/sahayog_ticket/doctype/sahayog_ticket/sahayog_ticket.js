@@ -413,6 +413,9 @@ frappe.ui.form.on("Sahayog Ticket", {
     // Ensure CSS class is applied on reload
     $('body').addClass('ticket-active-form');
 
+    // Track last saved status (used to revert if Close Remark dialog is cancelled)
+    frm._last_status = frm.doc.status;
+
     // Trigger custom functions
     frm.trigger("common_hidden_fields");
     frm.trigger("hide_timeline");
@@ -1232,6 +1235,42 @@ frappe.ui.form.on("Sahayog Ticket", {
     } else {
       frm.set_df_property("description", "read_only", 0);
     }
+
+    // Closing Remark is mandatory when status is set to Closed directly
+    // (the Close button flow already collects it before changing status)
+    if (
+      !frm.is_new() &&
+      frm.doc.status === "Closed" &&
+      !(frm.doc.close_remark || "").trim()
+    ) {
+      const prev_status = frm._last_status || "Open";
+      const d = new frappe.ui.Dialog({
+        title: __("Enter Close Remark"),
+        fields: [
+          {
+            label: "Close Remark",
+            fieldname: "close_remark",
+            fieldtype: "Small Text",
+            reqd: 1,
+          },
+        ],
+        primary_action_label: __("Submit"),
+        primary_action: function () {
+          const values = d.get_values();
+          if (!values) return;
+          frm.set_value("close_remark", values.close_remark);
+          d.hide();
+        },
+      });
+      d.onhide = function () {
+        if (frm.doc.status === "Closed" && !(frm.doc.close_remark || "").trim()) {
+          frm.set_value("status", prev_status);
+        }
+      };
+      d.show();
+    }
+
+    frm._last_status = frm.doc.status;
   },
 
   priority: function (frm) {
