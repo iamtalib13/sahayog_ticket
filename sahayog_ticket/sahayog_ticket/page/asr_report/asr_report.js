@@ -1144,7 +1144,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							</button>
 						</div>
 						<div style="font-size:10.5px;color:#94a3b8;margin-top:5px;padding:0 4px;">
-							Enter to send &nbsp;·&nbsp; Shift+Enter for a new line
+							Enter for a new line &nbsp;·&nbsp; Click the arrow to send
 						</div>
 					</div>
 				</div><!-- /middle chat column -->
@@ -1240,10 +1240,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			$ta.on("focus", () => d.$wrapper.find("#asr-input-wrap").css("border-color","#417c7d"));
 			$ta.on("blur",  () => d.$wrapper.find("#asr-input-wrap").css("border-color","#cbd5e1"));
 
-			// ── Enter to send ──
-			$ta.on("keydown", function(e) {
-				if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); }
-			});
+			// ── Enter = new line (send sirf arrow button se) ──
 			// Send icon: sirf chat bhejo (actions upar buttons se).
 			d.$wrapper.find("#asr-send-btn").off("click").on("click", sendMsg);
 
