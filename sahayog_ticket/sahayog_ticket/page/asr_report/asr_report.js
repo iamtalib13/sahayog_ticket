@@ -1049,13 +1049,14 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 								style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 2px;line-height:1;">✕</button>
 						</div>` : `
 						<div id="asr-assign-row" style="display:flex;gap:6px;">
-							<select id="asr-assign-sel" style="flex:1;min-width:0;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;">
-								<option value="">Select user…</option>
-								${((dt.assignees && dt.assignees.length) ? dt.assignees : []).map((u) => `
-									<option value="${frappe.utils.escape_html(u.value || "")}">
-										${frappe.utils.escape_html(u.label || u.value || "")}
-									</option>`).join("")}
-							</select>
+							<div style="position:relative;flex:1;min-width:0;">
+								<input id="asr-assign-search" type="text" placeholder="Search user…" autocomplete="off"
+									style="width:100%;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;box-sizing:border-box;">
+								<input type="hidden" id="asr-assign-sel" value="">
+								<div id="asr-assign-list" style="display:none;position:absolute;z-index:30;top:34px;left:0;right:0;
+									max-height:170px;overflow-y:auto;background:#fff;border:1px solid #cbd5e1;border-radius:6px;
+									box-shadow:0 6px 16px rgba(15,23,42,.12);"></div>
+							</div>
 							<button id="asr-assign-btn" style="border:1px solid #417c7d;background:#417c7d;color:#fff;cursor:pointer;border-radius:6px;padding:0 12px;font-size:12px;font-weight:600;flex-shrink:0;">Assign</button>
 						</div>`}
 					</div>
@@ -1306,7 +1307,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					frappe.msgprint(__("Select a user first."));
 					return;
 				}
-				const uLabel = d.$wrapper.find("#asr-assign-sel option:selected").text().trim();
+				const uLabel = (d.$wrapper.find("#asr-assign-sel").attr("data-label") || "").trim();
 				frappe.call({
 					method: "frappe.client.set_value",
 					args: { doctype: "Sahayog Ticket", name: ticket, fieldname: "assigned_to", value: u },
@@ -1331,6 +1332,60 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				});
 			});
 
+			// ── Searchable assignee picker (type to filter, click/Enter to select) ──
+			function bindAssignSearch() {
+				const $search = d.$wrapper.find("#asr-assign-search");
+				const $sel = d.$wrapper.find("#asr-assign-sel");
+				const $list = d.$wrapper.find("#asr-assign-list");
+				if (!$search.length) return;
+				const people = (dt.assignees && dt.assignees.length) ? dt.assignees : [];
+
+				function render(q) {
+					const needle = (q || "").trim().toLowerCase();
+					const items = people.filter((p) =>
+						!needle ||
+						String(p.label || p.value || "").toLowerCase().includes(needle) ||
+						String(p.value || "").toLowerCase().includes(needle)
+					);
+					$list.html(items.length
+						? items.map((p) => `
+							<div class="asr-assign-opt"
+								data-val="${frappe.utils.escape_html(p.value || "")}"
+								data-label="${frappe.utils.escape_html(p.label || p.value || "")}"
+								style="padding:7px 10px;font-size:12px;cursor:pointer;color:#1e293b;">
+								${frappe.utils.escape_html(p.label || p.value || "")}
+							</div>`).join("")
+						: `<div style="padding:8px 10px;font-size:12px;color:#94a3b8;">No user found</div>`);
+				}
+
+				$search.off(".asrAssign")
+					.on("focus.asrAssign input.asrAssign", function () {
+						const typed = (($(this).val() || "")).trim();
+						// text edited after picking → clear stale hidden selection
+						if (typed !== ($sel.attr("data-label") || "").trim()) $sel.val("");
+						render(typed);
+						$list.show();
+					})
+					.on("keydown.asrAssign", function (e) {
+						if (e.key === "Enter") {
+							e.preventDefault();
+							$list.find(".asr-assign-opt").first().trigger("mousedown");
+						} else if (e.key === "Escape") {
+							$list.hide();
+						}
+					})
+					.on("blur.asrAssign", () => setTimeout(() => $list.hide(), 150));
+
+				$list.off(".asrAssign").on("mousedown.asrAssign", ".asr-assign-opt", function (e) {
+					e.preventDefault();
+					const val = $(this).attr("data-val") || "";
+					const label = $(this).attr("data-label") || $(this).text().trim();
+					$sel.val(val).attr("data-label", label);
+					$search.val(label);
+					$list.hide();
+				});
+			}
+
 			function bindUnassign() {
 				d.$wrapper.find("#asr-unassign-btn").off("click").on("click", function () {
 					frappe.call({
@@ -1342,19 +1397,22 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							// Replace card with dropdown.
 							d.$wrapper.find("#asr-current-assign").replaceWith(`
 								<div id="asr-assign-row" style="display:flex;gap:6px;">
-									<select id="asr-assign-sel" style="flex:1;min-width:0;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;">
-										<option value="">Select user…</option>
-										${((dt.assignees && dt.assignees.length) ? dt.assignees : []).map((u) =>
-											`<option value="${frappe.utils.escape_html(u.value || "")}">${frappe.utils.escape_html(u.label || u.value || "")}</option>`
-										).join("")}
-									</select>
+									<div style="position:relative;flex:1;min-width:0;">
+										<input id="asr-assign-search" type="text" placeholder="Search user…" autocomplete="off"
+											style="width:100%;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;box-sizing:border-box;">
+										<input type="hidden" id="asr-assign-sel" value="">
+										<div id="asr-assign-list" style="display:none;position:absolute;z-index:30;top:34px;left:0;right:0;
+											max-height:170px;overflow-y:auto;background:#fff;border:1px solid #cbd5e1;border-radius:6px;
+											box-shadow:0 6px 16px rgba(15,23,42,.12);"></div>
+									</div>
 									<button id="asr-assign-btn" style="border:1px solid #417c7d;background:#417c7d;color:#fff;cursor:pointer;border-radius:6px;padding:0 12px;font-size:12px;font-weight:600;flex-shrink:0;">Assign</button>
 								</div>`);
+							bindAssignSearch();
 							// Re-bind assign button on the newly injected dropdown.
 							d.$wrapper.find("#asr-assign-btn").off("click").on("click", function () {
 								const u2 = d.$wrapper.find("#asr-assign-sel").val();
 								if (!u2) { frappe.msgprint(__("Select a user first.")); return; }
-								const uLabel2 = d.$wrapper.find("#asr-assign-sel option:selected").text().trim();
+								const uLabel2 = (d.$wrapper.find("#asr-assign-sel").attr("data-label") || "").trim();
 								frappe.call({
 									method: "frappe.client.set_value",
 									args: { doctype: "Sahayog Ticket", name: ticket, fieldname: "assigned_to", value: u2 },
@@ -1371,7 +1429,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 												<button id="asr-unassign-btn" title="Remove assignment"
 													style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 2px;line-height:1;">✕</button>
 											</div>`);
-										bindUnassign();
+			bindUnassign();
+			bindAssignSearch();
 										resetAndLoad();
 									},
 									error: () => frappe.msgprint(__("Could not assign.")),
