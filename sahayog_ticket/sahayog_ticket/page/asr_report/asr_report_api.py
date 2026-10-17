@@ -247,31 +247,26 @@ def get_report_data(filters=None, page_no=1, page_size=20):
 
 
 def _attach_ops_comments(data):
-    """All comments by Operations Support Executive holders, per ticket."""
+    """All comments per ticket (oldest first): user id + comment text."""
+    import html as _html
+
     for d in data:
         d["ops_comments"] = ""
         d["ops_comments_by"] = ""
     if not data:
         return
-    ops_users = [r[0] for r in frappe.db.sql(
-        """SELECT parent FROM `tabHas Role`
-           WHERE role = 'Operations Support Executive' AND parenttype = 'User'""")]
-    if not ops_users:
-        return
     names = [d["ticket"] for d in data]
     ph_t = ", ".join(["%s"] * len(names))
-    ph_u = ", ".join(["%s"] * len(ops_users))
     crows = frappe.db.sql(
-        f"""SELECT reference_name, comment_by, content FROM tabComment
+        f"""SELECT reference_name, comment_by, owner, content FROM tabComment
             WHERE reference_doctype = 'Sahayog Ticket'
               AND reference_name IN ({ph_t})
-              AND comment_type = 'Comment' AND comment_by IN ({ph_u})
+              AND comment_type = 'Comment'
             ORDER BY creation ASC""",
-        tuple(names) + tuple(ops_users), as_dict=True)
+        tuple(names), as_dict=True)
     grouped = {}
     for c in crows:
         grouped.setdefault(c.reference_name, []).append(c)
-    name_cache = {}
     for d in data:
         items = grouped.get(d["ticket"], [])
         if not items:
@@ -279,10 +274,10 @@ def _attach_ops_comments(data):
         bys = []
         parts = []
         for c in items:
-            nm = _display_name(c.comment_by, name_cache)
-            if nm not in bys:
-                bys.append(nm)
-            parts.append(_strip_html(c.content or ""))
+            uid = (c.comment_by or c.owner or "").strip()
+            if uid and uid not in bys:
+                bys.append(uid)
+            parts.append(_html.unescape(_strip_html(c.content or "")))
         d["ops_comments_by"] = ", ".join(bys)
         words = ["first", "second", "third", "fourth", "fifth", "sixth",
                  "seventh", "eighth", "ninth", "tenth"]
