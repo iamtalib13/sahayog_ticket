@@ -1429,8 +1429,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 												<button id="asr-unassign-btn" title="Remove assignment"
 													style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 2px;line-height:1;">✕</button>
 											</div>`);
-			bindUnassign();
-			bindAssignSearch();
+										bindUnassign();
+										bindAssignSearch();
 										resetAndLoad();
 									},
 									error: () => frappe.msgprint(__("Could not assign.")),
@@ -1443,6 +1443,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				});
 			}
 			bindUnassign();
+			bindAssignSearch();
 
 			// Top action buttons: pass last chat text (maybe "") as preset.
 			d.$wrapper.find("[data-wf-idx]").on("click", function () {
