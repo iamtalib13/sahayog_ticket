@@ -1049,13 +1049,14 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 								style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 2px;line-height:1;">✕</button>
 						</div>` : `
 						<div id="asr-assign-row" style="display:flex;gap:6px;">
-							<select id="asr-assign-sel" style="flex:1;min-width:0;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;">
-								<option value="">Select user…</option>
-								${((dt.assignees && dt.assignees.length) ? dt.assignees : []).map((u) => `
-									<option value="${frappe.utils.escape_html(u.value || "")}">
-										${frappe.utils.escape_html(u.label || u.value || "")}
-									</option>`).join("")}
-							</select>
+							<div style="position:relative;flex:1;min-width:0;">
+								<input id="asr-assign-search" type="text" placeholder="Search user…" autocomplete="off"
+									style="width:100%;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;box-sizing:border-box;">
+								<input type="hidden" id="asr-assign-sel" value="">
+								<div id="asr-assign-list" style="display:none;position:absolute;z-index:30;top:34px;left:0;right:0;
+									max-height:170px;overflow-y:auto;background:#fff;border:1px solid #cbd5e1;border-radius:6px;
+									box-shadow:0 6px 16px rgba(15,23,42,.12);"></div>
+							</div>
 							<button id="asr-assign-btn" style="border:1px solid #417c7d;background:#417c7d;color:#fff;cursor:pointer;border-radius:6px;padding:0 12px;font-size:12px;font-weight:600;flex-shrink:0;">Assign</button>
 						</div>`}
 					</div>
@@ -1144,7 +1145,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							</button>
 						</div>
 						<div style="font-size:10.5px;color:#94a3b8;margin-top:5px;padding:0 4px;">
-							Enter to send &nbsp;·&nbsp; Shift+Enter for a new line
+							Enter for a new line &nbsp;·&nbsp; Click the arrow to send
 						</div>
 					</div>
 				</div><!-- /middle chat column -->
@@ -1240,10 +1241,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			$ta.on("focus", () => d.$wrapper.find("#asr-input-wrap").css("border-color","#417c7d"));
 			$ta.on("blur",  () => d.$wrapper.find("#asr-input-wrap").css("border-color","#cbd5e1"));
 
-			// ── Enter to send ──
-			$ta.on("keydown", function(e) {
-				if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); }
-			});
+			// ── Enter = new line (send sirf arrow button se) ──
 			// Send icon: sirf chat bhejo (actions upar buttons se).
 			d.$wrapper.find("#asr-send-btn").off("click").on("click", sendMsg);
 
@@ -1309,7 +1307,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					frappe.msgprint(__("Select a user first."));
 					return;
 				}
-				const uLabel = d.$wrapper.find("#asr-assign-sel option:selected").text().trim();
+				const uLabel = (d.$wrapper.find("#asr-assign-sel").attr("data-label") || "").trim();
 				frappe.call({
 					method: "frappe.client.set_value",
 					args: { doctype: "Sahayog Ticket", name: ticket, fieldname: "assigned_to", value: u },
@@ -1334,6 +1332,60 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				});
 			});
 
+			// ── Searchable assignee picker (type to filter, click/Enter to select) ──
+			function bindAssignSearch() {
+				const $search = d.$wrapper.find("#asr-assign-search");
+				const $sel = d.$wrapper.find("#asr-assign-sel");
+				const $list = d.$wrapper.find("#asr-assign-list");
+				if (!$search.length) return;
+				const people = (dt.assignees && dt.assignees.length) ? dt.assignees : [];
+
+				function render(q) {
+					const needle = (q || "").trim().toLowerCase();
+					const items = people.filter((p) =>
+						!needle ||
+						String(p.label || p.value || "").toLowerCase().includes(needle) ||
+						String(p.value || "").toLowerCase().includes(needle)
+					);
+					$list.html(items.length
+						? items.map((p) => `
+							<div class="asr-assign-opt"
+								data-val="${frappe.utils.escape_html(p.value || "")}"
+								data-label="${frappe.utils.escape_html(p.label || p.value || "")}"
+								style="padding:7px 10px;font-size:12px;cursor:pointer;color:#1e293b;">
+								${frappe.utils.escape_html(p.label || p.value || "")}
+							</div>`).join("")
+						: `<div style="padding:8px 10px;font-size:12px;color:#94a3b8;">No user found</div>`);
+				}
+
+				$search.off(".asrAssign")
+					.on("focus.asrAssign input.asrAssign", function () {
+						const typed = (($(this).val() || "")).trim();
+						// text edited after picking → clear stale hidden selection
+						if (typed !== ($sel.attr("data-label") || "").trim()) $sel.val("");
+						render(typed);
+						$list.show();
+					})
+					.on("keydown.asrAssign", function (e) {
+						if (e.key === "Enter") {
+							e.preventDefault();
+							$list.find(".asr-assign-opt").first().trigger("mousedown");
+						} else if (e.key === "Escape") {
+							$list.hide();
+						}
+					})
+					.on("blur.asrAssign", () => setTimeout(() => $list.hide(), 150));
+
+				$list.off(".asrAssign").on("mousedown.asrAssign", ".asr-assign-opt", function (e) {
+					e.preventDefault();
+					const val = $(this).attr("data-val") || "";
+					const label = $(this).attr("data-label") || $(this).text().trim();
+					$sel.val(val).attr("data-label", label);
+					$search.val(label);
+					$list.hide();
+				});
+			}
+
 			function bindUnassign() {
 				d.$wrapper.find("#asr-unassign-btn").off("click").on("click", function () {
 					frappe.call({
@@ -1345,19 +1397,22 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							// Replace card with dropdown.
 							d.$wrapper.find("#asr-current-assign").replaceWith(`
 								<div id="asr-assign-row" style="display:flex;gap:6px;">
-									<select id="asr-assign-sel" style="flex:1;min-width:0;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;">
-										<option value="">Select user…</option>
-										${((dt.assignees && dt.assignees.length) ? dt.assignees : []).map((u) =>
-											`<option value="${frappe.utils.escape_html(u.value || "")}">${frappe.utils.escape_html(u.label || u.value || "")}</option>`
-										).join("")}
-									</select>
+									<div style="position:relative;flex:1;min-width:0;">
+										<input id="asr-assign-search" type="text" placeholder="Search user…" autocomplete="off"
+											style="width:100%;height:32px;border:1px solid #cbd5e1;border-radius:6px;padding:0 8px;font-size:12px;background:#fff;box-sizing:border-box;">
+										<input type="hidden" id="asr-assign-sel" value="">
+										<div id="asr-assign-list" style="display:none;position:absolute;z-index:30;top:34px;left:0;right:0;
+											max-height:170px;overflow-y:auto;background:#fff;border:1px solid #cbd5e1;border-radius:6px;
+											box-shadow:0 6px 16px rgba(15,23,42,.12);"></div>
+									</div>
 									<button id="asr-assign-btn" style="border:1px solid #417c7d;background:#417c7d;color:#fff;cursor:pointer;border-radius:6px;padding:0 12px;font-size:12px;font-weight:600;flex-shrink:0;">Assign</button>
 								</div>`);
+							bindAssignSearch();
 							// Re-bind assign button on the newly injected dropdown.
 							d.$wrapper.find("#asr-assign-btn").off("click").on("click", function () {
 								const u2 = d.$wrapper.find("#asr-assign-sel").val();
 								if (!u2) { frappe.msgprint(__("Select a user first.")); return; }
-								const uLabel2 = d.$wrapper.find("#asr-assign-sel option:selected").text().trim();
+								const uLabel2 = (d.$wrapper.find("#asr-assign-sel").attr("data-label") || "").trim();
 								frappe.call({
 									method: "frappe.client.set_value",
 									args: { doctype: "Sahayog Ticket", name: ticket, fieldname: "assigned_to", value: u2 },
@@ -1375,6 +1430,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 													style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 2px;line-height:1;">✕</button>
 											</div>`);
 										bindUnassign();
+										bindAssignSearch();
 										resetAndLoad();
 									},
 									error: () => frappe.msgprint(__("Could not assign.")),
@@ -1387,6 +1443,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				});
 			}
 			bindUnassign();
+			bindAssignSearch();
 
 			// Top action buttons: pass last chat text (maybe "") as preset.
 			d.$wrapper.find("[data-wf-idx]").on("click", function () {
@@ -1453,87 +1510,56 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		});
 	}
 
-	// ── Export CSV ───────────────────────────────────────────────────────────
+	// ── Export CSV (small → instant; large → background job) ─────────────────
 	function exportCSV() {
 		if (!state.total) { frappe.msgprint(__("No data to export.")); return; }
 
 		frappe.call({
-			method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_report_data",
-			args: { filters: state.filters, page_no: 1, page_size: state.total || 9999 },
+			method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.export_report",
+			args: { filters: state.filters },
 			callback(r) {
-				const data = (r.message || {}).data || [];
-				if (!data.length) { frappe.msgprint(__("No data to export.")); return; }
+				const msg = r.message || {};
 
-				// helper: "YYYY-MM-DD" → "DD-MM-YYYY"
-				function fmtDate(d) {
-					if (!d) return "";
-					return d.split("-").reverse().join("-");
+				if (msg.mode === "sync" && msg.content) {
+					const blob = new Blob([msg.content], { type: "text/csv;charset=utf-8;" });
+					const url  = URL.createObjectURL(blob);
+					const a    = document.createElement("a");
+					a.href     = url;
+					a.download = msg.filename || `Account_Service_Report_${frappe.datetime.nowdate()}.csv`;
+					a.click();
+					URL.revokeObjectURL(url);
+					return;
 				}
 
-				// helper: "HH:MM:SS" or "HH:MM" → "hh:mm AM/PM"
-				function fmtTime(t) {
-					if (!t) return "";
-					const parts = t.slice(0, 5).split(":");
-					let h = parseInt(parts[0]);
-					const mi = parts[1];
-					const ampm = h >= 12 ? "PM" : "AM";
-					h = h % 12 || 12;
-					return String(h).padStart(2, "0") + ":" + mi + " " + ampm;
+				if (msg.mode === "queued") {
+					// Listen once for the background export to finish.
+					if (!state.exportListener) {
+						state.exportListener = true;
+						frappe.realtime.on("asr_export_ready", function (m) {
+							frappe.msgprint({
+								title: __("Report Ready"),
+								message: __(
+									"Your export ({0} rows) is ready: <a href=\"{1}\" target=\"_blank\">{2}</a>",
+									[m.rows || "", m.file_url || "#", m.file_name || "Download"]
+								),
+								indicator: "green",
+							});
+						});
+					}
+					frappe.msgprint({
+						title: __("Export Started"),
+						message: __(
+							"Large export ({0} rows) started in background. You will get a notification and an email with the download link.",
+							[msg.total || 0]
+						),
+						indicator: "blue",
+					});
+					return;
 				}
 
-				// helper: raw modified "YYYY-MM-DD HH:MM:SS" → "DD-MM-YYYY hh:mm AM/PM"
-				function fmtModified(m) {
-					if (!m) return "";
-					const [datePart, timePart] = m.split(" ");
-					return fmtDate(datePart) + " " + fmtTime(timePart);
-				}
-
-				const headers = [
-					"Last Modified", "Ticket", "Creation Date", "Creation Time",
-					"Request Type", "SOL ID", "Branch", "Status", "Response Pending",
-					"Ticket Cycle", "Employee ID", "Employee Name",
-					"State", "Zone", "Region", "District",
-					"Resolved By", "Resolved Date", "Resolved Time", "Remark",
-					"Operations Comment By", "Operations Comments",
-				];
-
-				const csvRows = [headers.join(",")];
-				data.forEach(row => {
-					const vals = [
-						fmtModified(row.modified),
-						row.ticket,
-						fmtDate(row.creation_date),
-						fmtTime(row.creation_time),
-						row.request_type,
-						row.sol_id,
-						row.branch,
-						row.status,
-						row.response_pending,
-						row.ticket_cycle,
-						row.employee_id,
-						row.employee_name,
-						row.state,
-						row.zone,
-						row.region,
-						row.district,
-						row.resolved_by,
-						fmtDate(row.resolved_date),
-						fmtTime(row.resolved_time),
-					row.remark,
-					row.ops_comments_by,
-					row.ops_comments,
-				];
-					csvRows.push(vals.map(v => `"${(v ?? "").toString().replace(/"/g, '""')}"`).join(","));
-				});
-
-				const blob = new Blob(["\uFEFF" + csvRows.join("\n"), ], { type: "text/csv;charset=utf-8;" });
-				const url  = URL.createObjectURL(blob);
-				const a    = document.createElement("a");
-				a.href     = url;
-				a.download = `Account_Service_Report_${frappe.datetime.nowdate()}.csv`;
-				a.click();
-				URL.revokeObjectURL(url);
+				frappe.msgprint(__("No data to export."));
 			},
+			error: () => frappe.msgprint(__("Could not start the export. Please try again.")),
 		});
 	}
 
