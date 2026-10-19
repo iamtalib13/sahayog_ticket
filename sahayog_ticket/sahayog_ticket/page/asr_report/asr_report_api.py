@@ -265,13 +265,30 @@ def get_report_data(filters=None, page_no=1, page_size=20):
     }
 
 
+def _cpc_users():
+    """Users on the CPC side (Operations Support Executive / CPC Loan User)."""
+    rows = frappe.get_all(
+        "Has Role",
+        filters={"role": ("in", ["Operations Support Executive", "CPC Loan User"])},
+        fields=["parent"],
+    )
+    return {r.parent for r in rows}
+
+
 def _attach_ops_comments(data):
-    """All comments per ticket (oldest first): user id + comment text."""
+    """All comments per ticket (oldest first): user id + comment text.
+
+    Also attaches the LAST comment made by a CPC-side user (any ticket
+    status) as last_cpc_by / last_cpc_comment for the CSV export.
+    """
     import html as _html
 
+    cpc = _cpc_users()
     for d in data:
         d["ops_comments"] = ""
         d["ops_comments_by"] = ""
+        d["last_cpc_by"] = ""
+        d["last_cpc_comment"] = ""
     if not data:
         return
     names = [d["ticket"] for d in data]
@@ -296,7 +313,12 @@ def _attach_ops_comments(data):
             uid = (c.comment_by or c.owner or "").strip()
             if uid and uid not in bys:
                 bys.append(uid)
-            parts.append(_html.unescape(_strip_html(c.content or "")))
+            text = _html.unescape(_strip_html(c.content or ""))
+            parts.append(text)
+            # Oldest-first order: each CPC comment overwrites → last wins.
+            if uid in cpc:
+                d["last_cpc_by"] = uid
+                d["last_cpc_comment"] = text
         d["ops_comments_by"] = ", ".join(bys)
         words = ["first", "second", "third", "fourth", "fifth", "sixth",
                  "seventh", "eighth", "ninth", "tenth"]
@@ -315,7 +337,8 @@ CSV_HEADERS = [
     "Request Type", "SOL ID", "Branch", "Status", "Response Pending",
     "Ticket Cycle", "Employee ID", "Employee Name",
     "State", "Zone", "Region", "District",
-    "Resolved By", "Resolved Date", "Resolved Time", "Remark",
+    "Resolved By", "Resolved Date", "Resolved Time", "Resolver Remark",
+    "Last CPC Comment By", "Last CPC Comment",
     "Operations Comment By", "Operations Comments",
 ]
 
@@ -374,6 +397,8 @@ def _build_export_csv(data):
             _fmt_date(row.get("resolved_date")),
             _fmt_time(row.get("resolved_time")),
             row.get("remark"),
+            row.get("last_cpc_by"),
+            row.get("last_cpc_comment"),
             row.get("ops_comments_by"),
             row.get("ops_comments"),
         ]
