@@ -234,6 +234,25 @@ def get_report_data(filters=None, page_no=1, page_size=20):
     sum_conditions, sum_params = _build_conditions(filters, exclude_status=True)
     summary = _get_summary(sum_conditions, sum_params)
 
+    # Pending-tab sub-badge counts: response_pending among Open+In-Progress
+    # (ignores status/response_pending filters so badges stay global).
+    rp_filters = dict(filters or {})
+    rp_filters.pop("response_pending", None)
+    rp_conditions, rp_params = _build_conditions(rp_filters, exclude_status=True)
+    rp_conditions.append("st.status IN ('Open','In-Progress')")
+    rp_rows = frappe.db.sql(
+        f"""SELECT st.response_pending, COUNT(*) as cnt
+            FROM `tabSahayog Ticket` st
+            WHERE {" AND ".join(rp_conditions)}
+            GROUP BY st.response_pending""",
+        rp_params, as_dict=True)
+    for r in rp_rows:
+        key = r.response_pending or ""
+        if key in ("Pending Operations", "Pending Branch"):
+            summary[key] = summary.get(key, 0) + r.cnt
+    summary.setdefault("Pending Operations", 0)
+    summary.setdefault("Pending Branch", 0)
+
     # Operations-side comments for the CSV export (all of them, oldest first).
     _attach_ops_comments(data)
 

@@ -25,6 +25,15 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		completed: ["Closed", "Resolved"],
 	};
 
+	// Pending-tab sub-badges: Open (status) + the two response_pending values.
+	// Completed tab keeps its status sub-badges.
+	const SUB_BADGES = {
+		pending:   ["Open", "Pending Operations", "Pending Branch"],
+		completed: ["Closed", "Resolved"],
+	};
+	// Sub values that filter on response_pending instead of status.
+	const RP_SUBS = ["Pending Operations", "Pending Branch"];
+
 	// ── Status colors ────────────────────────────────────────────────────────
 	const STATUS_STYLE = {
 		"Open":        "background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;",
@@ -290,12 +299,14 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		$sub.empty();
 	// Light tints per sub-status; active = teal border.
 	const SUB_STYLE = {
-		"Open":        { bg: "#fee2e2", color: "#b91c1c", border: "#fca5a5" },
-		"In-Progress": { bg: "#fef3c7", color: "#b45309", border: "#fcd34d" },
-		"Closed":      { bg: "#f1f5f9", color: "#475569", border: "#cbd5e1" },
-		"Resolved":    { bg: "#dcfce7", color: "#15803d", border: "#86efac" },
+		"Open":               { bg: "#fee2e2", color: "#b91c1c", border: "#fca5a5" },
+		"In-Progress":        { bg: "#fef3c7", color: "#b45309", border: "#fcd34d" },
+		"Closed":             { bg: "#f1f5f9", color: "#475569", border: "#cbd5e1" },
+		"Resolved":           { bg: "#dcfce7", color: "#15803d", border: "#86efac" },
+		"Pending Operations": { bg: "#f3e8ff", color: "#7e22ce", border: "#d8b4fe" },
+		"Pending Branch":     { bg: "#dbeafe", color: "#1d4ed8", border: "#93c5fd" },
 	};
-		(TAB_GROUPS[state.mainTab] || []).forEach(s => {
+		(SUB_BADGES[state.mainTab] || []).forEach(s => {
 			const active = state.subStatus === s;
 			const cnt = (state.summary || {})[s] || 0;
 			const st = SUB_STYLE[s] || SUB_STYLE["Closed"];
@@ -319,7 +330,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 	// ── Event bindings ───────────────────────────────────────────────────────
 	function statusList() {
-		if (state.subStatus) return [state.subStatus];
+		if (state.subStatus && !RP_SUBS.includes(state.subStatus)) return [state.subStatus];
 		return TAB_GROUPS[state.mainTab] || [];
 	}
 	function applyFilters() {
@@ -329,9 +340,11 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			const s = $("#asr-filter-status").val();
 			if (s) statuses = [s];
 		}
+		// RP sub-badges filter on response_pending (within pending statuses).
+		const rpSub = RP_SUBS.includes(state.subStatus) ? state.subStatus : "";
 		state.filters = {
 			statuses:         statuses,
-			response_pending: $("#asr-filter-rp").val(),
+			response_pending: rpSub || $("#asr-filter-rp").val(),
 			request_type:     $("#asr-filter-rt").val(),
 			sol_id:           $("#asr-filter-sol").val(),
 			from_date:        $("#asr-filter-from").val(),
