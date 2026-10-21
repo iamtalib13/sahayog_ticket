@@ -265,25 +265,14 @@ def get_report_data(filters=None, page_no=1, page_size=20):
     }
 
 
-def _cpc_users():
-    """Users on the CPC side (Operations Support Executive / CPC Loan User)."""
-    rows = frappe.get_all(
-        "Has Role",
-        filters={"role": ("in", ["Operations Support Executive", "CPC Loan User"])},
-        fields=["parent"],
-    )
-    return {r.parent for r in rows}
-
-
 def _attach_last_cpc_comment(data):
-    """Attach the LAST comment made by a CPC-side user (any ticket status)
-    as last_cpc_by / last_cpc_comment for the CSV export. Full comment
-    history is intentionally NOT included.
+    """Attach the LAST comment made by the ticket's ASSIGNED CPC user
+    (assigned_to, any ticket status) as last_cpc_by / last_cpc_comment
+    for the CSV. Comments by anyone else are ignored; if the assigned
+    user never commented the cells stay empty. History is NOT included.
     """
     import html as _html
 
-    cpc = _cpc_users()
-    cpc_lower = {u.lower() for u in cpc}
     for d in data:
         d["last_cpc_by"] = ""
         d["last_cpc_comment"] = ""
@@ -303,13 +292,16 @@ def _attach_last_cpc_comment(data):
         d = by_ticket.get(c.reference_name)
         if not d:
             continue
+        assigned = (d.get("assigned_to") or "").strip().lower()
+        if not assigned:
+            continue
         # comment_by may hold a display name (e.g. "TUSHAR UMBARKAR") or an
         # uppercased id ("ADMINISTRATOR") — owner holds the real user id.
         # Match either, case-insensitively.
         owner = (c.owner or "").strip()
         by = (c.comment_by or "").strip()
-        if owner.lower() in cpc_lower or by.lower() in cpc_lower:
-            # Oldest-first order: each CPC comment overwrites → last wins.
+        if owner.lower() == assigned or by.lower() == assigned:
+            # Oldest-first order: each match overwrites → last wins.
             d["last_cpc_by"] = owner or by
             d["last_cpc_comment"] = _html.unescape(_strip_html(c.content or ""))
 
