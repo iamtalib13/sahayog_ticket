@@ -283,6 +283,7 @@ def _attach_last_cpc_comment(data):
     import html as _html
 
     cpc = _cpc_users()
+    cpc_lower = {u.lower() for u in cpc}
     for d in data:
         d["last_cpc_by"] = ""
         d["last_cpc_comment"] = ""
@@ -302,10 +303,14 @@ def _attach_last_cpc_comment(data):
         d = by_ticket.get(c.reference_name)
         if not d:
             continue
-        uid = (c.comment_by or c.owner or "").strip()
-        if uid in cpc:
+        # comment_by may hold a display name (e.g. "TUSHAR UMBARKAR") or an
+        # uppercased id ("ADMINISTRATOR") — owner holds the real user id.
+        # Match either, case-insensitively.
+        owner = (c.owner or "").strip()
+        by = (c.comment_by or "").strip()
+        if owner.lower() in cpc_lower or by.lower() in cpc_lower:
             # Oldest-first order: each CPC comment overwrites → last wins.
-            d["last_cpc_by"] = uid
+            d["last_cpc_by"] = owner or by
             d["last_cpc_comment"] = _html.unescape(_strip_html(c.content or ""))
 
 
