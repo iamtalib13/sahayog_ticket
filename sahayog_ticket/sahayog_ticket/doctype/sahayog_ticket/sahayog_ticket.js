@@ -271,7 +271,12 @@ frappe.ui.form.on("Sahayog Ticket", {
   before_workflow_action: function (frm) {
     frappe.dom.unfreeze();
     const action = frm.selected_workflow_action;
-    const isOps = frm.doc.dept_name === "Operations";
+    // Match the workflow's own condition: the Operations/ASR lane is
+    // dept Operations AND ticket_type Account Service Request. Anything
+    // else (e.g. Operations + "Others Operations Issue") takes the free
+    // lane, whose action names are In-Progress/Resolve/Re-Open/Close.
+    const isOps = frm.doc.dept_name === "Operations"
+      && frm.doc.ticket_type === "Account Service Request";
     // Free lane (non Operations+ASR): same moves + remarks as the old
     // Status buttons (In-Progress/Resolve/Re-Open/Close).
     const need = isOps ? {
