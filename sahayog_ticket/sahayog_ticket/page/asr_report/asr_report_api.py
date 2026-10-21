@@ -229,9 +229,12 @@ def get_report_data(filters=None, page_no=1, page_size=20):
                 d["last_comment_by"] = ""
         data.append(d)
 
-    # Summary counts by status (ignores the status filter so the
-    # All/Pending/Completed tab counts stay global).
-    sum_conditions, sum_params = _build_conditions(filters, exclude_status=True)
+    # Summary counts by status (ignores the status AND response_pending
+    # filters so the All/Pending/Completed tab counts stay static when the
+    # user clicks Open / Pending Operations / Pending Branch sub-badges).
+    sum_filters = dict(filters or {})
+    sum_filters.pop("response_pending", None)
+    sum_conditions, sum_params = _build_conditions(sum_filters, exclude_status=True)
     summary = _get_summary(sum_conditions, sum_params)
 
     # Pending-tab sub-badge counts: response_pending among Open+In-Progress
