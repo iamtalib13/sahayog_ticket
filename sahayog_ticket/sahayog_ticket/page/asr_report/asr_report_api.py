@@ -253,8 +253,8 @@ def get_report_data(filters=None, page_no=1, page_size=20):
     summary.setdefault("Pending Operations", 0)
     summary.setdefault("Pending Branch", 0)
 
-    # Operations-side comments for the CSV export (all of them, oldest first).
-    _attach_ops_comments(data)
+    # Last CPC-side comment for the CSV export (any ticket status).
+    _attach_last_cpc_comment(data)
 
     return {
         "data":     data,
@@ -275,18 +275,15 @@ def _cpc_users():
     return {r.parent for r in rows}
 
 
-def _attach_ops_comments(data):
-    """All comments per ticket (oldest first): user id + comment text.
-
-    Also attaches the LAST comment made by a CPC-side user (any ticket
-    status) as last_cpc_by / last_cpc_comment for the CSV export.
+def _attach_last_cpc_comment(data):
+    """Attach the LAST comment made by a CPC-side user (any ticket status)
+    as last_cpc_by / last_cpc_comment for the CSV export. Full comment
+    history is intentionally NOT included.
     """
     import html as _html
 
     cpc = _cpc_users()
     for d in data:
-        d["ops_comments"] = ""
-        d["ops_comments_by"] = ""
         d["last_cpc_by"] = ""
         d["last_cpc_comment"] = ""
     if not data:
@@ -300,33 +297,16 @@ def _attach_ops_comments(data):
               AND comment_type = 'Comment'
             ORDER BY creation ASC""",
         tuple(names), as_dict=True)
-    grouped = {}
+    by_ticket = {x["ticket"]: x for x in data}
     for c in crows:
-        grouped.setdefault(c.reference_name, []).append(c)
-    for d in data:
-        items = grouped.get(d["ticket"], [])
-        if not items:
+        d = by_ticket.get(c.reference_name)
+        if not d:
             continue
-        bys = []
-        parts = []
-        for c in items:
-            uid = (c.comment_by or c.owner or "").strip()
-            if uid and uid not in bys:
-                bys.append(uid)
-            text = _html.unescape(_strip_html(c.content or ""))
-            parts.append(text)
+        uid = (c.comment_by or c.owner or "").strip()
+        if uid in cpc:
             # Oldest-first order: each CPC comment overwrites → last wins.
-            if uid in cpc:
-                d["last_cpc_by"] = uid
-                d["last_cpc_comment"] = text
-        d["ops_comments_by"] = ", ".join(bys)
-        words = ["first", "second", "third", "fourth", "fifth", "sixth",
-                 "seventh", "eighth", "ninth", "tenth"]
-        numbered = []
-        for i, p in enumerate([x for x in parts if x]):
-            w = words[i] if i < len(words) else "%dth" % (i + 1)
-            numbered.append("%s comment : %s" % (w, p))
-        d["ops_comments"] = ", ".join(numbered)
+            d["last_cpc_by"] = uid
+            d["last_cpc_comment"] = _html.unescape(_strip_html(c.content or ""))
 
 
 # ── CSV export (sync for small data, background job for large data) ──
@@ -339,7 +319,6 @@ CSV_HEADERS = [
     "State", "Zone", "Region", "District",
     "Resolved By", "Resolved Date", "Resolved Time", "Resolver Remark",
     "Last CPC Comment By", "Last CPC Comment",
-    "Operations Comment By", "Operations Comments",
 ]
 
 
@@ -399,8 +378,6 @@ def _build_export_csv(data):
             row.get("remark"),
             row.get("last_cpc_by"),
             row.get("last_cpc_comment"),
-            row.get("ops_comments_by"),
-            row.get("ops_comments"),
         ]
         line = ",".join('"%s"' % str(v if v is not None else "").replace('"', '""') for v in vals)
         buf.write(line + "\n")
