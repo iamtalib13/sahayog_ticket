@@ -234,8 +234,27 @@ def get_report_data(filters=None, page_no=1, page_size=20):
     sum_conditions, sum_params = _build_conditions(filters, exclude_status=True)
     summary = _get_summary(sum_conditions, sum_params)
 
-    # Operations-side comments for the CSV export (all of them, oldest first).
-    _attach_ops_comments(data)
+    # Pending-tab sub-badge counts: response_pending among Open+In-Progress
+    # (ignores status/response_pending filters so badges stay global).
+    rp_filters = dict(filters or {})
+    rp_filters.pop("response_pending", None)
+    rp_conditions, rp_params = _build_conditions(rp_filters, exclude_status=True)
+    rp_conditions.append("st.status IN ('Open','In-Progress')")
+    rp_rows = frappe.db.sql(
+        f"""SELECT st.response_pending, COUNT(*) as cnt
+            FROM `tabSahayog Ticket` st
+            WHERE {" AND ".join(rp_conditions)}
+            GROUP BY st.response_pending""",
+        rp_params, as_dict=True)
+    for r in rp_rows:
+        key = r.response_pending or ""
+        if key in ("Pending Operations", "Pending Branch"):
+            summary[key] = summary.get(key, 0) + r.cnt
+    summary.setdefault("Pending Operations", 0)
+    summary.setdefault("Pending Branch", 0)
+
+    # Last CPC-side comment for the CSV export (any ticket status).
+    _attach_last_cpc_comment(data)
 
     return {
         "data":     data,
@@ -246,13 +265,17 @@ def get_report_data(filters=None, page_no=1, page_size=20):
     }
 
 
-def _attach_ops_comments(data):
-    """All comments per ticket (oldest first): user id + comment text."""
+def _attach_last_cpc_comment(data):
+    """Attach the LAST comment made by the ticket's ASSIGNED CPC user
+    (assigned_to, any ticket status) as last_cpc_by / last_cpc_comment
+    for the CSV. Comments by anyone else are ignored; if the assigned
+    user never commented the cells stay empty. History is NOT included.
+    """
     import html as _html
 
     for d in data:
-        d["ops_comments"] = ""
-        d["ops_comments_by"] = ""
+        d["last_cpc_by"] = ""
+        d["last_cpc_comment"] = ""
     if not data:
         return
     names = [d["ticket"] for d in data]
@@ -264,28 +287,23 @@ def _attach_ops_comments(data):
               AND comment_type = 'Comment'
             ORDER BY creation ASC""",
         tuple(names), as_dict=True)
-    grouped = {}
+    by_ticket = {x["ticket"]: x for x in data}
     for c in crows:
-        grouped.setdefault(c.reference_name, []).append(c)
-    for d in data:
-        items = grouped.get(d["ticket"], [])
-        if not items:
+        d = by_ticket.get(c.reference_name)
+        if not d:
             continue
-        bys = []
-        parts = []
-        for c in items:
-            uid = (c.comment_by or c.owner or "").strip()
-            if uid and uid not in bys:
-                bys.append(uid)
-            parts.append(_html.unescape(_strip_html(c.content or "")))
-        d["ops_comments_by"] = ", ".join(bys)
-        words = ["first", "second", "third", "fourth", "fifth", "sixth",
-                 "seventh", "eighth", "ninth", "tenth"]
-        numbered = []
-        for i, p in enumerate([x for x in parts if x]):
-            w = words[i] if i < len(words) else "%dth" % (i + 1)
-            numbered.append("%s comment : %s" % (w, p))
-        d["ops_comments"] = ", ".join(numbered)
+        assigned = (d.get("assigned_to") or "").strip().lower()
+        if not assigned:
+            continue
+        # comment_by may hold a display name (e.g. "TUSHAR UMBARKAR") or an
+        # uppercased id ("ADMINISTRATOR") — owner holds the real user id.
+        # Match either, case-insensitively.
+        owner = (c.owner or "").strip()
+        by = (c.comment_by or "").strip()
+        if owner.lower() == assigned or by.lower() == assigned:
+            # Oldest-first order: each match overwrites → last wins.
+            d["last_cpc_by"] = owner or by
+            d["last_cpc_comment"] = _html.unescape(_strip_html(c.content or ""))
 
 
 # ── CSV export (sync for small data, background job for large data) ──
@@ -296,8 +314,8 @@ CSV_HEADERS = [
     "Request Type", "SOL ID", "Branch", "Status", "Response Pending",
     "Ticket Cycle", "Employee ID", "Employee Name",
     "State", "Zone", "Region", "District",
-    "Resolved By", "Resolved Date", "Resolved Time", "Remark",
-    "Operations Comment By", "Operations Comments",
+    "Resolved By", "Resolved Date", "Resolved Time", "Resolver Remark",
+    "Last CPC Comment By", "Last CPC Comment",
 ]
 
 
@@ -355,8 +373,8 @@ def _build_export_csv(data):
             _fmt_date(row.get("resolved_date")),
             _fmt_time(row.get("resolved_time")),
             row.get("remark"),
-            row.get("ops_comments_by"),
-            row.get("ops_comments"),
+            row.get("last_cpc_by"),
+            row.get("last_cpc_comment"),
         ]
         line = ",".join('"%s"' % str(v if v is not None else "").replace('"', '""') for v in vals)
         buf.write(line + "\n")
