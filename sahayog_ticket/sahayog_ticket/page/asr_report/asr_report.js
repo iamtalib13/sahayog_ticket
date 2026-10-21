@@ -25,10 +25,10 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		completed: ["Closed", "Resolved"],
 	};
 
-	// Pending-tab sub-badges: Open (status) + the two response_pending values.
-	// Completed tab keeps its status sub-badges.
+	// Pending-tab sub-badges: the two response_pending values (Open removed
+	// per request). Completed tab keeps its status sub-badges.
 	const SUB_BADGES = {
-		pending:   ["Open", "Pending Operations", "Pending Branch"],
+		pending:   ["Pending Operations", "Pending Branch"],
 		completed: ["Closed", "Resolved"],
 	};
 	// Sub values that filter on response_pending instead of status.
