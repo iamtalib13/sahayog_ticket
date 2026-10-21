@@ -315,7 +315,7 @@ CSV_HEADERS = [
     "Ticket Cycle", "Employee ID", "Employee Name",
     "State", "Zone", "Region", "District",
     "Resolved By", "Resolved Date", "Resolved Time", "Resolver Remark",
-    "Last CPC Comment By", "Last CPC Comment",
+    "Last Comment By", "Last Comment",
 ]
 
 
