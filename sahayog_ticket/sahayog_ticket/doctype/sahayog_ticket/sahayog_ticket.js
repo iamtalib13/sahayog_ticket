@@ -2324,6 +2324,14 @@ function setup_notify_branch_button(frm) {
 
         d.show();
       });
+
+      // Status button (restored after Reply to Ticket)
+      frm.add_custom_button(__("Status"), async () => {
+        frappe.msgprint({
+          title: __("Ticket Status"),
+          message: __("Current Status: {0}", [frm.doc.status || "—"]),
+        });
+      });
     });
 }
 
