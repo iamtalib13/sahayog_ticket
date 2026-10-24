@@ -268,45 +268,102 @@ def get_report_data(filters=None, page_no=1, page_size=20):
     }
 
 
+def _ose_users():
+    """Operations-side users (role "Operations Support Executive").
+
+    Returns (ids, names): the user ids and the full names, both lower-cased,
+    so a comment can be matched whether it stores the id
+    ("4046@sahayog.com") or the display name ("TUSHAR UMBARKAR").
+    Administrator / Guest are excluded - they are not operations users
+    (same rule as the assign dropdowns).
+    """
+    rows = frappe.db.sql(
+        """SELECT u.name AS name, u.full_name AS full_name
+           FROM `tabHas Role` r
+           INNER JOIN tabUser u ON u.name = r.parent
+           WHERE r.role = %s
+             AND r.parenttype = 'User'
+             AND u.enabled = 1
+             AND u.name NOT IN ('Guest', 'Administrator')""",
+        ("Operations Support Executive",), as_dict=True)
+    ids, names = set(), set()
+    for r in rows:
+        if r.name:
+            ids.add(r.name.strip().lower())
+        if r.full_name:
+            names.add(r.full_name.strip().lower())
+    return ids, names
+
+
 def _attach_last_cpc_comment(data):
-    """Attach the LAST comment made by the ticket's ASSIGNED CPC user
-    (assigned_to, any ticket status) as last_cpc_by / last_cpc_comment
-    for the CSV. Comments by anyone else are ignored; if the assigned
-    user never commented the cells stay empty. History is NOT included.
+    """Attach the LAST comment for the CSV as last_cpc_by / last_cpc_comment.
+
+    Rule:
+      1. the ticket's ASSIGNED user (assigned_to, any ticket status) - their
+         last comment wins;
+      2. if the assigned user never commented (or the ticket is not
+         assigned), fall back to the LAST comment made by a user holding
+         the "Operations Support Executive" role;
+      3. if neither exists the cells stay empty.
+
+    Comment history is NOT included - only the single last comment.
     """
     import html as _html
 
     for d in data:
         d["last_cpc_by"] = ""
         d["last_cpc_comment"] = ""
+        d["last_ose_by"] = ""
+        d["last_ose_comment"] = ""
     if not data:
         return
+    ose_ids, ose_names = _ose_users()
     names = [d["ticket"] for d in data]
     ph_t = ", ".join(["%s"] * len(names))
     crows = frappe.db.sql(
-        f"""SELECT reference_name, comment_by, owner, content FROM tabComment
-            WHERE reference_doctype = 'Sahayog Ticket'
-              AND reference_name IN ({ph_t})
-              AND comment_type = 'Comment'
-            ORDER BY creation ASC""",
+        f"""SELECT c.reference_name, c.comment_by, c.owner, c.content,
+                   u.full_name AS owner_full_name
+            FROM tabComment c
+            LEFT JOIN tabUser u ON u.name = c.owner
+            WHERE c.reference_doctype = 'Sahayog Ticket'
+              AND c.reference_name IN ({ph_t})
+              AND c.comment_type = 'Comment'
+            ORDER BY c.creation ASC""",
         tuple(names), as_dict=True)
     by_ticket = {x["ticket"]: x for x in data}
     for c in crows:
         d = by_ticket.get(c.reference_name)
         if not d:
             continue
-        assigned = (d.get("assigned_to") or "").strip().lower()
-        if not assigned:
-            continue
         # comment_by may hold a display name (e.g. "TUSHAR UMBARKAR") or an
         # uppercased id ("ADMINISTRATOR") — owner holds the real user id.
-        # Match either, case-insensitively.
         owner = (c.owner or "").strip()
         by = (c.comment_by or "").strip()
-        if owner.lower() == assigned or by.lower() == assigned:
+        # Show the full name of the author in the report.
+        display = (c.owner_full_name or "").strip() or by or owner
+        text = _html.unescape(_strip_html(c.content or ""))
+
+        # 1. Assigned user's comment.
+        assigned = (d.get("assigned_to") or "").strip().lower()
+        if assigned and (owner.lower() == assigned or by.lower() == assigned):
             # Oldest-first order: each match overwrites → last wins.
-            d["last_cpc_by"] = owner or by
-            d["last_cpc_comment"] = _html.unescape(_strip_html(c.content or ""))
+            d["last_cpc_by"] = display
+            d["last_cpc_comment"] = text
+            continue
+
+        # 2. Fallback: comment by an Operations Support Executive.
+        if (owner.lower() in ose_ids or by.lower() in ose_ids
+                or by.lower() in ose_names):
+            d["last_ose_by"] = display
+            d["last_ose_comment"] = text
+
+    # Use the OSE comment only when the assigned user has none.
+    for d in data:
+        if not d["last_cpc_by"] and d["last_ose_comment"]:
+            d["last_cpc_by"] = d["last_ose_by"]
+            d["last_cpc_comment"] = d["last_ose_comment"]
+        d.pop("last_ose_by", None)
+        d.pop("last_ose_comment", None)
 
 
 # ── CSV export (sync for small data, background job for large data) ──
