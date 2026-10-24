@@ -2327,77 +2327,101 @@ function setup_notify_branch_button(frm) {
 
       // Status button (restored after Reply to Ticket)
       frm.add_custom_button(__("Status"), async () => {
+        // Get available statuses excluding current
+        const allStatuses = ["Open", "In-Progress", "Resolved", "Closed"];
+        const currentStatus = frm.doc.status || "Open";
+        const otherStatuses = allStatuses.filter((s) => s !== currentStatus);
+
         const d = new frappe.ui.Dialog({
-          title: __("Update Ticket Status"),
+          title: __("Change Ticket Status"),
           fields: [
             {
-              fieldname: "status",
+              fieldname: "new_status",
               fieldtype: "Select",
-              label: __("Ticket Status"),
-              options: ["Open", "In-Progress", "Resolved", "Closed"].join("\n"),
+              label: __("New Status"),
+              options: otherStatuses.join("\n"),
               reqd: 1,
-              default: frm.doc.status || "Open",
-            },
-            {
-              fieldname: "remark",
-              fieldtype: "Small Text",
-              label: __("Remark"),
-              reqd: 1,
+              default: otherStatuses[0],
             },
           ],
           size: "small",
-          primary_action_label: __("Update"),
-          async primary_action(values) {
-            const status = values?.status;
-            const remark = values?.remark;
-
-            if (!remark) {
-              frappe.msgprint(__("Please enter the remark."));
+          primary_action_label: __("Next"),
+          primary_action: function (values) {
+            const newStatus = values?.new_status;
+            if (!newStatus) {
+              frappe.msgprint(__("Please select a status."));
               return;
             }
-
-            frm.set_value("status", status);
-            frm.refresh_field("status");
-
-            if (status === "In-Progress") {
-              frm.set_value("executive_remark", remark);
-              frm.set_value("assigned_to", frappe.session.user);
-            } else if (status === "Resolved") {
-              frm.set_value("resolved_remark", remark);
-              frm.set_value("ticket_resolved_by", frappe.session.user);
-              frm.set_value("ticket_resolved_on", frappe.datetime.now_datetime());
-              frm.set_value("assigned_to", frappe.session.user);
-            } else if (status === "Closed") {
-              frm.set_value("close_remark", remark);
-            } else if (status === "Open") {
-              frm.set_value("reopen_remark", remark);
-              frm.set_value("ticket_resolved_by", "");
-              frm.set_value("ticket_resolved_user", "");
-              frm.set_value("ticket_resolved_on", "");
-            }
-
-            frm.save();
-
-            await frappe.call({
-              method: "frappe.desk.form.utils.add_comment",
-              args: {
-                reference_doctype: frm.doctype,
-                reference_name: frm.docname,
-                content: remark,
-                comment_by: frappe.session.user,
-                comment_email: frappe.session.user,
-              },
-            });
-
             d.hide();
-            frappe.show_alert(
-              { message: __("Status updated successfully"), indicator: "green" },
-              5,
-            );
+            // Now ask for remark
+            showRemarkDialog(newStatus);
           },
         });
 
-        d.set_value("status", frm.doc.status || "Open");
+        function showRemarkDialog(newStatus) {
+          const remarkDialog = new frappe.ui.Dialog({
+            title: __("Enter Remark for {0}", [newStatus]),
+            fields: [
+              {
+                fieldname: "remark",
+                fieldtype: "Small Text",
+                label: __("Remark"),
+                reqd: 1,
+              },
+            ],
+            size: "small",
+            primary_action_label: __("Update"),
+            async primary_action(remarkValues) {
+              const remark = remarkValues?.remark;
+              if (!remark) {
+                frappe.msgprint(__("Please enter the remark."));
+                return;
+              }
+              remarkDialog.hide();
+
+              // Apply status change with remark
+              frm.set_value("status", newStatus);
+              frm.refresh_field("status");
+
+              if (newStatus === "In-Progress") {
+                frm.set_value("executive_remark", remark);
+                frm.set_value("assigned_to", frappe.session.user);
+              } else if (newStatus === "Resolved") {
+                frm.set_value("resolved_remark", remark);
+                frm.set_value("ticket_resolved_by", frappe.session.user);
+                frm.set_value("ticket_resolved_on", frappe.datetime.now_datetime());
+                frm.set_value("assigned_to", frappe.session.user);
+              } else if (newStatus === "Closed") {
+                frm.set_value("close_remark", remark);
+              } else if (newStatus === "Open") {
+                frm.set_value("reopen_remark", remark);
+                frm.set_value("ticket_resolved_by", "");
+                frm.set_value("ticket_resolved_user", "");
+                frm.set_value("ticket_resolved_on", "");
+              }
+
+              frm.save();
+
+              await frappe.call({
+                method: "frappe.desk.form.utils.add_comment",
+                args: {
+                  reference_doctype: frm.doctype,
+                  reference_name: frm.docname,
+                  content: remark,
+                  comment_by: frappe.session.user,
+                  comment_email: frappe.session.user,
+                },
+              });
+
+              frappe.show_alert(
+                { message: __("Status updated successfully"), indicator: "green" },
+                5,
+              );
+            },
+          });
+          remarkDialog.show();
+        }
+
         d.show();
       });
     });
