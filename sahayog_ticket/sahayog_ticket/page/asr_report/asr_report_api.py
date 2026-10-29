@@ -79,21 +79,6 @@ def _ticket_updates(ticket):
             out.append({"title": head, "groups": groups})
     return out
 
-REQUEST_TYPES = [
-    "Activation of Dormant account",
-    "Change of Address",
-    "DOB Updation",
-    "Name Change",
-    "Nomination Addition/ Deletion/ Modification",
-    "SMS Alert Registration",
-    "Update Contact Number",
-    "Update Email Address",
-    "Update KYC (Adhaar/Voter/Passport/etc)",
-    "Update PAN NO",
-    "Update Signature",
-    "Account Transfer",
-]
-
 
 @frappe.whitelist()
 def get_report_data(filters=None, page_no=1, page_size=20):
@@ -706,9 +691,21 @@ def get_ticket_detail(ticket):
 
 @frappe.whitelist()
 def get_filter_options():
-    """Return dropdown options for Request Type and SOL ID."""
+    """Return dropdown options for Request Type and SOL ID.
+
+    Request types are sourced from the Sahayog Ticket child table
+    (Ticket Item) `request_type` Select field, so the report dropdown
+    only shows the options actually defined there.
+    """
+    request_types = []
+    rt_field = frappe.get_meta("Ticket Item").get_field("request_type")
+    if rt_field and rt_field.options:
+        raw = rt_field.options
+        opts = raw.split("\n") if isinstance(raw, str) else list(raw or [])
+        request_types = [str(o).strip() for o in opts if str(o).strip()]
+
     return {
-        "request_types": REQUEST_TYPES,
+        "request_types": request_types,
         "sol_ids": frappe.get_all("Sahayog Branch", fields=["sol_id", "branch"],
                                   order_by="sol_id asc", limit=500),
     }
