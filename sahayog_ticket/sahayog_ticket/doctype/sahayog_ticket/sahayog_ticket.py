@@ -429,20 +429,26 @@ class SahayogTicket(Document):
     def validate_request_detail(self):
         # Check only when ticket type is Account Service Request
         if self.ticket_type == "Account Service Request":
-            row_count = len(self.request_detail or [])
+            rows = self.request_detail or []
 
             # No rows added
-            if row_count == 0:
+            if not rows:
                 frappe.throw(
                     "Please add one Request Detail for Account Service Request.",
                     title="Account Detail Required"
                 )
 
-            # More than one row added
-            if row_count > 1:
+            # Multiple request types are allowed, but every row must belong
+            # to the same account (same account number) in a single ticket.
+            account_numbers = {
+                str(row.account_number).strip()
+                for row in rows
+                if row.account_number
+            }
+            if len(account_numbers) > 1:
                 frappe.throw(
-                    "Only one Account Request Detail is allowed for Account Service Request.",
-                    title="Multiple Request Details Not Allowed"
+                    _("All Request Details must have the same Account Number."),
+                    title="Different Account Numbers Not Allowed"
                 )
 
     def validate_contact_number_update(self):
