@@ -14,6 +14,48 @@ OPERATIONS_ROLES = frozenset(("Operations Support Executive",
                               "CPC Loan User"))
 
 
+def _handoff_counts(ticket_names):
+    """Branch <-> Operations handoff count per ticket (report "Cycle").
+
+    A handoff does not change `status` (it stays In-Progress); only
+    `response_pending` flips between Pending Branch / Pending Operations.
+    So the count comes from Frappe's Version history instead of status_log.
+    The initial "" -> "Pending Operations" default is not a handoff.
+    """
+    counts = {}
+    names = [n for n in (ticket_names or []) if n]
+    for start in range(0, len(names), 500):
+        chunk = names[start:start + 500]
+        placeholders = ", ".join(["%s"] * len(chunk))
+        rows = frappe.db.sql(
+            f"""
+            SELECT v.docname, COUNT(*) AS handoffs
+            FROM `tabVersion` v
+            WHERE v.ref_doctype = 'Sahayog Ticket'
+              AND v.docname IN ({placeholders})
+              AND v.data LIKE %s
+              AND EXISTS (
+                    SELECT 1 FROM JSON_TABLE(
+                        v.data, '$.changed[*]' COLUMNS (
+                            fname  VARCHAR(64) PATH '$[0]',
+                            oldval VARCHAR(64) PATH '$[1]',
+                            newval VARCHAR(64) PATH '$[2]'
+                        )
+                    ) jt
+                    WHERE jt.fname = 'response_pending'
+                      AND jt.oldval IN ('Pending Branch', 'Pending Operations')
+                      AND jt.newval IN ('Pending Branch', 'Pending Operations')
+              )
+            GROUP BY v.docname
+            """,
+            chunk + ['%"response_pending"%'],
+            as_dict=True,
+        )
+        for r in rows:
+            counts[r.docname] = r.handoffs
+    return counts
+
+
 def _strip_html(html):
     """Plain text from comment HTML for the report table."""
     import re
@@ -144,10 +186,6 @@ def get_report_data(filters=None, page_no=1, page_size=20):
             ) AS account_number,
             st.executive_remark,
             (
-                SELECT COUNT(*) FROM `tabTicket Status Log` tsl
-                WHERE tsl.parent = st.name
-            ) AS ticket_cycle,
-            (
                 SELECT COUNT(*) FROM tabComment c
                 WHERE c.reference_doctype = 'Sahayog Ticket'
                   AND c.reference_name = st.name
@@ -176,6 +214,8 @@ def get_report_data(filters=None, page_no=1, page_size=20):
     """
     rows = frappe.db.sql(query, params + [page_size, offset], as_dict=True)
 
+    handoffs = _handoff_counts([t.ticket for t in rows])
+
     data = []
     for t in rows:
         d = {
@@ -201,7 +241,7 @@ def get_report_data(filters=None, page_no=1, page_size=20):
             "zone":             t.zone or "",
             "region":           t.region or "",
             "district":         t.district or "",
-            "ticket_cycle":     t.ticket_cycle or 0,
+            "ticket_cycle":     handoffs.get(t.ticket, 0),
             "resolved_by":      t.resolved_by or "",
             "resolved_date":    str(t.resolved_date) if t.resolved_date else "",
             "resolved_time":    str(t.resolved_time) if t.resolved_time else "",
@@ -589,10 +629,24 @@ def _build_conditions(filters, exclude_status=False):
                 params.append(like)
             elif key == "cycle":
                 conditions.append("""(
-                    SELECT COUNT(*) FROM `tabTicket Status Log` tsl
-                    WHERE tsl.parent = st.name
+                    SELECT COUNT(*) FROM `tabVersion` v
+                    WHERE v.ref_doctype = 'Sahayog Ticket'
+                      AND v.docname = st.name
+                      AND v.data LIKE %s
+                      AND EXISTS (
+                            SELECT 1 FROM JSON_TABLE(
+                                v.data, '$.changed[*]' COLUMNS (
+                                    fname  VARCHAR(64) PATH '$[0]',
+                                    oldval VARCHAR(64) PATH '$[1]',
+                                    newval VARCHAR(64) PATH '$[2]'
+                                )
+                            ) jt
+                            WHERE jt.fname = 'response_pending'
+                              AND jt.oldval IN ('Pending Branch', 'Pending Operations')
+                              AND jt.newval IN ('Pending Branch', 'Pending Operations')
+                      )
                 ) LIKE %s""")
-                params.append(like)
+                params.extend(['%"response_pending"%', like])
 
     return conditions, params
 
