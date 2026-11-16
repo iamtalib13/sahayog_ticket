@@ -30,7 +30,9 @@
   "new_name",
   "nomination_opration",
   "new_kyc_no",
-  "new_pan_no"
+  "new_pan_no",
+   "from_cif",
+   "to_cif"
  ],
  "fields": [
   {
@@ -190,6 +192,20 @@
    "fieldname": "updated_dob",
    "fieldtype": "Date",
    "label": "Updated DOB"
+  },
+  {
+   "depends_on": "eval:doc.request_type ==\"CIF Merge\"",
+   "fieldname": "from_cif",
+   "fieldtype": "Data",
+   "label": "From CIF",
+   "mandatory_depends_on": "eval:doc.request_type ==\"CIF Merge\""
+  },
+  {
+   "depends_on": "eval:doc.request_type ==\"CIF Merge\"",
+   "fieldname": "to_cif",
+   "fieldtype": "Data",
+   "label": "To CIF",
+   "mandatory_depends_on": "eval:doc.request_type ==\"CIF Merge\""
   }
  ],
  "grid_page_length": 50,
