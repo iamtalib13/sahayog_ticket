@@ -481,6 +481,33 @@ frappe.ui.form.on("Sahayog Ticket", {
         if (frm.doc.status === "In-Progress") {
           frm.trigger("executive_remark");
         }
+
+        // IT Support Executive only: restore the old "Status" dropdown
+        // (In-Progress + Resolve, with the same remark dialogs as before the
+        // workflow was added). Purely additive — Workflow Actions, the new
+        // Status button and every other role stay exactly as they are.
+        // Old behaviour kept: Operations-dept tickets stay workflow-only.
+        if (frappe.user.has_role("IT Support Executive")) {
+          const it_ops_workflow = frm.doc.dept_name === "Operations";
+          if (!it_ops_workflow) {
+            if (frm.doc.status === "Open") {
+              frm.trigger("In_Progress_button");
+              frm.trigger("resolve_button");
+            } else if (frm.doc.status === "In-Progress") {
+              frm.trigger("resolve_button");
+            }
+          }
+          // Re-Open + Close: only the ticket owner, only when Resolved.
+          // (These are separate buttons, exactly like the old behaviour;
+          // Close still asks for a Close Remark, Re-Open for a Re-Open Remark.)
+          if (
+            frm.doc.status === "Resolved" &&
+            frm.doc.owner === frappe.session.user
+          ) {
+            frm.trigger("reopen_button");
+            frm.trigger("close_button");
+          }
+        }
       }
       // Designation top-up (cached per session): designation ending with
       // Executive/Manager can also assign. Skipped when role gate already
@@ -1699,45 +1726,16 @@ frappe.ui.form.on("Sahayog Ticket", {
     } catch (e) {}
   },
 
-  // in progress button with remark dialog box :it will set the status to in progress with executive remark
+  // in progress button : sets the status to In-Progress (no remark prompt now)
   In_Progress_button: function (frm) {
     frm.add_custom_button(
       __("In-Progress"),
       function () {
-        let currentOnHoldRemark = frm.doc.on_hold_remark || "";
-
         frappe.confirm(__("Do you want to set In-Progress "), function () {
-          let d = new frappe.ui.Dialog({
-            title: "Enter In-Progress Remarks",
-            fields: [
-              {
-                label: "In-Progress Remark",
-                fieldname: "executive_remark",
-                fieldtype: "Small Text",
-                reqd: 1,
-                default: currentOnHoldRemark,
-              },
-            ],
-            size: "small",
-            primary_action_label: "Submit",
-            primary_action: function () {
-              if (!d.fields_dict.executive_remark.get_value()) {
-                frappe.msgprint(__("Please provide In-Progress remark."));
-                return;
-              }
-
-              frm.set_value(
-                "executive_remark",
-                d.fields_dict.executive_remark.get_value(),
-              );
-              frm.set_value("status", "In-Progress");
-              frm.refresh_field("status");
-              frm.set_value("assigned_to", frappe.session.user);
-              frm.save();
-              d.hide();
-            },
-          });
-          d.show();
+          frm.set_value("status", "In-Progress");
+          frm.refresh_field("status");
+          frm.set_value("assigned_to", frappe.session.user);
+          frm.save();
         });
       },
       __("Status"),
@@ -2621,7 +2619,27 @@ function insert_intro_perfectly(html) {
 // --- end of sahayog_ticket.js ---
 
 // start of ticket_item.js we are adding a button to fetch account details from external API
+// TEMPORARILY DISABLED request type: "Account Transfer" (kept in the doctype so
+// existing records stay valid; only hidden from the picker for new selections).
+const DISABLED_REQUEST_TYPES = ["Account Transfer"];
+
 frappe.ui.form.on("Ticket Item", {
+  form_render: function (frm, cdt, cdn) {
+    const grid = frm.fields_dict.request_detail && frm.fields_dict.request_detail.grid;
+    if (!grid) return;
+    setTimeout(function () {
+      $(grid.wrapper)
+        .find('select[data-fieldname="request_type"]')
+        .each(function () {
+          // Keep the option when the row already uses it, so data is not lost.
+          if ($(this).val() === "Account Transfer") return;
+          DISABLED_REQUEST_TYPES.forEach((rt) => {
+            $(this).find(`option[value="${rt}"]`).remove();
+          });
+        });
+    }, 50);
+  },
+
   get_account_details: function (frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
 

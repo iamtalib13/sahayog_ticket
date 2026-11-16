@@ -21,7 +21,7 @@ SERVICE_TYPES = [
     "Activation of Dormant account",
     "SMS Alert Registration",
     "Nomination Addition/ Deletion/ Modification",
-    "Account Transfer",
+    # "Account Transfer",  # temporarily disabled for new requests
     "DOB Updation",
 ]
 
