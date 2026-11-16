@@ -2619,7 +2619,27 @@ function insert_intro_perfectly(html) {
 // --- end of sahayog_ticket.js ---
 
 // start of ticket_item.js we are adding a button to fetch account details from external API
+// TEMPORARILY DISABLED request type: "Account Transfer" (kept in the doctype so
+// existing records stay valid; only hidden from the picker for new selections).
+const DISABLED_REQUEST_TYPES = ["Account Transfer"];
+
 frappe.ui.form.on("Ticket Item", {
+  form_render: function (frm, cdt, cdn) {
+    const grid = frm.fields_dict.request_detail && frm.fields_dict.request_detail.grid;
+    if (!grid) return;
+    setTimeout(function () {
+      $(grid.wrapper)
+        .find('select[data-fieldname="request_type"]')
+        .each(function () {
+          // Keep the option when the row already uses it, so data is not lost.
+          if ($(this).val() === "Account Transfer") return;
+          DISABLED_REQUEST_TYPES.forEach((rt) => {
+            $(this).find(`option[value="${rt}"]`).remove();
+          });
+        });
+    }, 50);
+  },
+
   get_account_details: function (frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
 
