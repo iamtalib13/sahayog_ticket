@@ -99,12 +99,13 @@ def get_data(filters=None):
             st.creation,
             st.modified,
 
-            -- request_type from child table request_detail (Ticket Item)
+            -- request_type: all request types of the ticket, comma separated
             (
-                SELECT ti.request_type
+                SELECT GROUP_CONCAT(DISTINCT ti.request_type
+                                    ORDER BY ti.request_type SEPARATOR ', ')
                 FROM `tabTicket Item` ti
                 WHERE ti.parent = st.name
-                LIMIT 1
+                  AND IFNULL(ti.request_type, '') != ''
             ) AS request_type,
 
             -- ticket_cycle comes from Branch <-> Operations handoffs
