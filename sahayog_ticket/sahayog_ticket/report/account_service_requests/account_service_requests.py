@@ -1,6 +1,10 @@
 import frappe
 from frappe.utils import getdate, get_time
 
+from sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api import (
+    _handoff_counts,
+)
+
 
 def execute(filters=None):
     columns = get_columns()
@@ -103,12 +107,8 @@ def get_data(filters=None):
                 LIMIT 1
             ) AS request_type,
 
-            -- ticket_cycle: count of status log entries (child table status_log)
-            (
-                SELECT COUNT(*)
-                FROM `tabTicket Status Log` tsl
-                WHERE tsl.parent = st.name
-            ) AS ticket_cycle,
+            -- ticket_cycle comes from Branch <-> Operations handoffs
+            -- (Version history), filled in after the query below.
 
             -- resolved_date and resolved_time from existing ticket_resolved_on field
             DATE(st.ticket_resolved_on) AS resolved_date,
@@ -120,6 +120,8 @@ def get_data(filters=None):
     """
 
     rows = frappe.db.sql(query, params, as_dict=True)
+
+    handoffs = _handoff_counts([t.ticket for t in rows])
 
     data = []
     for t in rows:
@@ -152,7 +154,7 @@ def get_data(filters=None):
             "request_type":     t.request_type or "",
             "creation_date":    getdate(t.creation),
             "creation_time":    get_time(t.creation),
-            "ticket_cycle":     t.ticket_cycle or 0,
+            "ticket_cycle":     handoffs.get(t.ticket, 0),
             "resolved_by":      t.resolved_by or "",
             "resolved_date":    t.resolved_date,
             "resolved_time":    t.resolved_time,
