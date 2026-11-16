@@ -8,6 +8,11 @@ from frappe.utils import getdate, get_time
 
 TICKET_TYPE = "Account Service Request"
 
+# Roles that identify the Operations side of a ticket thread.
+OPERATIONS_ROLES = frozenset(("Operations Support Executive",
+                              "Operations Support Manager",
+                              "CPC Loan User"))
+
 
 def _strip_html(html):
     """Plain text from comment HTML for the report table."""
@@ -623,10 +628,12 @@ def get_ticket_comments(ticket):
     )
     out = []
     name_cache = {}
+    side_cache = {}
     for r in rows:
         out.append({
             "by":   r.comment_by or "",
             "name": _display_name(r.comment_by, name_cache),
+            "side": _comment_side(r.comment_by, side_cache),
             "text": _strip_html(r.content or ""),
             "on":   str(r.creation) if r.creation else "",
         })
@@ -635,6 +642,16 @@ def get_ticket_comments(ticket):
     if dept == "CBS" and not _can_view_ticket_password(ticket):
         out = [c for c in out if not _is_sensitive(c["text"])]
     return out
+
+
+def _comment_side(by, cache):
+    """Role-based side label for a comment author: Operations or Branch."""
+    if not by:
+        return ""
+    if by not in cache:
+        roles = set(frappe.get_roles(by))
+        cache[by] = "Operations" if roles & OPERATIONS_ROLES else "Branch"
+    return cache[by]
 
 
 def _display_name(by, cache):
