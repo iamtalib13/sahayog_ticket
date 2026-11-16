@@ -177,8 +177,11 @@ def get_report_data(filters=None, page_no=1, page_size=20):
             st.creation,
             st.modified,
             (
-                SELECT ti.request_type FROM `tabTicket Item` ti
-                WHERE ti.parent = st.name LIMIT 1
+                SELECT GROUP_CONCAT(DISTINCT ti.request_type
+                                    ORDER BY ti.request_type SEPARATOR ', ')
+                FROM `tabTicket Item` ti
+                WHERE ti.parent = st.name
+                  AND IFNULL(ti.request_type, '') != ''
             ) AS request_type,
             (
                 SELECT ti.account_number FROM `tabTicket Item` ti
