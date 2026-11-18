@@ -9,6 +9,7 @@
   "request_type",
   "column_break_hsfh",
   "response_pending",
+  "request_status",
   "section_break_omei",
   "account_number",
   "get_account_details",
@@ -206,13 +207,19 @@
    "fieldtype": "Data",
    "label": "To CIF",
    "mandatory_depends_on": "eval:doc.request_type ==\"CIF Merge\""
+  },
+  {
+   "fieldname": "request_status",
+   "fieldtype": "Select",
+   "label": "Request Status",
+   "options": "Pending\nCompleted\nRejected"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-11-18 15:53:29.318446",
+ "modified": "2026-11-18 16:26:51.556936",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Ticket Item",
