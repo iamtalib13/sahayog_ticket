@@ -31,8 +31,8 @@
   "nomination_opration",
   "new_kyc_no",
   "new_pan_no",
-   "from_cif",
-   "to_cif"
+  "from_cif",
+  "to_cif"
  ],
  "fields": [
   {
@@ -41,7 +41,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Request Type",
-   "options": "\nChange of Address\nUpdate Contact Number\nUpdate Email Address\nUpdate KYC (Adhaar/Voter/Passport/etc)\nUpdate PAN NO\nUpdate Signature\nName Change\nActivation of Dormant account\nSMS Alert Registration\nNomination Addition/ Deletion/ Modification\nAccount Transfer\nDOB Updation\nPhotograph update\nAddition or removal of a joint holder\nChange in mode of operation or account operating instructions\nAccount transfer from one branch to another\nModification or correction of CIF/customer details\nCIF Merge\nOther modification not listed",
+   "options": "\nChange of Address\nUpdate Contact Number\nUpdate Email Address\nUpdate KYC (Adhaar/Voter/Passport/etc)\nUpdate PAN NO\nUpdate Signature\nName Change\nActivation of Dormant account\nSMS Alert Registration\nNomination Addition/ Deletion/ Modification\nAccount Transfer\nDOB Updation\nPhotograph update\nAddition or removal of a joint holder\nChange in mode of operation or account operating instructions\nAccount transfer from one branch to another\nModification or correction of CIF/customer details\nCIF Merge\nOther modification not listed\nAccount transfer",
    "reqd": 1
   },
   {
@@ -212,7 +212,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-10-24 15:34:33.778525",
+ "modified": "2026-11-18 15:53:29.318446",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Ticket Item",
