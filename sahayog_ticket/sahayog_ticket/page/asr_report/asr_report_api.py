@@ -443,38 +443,62 @@ def _fmt_modified(m):
     return (_fmt_date(date_part) + " " + _fmt_time(time_part)).strip()
 
 
+def _export_request_types_by_ticket(tickets):
+    """Request types per ticket from Request Detail (Ticket Item), in row order.
+    Used to expand CSV export so each request detail becomes its own row."""
+    if not tickets:
+        return {}
+    req_map = {}
+    for start in range(0, len(tickets), 500):
+        chunk = tickets[start:start + 500]
+        rows = frappe.get_all(
+            "Ticket Item",
+            filters={"parent": ["in", chunk]},
+            fields=["parent", "request_type"],
+            order_by="idx asc",
+        )
+        for r in rows:
+            req_map.setdefault(r.parent, []).append((r.request_type or "").strip())
+    return req_map
+
+
 def _build_export_csv(data):
     import io
+
+    tickets = [row.get("ticket") for row in data if row.get("ticket")]
+    req_map = _export_request_types_by_ticket(tickets)
 
     buf = io.StringIO()
     buf.write(",".join(CSV_HEADERS) + "\n")
     for row in data:
-        vals = [
-            _fmt_modified(row.get("modified")),
-            row.get("ticket"),
-            _fmt_date(row.get("creation_date")),
-            _fmt_time(row.get("creation_time")),
-            row.get("request_type"),
-            row.get("sol_id"),
-            row.get("branch"),
-            row.get("status"),
-            row.get("response_pending"),
-            row.get("ticket_cycle"),
-            row.get("employee_id"),
-            row.get("employee_name"),
-            row.get("state"),
-            row.get("zone"),
-            row.get("region"),
-            row.get("district"),
-            row.get("resolved_by"),
-            _fmt_date(row.get("resolved_date")),
-            _fmt_time(row.get("resolved_time")),
-            row.get("remark"),
-            row.get("last_cpc_by"),
-            row.get("last_cpc_comment"),
-        ]
-        line = ",".join('"%s"' % str(v if v is not None else "").replace('"', '""') for v in vals)
-        buf.write(line + "\n")
+        request_types = req_map.get(row.get("ticket")) or [row.get("request_type") or ""]
+        for request_type in request_types:
+            vals = [
+                _fmt_modified(row.get("modified")),
+                row.get("ticket"),
+                _fmt_date(row.get("creation_date")),
+                _fmt_time(row.get("creation_time")),
+                request_type,
+                row.get("sol_id"),
+                row.get("branch"),
+                row.get("status"),
+                row.get("response_pending"),
+                row.get("ticket_cycle"),
+                row.get("employee_id"),
+                row.get("employee_name"),
+                row.get("state"),
+                row.get("zone"),
+                row.get("region"),
+                row.get("district"),
+                row.get("resolved_by"),
+                _fmt_date(row.get("resolved_date")),
+                _fmt_time(row.get("resolved_time")),
+                row.get("remark"),
+                row.get("last_cpc_by"),
+                row.get("last_cpc_comment"),
+            ]
+            line = ",".join('"%s"' % str(v if v is not None else "").replace('"', '""') for v in vals)
+            buf.write(line + "\n")
     return "﻿" + buf.getvalue()  # BOM so Excel opens it correctly
 
 
