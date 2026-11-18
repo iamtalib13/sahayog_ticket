@@ -9,6 +9,7 @@
   "request_type",
   "column_break_hsfh",
   "response_pending",
+  "request_status",
   "section_break_omei",
   "account_number",
   "get_account_details",
@@ -31,8 +32,8 @@
   "nomination_opration",
   "new_kyc_no",
   "new_pan_no",
-   "from_cif",
-   "to_cif"
+  "from_cif",
+  "to_cif"
  ],
  "fields": [
   {
@@ -41,7 +42,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Request Type",
-   "options": "\nChange of Address\nUpdate Contact Number\nUpdate Email Address\nUpdate KYC (Adhaar/Voter/Passport/etc)\nUpdate PAN NO\nUpdate Signature\nName Change\nActivation of Dormant account\nSMS Alert Registration\nNomination Addition/ Deletion/ Modification\nAccount Transfer\nDOB Updation\nPhotograph update\nAddition or removal of a joint holder\nChange in mode of operation or account operating instructions\nAccount transfer from one branch to another\nModification or correction of CIF/customer details\nCIF Merge\nOther modification not listed",
+   "options": "\nChange of Address\nUpdate Contact Number\nUpdate Email Address\nUpdate KYC (Adhaar/Voter/Passport/etc)\nUpdate PAN NO\nUpdate Signature\nName Change\nActivation of Dormant account\nSMS Alert Registration\nNomination Addition/ Deletion/ Modification\nAccount Transfer\nDOB Updation\nPhotograph update\nAddition or removal of a joint holder\nChange in mode of operation or account operating instructions\nAccount transfer from one branch to another\nModification or correction of CIF/customer details\nCIF Merge\nOther modification not listed\nAccount transfer",
    "reqd": 1
   },
   {
@@ -206,13 +207,20 @@
    "fieldtype": "Data",
    "label": "To CIF",
    "mandatory_depends_on": "eval:doc.request_type ==\"CIF Merge\""
+  },
+  {
+   "fieldname": "request_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Request Status",
+   "options": "Pending\nCompleted\nRejected"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-10-24 15:34:33.778525",
+ "modified": "2026-11-18 16:28:06.926714",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Ticket Item",
