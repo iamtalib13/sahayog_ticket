@@ -211,6 +211,7 @@
   {
    "fieldname": "request_status",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Request Status",
    "options": "Pending\nCompleted\nRejected"
   }
@@ -219,7 +220,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-11-18 16:26:51.556936",
+ "modified": "2026-11-18 16:28:06.926714",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Ticket Item",
