@@ -42,7 +42,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Request Type",
-   "options": "\nChange of Address\nUpdate Contact Number\nUpdate Email Address\nUpdate KYC (Adhaar/Voter/Passport/etc)\nUpdate PAN NO\nUpdate Signature\nName Change\nActivation of Dormant account\nSMS Alert Registration\nNomination Addition/ Deletion/ Modification\nAccount Transfer\nDOB Updation\nPhotograph update\nAddition or removal of a joint holder\nChange in mode of operation or account operating instructions\nAccount transfer from one branch to another\nModification or correction of CIF/customer details\nCIF Merge\nOther modification not listed\nAccount transfer",
+   "options": "\nChange of Address\nUpdate Contact Number\nUpdate Email Address\nUpdate KYC (Adhaar/Voter/Passport/etc)\nUpdate PAN NO\nUpdate Signature\nName Change\nActivation of Dormant account\nSMS Alert Registration\nNomination Addition/ Deletion/ Modification\nAccount Transfer\nDOB Updation\nPhotograph update\nAddition or removal of a joint holder\nChange in mode of operation or account operating instructions\nModification or correction of CIF/customer details\nCIF Merge\nOther modification not listed",
    "reqd": 1
   },
   {
@@ -220,7 +220,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-11-18 16:28:06.926714",
+ "modified": "2026-11-20 11:38:58.666033",
  "modified_by": "Administrator",
  "module": "Sahayog Ticket",
  "name": "Ticket Item",
