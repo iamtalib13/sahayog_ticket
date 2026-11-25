@@ -104,6 +104,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	function clearAllFilters() {
 		$("#asr-filter-status,#asr-filter-rp,#asr-filter-rt,#asr-filter-sol").val("");
 		$("#asr-filter-from,#asr-filter-to").val("");
+		if (IS_AGENT) $("#asr-filter-branch-code").val("");
 		$(".asr-col-search").val("");
 		state.colSearch = {};
 		state.mainTab = "all";
@@ -191,15 +192,15 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	}
 
 	// ── Page toolbar buttons ─────────────────────────────────────────────────
-	if (IS_AGENT) {
-		page.add_button(__("Refresh"), () => resetAndLoad(), { icon: "refresh" });
-	} else {
-		// Account: Refresh removed; Clear Filters moves up in its place.
-		const $clearTop = page.add_button(__("Clear Filters"), clearAllFilters, { icon: "filter-x" });
-		$clearTop.attr({ title: __("Clear Filters"), "aria-label": __("Clear Filters") })
-			.contents().filter(function () { return this.nodeType === 3; }).remove();
-	}
+	// Refresh hata diya; Clear Filters upar toolbar me (icon-only) aa gaya.
+	const $clearTop = page.add_button(__("Clear Filters"), clearAllFilters, { icon: "filter-x" });
+	$clearTop.attr({ title: __("Clear Filters"), "aria-label": __("Clear Filters") })
+		.contents().filter(function () { return this.nodeType === 3; }).remove();
 	page.set_primary_action(__("Export CSV"), () => exportCSV(), "download");
+
+	// Page head me 3-dot menu hide (dono modes ke liye).
+	page.hide_menu();
+	page.wrapper.find(".more-button").hide();
 
 	// ── Filter bar HTML ──────────────────────────────────────────────────────
 	const $filterBar = $(`
@@ -260,15 +261,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					padding:0 8px;font-size:12px;min-width:130px;background:#fff;" />
 			</div>
 
-			${IS_AGENT ? `
-			<div style="display:flex;align-items:flex-end;gap:6px;margin-top:auto;">
-				<button id="asr-clear-btn" title="Clear Filters"
-					style="height:32px;width:32px;display:flex;align-items:center;justify-content:center;
-					background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;
-					border-radius:6px;font-size:16px;cursor:pointer;padding:0;">
-					↺
-				</button>
-			</div>` : ""}
 		</div>
 	`).appendTo(page.main);
 
@@ -586,23 +578,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	$("#asr-filter-rp, #asr-filter-rt, #asr-filter-sol").on("change", applyFilters);
 	$("#asr-filter-from, #asr-filter-to").on("change", applyFilters);
 
-	$("#asr-clear-btn").on("click", () => {
-		$("#asr-filter-status,#asr-filter-rp,#asr-filter-rt,#asr-filter-sol").val("");
-		$("#asr-filter-from,#asr-filter-to").val("");
-		$(".asr-col-search").val("");
-		state.colSearch = {};
-		state.mainTab = "all";
-		state.subStatus = "";
-		renderTabs();
-		state.filters = {};
-		resetAndLoad();
-	});
 	if (IS_AGENT) {
 		$("#asr-filter-branch-code").on("change", applyFilters);
-		$("#asr-clear-btn").on("click", () => {
-			$("#asr-filter-branch-code").val("");
-			applyFilters();
-		});
 	}
 
 	// ── Infinite scroll via IntersectionObserver ─────────────────────────────
