@@ -7,7 +7,6 @@ TICKET_TYPE = "Agent Service Request"
 REQUEST_TYPES = {
     "Agent Customer Mapping": [
         ("action_type", "Action Type", "Select", "Modify\nRemove", 1),
-        ("branch_sol_details", "Branch / SOL Details", "Small Text", None, 0),
         ("new_agent_code", "New Agent Code", "Data", None, 0),
         ("new_agent_name", "New Agent Name", "Data", None, 0),
         ("reason", "Reason", "Small Text", None, 1),
@@ -68,6 +67,13 @@ OLD_NAMES = [
 
 
 def execute():
+    # Branch details are now shown from the Agent master in the request row,
+    # so this old optional field is no longer needed.
+    frappe.db.delete("Request Field", {
+        "service_request_sub_type": "Agent Customer Mapping",
+        "field_key": "branch_sol_details",
+    })
+
     for old in OLD_NAMES:
         frappe.db.delete("Request Field", {"service_request_sub_type": old})
         if frappe.db.exists("Service Request Sub Type", old):
