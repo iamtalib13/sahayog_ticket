@@ -523,7 +523,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				field: "executive_remark", commentAfter: true,
 				title: "Enter Remark for Branch", label: "Branch Remark" });
 		}
-		if (br && st === "In-Progress" && rp !== "Pending Operations") {
+		if (br && !frappe.user.has_role("Operations Support Executive") && st === "In-Progress" && rp !== "Pending Operations") {
 			out.push({ key: "Send to CPC", rp: "Pending Operations",
 				field: "executive_remark", commentAfter: true,
 				title: "Enter Info Provided", label: "Info for CPC" });
