@@ -46,8 +46,13 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		{ label: "Status",          width: 100 },
 		{ label: "Response Pending",width: 160 },
 		{ label: "Cycle",           width: 50 },
-		{ label: "Priority",        width: 90 },
-		{ label: "Assigned To",     width: 130 },
+		{ label: "Employee",        width: 130 },
+		{ label: "State",           width: 90 },
+		{ label: "Zone",            width: 90 },
+		{ label: "Region",          width: 90 },
+		{ label: "District",        width: 90 },
+		{ label: "Resolved By",     width: 110 },
+		{ label: "Resolved Date",   width: 120 },
 		{ label: "Remark",          width: 160 },
 		{ label: "Last Modified",   width: 130, sticky: "right" },
 	];
@@ -55,9 +60,12 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		null, null, { key: "ticket", label: "Ticket" }, { key: "creation_date", label: "Creation Date" },
 		{ key: "sub_type", label: "Request Type" }, { key: "agent_code", label: "Agent Code" },
 		{ key: "agent_name", label: "Agent Name" }, { key: "branch_code", label: "Branch Code" },
-		{ key: "branch_name", label: "Branch Name" }, null, null, null, null,
-		{ key: "assigned_to", label: "Assigned To" }, { key: "remark", label: "Remark" },
-		{ key: "modified", label: "Last Modified" },
+		{ key: "branch_name", label: "Branch Name" }, null, null, null,
+		{ key: "employee", label: "Employee" }, { key: "state", label: "State" },
+		{ key: "zone", label: "Zone" }, { key: "region", label: "Region" },
+		{ key: "district", label: "District" }, { key: "resolved_by", label: "Resolved By" },
+		{ key: "resolved_date", label: "Resolved Date" },
+		{ key: "remark", label: "Remark" }, { key: "modified", label: "Last Modified" },
 	];
 
 	function buildAgentColumnFilters() {
@@ -1781,6 +1789,13 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			const bg      = rowIdx % 2 === 0 ? "#fff" : "#fafafa";
 			const mod     = formatModified(r.modified);
 			const shortId = String(r.ticket || "").split("-").slice(-2).join("-") || r.ticket;
+			const resolvedDateHtml = (function () {
+				if (!r.resolved_date) return "—";
+				const d = esc(r.resolved_date.split("-").reverse().join("-"));
+				const tm = timePart(r.resolved_time);
+				return `<div style="white-space:nowrap;color:#475569;">${d}</div>` +
+					(tm ? `<div style="font-size:10.5px;color:#94a3b8;white-space:nowrap;">${tm}</div>` : "");
+			})();
 			const $tr = $(`<tr style="cursor:pointer;border-bottom:1px solid #f1f5f9;background:${bg};">
 				<td style="${tdBase}color:#94a3b8;">${rowIdx + 1}</td>
 				<td class="asr-cmt-cell" style="${tdBase}position:sticky;left:0;z-index:2;background:${bg};border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);cursor:default;" title="${esc((r.last_comment_by ? r.last_comment_by + ': ' : '') + (r.last_comment || ''))}">
@@ -1799,8 +1814,16 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				<td style="${tdBase}">${badge(r.status, STATUS_STYLE[r.status])}</td>
 				<td style="${tdBase}">${r.response_pending ? badge(r.response_pending, RP_STYLE[r.response_pending]) : "—"}</td>
 				<td style="${tdBase}text-align:center;color:#64748b;">${r.ticket_cycle || 0}</td>
-				<td style="${tdBase}color:#475569;">${esc(r.priority || "—")}</td>
-				<td style="${tdBase}color:#475569;">${esc(r.assigned_to_name || r.assigned_to || "—")}</td>
+				<td style="${tdBase}color:#475569;" title="${esc(r.employee_name || r.employee_id || "")}">
+					<span style="font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;">${esc(r.employee_name || "—")}</span>
+					<span style="font-size:10.5px;color:#94a3b8;display:block;overflow:hidden;text-overflow:ellipsis;">${esc(r.employee_id || "")}</span>
+				</td>
+				<td style="${tdBase}color:#475569;">${esc(r.state || "—")}</td>
+				<td style="${tdBase}color:#475569;">${esc(r.zone || "—")}</td>
+				<td style="${tdBase}color:#475569;">${esc(r.region || "—")}</td>
+				<td style="${tdBase}color:#475569;">${esc(r.district || "—")}</td>
+				<td style="${tdBase}color:#475569;">${esc(r.resolved_by || "—")}</td>
+				<td style="${tdBase}overflow:hidden;">${resolvedDateHtml}</td>
 				<td style="${tdBase}font-size:11.5px;color:#475569;">${esc(r.remark || "—")}</td>
 				<td style="${tdBase}border-left:1px solid #e2e8f0;position:sticky;right:0;z-index:2;background:${bg};box-shadow:-2px 0 4px rgba(0,0,0,0.06);">${mod.html}</td>
 			</tr>`);
