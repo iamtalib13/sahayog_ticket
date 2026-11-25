@@ -38,7 +38,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		{ label: "Comments",        width: 88,  sticky: "left" },
 		{ label: "Ticket",          width: 110 },
 		{ label: "Creation Date",   width: 100 },
-		{ label: "Sub Type",        width: 160 },
+		{ label: "Request Type",        width: 160 },
 		{ label: "Agent Code",      width: 110 },
 		{ label: "Agent Name",      width: 140 },
 		{ label: "Branch Code",     width: 110 },
@@ -53,7 +53,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	];
 	const AGENT_COL_SEARCH = [
 		null, { key: "ticket", label: "Ticket" }, { key: "creation_date", label: "Creation Date" },
-		{ key: "sub_type", label: "Sub Type" }, { key: "agent_code", label: "Agent Code" },
+		{ key: "sub_type", label: "Request Type" }, { key: "agent_code", label: "Agent Code" },
 		{ key: "agent_name", label: "Agent Name" }, { key: "branch_code", label: "Branch Code" },
 		{ key: "branch_name", label: "Branch Name" }, null, null, null, null,
 		{ key: "assigned_to", label: "Assigned To" }, { key: "remark", label: "Remark" },
@@ -266,7 +266,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 	// Agent mode: same filter bar, agent labels + one extra Branch Code input.
 	if (IS_AGENT) {
-		$filterBar.find("label:contains('Request Type')").text("Sub Type");
 		$filterBar.find("label:contains('SOL ID')").text("Agent Code");
 		$filterBar.children().last().before(`
 			<div style="display:flex;flex-direction:column;gap:3px;">
@@ -1964,7 +1963,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					<div style="width:340px;flex-shrink:0;background:#f8fafc;border-right:1px solid #e2e8f0;overflow-y:auto;">
 						<div style="padding:14px 16px 10px;">
 							<div style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">Ticket Details</div>
-							${detailLine("Sub Type", row.sub_type)}
+							${detailLine("Request Type", row.sub_type)}
 							${detailLine("Priority", row.priority)}
 							${detailLine("Status", row.status)}
 							${detailLine("Response Pending", row.response_pending)}
