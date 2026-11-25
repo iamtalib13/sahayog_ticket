@@ -884,3 +884,445 @@ def attach_file_to_ticket(ticket, file_url):
     }).insert(ignore_permissions=True)
 
     return {"status": "ok", "file_name": display}
+
+
+# ---------------------------------------------------------------------------
+# Agent Service Request report — same Page, isolated API methods.
+# Account functions above are deliberately untouched.
+# ---------------------------------------------------------------------------
+
+AGENT_TICKET_TYPE = "Agent Service Request"
+
+
+def _require_agent_read():
+    if not frappe.has_permission("Sahayog Ticket", "read"):
+        frappe.throw("You do not have access to Agent Service Requests.",
+                     frappe.PermissionError)
+
+
+def _require_agent_ticket(ticket):
+    """Both permission and ticket_type guard — no account record can leak."""
+    _require_agent_read()
+    actual = frappe.db.get_value("Sahayog Ticket", ticket, "ticket_type")
+    if actual != AGENT_TICKET_TYPE:
+        frappe.throw("This ticket is not an Agent Service Request.",
+                     frappe.PermissionError)
+
+
+def _build_agent_conditions(filters, exclude_status=False):
+    filters = filters or {}
+    conditions = ["st.ticket_type = %s"]
+    params = [AGENT_TICKET_TYPE]
+
+    allowed_statuses = ("Open", "In-Progress", "Resolved", "Closed")
+    if not exclude_status and filters.get("statuses"):
+        vals = [s for s in filters["statuses"] if s in allowed_statuses]
+        if vals:
+            conditions.append("st.status IN ({})".format(", ".join(["%s"] * len(vals))))
+            params.extend(vals)
+
+    if not exclude_status and filters.get("status") in allowed_statuses:
+        conditions.append("st.status = %s")
+        params.append(filters["status"])
+
+    if filters.get("response_pending"):
+        conditions.append("st.response_pending = %s")
+        params.append(filters["response_pending"])
+
+    for key, field in (("sub_type", "sub_type"), ("agent_code", "agent_code"),
+                       ("branch_code", "branch_code")):
+        if filters.get(key):
+            conditions.append(
+                "EXISTS (SELECT 1 FROM `tabTicket Item` ti "
+                "WHERE ti.parent = st.name AND ti.{0} = %s)".format(field))
+            params.append(filters[key])
+
+    if filters.get("from_date"):
+        conditions.append("DATE(st.creation) >= %s")
+        params.append(filters["from_date"])
+    if filters.get("to_date"):
+        conditions.append("DATE(st.creation) <= %s")
+        params.append(filters["to_date"])
+
+    col_search = filters.get("column_search") or {}
+    if isinstance(col_search, dict):
+        simple_cols = {
+            "ticket": "st.name", "status": "st.status",
+            "response_pending": "st.response_pending", "priority": "st.priority",
+            "modified": "st.modified",
+        }
+        item_cols = ("sub_type", "agent_code", "agent_name",
+                     "branch_code", "branch_name")
+        for key, raw in col_search.items():
+            val = (raw or "").strip()
+            if not val:
+                continue
+            like = "%" + val + "%"
+            if key in simple_cols:
+                conditions.append("{0} LIKE %s".format(simple_cols[key]))
+                params.append(like)
+            elif key in item_cols:
+                conditions.append(
+                    "EXISTS (SELECT 1 FROM `tabTicket Item` ti "
+                    "WHERE ti.parent = st.name AND ti.{0} LIKE %s)".format(key))
+                params.append(like)
+            elif key == "assigned_to":
+                conditions.append("(st.assigned_to LIKE %s OR st.assigned_to_name LIKE %s)")
+                params.extend([like, like])
+            elif key == "remark":
+                conditions.append("st.resolved_remark LIKE %s")
+                params.append(like)
+            elif key == "comments":
+                conditions.append("""EXISTS (
+                    SELECT 1 FROM tabComment c
+                    WHERE c.reference_doctype = 'Sahayog Ticket'
+                      AND c.reference_name = st.name
+                      AND c.comment_type = 'Comment' AND c.content LIKE %s
+                )""")
+                params.append(like)
+            elif key == "creation_date":
+                conditions.append(
+                    "(DATE_FORMAT(st.creation, '%%d-%%m-%%Y') LIKE %s "
+                    "OR DATE(st.creation) LIKE %s)")
+                params.extend([like, like])
+
+    return conditions, params
+
+
+def _agent_updates(rows):
+    """Dynamic Request Field values, grouped per ticket for the dialog."""
+    key_map = {}
+    keys = []
+    for r in rows:
+        key = r.get("item_key") or ""
+        if key:
+            keys.append(key)
+            key_map[key] = (r.get("ticket"), r.get("sub_type") or "Agent Request")
+    if not keys:
+        return {}
+
+    labels = {}
+    for f in frappe.get_all("Request Field", fields=["field_key", "label"]):
+        labels[f.field_key] = f.label or f.field_key
+
+    values = {}
+    for start in range(0, len(keys), 500):
+        chunk = keys[start:start + 500]
+        for v in frappe.get_all(
+                "Ticket Item Value",
+                filters={"item_key": ["in", chunk]},
+                fields=["item_key", "field_key", "value_data", "value_text",
+                        "value_date", "value_display"],
+                order_by="idx asc"):
+            val = (v.value_display or v.value_data or v.value_text
+                   or (str(v.value_date) if v.value_date else ""))
+            val = str(val).strip()
+            if not val:
+                continue
+            values.setdefault(v.item_key, []).append({
+                "label": labels.get(v.field_key, v.field_key),
+                "value": val,
+            })
+
+    out = {}
+    for key, (ticket, sub_type) in key_map.items():
+        lines = values.get(key) or []
+        if lines:
+            out[ticket] = [{
+                "title": sub_type,
+                "groups": [{"section": "", "lines": lines}],
+            }]
+    return out
+
+
+@frappe.whitelist()
+def agent_get_report_data(filters=None, page_no=1, page_size=20):
+    """Agent-only report rows + summary. Never returns account tickets."""
+    _require_agent_read()
+    if isinstance(filters, str):
+        import json
+        filters = json.loads(filters)
+    filters = filters or {}
+    page_no = int(page_no)
+    page_size = int(page_size)
+    offset = (page_no - 1) * page_size
+
+    conditions, params = _build_agent_conditions(filters)
+    where_clause = "WHERE " + " AND ".join(conditions)
+
+    count_row = frappe.db.sql(
+        f"SELECT COUNT(*) as cnt FROM `tabSahayog Ticket` st {where_clause}",
+        params, as_dict=True)
+    total = count_row[0].cnt if count_row else 0
+
+    query = f"""
+        SELECT
+            st.name AS ticket,
+            st.status, st.dept_name, st.response_pending, st.ticket_type,
+            st.priority, st.assigned_to, st.assigned_to_name,
+            st.ticket_resolved_user AS resolved_by, st.ticket_resolved_on,
+            st.resolved_remark, st.executive_remark, st.creation, st.modified,
+            (SELECT ti.sub_type FROM `tabTicket Item` ti
+              WHERE ti.parent = st.name LIMIT 1) AS sub_type,
+            (SELECT ti.agent_code FROM `tabTicket Item` ti
+              WHERE ti.parent = st.name LIMIT 1) AS agent_code,
+            (SELECT ti.agent_name FROM `tabTicket Item` ti
+              WHERE ti.parent = st.name LIMIT 1) AS agent_name,
+            (SELECT ti.branch_code FROM `tabTicket Item` ti
+              WHERE ti.parent = st.name LIMIT 1) AS branch_code,
+            (SELECT ti.branch_name FROM `tabTicket Item` ti
+              WHERE ti.parent = st.name LIMIT 1) AS branch_name,
+            (SELECT ti.item_key FROM `tabTicket Item` ti
+              WHERE ti.parent = st.name LIMIT 1) AS item_key,
+            (SELECT COUNT(*) FROM tabComment c
+              WHERE c.reference_doctype = 'Sahayog Ticket'
+                AND c.reference_name = st.name
+                AND c.comment_type = 'Comment') AS comments_count,
+            (SELECT c.content FROM tabComment c
+              WHERE c.reference_doctype = 'Sahayog Ticket'
+                AND c.reference_name = st.name
+                AND c.comment_type = 'Comment'
+              ORDER BY c.creation DESC LIMIT 1) AS last_comment,
+            (SELECT c.comment_by FROM tabComment c
+              WHERE c.reference_doctype = 'Sahayog Ticket'
+                AND c.reference_name = st.name
+                AND c.comment_type = 'Comment'
+              ORDER BY c.creation DESC LIMIT 1) AS last_comment_by,
+            DATE(st.ticket_resolved_on) AS resolved_date,
+            TIME(st.ticket_resolved_on) AS resolved_time
+        FROM `tabSahayog Ticket` st
+        {where_clause}
+        ORDER BY st.modified DESC
+        LIMIT %s OFFSET %s
+    """
+    rows = frappe.db.sql(query, params + [page_size, offset], as_dict=True)
+    handoffs = _handoff_counts([t.ticket for t in rows])
+    updates = _agent_updates(rows)
+
+    data = []
+    for t in rows:
+        data.append({
+            "ticket":            t.ticket,
+            "creation_date":     str(getdate(t.creation)) if t.creation else "",
+            "creation_time":     str(get_time(t.creation)) if t.creation else "",
+            "modified":          str(t.modified) if t.modified else "",
+            "status":            t.status or "",
+            "dept_name":         t.dept_name or "",
+            "response_pending":  t.response_pending or "",
+            "ticket_type":       t.ticket_type or "",
+            "priority":          t.priority or "",
+            "sub_type":          t.sub_type or "",
+            "agent_code":        t.agent_code or "",
+            "agent_name":        t.agent_name or "",
+            "branch_code":       t.branch_code or "",
+            "branch_name":       t.branch_name or "",
+            "assigned_to":       t.assigned_to or "",
+            "assigned_to_name":  t.assigned_to_name or "",
+            "ticket_cycle":      handoffs.get(t.ticket, 0),
+            "resolved_by":       t.resolved_by or "",
+            "resolved_date":     str(t.resolved_date) if t.resolved_date else "",
+            "resolved_time":     str(t.resolved_time) if t.resolved_time else "",
+            "remark":            (t.get("resolved_remark") or "").strip(),
+            "executive_remark":  (t.get("executive_remark") or "").strip(),
+            "comments_count":    t.comments_count or 0,
+            "last_comment":      _strip_html(t.last_comment or ""),
+            "last_comment_by":   t.last_comment_by or "",
+            "updates":           updates.get(t.ticket, []),
+        })
+
+    sum_filters = dict(filters or {})
+    sum_filters.pop("response_pending", None)
+    sum_conditions, sum_params = _build_agent_conditions(sum_filters, exclude_status=True)
+    summary = _get_summary(sum_conditions, sum_params)
+
+    rp_filters = dict(filters or {})
+    rp_filters.pop("response_pending", None)
+    rp_conditions, rp_params = _build_agent_conditions(rp_filters, exclude_status=True)
+    rp_conditions.append("st.status IN ('Open','In-Progress')")
+    rp_rows = frappe.db.sql(
+        f"""SELECT st.response_pending, COUNT(*) as cnt
+            FROM `tabSahayog Ticket` st
+            WHERE {" AND ".join(rp_conditions)}
+            GROUP BY st.response_pending""",
+        rp_params, as_dict=True)
+    for r in rp_rows:
+        key = r.response_pending or ""
+        if key in ("Pending Operations", "Pending Branch"):
+            summary[key] = summary.get(key, 0) + r.cnt
+    summary.setdefault("Pending Operations", 0)
+    summary.setdefault("Pending Branch", 0)
+
+    _attach_last_cpc_comment(data)
+    return {
+        "data": data, "total": total, "page_no": page_no,
+        "page_size": page_size, "summary": summary,
+    }
+
+
+@frappe.whitelist()
+def agent_get_filter_options():
+    """Agent sub types and agent codes for the same report page."""
+    _require_agent_read()
+    sub_types = [
+        r.sub_type_name or r.name
+        for r in frappe.get_all(
+            "Service Request Sub Type",
+            filters={"ticket_type": AGENT_TICKET_TYPE, "is_active": 1},
+            fields=["name", "sub_type_name"], order_by="name asc")
+    ]
+    agent_codes = frappe.get_all(
+        "Agent", fields=["name as agent_code", "agent_name"],
+        order_by="agent_name asc", limit_page_length=0)
+    return {"sub_types": sub_types, "agent_codes": agent_codes}
+
+
+@frappe.whitelist()
+def agent_get_ticket_comments(ticket):
+    _require_agent_ticket(ticket)
+    return get_ticket_comments(ticket)
+
+
+@frappe.whitelist()
+def agent_get_ticket_detail(ticket):
+    _require_agent_ticket(ticket)
+    detail = get_ticket_detail(ticket)
+    detail["employee"] = None
+
+    # Raised-by panel: agent master details (account panel uses Employee).
+    agent_code = frappe.db.get_value("Ticket Item", {"parent": ticket}, "agent_code")
+    agent = None
+    if agent_code and frappe.db.exists("Agent", agent_code):
+        agent = frappe.db.get_value(
+            "Agent", agent_code,
+            ["name", "agent_name", "phone_number", "branch_code",
+             "branch_name", "role", "status", "requested_by"],
+            as_dict=True)
+    detail["agent"] = agent
+    return detail
+
+
+@frappe.whitelist()
+def agent_add_ticket_comment(ticket, text):
+    _require_agent_ticket(ticket)
+    return add_ticket_comment(ticket, text)
+
+
+@frappe.whitelist()
+def agent_attach_file_to_ticket(ticket, file_url):
+    _require_agent_ticket(ticket)
+    return attach_file_to_ticket(ticket, file_url)
+
+
+AGENT_CSV_HEADERS = [
+    "Last Modified", "Ticket", "Creation Date", "Creation Time",
+    "Sub Type", "Agent Code", "Agent Name", "Branch Code", "Branch Name",
+    "Status", "Response Pending", "Ticket Cycle", "Priority",
+    "Assigned To", "Resolved By", "Resolved Date", "Resolved Time",
+    "Resolver Remark", "Last Comment By", "Last Comment",
+]
+
+
+def _build_agent_export_csv(data):
+    import io
+
+    buf = io.StringIO()
+    buf.write(",".join(AGENT_CSV_HEADERS) + "\n")
+    for row in data:
+        vals = [
+            _fmt_modified(row.get("modified")),
+            row.get("ticket"),
+            _fmt_date(row.get("creation_date")),
+            _fmt_time(row.get("creation_time")),
+            row.get("sub_type"),
+            row.get("agent_code"),
+            row.get("agent_name"),
+            row.get("branch_code"),
+            row.get("branch_name"),
+            row.get("status"),
+            row.get("response_pending"),
+            row.get("ticket_cycle"),
+            row.get("priority"),
+            row.get("assigned_to_name") or row.get("assigned_to"),
+            row.get("resolved_by"),
+            _fmt_date(row.get("resolved_date")),
+            _fmt_time(row.get("resolved_time")),
+            row.get("remark"),
+            row.get("last_cpc_by"),
+            row.get("last_cpc_comment"),
+        ]
+        line = ",".join(
+            '"%s"' % str(v if v is not None else "").replace('"', '""')
+            for v in vals)
+        buf.write(line + "\n")
+    return "\ufeff" + buf.getvalue()
+
+
+def _agent_export_filename():
+    from frappe.utils import nowdate
+    return "Agent_Service_Report_%s.csv" % nowdate()
+
+
+@frappe.whitelist()
+def agent_export_report(filters=None):
+    _require_agent_read()
+    if isinstance(filters, str):
+        import json
+        filters = json.loads(filters)
+    filters = filters or {}
+
+    conditions, params = _build_agent_conditions(filters)
+    where_clause = "WHERE " + " AND ".join(conditions)
+    cnt = frappe.db.sql(
+        f"SELECT COUNT(*) FROM `tabSahayog Ticket` st {where_clause}", params)
+    total = cnt[0][0] if cnt else 0
+
+    if total <= SYNC_EXPORT_LIMIT:
+        data = agent_get_report_data(
+            filters=filters, page_no=1, page_size=max(total, 1))["data"]
+        return {
+            "mode": "sync",
+            "content": _build_agent_export_csv(data),
+            "filename": _agent_export_filename(),
+        }
+
+    frappe.enqueue(
+        agent_export_report_job,
+        filters=filters,
+        user=frappe.session.user,
+        queue="long",
+        job_id="asr_agent_export_%s" % frappe.session.user,
+        deduplicate=True,
+    )
+    return {"mode": "queued", "total": total}
+
+
+def agent_export_report_job(filters, user):
+    data = agent_get_report_data(filters=filters, page_no=1,
+                                page_size=10 ** 6)["data"]
+    content = _build_agent_export_csv(data)
+
+    file_doc = frappe.get_doc({
+        "doctype": "File",
+        "file_name": _agent_export_filename(),
+        "is_private": 1,
+        "content": content,
+    }).insert(ignore_permissions=True)
+    frappe.db.commit()
+
+    file_url = file_doc.file_url
+    link = frappe.utils.get_url(file_url)
+    frappe.publish_realtime(
+        "asr_agent_export_ready",
+        {"file_url": file_url, "file_name": file_doc.file_name, "rows": len(data)},
+        user=user,
+    )
+    try:
+        frappe.sendmail(
+            recipients=[user],
+            subject="Agent Service Report export is ready (%s rows)" % len(data),
+            message='Your Agent Service Report export is ready.<br><br>'
+                    '<a href="%s">Download %s</a>' % (link, file_doc.file_name),
+        )
+    except Exception:
+        frappe.log_error("ASR agent export email failed",
+                         title="ASR agent export email failed")
