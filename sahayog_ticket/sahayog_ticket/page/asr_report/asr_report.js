@@ -100,6 +100,19 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		colSearch: {},      // per-column text search {key: text}
 	};
 
+	// Clear every filter and tab selection, then reload from page 1.
+	function clearAllFilters() {
+		$("#asr-filter-status,#asr-filter-rp,#asr-filter-rt,#asr-filter-sol").val("");
+		$("#asr-filter-from,#asr-filter-to").val("");
+		$(".asr-col-search").val("");
+		state.colSearch = {};
+		state.mainTab = "all";
+		state.subStatus = "";
+		renderTabs();
+		state.filters = {};
+		resetAndLoad();
+	}
+
 	// Taskflow-style groups: Pending = Open+In-Progress, Completed = Closed+Resolved.
 	const TAB_GROUPS = {
 		pending:   ["Open", "In-Progress"],
@@ -178,7 +191,14 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	}
 
 	// ── Page toolbar buttons ─────────────────────────────────────────────────
-	page.add_button(__("Refresh"), () => resetAndLoad(), { icon: "refresh" });
+	if (IS_AGENT) {
+		page.add_button(__("Refresh"), () => resetAndLoad(), { icon: "refresh" });
+	} else {
+		// Account: Refresh removed; Clear Filters moves up in its place.
+		const $clearTop = page.add_button(__("Clear Filters"), clearAllFilters, { icon: "filter-x" });
+		$clearTop.attr({ title: __("Clear Filters"), "aria-label": __("Clear Filters") })
+			.contents().filter(function () { return this.nodeType === 3; }).remove();
+	}
 	page.set_primary_action(__("Export CSV"), () => exportCSV(), "download");
 
 	// ── Filter bar HTML ──────────────────────────────────────────────────────
@@ -240,6 +260,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					padding:0 8px;font-size:12px;min-width:130px;background:#fff;" />
 			</div>
 
+			${IS_AGENT ? `
 			<div style="display:flex;align-items:flex-end;gap:6px;margin-top:auto;">
 				<button id="asr-clear-btn" title="Clear Filters"
 					style="height:32px;width:32px;display:flex;align-items:center;justify-content:center;
@@ -247,7 +268,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					border-radius:6px;font-size:16px;cursor:pointer;padding:0;">
 					↺
 				</button>
-			</div>
+			</div>` : ""}
 		</div>
 	`).appendTo(page.main);
 
