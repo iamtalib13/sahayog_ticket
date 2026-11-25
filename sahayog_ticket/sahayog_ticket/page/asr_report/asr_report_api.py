@@ -954,7 +954,8 @@ def _build_agent_conditions(filters, exclude_status=False):
         simple_cols = {
             "ticket": "st.name", "status": "st.status",
             "response_pending": "st.response_pending", "priority": "st.priority",
-            "modified": "st.modified",
+            "state": "st.state", "zone": "st.zone", "region": "st.region",
+            "district": "st.district", "modified": "st.modified",
         }
         item_cols = ("sub_type", "agent_code", "agent_name",
                      "branch_code", "branch_name")
@@ -974,6 +975,12 @@ def _build_agent_conditions(filters, exclude_status=False):
             elif key == "assigned_to":
                 conditions.append("(st.assigned_to LIKE %s OR st.assigned_to_name LIKE %s)")
                 params.extend([like, like])
+            elif key == "employee":
+                conditions.append("(st.employee_name LIKE %s OR st.employee_id LIKE %s)")
+                params.extend([like, like])
+            elif key == "resolved_by":
+                conditions.append("st.ticket_resolved_user LIKE %s")
+                params.append(like)
             elif key == "remark":
                 conditions.append("st.resolved_remark LIKE %s")
                 params.append(like)
@@ -985,10 +992,11 @@ def _build_agent_conditions(filters, exclude_status=False):
                       AND c.comment_type = 'Comment' AND c.content LIKE %s
                 )""")
                 params.append(like)
-            elif key == "creation_date":
+            elif key in ("creation_date", "resolved_date"):
+                col = "st.creation" if key == "creation_date" else "st.ticket_resolved_on"
                 conditions.append(
-                    "(DATE_FORMAT(st.creation, '%%d-%%m-%%Y') LIKE %s "
-                    "OR DATE(st.creation) LIKE %s)")
+                    "(DATE_FORMAT({0}, '%%d-%%m-%%Y') LIKE %s "
+                    "OR DATE({0}) LIKE %s)".format(col))
                 params.extend([like, like])
 
     return conditions, params
@@ -1065,6 +1073,8 @@ def agent_get_report_data(filters=None, page_no=1, page_size=20):
             st.name AS ticket,
             st.status, st.dept_name, st.response_pending, st.ticket_type,
             st.priority, st.assigned_to, st.assigned_to_name,
+            st.employee_id, st.employee_name,
+            st.state, st.zone, st.region, st.district,
             st.ticket_resolved_user AS resolved_by, st.ticket_resolved_on,
             st.resolved_remark, st.executive_remark, st.creation, st.modified,
             (SELECT ti.sub_type FROM `tabTicket Item` ti
@@ -1123,6 +1133,12 @@ def agent_get_report_data(filters=None, page_no=1, page_size=20):
             "branch_name":       t.branch_name or "",
             "assigned_to":       t.assigned_to or "",
             "assigned_to_name":  t.assigned_to_name or "",
+            "employee_id":       t.employee_id or "",
+            "employee_name":     t.employee_name or "",
+            "state":             t.state or "",
+            "zone":              t.zone or "",
+            "region":            t.region or "",
+            "district":          t.district or "",
             "ticket_cycle":      handoffs.get(t.ticket, 0),
             "resolved_by":       t.resolved_by or "",
             "resolved_date":     str(t.resolved_date) if t.resolved_date else "",
