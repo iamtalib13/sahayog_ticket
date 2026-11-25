@@ -1118,6 +1118,35 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				}
 				return null;
 			}
+			// Pull the same named group from EVERY child request (not just the first).
+			function _getGroups(sectionName) {
+				const out = [];
+				(row.updates || []).forEach(u => {
+					(u.groups || []).forEach(g => {
+						if (g.section === sectionName && (g.lines || []).length) {
+							out.push({
+								title: u.title || "",
+								status: (u.request_status || "").trim(),
+								lines: g.lines,
+							});
+						}
+					});
+				});
+				return out;
+			}
+			// Status pill for one child request (Pending / Completed / Rejected).
+			function _statusPill(status) {
+				const s = status || "Pending";
+				const palette = s === "Completed"
+					? { bg: "#dcfce7", fg: "#15803d", bd: "#86efac" }
+					: s === "Rejected"
+						? { bg: "#fee2e2", fg: "#b91c1c", bd: "#fecaca" }
+						: { bg: "#fef3c7", fg: "#b45309", bd: "#fcd34d" };
+				const mark = s === "Completed" ? "✓" : s === "Rejected" ? "✕" : "•";
+				return `<span style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;
+					font-size:9.5px;font-weight:700;line-height:1;padding:3px 7px;border-radius:999px;
+					background:${palette.bg};color:${palette.fg};border:1px solid ${palette.bd};">${mark} ${frappe.utils.escape_html(s)}</span>`;
+			}
 			// Return value by label inside a group.
 			function _groupVal(g, label) {
 				if (!g) return "";
@@ -1146,7 +1175,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			// AND CIF / attatchment from section='' group.
 			const _grpRoot   = _getGroup("");
 			const _grpAcct   = _getGroup("Account Holder Details");
-			const _grpNew    = _getGroup("New Information");
 
 			const cifVal      = _groupVal(_grpRoot, "Customer ID");
 			const custName    = _groupVal(_grpAcct, "Customer Name");
@@ -1155,8 +1183,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			const emailVal    = _groupVal(_grpAcct, "Email");   // account email (not new)
 			const contactVal  = _groupVal(_grpAcct, "Contact Number");
 
-			// New Information lines (only filled, any request type).
-			const newLines    = (_grpNew && _grpNew.lines) ? _grpNew.lines : [];
+			// New Information from all requests in this ticket.
+			const newGroups   = _getGroups("New Information");
 
 			// Attachments from dt.files (ticket-level) — inline in Account Holder section.
 			const files = (dt.files && dt.files.length) ? dt.files : [];
@@ -1337,8 +1365,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						</div>
 					</div>
 
-					<!-- ── REQUESTED UPDATES ── -->
-					${newLines.length ? `
+					<!-- ── REQUESTED UPDATES (all child requests) ── -->
+					${newGroups.length ? `
 					<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
 					<div style="padding:10px 16px;">
 						<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
@@ -1346,16 +1374,23 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							<div style="flex:1;height:1px;background:#e2e8f0;"></div>
 						</div>
 						<div style="display:flex;flex-direction:column;gap:0;">
-							${newLines.map((ln) => {
-								const escaped = frappe.utils.escape_html(ln.value || "");
-								const isDate = /^\d{4}-\d{2}-\d{2}$/.test((ln.value || "").trim());
-								const display = isDate ? ln.value.trim().split("-").reverse().join("-") : escaped;
-								const isLong = (ln.value || "").length > 40;
-								return `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">
-									<div style="font-size:10.5px;color:#94a3b8;font-weight:500;margin-bottom:2px;">${frappe.utils.escape_html(ln.label || "")}</div>
-									<div style="${isLong ? "white-space:pre-wrap;word-break:break-word;" : ""}font-size:12.5px;color:#0f172a;font-weight:600;">${isDate ? frappe.utils.escape_html(display) : escaped}</div>
-								</div>`;
-							}).join("")}
+							${newGroups.map((grp) => `
+								<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;
+									margin:8px 0 2px;background:#f1f5f9;border-radius:5px;padding:4px 7px;">
+									<span style="font-size:10.5px;font-weight:700;color:#417c7d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${frappe.utils.escape_html(grp.title || "Request")}</span>
+									${_statusPill(grp.status)}
+								</div>
+								${grp.lines.map((ln) => {
+									const escaped = frappe.utils.escape_html(ln.value || "");
+									const isDate = /^\d{4}-\d{2}-\d{2}$/.test((ln.value || "").trim());
+									const display = isDate ? ln.value.trim().split("-").reverse().join("-") : escaped;
+									const isLong = (ln.value || "").length > 40;
+									return `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">
+										<div style="font-size:10.5px;color:#94a3b8;font-weight:500;margin-bottom:2px;">${frappe.utils.escape_html(ln.label || "")}</div>
+										<div style="${isLong ? "white-space:pre-wrap;word-break:break-word;" : ""}font-size:12.5px;color:#0f172a;font-weight:600;">${isDate ? frappe.utils.escape_html(display) : escaped}</div>
+									</div>`;
+								}).join("")}
+							`).join("")}
 						</div>
 					</div>` : ""}
 
