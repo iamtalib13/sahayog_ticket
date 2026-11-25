@@ -265,7 +265,7 @@ class SahayogTicket(Document):
         """Drop orphaned/stale dynamic values before validating.
 
         Values are keyed by item_key. When a Desk row is deleted or its
-        Sub Type changes, old Ticket Item Value rows must not be saved.
+        Request Type changes, old Ticket Item Value rows must not be saved.
         """
         if self.ticket_type != "Agent Service Request":
             return
@@ -577,14 +577,14 @@ class SahayogTicket(Document):
                     )
                 if not row.sub_type:
                     frappe.throw(
-                        _("Row #{0}: Sub Type is required.").format(row.idx)
+                        _("Row #{0}: Request Type is required.").format(row.idx)
                     )
                 sub_type_ticket_type = frappe.db.get_value(
                     "Service Request Sub Type", row.sub_type, "ticket_type"
                 )
                 if sub_type_ticket_type != "Agent Service Request":
                     frappe.throw(
-                        _("Row #{0}: Invalid Sub Type for Agent Service Request.").format(
+                        _("Row #{0}: Invalid Request Type for Agent Service Request.").format(
                             row.idx
                         )
                     )
