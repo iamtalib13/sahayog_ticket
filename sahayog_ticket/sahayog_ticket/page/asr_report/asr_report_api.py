@@ -1178,7 +1178,21 @@ def agent_get_filter_options():
     agent_codes = frappe.get_all(
         "Agent", fields=["name as agent_code", "agent_name"],
         order_by="agent_name asc", limit_page_length=0)
-    return {"sub_types": sub_types, "agent_codes": agent_codes}
+    branch_codes = []
+    seen = set()
+    for b in frappe.get_all(
+            "Agent", fields=["branch_code", "branch_name"],
+            order_by="branch_code asc", limit_page_length=0):
+        code = (b.branch_code or "").strip()
+        if not code or code in seen:
+            continue
+        seen.add(code)
+        branch_codes.append({"branch_code": code, "branch_name": b.branch_name or ""})
+    return {
+        "sub_types": sub_types,
+        "agent_codes": agent_codes,
+        "branch_codes": branch_codes,
+    }
 
 
 @frappe.whitelist()
