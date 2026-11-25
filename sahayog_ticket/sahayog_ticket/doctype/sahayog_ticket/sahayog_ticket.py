@@ -332,6 +332,23 @@ class SahayogTicket(Document):
                     )
                 )
 
+        # Agent Customer Mapping: a new agent is needed only when modifying
+        # the mapping, not when removing it.
+        if row.sub_type == "Agent Customer Mapping":
+            def raw(key):
+                value = values.get(key)
+                if not value:
+                    return ""
+                return str(
+                    value.value_display or value.value_data
+                    or value.value_text or value.value_date or ""
+                ).strip()
+
+            if raw("action_type").lower() == "modify" and not raw("new_agent_code"):
+                frappe.throw(
+                    _("Row #{0}: New Agent Code is required.").format(row.idx)
+                )
+
     def validate_close_remark(self):
         # Closing Remark is mandatory whenever a ticket transitions to Closed
         if self.status != "Closed" or (self.close_remark or "").strip():
