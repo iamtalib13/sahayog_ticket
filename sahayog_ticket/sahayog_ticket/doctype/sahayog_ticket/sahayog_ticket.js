@@ -2776,7 +2776,7 @@ frappe.ui.form.on("Ticket Item", {
   },
 });
 
-// --- Agent Service Request: Agent Code -> Sub Type -> dynamic update fields ---
+// --- Agent Service Request: Agent Code -> Request Type -> dynamic update fields ---
 // The child row uses a dedicated section (see ticket_item.json) so the fields
 // actually render. Master-defined fields are rendered into the HTML field and
 // their typed values are kept in the hidden request_values child table.
@@ -2813,7 +2813,7 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
   agent_item_key(row);
   if (!row.sub_type) {
     ctrl._agent_fields = [];
-    ctrl.html('<div class="text-muted small">Sub Type select karein.</div>');
+    ctrl.html('<div class="text-muted small">Request Type select karein.</div>');
     return;
   }
   frappe.call({
@@ -2823,7 +2823,7 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
       const fields = r.message || [];
       ctrl._agent_fields = fields;
 
-      // Sub Type badla to purane field keys ki values hata do, warna
+      // Request Type badla to purane field keys ki values hata do, warna
       // stale rows save ho jayengi.
       const allowedKeys = new Set(fields.map(function (f) { return f.field_key; }));
       const before = (frm.doc.request_values || []).length;
@@ -2833,7 +2833,7 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
       if ((frm.doc.request_values || []).length !== before) frm.dirty();
 
       if (!fields.length) {
-        ctrl.html('<div class="text-muted small">Is Sub Type ke liye koi field configure nahi hai.</div>');
+        ctrl.html('<div class="text-muted small">Is Request Type ke liye koi field configure nahi hai.</div>');
         return;
       }
       const saved = {};
@@ -2958,7 +2958,7 @@ frappe.ui.form.on("Sahayog Ticket", {
         frappe.throw("Row #" + row.idx + ": Agent Code is required.");
       }
       if (!row.sub_type) {
-        frappe.throw("Row #" + row.idx + ": Sub Type is required.");
+        frappe.throw("Row #" + row.idx + ": Request Type is required.");
       }
       const ctrl = agent_dynamic_ctrl(frm, row.name);
       const readValue = function (key) {
