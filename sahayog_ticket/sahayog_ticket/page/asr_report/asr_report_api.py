@@ -110,7 +110,8 @@ def _ticket_updates(ticket):
             ("updated_dob", "Updated DOB")]),
     ]
     keys = [k for _, pairs in sections for k, _ in pairs]
-    items = frappe.get_all("Ticket Item", {"parent": ticket}, ["name"] + keys, order_by="idx")
+    items = frappe.get_all("Ticket Item", {"parent": ticket},
+                           ["name", "request_status"] + keys, order_by="idx")
     out = []
     for it in items:
         groups = []
@@ -127,7 +128,11 @@ def _ticket_updates(ticket):
                 groups.append({"section": sec, "lines": lines})
         if groups:
             head = " / ".join(x for x in (it.request_type, it.account_number) if x) or "Item"
-            out.append({"title": head, "groups": groups})
+            out.append({
+                "title": head,
+                "request_status": (it.request_status or "").strip(),
+                "groups": groups,
+            })
     return out
 
 
