@@ -52,7 +52,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		{ label: "Last Modified",   width: 130, sticky: "right" },
 	];
 	const AGENT_COL_SEARCH = [
-		null, { key: "ticket", label: "Ticket" }, { key: "creation_date", label: "Creation Date" },
+		null, null, { key: "ticket", label: "Ticket" }, { key: "creation_date", label: "Creation Date" },
 		{ key: "sub_type", label: "Request Type" }, { key: "agent_code", label: "Agent Code" },
 		{ key: "agent_name", label: "Agent Name" }, { key: "branch_code", label: "Branch Code" },
 		{ key: "branch_name", label: "Branch Name" }, null, null, null, null,
