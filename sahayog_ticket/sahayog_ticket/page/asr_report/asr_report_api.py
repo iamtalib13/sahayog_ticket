@@ -1220,7 +1220,7 @@ def agent_attach_file_to_ticket(ticket, file_url):
 
 AGENT_CSV_HEADERS = [
     "Last Modified", "Ticket", "Creation Date", "Creation Time",
-    "Sub Type", "Agent Code", "Agent Name", "Branch Code", "Branch Name",
+    "Request Type", "Agent Code", "Agent Name", "Branch Code", "Branch Name",
     "Status", "Response Pending", "Ticket Cycle", "Priority",
     "Assigned To", "Resolved By", "Resolved Date", "Resolved Time",
     "Resolver Remark", "Last Comment By", "Last Comment",
