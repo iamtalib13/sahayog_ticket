@@ -56,6 +56,8 @@ def get_agent_details(agent_code):
     return {
         "agent_name": d.get("agent_name") or "",
         "branch": d.get("branch_name") or "",
+        "branch_code": d.get("branch_code") or "",
+        "branch_name": d.get("branch_name") or "",
         "sol_id": d.get("sol_id") or "",
     }
 
@@ -86,6 +88,11 @@ def create_agent_request(args):
         if f.get("reqd") and str(values.get(f["field_key"]) or "").strip() == "":
             frappe.throw(_("{0} is required.").format(f.get("label") or f["field_key"]))
 
+    if sub_type == "Agent Customer Mapping" and \
+            str(values.get("action_type") or "").strip().lower() == "modify" and \
+            not str(values.get("new_agent_code") or "").strip():
+        frappe.throw(_("New Agent Code is required."))
+
     agent = get_agent_details(agent_code)
     agent_name = args.get("agent_name") or agent.get("agent_name") or ""
     item_key = frappe.generate_hash(length=12)
@@ -95,6 +102,8 @@ def create_agent_request(args):
         "sub_type": sub_type,
         "agent_code": agent_code,
         "agent_name": agent_name,
+        "branch_code": agent.get("branch_code") or "",
+        "branch_name": agent.get("branch_name") or "",
         "item_key": item_key,
     }
 
