@@ -276,7 +276,8 @@ frappe.ui.form.on("Sahayog Ticket", {
     // else (e.g. Operations + "Others Operations Issue") takes the free
     // lane, whose action names are In-Progress/Resolve/Re-Open/Close.
     const isOps = frm.doc.dept_name === "Operations"
-      && frm.doc.ticket_type === "Account Service Request";
+      && (frm.doc.ticket_type === "Account Service Request"
+        || frm.doc.ticket_type === "Agent Service Request");
     // Free lane (non Operations+ASR): same moves + remarks as the old
     // Status buttons (In-Progress/Resolve/Re-Open/Close).
     const need = isOps ? {
