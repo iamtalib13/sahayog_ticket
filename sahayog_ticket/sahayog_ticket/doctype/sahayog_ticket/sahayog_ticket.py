@@ -246,6 +246,7 @@ class SahayogTicket(Document):
         self.validate_workflow_requirements()
         self.fill_missing_fields()
         self.ensure_agent_item_keys()
+        self.sync_agent_request_status()
         self.cleanup_agent_request_values()
         self.validate_request_detail()
         self.check_account_validation()
@@ -260,6 +261,25 @@ class SahayogTicket(Document):
         for row in self.request_detail or []:
             if not row.item_key:
                 row.item_key = frappe.generate_hash(length=12)
+
+    def sync_agent_request_status(self):
+        """Mirror ticket status onto the single Agent request row.
+
+        Request Status is hidden on Agent rows, so the workflow owns it:
+        resolving (or closing) completes the request, reopening resets it.
+        """
+        if self.ticket_type != "Agent Service Request":
+            return
+        old = self._doc_before_save
+        if self.status in ("Resolved", "Closed") and (
+                not old or old.status not in ("Resolved", "Closed")):
+            target = "Completed"
+        elif old and old.status in ("Resolved", "Closed") and self.status == "Open":
+            target = "Pending"
+        else:
+            return
+        for row in self.request_detail or []:
+            row.request_status = target
 
     def cleanup_agent_request_values(self):
         """Drop orphaned/stale dynamic values before validating.
