@@ -300,7 +300,7 @@
    "fieldname": "sub_type",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Sub Type",
+   "label": "Request Type",
    "options": "Service Request Sub Type",
    "search_index": 1,
    "depends_on": "eval:parent.ticket_type==\"Agent Service Request\"",
