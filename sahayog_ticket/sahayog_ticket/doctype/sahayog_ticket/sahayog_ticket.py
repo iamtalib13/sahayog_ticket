@@ -250,7 +250,7 @@ class SahayogTicket(Document):
         self.validate_request_detail()
         self.check_account_validation()
         self.validate_contact_number_update()
-        # self.validate_request_item_status_for_operations()  # temporarily disabled (restore old flow); uncomment to re-enable
+        self.validate_request_item_status_for_operations()
         self.validate_close_remark()
 
     def ensure_agent_item_keys(self):
@@ -583,34 +583,32 @@ class SahayogTicket(Document):
                             f"Row {row.idx}: New Contact Number must be different from the existing Contact Number."
                         )
 
-    # --- Guard (temporarily disabled): block resolve/close while any Request Detail row is Pending.
-    #     Uncomment the call above + this method to re-enable.
-    # def validate_request_item_status_for_operations(self):
-    #     \"\"\"For Operations Account Service Requests, block Resolve/Close
-    #     while any Request Detail item is still Pending.\"\"\"
-    #     if self.dept_name != "Operations" or self.ticket_type != "Account Service Request":
-    #         return
-    #     if self.status not in ("Resolved", "Closed"):
-    #         return
-    #
-    #     old = self._doc_before_save
-    #     transitioning = self.is_new() or not old or old.status != self.status
-    #     if not transitioning:
-    #         return
-    #
-    #     pending_rows = [
-    #         row.idx for row in (self.request_detail or [])
-    #         if (row.get("request_status") or "").strip() == "Pending"
-    #     ]
-    #     if pending_rows:
-    #         frappe.throw(
-    #             _("Cannot {0} ticket while Request Detail row(s) {1} are Pending. "
-    #               "Please complete or update their Request Status first.").format(
-    #                 self.status,
-    #                 ", ".join(f"#{idx}" for idx in pending_rows),
-    #             )
-    #         )
-    #
+    def validate_request_item_status_for_operations(self):
+        """For Operations Account Service Requests, block Resolve/Close
+        while any Request Detail item is still Pending."""
+        if self.dept_name != "Operations" or self.ticket_type != "Account Service Request":
+            return
+        if self.status not in ("Resolved", "Closed"):
+            return
+
+        old = self._doc_before_save
+        transitioning = self.is_new() or not old or old.status != self.status
+        if not transitioning:
+            return
+
+        pending_rows = [
+            row.idx for row in (self.request_detail or [])
+            if (row.get("request_status") or "").strip() == "Pending"
+        ]
+        if pending_rows:
+            frappe.throw(
+                _("Cannot {0} ticket while Request Detail row(s) {1} are Pending. "
+                  "Please complete or update their Request Status first.").format(
+                    self.status,
+                    ", ".join(f"#{idx}" for idx in pending_rows),
+                )
+            )
+
     def track_status_change(self):
         if not self._doc_before_save:
             return
