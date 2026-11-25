@@ -33,7 +33,13 @@
   "new_kyc_no",
   "new_pan_no",
   "from_cif",
-  "to_cif"
+  "to_cif",
+  "agent_request_section",
+  "agent_code",
+  "agent_name",
+  "sub_type",
+  "agent_dynamic_fields",
+  "item_key"
  ],
  "fields": [
   {
@@ -43,88 +49,103 @@
    "in_list_view": 1,
    "label": "Request Type",
    "options": "\nChange of Address\nUpdate Contact Number\nUpdate Email Address\nUpdate KYC (Adhaar/Voter/Passport/etc)\nUpdate PAN NO\nUpdate Signature\nName Change\nActivation of Dormant account\nSMS Alert Registration\nNomination Addition/ Deletion/ Modification\nAccount Transfer\nDOB Updation\nPhotograph update\nAddition or removal of a joint holder\nChange in mode of operation or account operating instructions\nModification or correction of CIF/customer details\nCIF Merge\nOther modification not listed",
-   "reqd": 1
+   "reqd": 0,
+   "mandatory_depends_on": "eval:parent.ticket_type!=\"Agent Service Request\" && !doc.sub_type",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "columns": 1,
    "fieldname": "attatchment",
    "fieldtype": "Attach",
-   "label": "Attatchment"
+   "label": "Attatchment",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "columns": 2,
    "fieldname": "cif",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Customer ID"
+   "label": "Customer ID",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "fieldname": "request_type_section",
    "fieldtype": "Section Break",
-   "label": "Request Type"
+   "label": "Request Type",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "fieldname": "section_break_omei",
    "fieldtype": "Section Break",
-   "label": "Account Holder Details"
+   "label": "Account Holder Details",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "fieldname": "account_type",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Account Type"
+   "label": "Account Type",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "fieldname": "customer_name",
    "fieldtype": "Data",
-   "label": "Customer Name"
+   "label": "Customer Name",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "fieldname": "account_number",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Account Number",
-   "reqd": 1
+   "reqd": 0,
+   "mandatory_depends_on": "eval:parent.ticket_type!=\"Agent Service Request\" && !doc.sub_type",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "fieldname": "contact_number",
    "fieldtype": "Data",
-   "label": "Contact Number"
+   "label": "Contact Number",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "fieldname": "column_break_fuzv",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "fieldname": "new_information_section",
    "fieldtype": "Section Break",
-   "label": "New Information"
+   "label": "New Information",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "fieldname": "new_address",
    "fieldtype": "Small Text",
-   "label": "New Address"
+   "label": "New Address",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "fieldname": "column_break_bmex",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
-   "depends_on": "eval: doc.request_type == \"Update Contact Number\" || doc.request_type == \"SMS Alert Registration\"\n",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\" && ( doc.request_type == \"Update Contact Number\" || doc.request_type == \"SMS Alert Registration\" )",
    "fieldname": "new_contact_number",
    "fieldtype": "Data",
    "label": "New Contact Number",
    "mandatory_depends_on": "eval: doc.request_type == \"Update Contact Number\" || doc.request_type == \"SMS Alert Registration\"\n"
   },
   {
-   "depends_on": "eval:doc.request_type ==\"Update KYC (Adhaar/Voter/Passport/etc)\"",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\" && (doc.request_type ==\"Update KYC (Adhaar/Voter/Passport/etc)\")",
    "fieldname": "new_kyc_no",
    "fieldtype": "Data",
    "label": "New KYC No",
    "mandatory_depends_on": "eval:doc.request_type ==\"Update KYC (Adhaar/Voter/Passport/etc)\""
   },
   {
-   "depends_on": "eval:doc.request_type ==\"Update PAN NO\"",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\" && (doc.request_type ==\"Update PAN NO\")",
    "fieldname": "new_pan_no",
    "fieldtype": "Data",
    "label": "New PAN No",
@@ -133,15 +154,17 @@
   {
    "fieldname": "get_account_details",
    "fieldtype": "Button",
-   "label": "Get account details"
+   "label": "Get account details",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "fieldname": "email",
    "fieldtype": "Data",
-   "label": "Email"
+   "label": "Email",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
-   "depends_on": "eval:doc.request_type ==\"Update Email Address\"",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\" && (doc.request_type ==\"Update Email Address\")",
    "fieldname": "new_email",
    "fieldtype": "Data",
    "label": "New Email",
@@ -149,7 +172,8 @@
   },
   {
    "fieldname": "column_break_hsfh",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
   },
   {
    "fieldname": "response_pending",
@@ -160,14 +184,14 @@
    "options": "Pending Operations\nPending Branch\nResolved"
   },
   {
-   "depends_on": "eval:doc.request_type ==\"Name Change\"",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\" && (doc.request_type ==\"Name Change\")",
    "fieldname": "new_name",
    "fieldtype": "Data",
    "label": "Enter New Name",
    "mandatory_depends_on": "eval:doc.request_type ==\"Name Change\""
   },
   {
-   "depends_on": "eval:doc.request_type ==\"Nomination Addition/ Deletion/ Modification\"",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\" && (doc.request_type ==\"Nomination Addition/ Deletion/ Modification\")",
    "fieldname": "nomination_opration",
    "fieldtype": "Select",
    "label": "Nomination Opration",
@@ -175,34 +199,34 @@
    "options": "\nAddition\nDeletion\nModification"
   },
   {
-   "depends_on": "eval:doc.request_type ==\"Account Transfer\"",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\" && (doc.request_type ==\"Account Transfer\")",
    "fieldname": "existing_branch",
    "fieldtype": "Data",
    "label": "Existing Branch",
    "mandatory_depends_on": "eval:doc.request_type ==\"Account Transfer\""
   },
   {
-   "depends_on": "eval:doc.request_type ==\"Account Transfer\"",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\" && (doc.request_type ==\"Account Transfer\")",
    "fieldname": "new_branch",
    "fieldtype": "Data",
    "label": "New Branch",
    "mandatory_depends_on": "eval:doc.request_type ==\"Account Transfer\""
   },
   {
-   "depends_on": "eval:doc.request_type ==\"DOB Updation\"",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\" && (doc.request_type ==\"DOB Updation\")",
    "fieldname": "updated_dob",
    "fieldtype": "Date",
    "label": "Updated DOB"
   },
   {
-   "depends_on": "eval:doc.request_type ==\"CIF Merge\"",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\" && (doc.request_type ==\"CIF Merge\")",
    "fieldname": "from_cif",
    "fieldtype": "Data",
    "label": "From CIF",
    "mandatory_depends_on": "eval:doc.request_type ==\"CIF Merge\""
   },
   {
-   "depends_on": "eval:doc.request_type ==\"CIF Merge\"",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\" && (doc.request_type ==\"CIF Merge\")",
    "fieldname": "to_cif",
    "fieldtype": "Data",
    "label": "To CIF",
@@ -213,7 +237,56 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Request Status",
-   "options": "Pending\nCompleted\nRejected"
+   "options": "Pending\nCompleted\nRejected",
+   "depends_on": "eval:parent.ticket_type!=\"Agent Service Request\""
+  },
+  {
+   "fieldname": "agent_request_section",
+   "fieldtype": "Section Break",
+   "label": "Agent Service Request",
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\""
+  },
+  {
+   "fieldname": "agent_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Agent Code",
+   "options": "Agent",
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\"",
+   "search_index": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "agent_name",
+   "fieldtype": "Data",
+   "label": "Agent Name",
+   "fetch_from": "agent_code.agent_name",
+   "read_only": 1,
+   "in_list_view": 1,
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\"",
+   "columns": 4
+  },
+  {
+   "fieldname": "agent_dynamic_fields",
+   "fieldtype": "HTML",
+   "label": "Update Details",
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\""
+  },
+  {
+   "fieldname": "sub_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Sub Type",
+   "options": "Service Request Sub Type",
+   "search_index": 1,
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\"",
+   "columns": 4
+  },
+  {
+   "fieldname": "item_key",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Item Key"
   }
  ],
  "grid_page_length": 50,
