@@ -1775,7 +1775,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					<button class="asr-cmt-btn" data-ticket="${esc(r.ticket)}" title="View comments" style="border:1px solid #cbd5e1;background:#fff;cursor:pointer;border-radius:6px;padding:1px 6px;font-size:11px;color:#417c7d;">💬</button>
 				</td>
 				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${esc(r.ticket)}">${esc(shortId)}${wfActionsFor(r).length ? ` <button class="asr-row-act" title="Workflow actions" style="border:1px solid #cbd5e1;background:#fff;cursor:pointer;border-radius:6px;padding:0 6px;margin-left:4px;font-size:11px;color:#417c7d;font-weight:700;">›</button>` : ""}</td>
-				<td style="${tdBase}color:#475569;">${esc(r.creation_date || "—")}<span style="display:block;font-size:10.5px;color:#94a3b8;">${timePart(r.creation_time)}</span></td>
+				<td style="${tdBase}color:#475569;">${esc(r.creation_date ? r.creation_date.split("-").reverse().join("-") : "—")}<span style="display:block;font-size:10.5px;color:#94a3b8;">${timePart(r.creation_time)}</span></td>
 				<td style="${tdBase}color:#475569;">${esc(r.sub_type || "—")}</td>
 				<td style="${tdBase}color:#475569;">${esc(r.agent_code || "—")}</td>
 				<td style="${tdBase}color:#475569;">${esc(r.agent_name || "—")}</td>
