@@ -423,6 +423,7 @@ frappe.ui.form.on("Sahayog Ticket", {
 
     // Trigger custom functions
     frm.trigger("common_hidden_fields");
+    frm.trigger("set_agent_request_columns");
     frm.trigger("hide_timeline");
     frm.trigger("hide_sidebar_options");
     frm.trigger("custom_buttons");
@@ -2621,6 +2622,68 @@ function insert_intro_perfectly(html) {
 
 // --- end of sahayog_ticket.js ---
 
+// Agent Service Request: Request Detail grid me sirf agent columns dikhao.
+// Frappe grid columns ko depends_on nahi, DOM hidden control karta hai
+// (setup_visible_columns ek baar compute hokar cache ho jata hai), isliye
+// class-based CSS use kar rahe hain — header aur dono tarah ki rows par kaam karta hai.
+frappe.ui.form.on("Sahayog Ticket", {
+  ticket_type: function (frm) {
+    frm.trigger("set_agent_request_columns");
+  },
+  set_agent_request_columns: function (frm) {
+    const grid = frm.fields_dict.request_detail && frm.fields_dict.request_detail.grid;
+    if (!grid) return;
+    const is_agent = frm.doc.ticket_type === "Agent Service Request";
+    const is_account = frm.doc.ticket_type === "Account Service Request";
+    const account_cols = ["request_type", "request_status", "account_number", "account_type",
+      "cif", "customer_name", "contact_number", "email"];
+    const agent_cols = ["sub_type", "agent_code", "agent_name"];
+
+    const safe_disp = function (fields, show) {
+      fields.forEach(function (f) {
+        try { grid.set_column_disp(f, show); } catch (e) { /* field not in this grid */ }
+      });
+    };
+    const apply = function () {
+      if (is_agent) {
+        safe_disp(account_cols, false);
+        safe_disp(agent_cols, true);
+      } else if (is_account) {
+        safe_disp(agent_cols, false);
+        safe_disp(account_cols, true);
+      } else {
+        safe_disp(account_cols, true);
+        safe_disp(agent_cols, true);
+      }
+
+      // Debug: recompute which fields pass the visible filter
+
+      $(grid.wrapper)
+        .toggleClass("agent-request-grid", is_agent)
+        .toggleClass("account-request-grid", is_account);
+
+      // Invalidate the cached visible_columns and rebuild the grid so the
+      // header and rows reflect the new hidden flags immediately.
+      try { grid.reset_grid(); } catch (e) { /* grid not ready */ }
+    };
+
+    if (grid.wrapper) {
+      apply();
+    } else {
+      // Grid not rendered yet; retry shortly.
+      setTimeout(apply, 300);
+    }
+
+    if (!frappe._agent_grid_cols_css) {
+      const sel = (cols, cls) => cols.map(f => `.${cls} [data-fieldname="${f}"]`).join(",");
+      frappe._agent_grid_cols_css = $("<style>")
+        .text(sel(account_cols, "agent-request-grid") + "{display:none!important}" +
+              sel(agent_cols, "account-request-grid") + "{display:none!important}")
+        .appendTo("head");
+    }
+  }
+});
+
 // start of ticket_item.js we are adding a button to fetch account details from external API
 // TEMPORARILY DISABLED request type: "Account Transfer" (kept in the doctype so
 // existing records stay valid; only hidden from the picker for new selections).
@@ -2709,5 +2772,248 @@ frappe.ui.form.on("Ticket Item", {
       const fresh = m && typeof m === "object" ? m.modified : m;
       if (fresh) frm.doc.modified = fresh;
     });
+  },
+});
+
+// --- Agent Service Request: Agent Code -> Sub Type -> dynamic update fields ---
+// The child row uses a dedicated section (see ticket_item.json) so the fields
+// actually render. Master-defined fields are rendered into the HTML field and
+// their typed values are kept in the hidden request_values child table.
+const AGENT_FIELDS_API =
+  "sahayog_ticket.sahayog_ticket.page.agent_service.agent_service_api.get_fields";
+
+function agent_row(frm, cdt, cdn) {
+  return (locals[cdt] && locals[cdt][cdn]) || null;
+}
+
+function agent_dynamic_ctrl(frm, cdn) {
+  const grid = frm.fields_dict.request_detail && frm.fields_dict.request_detail.grid;
+  const row = grid && grid.grid_rows_by_docname[cdn];
+  return row && row.grid_form && row.grid_form.fields_dict.agent_dynamic_fields;
+}
+
+function agent_item_key(row) {
+  if (row && !row.item_key) {
+    row.item_key = Math.random().toString(36).substring(2, 14);
+  }
+}
+
+function agent_escape_html(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+function render_agent_dynamic_fields(frm, cdt, cdn) {
+  if (frm.doc.ticket_type !== "Agent Service Request") return;
+  const row = agent_row(frm, cdt, cdn);
+  const ctrl = agent_dynamic_ctrl(frm, cdn);
+  if (!row || !ctrl) return;
+  agent_item_key(row);
+  if (!row.sub_type) {
+    ctrl._agent_fields = [];
+    ctrl.html('<div class="text-muted small">Sub Type select karein.</div>');
+    return;
+  }
+  frappe.call({
+    method: AGENT_FIELDS_API,
+    args: { sub_type: row.sub_type },
+    callback: function (r) {
+      const fields = r.message || [];
+      ctrl._agent_fields = fields;
+
+      // Sub Type badla to purane field keys ki values hata do, warna
+      // stale rows save ho jayengi.
+      const allowedKeys = new Set(fields.map(function (f) { return f.field_key; }));
+      const before = (frm.doc.request_values || []).length;
+      frm.doc.request_values = (frm.doc.request_values || []).filter(function (v) {
+        return v.item_key !== row.item_key || allowedKeys.has(v.field_key);
+      });
+      if ((frm.doc.request_values || []).length !== before) frm.dirty();
+
+      if (!fields.length) {
+        ctrl.html('<div class="text-muted small">Is Sub Type ke liye koi field configure nahi hai.</div>');
+        return;
+      }
+      const saved = {};
+      (frm.doc.request_values || []).forEach(function (v) {
+        if (v.item_key === row.item_key) {
+          saved[v.field_key] = v.value_display || v.value_data || v.value_text || v.value_date || "";
+        }
+      });
+      let html = '<div class="agent-dynamic-fields">';
+      fields.forEach(function (f) {
+        const key = f.field_key;
+        const val = saved[key] || "";
+        const star = f.reqd ? ' <span class="text-danger">*</span>' : "";
+        html += '<div class="frappe-control agent-field" style="margin-bottom:10px;">';
+        html += '<label class="control-label">' + agent_escape_html(f.label || key) + star + "</label>";
+        if (f.field_type === "Small Text") {
+          html += '<textarea class="form-control agent-val" data-key="' + agent_escape_html(key) +
+            '" rows="2">' + agent_escape_html(val) + "</textarea>";
+        } else if (f.field_type === "Select") {
+          html += '<select class="form-control agent-val" data-key="' + agent_escape_html(key) + '"><option value=""></option>';
+          String(f.options || "").split("\n").forEach(function (o) {
+            o = o.trim();
+            if (!o) return;
+            html += '<option value="' + agent_escape_html(o) + '"' + (o === val ? " selected" : "") +
+              ">" + agent_escape_html(o) + "</option>";
+          });
+          html += "</select>";
+        } else if (f.field_type === "Date") {
+          html += '<input type="date" class="form-control agent-val" data-key="' + agent_escape_html(key) +
+            '" value="' + agent_escape_html(val) + '">';
+        } else {
+          html += '<input type="text" class="form-control agent-val" data-key="' + agent_escape_html(key) +
+            '" value="' + agent_escape_html(val) + '">';
+        }
+        html += "</div>";
+      });
+      html += "</div>";
+      ctrl.html(html);
+      $(ctrl.wrapper).find(".agent-val").off("change.agent").on("change.agent", function () {
+        sync_agent_values(frm, cdt, cdn);
+      });
+    },
+  });
+}
+
+function sync_agent_values(frm, cdt, cdn) {
+  const row = agent_row(frm, cdt, cdn);
+  const ctrl = agent_dynamic_ctrl(frm, cdn);
+  if (!row || !ctrl) return;
+  // Ensure the row has an item_key before syncing, otherwise value rows
+  // would be saved with a blank key and fail the mandatory check.
+  agent_item_key(row);
+  if (!row.item_key) {
+    row.item_key = Math.random().toString(36).substring(2, 14);
+  }
+  const fields = ctrl._agent_fields || [];
+  const values = {};
+  $(ctrl.wrapper).find(".agent-val").each(function () {
+    values[$(this).data("key")] = $(this).val() || "";
+  });
+  // Use Frappe's child-table API (clear + add_child) instead of direct
+  // assignment, so the hidden request_values table stays in sync with the
+  // form and no stale/blank rows are sent to the server.
+  // Keep only valid rows belonging to OTHER items; drop blank/stale rows.
+  const otherRows = (frm.doc.request_values || []).filter(function (v) {
+    return v.item_key !== row.item_key
+      && (v.item_key || "").trim() !== ""
+      && (v.field_key || "").trim() !== "";
+  });
+  frm.clear_table("request_values");
+  otherRows.forEach(function (v) {
+    frm.add_child("request_values", {
+      item_key: v.item_key || "",
+      field_key: v.field_key || "",
+      value_data: v.value_data,
+      value_text: v.value_text,
+      value_date: v.value_date,
+      value_display: v.value_display || "",
+    });
+  });
+  Object.keys(values).forEach(function (key) {
+    const raw = values[key];
+    if (!String(raw || "").trim()) return;
+    const def = fields.find(function (f) { return f.field_key === key; }) || {};
+    const ft = def.field_type || "Data";
+    const child = frm.add_child("request_values", {
+      item_key: row.item_key,
+      field_key: key,
+      value_data: null,
+      value_text: null,
+      value_date: null,
+      value_display: String(raw),
+    });
+    if (ft === "Small Text") child.value_text = raw;
+    else if (ft === "Date") child.value_date = raw || null;
+    else child.value_data = raw;
+  });
+  frm.refresh_field("request_values");
+  frm.dirty();
+}
+
+frappe.ui.form.on("Sahayog Ticket", {
+  setup: function (frm) {
+    frm.set_query("sub_type", "request_detail", function () {
+      return { filters: { ticket_type: "Agent Service Request", is_active: 1 } };
+    });
+  },
+  validate: function (frm) {
+    if (frm.doc.ticket_type !== "Agent Service Request") return;
+    const rows = frm.doc.request_detail || [];
+    if (!rows.length) {
+      frappe.throw("Please add one Request Detail for Agent Service Request.");
+    }
+    rows.forEach(function (row) {
+      if (!row.agent_code) {
+        frappe.throw("Row #" + row.idx + ": Agent Code is required.");
+      }
+      if (!row.sub_type) {
+        frappe.throw("Row #" + row.idx + ": Sub Type is required.");
+      }
+      const ctrl = agent_dynamic_ctrl(frm, row.name);
+      const fields = (ctrl && ctrl._agent_fields) || [];
+      fields.forEach(function (f) {
+        if (!f.reqd) return;
+        let val = "";
+        if (ctrl) {
+          val = $(ctrl.wrapper)
+            .find('.agent-val[data-key="' + f.field_key + '"]')
+            .val() || "";
+        } else {
+          const saved = (frm.doc.request_values || []).find(function (v) {
+            return v.item_key === row.item_key && v.field_key === f.field_key;
+          });
+          val = saved
+            ? (saved.value_display || saved.value_data || saved.value_text || saved.value_date || "")
+            : "";
+        }
+        if (!String(val || "").trim()) {
+          frappe.throw(
+            "Row #" + row.idx + ": " + (f.label || f.field_key) + " is required."
+          );
+        }
+      });
+    });
+  },
+});
+
+frappe.ui.form.on("Ticket Item", {
+  new: function (frm, cdt, cdn) {
+    const row = agent_row(frm, cdt, cdn);
+    if (frm.doc.ticket_type === "Agent Service Request" && row) {
+      agent_item_key(row);
+      frm.dirty();
+    }
+  },
+  form_render: function (frm, cdt, cdn) {
+    setTimeout(function () { render_agent_dynamic_fields(frm, cdt, cdn); }, 80);
+  },
+  agent_code: function (frm, cdt, cdn) {
+    const row = agent_row(frm, cdt, cdn);
+    if (!row || frm.doc.ticket_type !== "Agent Service Request") return;
+    if (!row.agent_code) {
+      frappe.model.set_value(cdt, cdn, "agent_name", "");
+      return;
+    }
+    frappe.call({
+      method:
+        "sahayog_ticket.sahayog_ticket.page.agent_service.agent_service_api.get_agent_details",
+      args: { agent_code: row.agent_code },
+      callback: function (r) {
+        const d = r.message || {};
+        frappe.model.set_value(cdt, cdn, "agent_name", d.agent_name || "");
+      },
+    });
+  },
+  sub_type: function (frm, cdt, cdn) {
+    const row = agent_row(frm, cdt, cdn);
+    if (row && frm.doc.ticket_type === "Agent Service Request") {
+      agent_item_key(row);
+      frm.dirty();
+    }
+    render_agent_dynamic_fields(frm, cdt, cdn);
   },
 });
