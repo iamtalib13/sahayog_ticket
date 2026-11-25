@@ -1010,7 +1010,11 @@ def _agent_updates(rows):
         key = r.get("item_key") or ""
         if key:
             keys.append(key)
-            key_map[key] = (r.get("ticket"), r.get("sub_type") or "Agent Request")
+            key_map[key] = (
+                r.get("ticket"),
+                r.get("sub_type") or "Agent Request",
+                (r.get("request_status") or "").strip(),
+            )
     if not keys:
         return {}
 
@@ -1038,11 +1042,12 @@ def _agent_updates(rows):
             })
 
     out = {}
-    for key, (ticket, sub_type) in key_map.items():
+    for key, (ticket, sub_type, request_status) in key_map.items():
         lines = values.get(key) or []
         if lines:
             out[ticket] = [{
                 "title": sub_type,
+                "request_status": request_status,
                 "groups": [{"section": "", "lines": lines}],
             }]
     return out
@@ -1089,6 +1094,8 @@ def agent_get_report_data(filters=None, page_no=1, page_size=20):
               WHERE ti.parent = st.name LIMIT 1) AS branch_name,
             (SELECT ti.item_key FROM `tabTicket Item` ti
               WHERE ti.parent = st.name LIMIT 1) AS item_key,
+            (SELECT ti.request_status FROM `tabTicket Item` ti
+              WHERE ti.parent = st.name LIMIT 1) AS request_status,
             (SELECT COUNT(*) FROM tabComment c
               WHERE c.reference_doctype = 'Sahayog Ticket'
                 AND c.reference_name = st.name
@@ -1221,9 +1228,8 @@ def agent_get_ticket_comments(ticket):
 def agent_get_ticket_detail(ticket):
     _require_agent_ticket(ticket)
     detail = get_ticket_detail(ticket)
-    detail["employee"] = None
-
-    # Raised-by panel: agent master details (account panel uses Employee).
+    # Keep the shared helper's creator (raised-by employee) details; the agent
+    # master is shown separately in its own right-hand panel section.
     agent_code = frappe.db.get_value("Ticket Item", {"parent": ticket}, "agent_code")
     agent = None
     if agent_code and frappe.db.exists("Agent", agent_code):
