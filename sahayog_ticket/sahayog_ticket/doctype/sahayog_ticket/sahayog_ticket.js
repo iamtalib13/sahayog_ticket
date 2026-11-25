@@ -2638,7 +2638,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     const is_account = frm.doc.ticket_type === "Account Service Request";
     const account_cols = ["request_type", "request_status", "account_number", "account_type",
       "cif", "customer_name", "contact_number", "email"];
-    const agent_cols = ["sub_type", "agent_code", "agent_name"];
+    const agent_cols = ["sub_type", "agent_code", "agent_name", "branch_code", "branch_name"];
 
     const safe_disp = function (fields, show) {
       fields.forEach(function (f) {
@@ -2846,7 +2846,9 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
       fields.forEach(function (f) {
         const key = f.field_key;
         const val = saved[key] || "";
-        const star = f.reqd ? ' <span class="text-danger">*</span>' : "";
+        const condRequired = key === "new_agent_code" &&
+          String(saved.action_type || "").trim().toLowerCase() === "modify";
+        const star = (f.reqd || condRequired) ? ' <span class="text-danger">*</span>' : "";
         html += '<div class="frappe-control agent-field" style="margin-bottom:10px;">';
         html += '<label class="control-label">' + agent_escape_html(f.label || key) + star + "</label>";
         if (f.field_type === "Small Text") {
@@ -2873,7 +2875,11 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
       html += "</div>";
       ctrl.html(html);
       $(ctrl.wrapper).find(".agent-val").off("change.agent").on("change.agent", function () {
+        const changedKey = $(this).data("key");
         sync_agent_values(frm, cdt, cdn);
+        if (changedKey === "action_type") {
+          render_agent_dynamic_fields(frm, cdt, cdn);
+        }
       });
     },
   });
@@ -2955,6 +2961,22 @@ frappe.ui.form.on("Sahayog Ticket", {
         frappe.throw("Row #" + row.idx + ": Sub Type is required.");
       }
       const ctrl = agent_dynamic_ctrl(frm, row.name);
+      const readValue = function (key) {
+        if (ctrl) {
+          return $(ctrl.wrapper).find('.agent-val[data-key="' + key + '"]').val() || "";
+        }
+        const saved = (frm.doc.request_values || []).find(function (v) {
+          return v.item_key === row.item_key && v.field_key === key;
+        });
+        return saved
+          ? (saved.value_display || saved.value_data || saved.value_text || saved.value_date || "")
+          : "";
+      };
+      if (row.sub_type === "Agent Customer Mapping" &&
+          String(readValue("action_type") || "").trim().toLowerCase() === "modify" &&
+          !String(readValue("new_agent_code") || "").trim()) {
+        frappe.throw("Row #" + row.idx + ": New Agent Code is required.");
+      }
       const fields = (ctrl && ctrl._agent_fields) || [];
       fields.forEach(function (f) {
         if (!f.reqd) return;
@@ -2997,6 +3019,8 @@ frappe.ui.form.on("Ticket Item", {
     if (!row || frm.doc.ticket_type !== "Agent Service Request") return;
     if (!row.agent_code) {
       frappe.model.set_value(cdt, cdn, "agent_name", "");
+      frappe.model.set_value(cdt, cdn, "branch_code", "");
+      frappe.model.set_value(cdt, cdn, "branch_name", "");
       return;
     }
     frappe.call({
@@ -3006,6 +3030,8 @@ frappe.ui.form.on("Ticket Item", {
       callback: function (r) {
         const d = r.message || {};
         frappe.model.set_value(cdt, cdn, "agent_name", d.agent_name || "");
+        frappe.model.set_value(cdt, cdn, "branch_code", d.branch_code || "");
+        frappe.model.set_value(cdt, cdn, "branch_name", d.branch_name || "");
       },
     });
   },
