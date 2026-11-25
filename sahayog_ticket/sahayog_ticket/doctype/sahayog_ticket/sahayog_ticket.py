@@ -245,11 +245,92 @@ class SahayogTicket(Document):
     def validate(self):
         self.validate_workflow_requirements()
         self.fill_missing_fields()
+        self.ensure_agent_item_keys()
+        self.cleanup_agent_request_values()
         self.validate_request_detail()
         self.check_account_validation()
         self.validate_contact_number_update()
-        self.validate_request_item_status_for_operations()
+        # self.validate_request_item_status_for_operations()  # temporarily disabled (restore old flow); uncomment to re-enable
         self.validate_close_remark()
+
+    def ensure_agent_item_keys(self):
+        """Link agent rows to their typed values even when created from Desk."""
+        if self.ticket_type != "Agent Service Request":
+            return
+        for row in self.request_detail or []:
+            if not row.item_key:
+                row.item_key = frappe.generate_hash(length=12)
+
+    def cleanup_agent_request_values(self):
+        """Drop orphaned/stale dynamic values before validating.
+
+        Values are keyed by item_key. When a Desk row is deleted or its
+        Sub Type changes, old Ticket Item Value rows must not be saved.
+        """
+        if self.ticket_type != "Agent Service Request":
+            return
+
+        allowed = {}
+        for row in self.request_detail or []:
+            if row.item_key and row.sub_type:
+                allowed[row.item_key] = set(
+                    frappe.get_all(
+                        "Request Field",
+                        filters={"service_request_sub_type": row.sub_type},
+                        pluck="field_key",
+                    )
+                )
+
+        row_keys = {row.item_key for row in (self.request_detail or []) if row.item_key}
+        for value in list(self.request_values or []):
+            # Drop rows that can never be valid (blank keys) or that no
+            # longer belong to a current row / configured field.
+            if not (value.item_key or "").strip() or not (value.field_key or "").strip():
+                self.remove(value)
+                continue
+            if value.item_key not in row_keys:
+                self.remove(value)
+                continue
+            if (
+                value.item_key in allowed
+                and value.field_key not in allowed[value.item_key]
+            ):
+                self.remove(value)
+
+    def validate_agent_row_values(self, row):
+        """Enforce mandatory dynamic fields defined in the Request Field master."""
+        if not row.sub_type:
+            return
+
+        fields = frappe.get_all(
+            "Request Field",
+            filters={"service_request_sub_type": row.sub_type, "is_active": 1},
+            fields=["field_key", "label", "reqd"],
+        )
+        values = {
+            value.field_key: value
+            for value in (self.request_values or [])
+            if value.item_key == row.item_key
+        }
+        for field in fields:
+            if not field.reqd:
+                continue
+            value = values.get(field.field_key)
+            present = bool(
+                value
+                and (
+                    value.value_data
+                    or value.value_text
+                    or value.value_date
+                    or value.value_display
+                )
+            )
+            if not present:
+                frappe.throw(
+                    _("Row #{0}: {1} is required.").format(
+                        row.idx, field.label or field.field_key
+                    )
+                )
 
     def validate_close_remark(self):
         # Closing Remark is mandatory whenever a ticket transitions to Closed
@@ -428,7 +509,6 @@ class SahayogTicket(Document):
                     )
     
     def validate_request_detail(self):
-        # Check only when ticket type is Account Service Request
         if self.ticket_type == "Account Service Request":
             rows = self.request_detail or []
 
@@ -438,6 +518,19 @@ class SahayogTicket(Document):
                     "Please add one Request Detail for Account Service Request.",
                     title="Account Detail Required"
                 )
+
+            # request_type/account_number used to be reqd=1 on the child
+            # doctype. They are now conditional in the UI so agent rows can
+            # omit them, so enforce them here for account rows.
+            for row in rows:
+                if not row.request_type:
+                    frappe.throw(
+                        _("Row #{0}: Request Type is required.").format(row.idx)
+                    )
+                if not row.account_number:
+                    frappe.throw(
+                        _("Row #{0}: Account Number is required.").format(row.idx)
+                    )
 
             # Multiple request types are allowed, but every row must belong
             # to the same account (same account number) in a single ticket.
@@ -452,6 +545,34 @@ class SahayogTicket(Document):
                     title="Different Account Numbers Not Allowed"
                 )
 
+        elif self.ticket_type == "Agent Service Request":
+            rows = self.request_detail or []
+            if not rows:
+                frappe.throw(
+                    "Please add one Request Detail for Agent Service Request.",
+                    title="Agent Detail Required"
+                )
+
+            for row in rows:
+                if not row.agent_code:
+                    frappe.throw(
+                        _("Row #{0}: Agent Code is required.").format(row.idx)
+                    )
+                if not row.sub_type:
+                    frappe.throw(
+                        _("Row #{0}: Sub Type is required.").format(row.idx)
+                    )
+                sub_type_ticket_type = frappe.db.get_value(
+                    "Service Request Sub Type", row.sub_type, "ticket_type"
+                )
+                if sub_type_ticket_type != "Agent Service Request":
+                    frappe.throw(
+                        _("Row #{0}: Invalid Sub Type for Agent Service Request.").format(
+                            row.idx
+                        )
+                    )
+                self.validate_agent_row_values(row)
+
     def validate_contact_number_update(self):
                 # Loop through child table rows
         for row in self.request_detail or []:
@@ -462,32 +583,34 @@ class SahayogTicket(Document):
                             f"Row {row.idx}: New Contact Number must be different from the existing Contact Number."
                         )
 
-    def validate_request_item_status_for_operations(self):
-        """For Operations Account Service Requests, block Resolve/Close
-        while any Request Detail item is still Pending."""
-        if self.dept_name != "Operations" or self.ticket_type != "Account Service Request":
-            return
-        if self.status not in ("Resolved", "Closed"):
-            return
-
-        old = self._doc_before_save
-        transitioning = self.is_new() or not old or old.status != self.status
-        if not transitioning:
-            return
-
-        pending_rows = [
-            row.idx for row in (self.request_detail or [])
-            if (row.get("request_status") or "").strip() == "Pending"
-        ]
-        if pending_rows:
-            frappe.throw(
-                _("Cannot {0} ticket while Request Detail row(s) {1} are Pending. "
-                  "Please complete or update their Request Status first.").format(
-                    self.status,
-                    ", ".join(f"#{idx}" for idx in pending_rows),
-                )
-            )
-
+    # --- Guard (temporarily disabled): block resolve/close while any Request Detail row is Pending.
+    #     Uncomment the call above + this method to re-enable.
+    # def validate_request_item_status_for_operations(self):
+    #     \"\"\"For Operations Account Service Requests, block Resolve/Close
+    #     while any Request Detail item is still Pending.\"\"\"
+    #     if self.dept_name != "Operations" or self.ticket_type != "Account Service Request":
+    #         return
+    #     if self.status not in ("Resolved", "Closed"):
+    #         return
+    #
+    #     old = self._doc_before_save
+    #     transitioning = self.is_new() or not old or old.status != self.status
+    #     if not transitioning:
+    #         return
+    #
+    #     pending_rows = [
+    #         row.idx for row in (self.request_detail or [])
+    #         if (row.get("request_status") or "").strip() == "Pending"
+    #     ]
+    #     if pending_rows:
+    #         frappe.throw(
+    #             _("Cannot {0} ticket while Request Detail row(s) {1} are Pending. "
+    #               "Please complete or update their Request Status first.").format(
+    #                 self.status,
+    #                 ", ".join(f"#{idx}" for idx in pending_rows),
+    #             )
+    #         )
+    #
     def track_status_change(self):
         if not self._doc_before_save:
             return
