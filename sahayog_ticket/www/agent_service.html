@@ -38,6 +38,14 @@
         <label>Agent Name</label>
         <input id="agent_name" readonly />
       </div>
+      <div class="row">
+        <label>Branch Code</label>
+        <input id="branch_code" readonly />
+      </div>
+      <div class="row">
+        <label>Branch Name</label>
+        <input id="branch_name" readonly />
+      </div>
     </div>
 
     <div class="row">
@@ -128,11 +136,15 @@
     const code = this.value;
     if (!code) {
       document.getElementById('agent_name').value = '';
+      document.getElementById('branch_code').value = '';
+      document.getElementById('branch_name').value = '';
       document.getElementById('agent_hint').textContent = '';
       return;
     }
     call('get_agent_details', { agent_code: code }).then(d => {
       document.getElementById('agent_name').value = d.agent_name || '';
+      document.getElementById('branch_code').value = d.branch_code || '';
+      document.getElementById('branch_name').value = d.branch_name || '';
       if (!d.agent_name) {
         document.getElementById('agent_hint').textContent = 'Agent not found';
         return;
@@ -183,6 +195,8 @@
     const args = {
       agent_code: document.getElementById('agent_code').value,
       agent_name: document.getElementById('agent_name').value,
+      branch_code: document.getElementById('branch_code').value,
+      branch_name: document.getElementById('branch_name').value,
       sub_type: document.getElementById('sub_type').value,
       values: values,
       remarks: document.getElementById('remarks').value,
