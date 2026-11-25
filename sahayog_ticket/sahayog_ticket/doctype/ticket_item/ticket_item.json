@@ -37,6 +37,8 @@
   "agent_request_section",
   "agent_code",
   "agent_name",
+  "branch_code",
+  "branch_name",
   "sub_type",
   "agent_dynamic_fields",
   "item_key"
@@ -265,6 +267,28 @@
    "in_list_view": 1,
    "depends_on": "eval:parent.ticket_type==\"Agent Service Request\"",
    "columns": 4
+  },
+  {
+   "fieldname": "branch_code",
+   "fieldtype": "Data",
+   "label": "Branch Code",
+   "fetch_from": "agent_code.branch_code",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2,
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\"",
+   "search_index": 1
+  },
+  {
+   "fieldname": "branch_name",
+   "fieldtype": "Data",
+   "label": "Branch Name",
+   "fetch_from": "agent_code.branch_name",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 3,
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\"",
+   "search_index": 1
   },
   {
    "fieldname": "agent_dynamic_fields",
