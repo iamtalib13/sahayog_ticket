@@ -102,7 +102,9 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 	// Clear every filter and tab selection, then reload from page 1.
 	function clearAllFilters() {
-		$("#asr-filter-status,#asr-filter-rp,#asr-filter-rt,#asr-filter-sol").val("");
+		// Agent mode has no Status/RP dropdowns — tabs own those filters.
+		if (!IS_AGENT) $("#asr-filter-status,#asr-filter-rp").val("");
+		$("#asr-filter-rt,#asr-filter-sol").val("");
 		$("#asr-filter-from,#asr-filter-to").val("");
 		if (IS_AGENT) $("#asr-filter-branch-code").val("");
 		$(".asr-col-search").val("");
@@ -264,15 +266,18 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		</div>
 	`).appendTo(page.main);
 
-	// Agent mode: same filter bar, agent labels + one extra Branch Code input.
+	// Agent mode: tabs handle Status/Response Pending, so drop those two
+	// dropdowns and keep the remaining 5 filters together in one row.
 	if (IS_AGENT) {
+		$filterBar.find("#asr-filter-status, #asr-filter-rp").closest("div").remove();
 		$filterBar.find("label:contains('SOL ID')").text("Agent Code");
-		$filterBar.children().last().before(`
+		$filterBar.find("#asr-filter-from").closest("div").before(`
 			<div style="display:flex;flex-direction:column;gap:3px;">
 				<label style="font-size:11px;font-weight:600;color:#64748b;">Branch Code</label>
-				<input type="text" id="asr-filter-branch-code" placeholder="Branch Code"
-					style="height:32px;border:1px solid #cbd5e1;border-radius:6px;
-					padding:0 8px;font-size:12px;min-width:130px;background:#fff;" />
+				<select id="asr-filter-branch-code" style="height:32px;border:1px solid #cbd5e1;
+					border-radius:6px;padding:0 8px;font-size:12px;min-width:140px;background:#fff;">
+					<option value="">All</option>
+				</select>
 			</div>`);
 	}
 
@@ -360,6 +365,12 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					const nm = frappe.utils.escape_html(a.agent_name || "");
 					$sol.append(`<option value="${code}">${code}${nm ? " – " + nm : ""}</option>`);
 				});
+				const $branch = $("#asr-filter-branch-code");
+				(opts.branch_codes || []).forEach(b => {
+					const code = frappe.utils.escape_html(b.branch_code || "");
+					const nm = frappe.utils.escape_html(b.branch_name || "");
+					$branch.append(`<option value="${code}">${code}${nm ? " – " + nm : ""}</option>`);
+				});
 				return;
 			}
 			const $rt = $("#asr-filter-rt");
@@ -411,7 +422,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		$main.find("button").on("click", function () {
 			state.mainTab = $(this).data("tab");
 			state.subStatus = "";
-			$("#asr-filter-status").val("");
+			if (!IS_AGENT) $("#asr-filter-status").val("");
 			renderTabs();
 			applyFilters();
 		});
@@ -441,7 +452,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		$sub.find("button").on("click", function () {
 			const s = $(this).data("sub");
 			state.subStatus = (state.subStatus === s) ? "" : s;
-			$("#asr-filter-status").val("");
+			if (!IS_AGENT) $("#asr-filter-status").val("");
 			renderTabs();
 			applyFilters();
 		});
@@ -454,17 +465,18 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		return TAB_GROUPS[state.mainTab] || [];
 	}
 	function applyFilters() {
-	 // Tabs win when set; else fall back to the Status dropdown (as-is).
+	 // Tabs win when set; Account alone falls back to the Status dropdown.
 		let statuses = statusList();
-		if (!statuses.length) {
+		if (!statuses.length && !IS_AGENT) {
 			const s = $("#asr-filter-status").val();
 			if (s) statuses = [s];
 		}
 		// RP sub-badges filter on response_pending (within pending statuses).
 		const rpSub = RP_SUBS.includes(state.subStatus) ? state.subStatus : "";
+		const rpFallback = IS_AGENT ? "" : ($("#asr-filter-rp").val() || "");
 		state.filters = {
 			statuses:         statuses,
-			response_pending: rpSub || $("#asr-filter-rp").val(),
+			response_pending: rpSub || rpFallback,
 			request_type:     $("#asr-filter-rt").val(),
 			sol_id:           $("#asr-filter-sol").val(),
 			from_date:        $("#asr-filter-from").val(),
@@ -479,12 +491,14 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		resetAndLoad();
 	}
 
-	$("#asr-filter-status").on("change", () => {
-		state.mainTab = "all";
-		state.subStatus = "";
-		renderTabs();
-		applyFilters();
-	});
+	if (!IS_AGENT) {
+		$("#asr-filter-status").on("change", () => {
+			state.mainTab = "all";
+			state.subStatus = "";
+			renderTabs();
+			applyFilters();
+		});
+	}
 	// ── Per-column search (only where needed; server filters) ──────────────
 	// Order = thead order (empty cell keeps alignment).
 	const COL_SEARCH_COLS = [
@@ -574,7 +588,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	$("#asr-table-wrap").on("blur", ".asr-col-search", function () {
 		$(this).css({ "border-color": "#e2e8f0", background: "#f8fafc" });
 	});
-	$("#asr-filter-rp, #asr-filter-rt, #asr-filter-sol").on("change", applyFilters);
+	$("#asr-filter-rt, #asr-filter-sol").on("change", applyFilters);
+	if (!IS_AGENT) $("#asr-filter-rp").on("change", applyFilters);
 	$("#asr-filter-from, #asr-filter-to").on("change", applyFilters);
 
 	if (IS_AGENT) {
