@@ -714,11 +714,21 @@ def get_ticket_comments(ticket):
     out = []
     name_cache = {}
     side_cache = {}
+    email_cache = {}
     for r in rows:
+        by = r.comment_by or ""
+        # Normalize comment_by to email when it was stored as a full name
+        # (e.g. by Frappe's standard comment box), so the client can match
+        # the current user's own comments reliably.
+        if by and "@" not in by:
+            if by not in email_cache:
+                u = frappe.db.get_value("User", {"full_name": by}, "name")
+                email_cache[by] = u or by
+            by = email_cache[by]
         out.append({
-            "by":   r.comment_by or "",
+            "by":   by,
             "name": _display_name(r.comment_by, name_cache),
-            "side": _comment_side(r.comment_by, side_cache),
+            "side": _comment_side(by, side_cache),
             "text": _strip_html(r.content or ""),
             "on":   str(r.creation) if r.creation else "",
         })
