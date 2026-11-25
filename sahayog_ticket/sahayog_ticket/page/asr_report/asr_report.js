@@ -1872,6 +1872,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		});
 		d.show();
 		d.$wrapper.find(".modal-footer").hide();
+		d.$wrapper.find(".modal-header").css({ "border-bottom": "none", "padding": "10px 16px 0" });
 		d.$wrapper.find(".modal-body").css("padding", "0");
 		d.$wrapper.find(".modal-dialog").css({ "max-width": "1080px", width: "1080px" });
 
@@ -1960,9 +1961,33 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 		function buildUI(dt) {
 			dt = dt || {};
-			const lines = [];
-			(row.updates || []).forEach(u => (u.groups || []).forEach(g =>
-				(g.lines || []).forEach(l => lines.push(l))));
+
+			// ── Modal title (header, not a chat message) ──
+			d.$wrapper.find(".modal-title").html(`
+				<div style="display:flex;align-items:center;gap:8px;">
+					<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#417c7d,#0f766e);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;">
+						${esc(initial(ticket))}
+					</div>
+					<div>
+						<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+							<span style="font-size:14px;font-weight:700;color:#0f172a;line-height:1.2;">${esc(ticket)}</span>
+							${badge(row.status, STATUS_STYLE[row.status]).replace("font-size:11.5px", "font-size:9px").replace("padding:2px 10px", "padding:0 6px")}
+						</div>
+						<div style="font-size:11px;color:#64748b;">Sahayog Ticket · Agent Service Request</div>
+					</div>
+				</div>`);
+
+			const agentStatusPill = status => {
+				const s = status || "Pending";
+				const palette = s === "Completed"
+					? { bg: "#dcfce7", fg: "#15803d", bd: "#86efac" }
+					: s === "Rejected"
+						? { bg: "#fee2e2", fg: "#b91c1c", bd: "#fecaca" }
+						: { bg: "#fef3c7", fg: "#b45309", bd: "#fcd34d" };
+				const mark = s === "Completed" ? "✓" : s === "Rejected" ? "✕" : "•";
+				return `<span style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;line-height:1;padding:3px 7px;border-radius:999px;background:${palette.bg};color:${palette.fg};border:1px solid ${palette.bd};">${mark} ${esc(s)}</span>`;
+			};
+
 			const files = dt.files || [];
 			const assignees = dt.assignees || [];
 			const agent = dt.agent || {};
@@ -2002,10 +2027,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						<div style="padding:14px 16px 10px;">
 							<div style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">Ticket Details</div>
 							${detailLine("Request Type", row.sub_type)}
-							${detailLine("Priority", row.priority)}
-							${detailLine("Status", row.status)}
-							${detailLine("Response Pending", row.response_pending)}
-							${detailLine("Cycle", String(row.ticket_cycle || 0))}
 						</div>
 
 						<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
@@ -2014,16 +2035,15 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							<div style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">Raised By</div>
 							<div style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
 								<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;">
-									<span style="font-size:12.5px;font-weight:700;color:#0f172a;">${esc(agent.agent_name || row.agent_name || "—")}</span>
-									<span style="font-size:11px;color:#64748b;">${esc(agent.name || row.agent_code || "")}</span>
+									<span style="font-size:12.5px;font-weight:700;color:#0f172a;">${esc((dt.employee && dt.employee.employee_name) || row.employee_name || "—")}</span>
+									<span style="font-size:11px;color:#64748b;">${esc(row.employee_id || "")}</span>
 								</div>
 								${[
-									["Phone", agent.phone_number],
-									["Branch Code", agent.branch_code || row.branch_code],
-									["Branch Name", agent.branch_name || row.branch_name],
-									["Role", agent.role],
-									["Status", agent.status],
-									["Requested By", agent.requested_by],
+									["Designation", dt.employee && dt.employee.designation],
+									["Department", dt.employee && dt.employee.department],
+									["Branch", (dt.employee && dt.employee.branch) || row.branch_name || row.branch_code],
+									["Mobile", dt.employee && dt.employee.cell_number],
+									["Email", dt.employee && (dt.employee.company_email || dt.employee.personal_email)],
 								].filter(([l, v]) => v).map(([l, v]) => `
 									<div style="font-size:11.5px;color:#64748b;margin-top:2px;">${esc(l)}: <span style="color:#1e293b;">${esc(v)}</span></div>`).join("")}
 							</div>
@@ -2041,14 +2061,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 					<!-- MIDDLE: chat -->
 					<div style="flex:1;display:flex;flex-direction:column;min-width:0;">
-						<div style="padding:12px 16px;border-bottom:1px solid #e2e8f0;background:#fff;">
-							<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-								<span style="font-size:14px;font-weight:700;color:#0f172a;">${esc(ticket)}</span>
-								${badge(row.status, STATUS_STYLE[row.status]).replace("font-size:11.5px", "font-size:9px").replace("padding:2px 10px", "padding:0 6px")}
-							</div>
-							<div style="font-size:11px;color:#64748b;margin-top:4px;">Sahayog Ticket · Agent Service Request</div>
-						</div>
-
 						${row.executive_remark || row.remark || resolver.remark ? `
 						<div style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 16px;font-size:12px;color:#1e293b;">
 							${row.executive_remark ? `<div style="margin-bottom:4px;"><span style="color:#417c7d;font-weight:700;">FIRST REMARK · </span>${esc(row.executive_remark)}</div>` : ""}
@@ -2067,25 +2079,58 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						</div>
 					</div>
 
-					<!-- RIGHT: complete updation details + attachments -->
-					<div style="width:290px;flex-shrink:0;background:#f8fafc;border-left:1px solid #e2e8f0;overflow-y:auto;">
+					<!-- RIGHT: agent details + requested updates + attachments -->
+					<div style="width:290px;flex-shrink:0;background:#f8fafc;border-left:1px solid #e2e8f0;overflow-y:auto;display:flex;flex-direction:column;">
+
+						<!-- ── AGENT DETAILS ── -->
 						<div style="padding:14px 16px 10px;">
 							<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-								<span style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;">Updation Details</span>
+								<span style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;">Agent Details</span>
 								<div style="flex:1;height:1px;background:#e2e8f0;"></div>
 							</div>
-							${lines.length ? lines.map(l => {
-								const raw = String(l.value || "");
-								const isDate = /^\d{4}-\d{2}-\d{2}$/.test(raw.trim());
-								const val = isDate ? raw.trim().split("-").reverse().join("-") : raw;
-								const long = raw.length > 40;
-								return `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">
-									<div style="font-size:10.5px;color:#94a3b8;font-weight:500;margin-bottom:2px;">${esc(l.label || "")}</div>
-									<div style="${long ? "white-space:pre-wrap;word-break:break-word;" : ""}font-size:12.5px;color:#0f172a;font-weight:600;">${esc(val)}</div>
-								</div>`;
-							}).join("")
-								: `<div style="font-size:12px;color:#94a3b8;">No values recorded.</div>`}
+							<div style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
+								<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;">
+									<span style="font-size:12.5px;font-weight:700;color:#0f172a;">${esc(agent.agent_name || row.agent_name || "—")}</span>
+									<span style="font-size:11px;color:#64748b;">${esc(agent.name || row.agent_code || "")}</span>
+								</div>
+								${[
+									["Phone", agent.phone_number],
+									["Branch Code", agent.branch_code || row.branch_code],
+									["Branch Name", agent.branch_name || row.branch_name],
+									["Role", agent.role],
+									["Status", agent.status],
+									["Requested By", agent.requested_by],
+								].filter(([l, v]) => v).map(([l, v]) => `
+									<div style="font-size:11.5px;color:#64748b;margin-top:2px;">${esc(l)}: <span style="color:#1e293b;">${esc(v)}</span></div>`).join("")}
+							</div>
 						</div>
+
+						<!-- ── REQUESTED UPDATES (all child requests) ── -->
+						${(row.updates || []).length ? `
+						<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
+						<div style="padding:10px 16px;">
+							<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+								<span style="font-size:10.5px;font-weight:700;color:#0f766e;letter-spacing:.06em;text-transform:uppercase;">Requested Updates</span>
+								<div style="flex:1;height:1px;background:#e2e8f0;"></div>
+							</div>
+							${(row.updates || []).map(u => `
+								<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 2px;background:#f1f5f9;border-radius:5px;padding:4px 7px;">
+									<span style="font-size:10.5px;font-weight:700;color:#417c7d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(u.title || "Request")}</span>
+									${agentStatusPill(u.request_status)}
+								</div>
+								${(u.groups || []).flatMap(g => g.lines || []).map(l => {
+									const raw = String(l.value || "");
+									const isDate = /^\d{4}-\d{2}-\d{2}$/.test(raw.trim());
+									const val = isDate ? raw.trim().split("-").reverse().join("-") : raw;
+									const long = raw.length > 40;
+									return `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">
+										<div style="font-size:10.5px;color:#94a3b8;font-weight:500;margin-bottom:2px;">${esc(l.label || "")}</div>
+										<div style="${long ? "white-space:pre-wrap;word-break:break-word;" : ""}font-size:12.5px;color:#0f172a;font-weight:600;">${esc(val)}</div>
+									</div>`;
+								}).join("")}
+							`).join("")}
+						</div>` : ""}
+
 						${files.length ? `
 						<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
 						<div style="padding:10px 16px 14px;">
