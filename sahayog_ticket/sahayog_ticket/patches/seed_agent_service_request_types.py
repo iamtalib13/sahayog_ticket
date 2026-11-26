@@ -46,9 +46,9 @@ REQUEST_TYPES = {
         ("reason", "Reason", "Small Text", None, 1),
     ],
     "Other Modification": [
-        ("modification_category", "Modification Category", "Data", None, 1),
+        ("modification_category", "Modification Category", "Data", None, 0),
         ("existing_details", "Existing Details", "Small Text", None, 0),
-        ("proposed_details", "Proposed / New Details", "Small Text", None, 1),
+        ("proposed_details", "Proposed / New Details", "Small Text", None, 0),
         ("reason", "Reason", "Small Text", None, 1),
     ],
 }
