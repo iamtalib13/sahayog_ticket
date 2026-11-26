@@ -5,6 +5,7 @@ sahayog_ticket.sahayog_ticket.patches.add_comment_perm_for_ops_roles
 
 [post_model_sync]
 sahayog_ticket.sahayog_ticket.patches.update_account_service_workspace
+sahayog_ticket.sahayog_ticket.patches.add_agent_report_workspace_shortcut
 sahayog_ticket.sahayog_ticket.patches.seed_agent_service_request_types
 sahayog_ticket.sahayog_ticket.patches.set_authorizer_id_link
 sahayog_ticket.sahayog_ticket.patches.set_new_sol_id_link
