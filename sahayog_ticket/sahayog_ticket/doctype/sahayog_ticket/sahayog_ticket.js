@@ -2805,6 +2805,31 @@ function agent_escape_html(s) {
   });
 }
 
+// Fields whose value comes from the Agent master. When the agent changes,
+// old prefilled values must go away just like Agent Name / Branch Code do.
+const AGENT_PREFILL_KEYS = [
+  "existing_account_number", "account_holder_name", "existing_mobile",
+  "existing_authorizer_id", "existing_sol_id", "existing_branch",
+  "operative_account", "savings_account", "security_account", "cif",
+];
+
+function agent_clear_prefill_values(frm, row) {
+  const before = (frm.doc.request_values || []).length;
+  frm.doc.request_values = (frm.doc.request_values || []).filter(function (v) {
+    return v.item_key !== row.item_key || AGENT_PREFILL_KEYS.indexOf(v.field_key) === -1;
+  });
+  if ((frm.doc.request_values || []).length !== before) frm.dirty();
+}
+
+function agent_prefill_value(info, key, values) {
+  const prefill = (info && info.prefill) || {};
+  if (key === "existing_account_number") {
+    const type = String((values && values.account_type) || "").trim();
+    return ((info && info.account_numbers) || {})[type] || "";
+  }
+  return prefill[key] || "";
+}
+
 function render_agent_dynamic_fields(frm, cdt, cdn) {
   if (frm.doc.ticket_type !== "Agent Service Request") return;
   const row = agent_row(frm, cdt, cdn);
@@ -2842,10 +2867,16 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
           saved[v.field_key] = v.value_display || v.value_data || v.value_text || v.value_date || "";
         }
       });
+      const prefillInfo = ctrl._agent_info || null;
+      let appliedPrefill = false;
       let html = '<div class="agent-dynamic-fields">';
       fields.forEach(function (f) {
         const key = f.field_key;
-        const val = saved[key] || "";
+        let val = saved[key] || "";
+        if (!val) {
+          val = agent_prefill_value(prefillInfo, key, saved);
+          if (val) appliedPrefill = true;
+        }
         const condRequired = key === "new_agent_code" &&
           String(saved.action_type || "").trim().toLowerCase() === "modify";
         const star = (f.reqd || condRequired) ? ' <span class="text-danger">*</span>' : "";
@@ -2863,6 +2894,12 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
               ">" + agent_escape_html(o) + "</option>";
           });
           html += "</select>";
+        } else if (f.field_type === "Link") {
+          // Keep a hidden agent-val input so validation / sync stay unchanged.
+          html += '<input type="hidden" class="agent-val" data-key="' + agent_escape_html(key) +
+            '" value="' + agent_escape_html(val) + '">';
+          html += '<div class="agent-link-control" data-key="' + agent_escape_html(key) +
+            '" data-options="' + agent_escape_html(f.options || "Employee") + '"></div>';
         } else if (f.field_type === "Date") {
           html += '<input type="date" class="form-control agent-val" data-key="' + agent_escape_html(key) +
             '" value="' + agent_escape_html(val) + '">';
@@ -2874,13 +2911,66 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
       });
       html += "</div>";
       ctrl.html(html);
+      $(ctrl.wrapper).find(".agent-link-control").each(function () {
+        const holder = $(this);
+        const key = holder.data("key");
+        const hidden = $(ctrl.wrapper).find('.agent-val[data-key="' + key + '"]');
+        let control;
+        let initializing = true;
+        control = frappe.ui.form.make_control({
+          df: {
+            fieldname: key,
+            fieldtype: "Link",
+            options: holder.data("options") || "Employee",
+            change: function () {
+              if (initializing) return;
+              const emp = control.get_value() || "";
+              hidden.val(emp);
+              if (key === "new_authorizer_id") {
+                const nameInput = function () {
+                  return $(ctrl.wrapper).find('.agent-val[data-key="new_authorizer_name"]');
+                };
+                if (!emp) {
+                  nameInput().val("");
+                } else {
+                  frappe.call({
+                    method: "frappe.client.get_value",
+                    args: {
+                      doctype: "Employee",
+                      fieldname: "employee_name",
+                      filters: { name: emp },
+                    },
+                    callback: function (r) {
+                      if (hidden.val() !== emp) return;
+                      nameInput().val((r.message && r.message.employee_name) || "");
+                      sync_agent_values(frm, cdt, cdn);
+                    },
+                  });
+                }
+              }
+              sync_agent_values(frm, cdt, cdn);
+            },
+          },
+          parent: holder,
+          only_input: true,
+          render_input: 1,
+        });
+        const ready = function () { initializing = false; };
+        $.when(control.set_value(hidden.val() || "")).then(ready, ready);
+      });
       $(ctrl.wrapper).find(".agent-val").off("change.agent").on("change.agent", function () {
         const changedKey = $(this).data("key");
+        if (changedKey === "account_type") {
+          const num = ((ctrl._agent_info && ctrl._agent_info.account_numbers) || {})[$(this).val()] || "";
+          $(ctrl.wrapper).find('.agent-val[data-key="existing_account_number"]').val(num);
+        }
         sync_agent_values(frm, cdt, cdn);
         if (changedKey === "action_type") {
           render_agent_dynamic_fields(frm, cdt, cdn);
         }
       });
+      // Prefilled values never fire a change event; persist them explicitly.
+      if (appliedPrefill) sync_agent_values(frm, cdt, cdn);
     },
   });
 }
@@ -3017,10 +3107,14 @@ frappe.ui.form.on("Ticket Item", {
   agent_code: function (frm, cdt, cdn) {
     const row = agent_row(frm, cdt, cdn);
     if (!row || frm.doc.ticket_type !== "Agent Service Request") return;
+    const ctrl = agent_dynamic_ctrl(frm, cdn);
     if (!row.agent_code) {
+      if (ctrl) ctrl._agent_info = null;
       frappe.model.set_value(cdt, cdn, "agent_name", "");
       frappe.model.set_value(cdt, cdn, "branch_code", "");
       frappe.model.set_value(cdt, cdn, "branch_name", "");
+      agent_clear_prefill_values(frm, row);
+      render_agent_dynamic_fields(frm, cdt, cdn);
       return;
     }
     frappe.call({
@@ -3032,6 +3126,9 @@ frappe.ui.form.on("Ticket Item", {
         frappe.model.set_value(cdt, cdn, "agent_name", d.agent_name || "");
         frappe.model.set_value(cdt, cdn, "branch_code", d.branch_code || "");
         frappe.model.set_value(cdt, cdn, "branch_name", d.branch_name || "");
+        if (ctrl) ctrl._agent_info = d;
+        agent_clear_prefill_values(frm, row);
+        render_agent_dynamic_fields(frm, cdt, cdn);
       },
     });
   },
