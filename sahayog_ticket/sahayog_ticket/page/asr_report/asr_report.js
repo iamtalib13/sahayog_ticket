@@ -218,8 +218,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 	// ── Filter bar HTML ──────────────────────────────────────────────────────
 	const $filterBar = $(`
-		<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
-			padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;
+		<div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;
+			align-items:end;padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;
 			border:1px solid #e2e8f0;border-top:none;">
 
 		<div style="display:flex;flex-direction:column;gap:3px;">
@@ -292,6 +292,12 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				</select>
 			</div>`);
 	}
+
+	// One row for all filters: equal columns, no wrapping / overflow.
+	$filterBar.css("grid-template-columns",
+		`repeat(${$filterBar.children().length}, minmax(0, 1fr))`);
+	$filterBar.find("select, input").css({ width: "100%", "min-width": "0" });
+	$filterBar.find("label").css("white-space", "nowrap");
 
 	// ── Page layout: main = flex column, exact viewport height ─────────────
 	// NOTE: page.main KHUD .layout-main-section hai (direct ref). Purani
