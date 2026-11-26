@@ -27,6 +27,11 @@
     <h1>Agent Service Request</h1>
     <div id="msg" class="msg"></div>
 
+    <div class="row">
+      <label>Request Type <span class="req">*</span></label>
+      <select id="sub_type"><option value="">-- select --</option></select>
+    </div>
+
     <div class="grid">
       <div class="row">
         <label>Agent Code <span class="req">*</span></label>
@@ -46,11 +51,6 @@
         <label>Branch Name</label>
         <input id="branch_name" readonly />
       </div>
-    </div>
-
-    <div class="row">
-      <label>Request Type <span class="req">*</span></label>
-      <select id="sub_type"><option value="">-- select --</option></select>
     </div>
 
     <div id="dynamic_fields"></div>
