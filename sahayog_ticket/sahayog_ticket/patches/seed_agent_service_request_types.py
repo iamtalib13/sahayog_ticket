@@ -14,7 +14,7 @@ REQUEST_TYPES = {
     "Agent Authorizer Mapping": [
         ("existing_authorizer_id", "Existing Authorizer ID", "Data", None, 0),
         ("existing_authorizer_name", "Existing Authorizer Name", "Data", None, 0),
-        ("new_authorizer_id", "New Authorizer ID", "Data", None, 1),
+        ("new_authorizer_id", "New Authorizer ID", "Link", "Employee", 1),
         ("new_authorizer_name", "New Authorizer Name", "Data", None, 0),
         ("effective_date", "Effective Date", "Date", None, 0),
         ("reason", "Reason", "Small Text", None, 1),
