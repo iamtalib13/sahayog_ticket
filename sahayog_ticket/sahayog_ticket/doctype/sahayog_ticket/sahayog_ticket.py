@@ -300,6 +300,8 @@ class SahayogTicket(Document):
                         pluck="field_key",
                     )
                 )
+                # Desk adds one optional attachment for every request type.
+                allowed[row.item_key].add("attachment")
 
         row_keys = {row.item_key for row in (self.request_detail or []) if row.item_key}
         for value in list(self.request_values or []):
