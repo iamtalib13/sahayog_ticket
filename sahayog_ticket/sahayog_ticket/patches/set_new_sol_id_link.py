@@ -2,7 +2,7 @@ import frappe
 
 
 def execute():
-    """Link New SOL ID to Sahayog Branch and fix the field order."""
+    """Fix Agent SOL ID link/order and keep only Reason mandatory for Other Modification."""
     name = "Agent SOL ID Modification-new_sol_id"
     if frappe.db.exists("Request Field", name):
         doc = frappe.get_doc("Request Field", name)
@@ -20,3 +20,9 @@ def execute():
             continue
         idx += 1
         frappe.db.set_value("Request Field", field_name, "idx", idx, update_modified=False)
+
+    # Other Modification: only Reason should remain mandatory.
+    for key in ("modification_category", "proposed_details"):
+        field_name = f"Other Modification-{key}"
+        if frappe.db.exists("Request Field", field_name):
+            frappe.db.set_value("Request Field", field_name, "reqd", 0, update_modified=False)
