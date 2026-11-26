@@ -2666,6 +2666,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       // Invalidate the cached visible_columns and rebuild the grid so the
       // header and rows reflect the new hidden flags immediately.
       try { grid.reset_grid(); } catch (e) { /* grid not ready */ }
+      setTimeout(function () { sync_agent_authorizer_grid(frm); }, 0);
     };
 
     if (grid.wrapper) {
@@ -2677,9 +2678,16 @@ frappe.ui.form.on("Sahayog Ticket", {
 
     if (!frappe._agent_grid_cols_css) {
       const sel = (cols, cls) => cols.map(f => `.${cls} [data-fieldname="${f}"]`).join(",");
+      const hideSel = (prefix, cols) => cols.map(f => `${prefix} [data-fieldname="${f}"]`).join(",");
       frappe._agent_grid_cols_css = $("<style>")
-        .text(sel(account_cols, "agent-request-grid") + "{display:none!important}" +
-              sel(agent_cols, "account-request-grid") + "{display:none!important}")
+        .text(
+          sel(account_cols, "agent-request-grid") + "{display:none!important}" +
+          sel(agent_cols, "account-request-grid") + "{display:none!important}" +
+          hideSel(".agent-request-grid .agent-authorizer-row", AGENT_AUTHORIZER_GRID_FIELDS) +
+            "{display:none!important}" +
+          hideSel(".agent-request-grid.agent-authorizer-only .grid-heading-row",
+            AGENT_AUTHORIZER_GRID_FIELDS) + "{display:none!important}"
+        )
         .appendTo("head");
     }
   }
@@ -2795,9 +2803,15 @@ const AGENT_PREFILL_KEYS = [
 
 // Link field -> [doctype, field to read, target field to fill]
 const AGENT_LINK_FILL = {
+  existing_authorizer_id: ["Employee", "employee_name", "existing_authorizer_name"],
   new_authorizer_id: ["Employee", "employee_name", "new_authorizer_name"],
   new_sol_id: ["Sahayog Branch", "branch", "new_branch"],
 };
+
+// Columns hidden only for Authorizer Mapping rows in the Request Detail grid.
+const AGENT_AUTHORIZER_GRID_FIELDS = [
+  "agent_code", "agent_name", "branch_code", "branch_name",
+];
 
 // One optional attachment is available for every Agent request type.
 const AGENT_ATTACH_KEY = "attachment";
@@ -2819,8 +2833,31 @@ function agent_prefill_value(info, key, values) {
   return prefill[key] || "";
 }
 
+// Row-wise grid flags: Authorizer Mapping rows hide Agent Code/Name/Branch
+// cells, and the column header hides too when every row is authorizer mapping.
+function sync_agent_authorizer_grid(frm) {
+  if (frm.doc.ticket_type !== "Agent Service Request") return;
+  const grid = frm.fields_dict.request_detail && frm.fields_dict.request_detail.grid;
+  if (!grid || !grid.wrapper) return;
+  const rows = frm.doc.request_detail || [];
+  const onlyAuthorizer = rows.length > 0 && rows.every(function (row) {
+    return row.sub_type === "Agent Authorizer Mapping";
+  });
+  $(grid.wrapper).toggleClass("agent-authorizer-only", onlyAuthorizer);
+  rows.forEach(function (row) {
+    const gr = grid.grid_rows_by_docname && grid.grid_rows_by_docname[row.name];
+    if (gr && gr.wrapper) {
+      $(gr.wrapper).toggleClass(
+        "agent-authorizer-row",
+        row.sub_type === "Agent Authorizer Mapping"
+      );
+    }
+  });
+}
+
 function render_agent_dynamic_fields(frm, cdt, cdn) {
   if (frm.doc.ticket_type !== "Agent Service Request") return;
+  sync_agent_authorizer_grid(frm);
   const row = agent_row(frm, cdt, cdn);
   const ctrl = agent_dynamic_ctrl(frm, cdn);
   if (!row || !ctrl) return;
