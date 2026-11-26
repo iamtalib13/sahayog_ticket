@@ -593,7 +593,7 @@ class SahayogTicket(Document):
                 )
 
             for row in rows:
-                if not row.agent_code:
+                if row.sub_type != "Agent Authorizer Mapping" and not row.agent_code:
                     frappe.throw(
                         _("Row #{0}: Agent Code is required.").format(row.idx)
                     )
