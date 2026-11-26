@@ -53,12 +53,31 @@ def get_agent_details(agent_code):
         d = frappe.get_doc("Agent", agent_code)
     except frappe.DoesNotExistError:
         return {}
+    account_numbers = {
+        "Operative": d.get("agent_operative_account") or "",
+        "Savings": d.get("agent_saving_account") or "",
+        "Security": d.get("agent_security_account") or "",
+    }
     return {
         "agent_name": d.get("agent_name") or "",
         "branch": d.get("branch_name") or "",
         "branch_code": d.get("branch_code") or "",
         "branch_name": d.get("branch_name") or "",
         "sol_id": d.get("sol_id") or "",
+        # Values for the "Existing ..." fields of Agent request types.
+        # Desk fills only the fields that exist in the selected Request Type.
+        "prefill": {
+            "account_holder_name": d.get("agent_name") or "",
+            "existing_mobile": d.get("phone_number") or "",
+            "existing_authorizer_id": d.get("auth_id") or "",
+            "existing_sol_id": d.get("branch_code") or "",
+            "existing_branch": d.get("branch_name") or "",
+            "operative_account": account_numbers["Operative"],
+            "savings_account": account_numbers["Savings"],
+            "security_account": account_numbers["Security"],
+            "cif": d.get("cif") or "",
+        },
+        "account_numbers": account_numbers,
     }
 
 
