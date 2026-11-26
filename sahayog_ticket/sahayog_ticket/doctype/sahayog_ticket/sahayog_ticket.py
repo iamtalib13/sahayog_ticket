@@ -244,6 +244,7 @@ class SahayogTicket(Document):
 
     def validate(self):
         self.validate_workflow_requirements()
+        self.validate_cbs_status_permission()
         self.fill_missing_fields()
         self.ensure_agent_item_keys()
         self.sync_agent_request_status()
@@ -253,6 +254,37 @@ class SahayogTicket(Document):
         self.validate_contact_number_update()
         self.validate_request_item_status_for_operations()
         self.validate_close_remark()
+
+    def validate_cbs_status_permission(self):
+        """Only the IT/CBS support teams may change status on CBS tickets.
+
+        New tickets and saves that do not touch status are untouched, so
+        branch users can still create/update CBS tickets and every other
+        department keeps its existing workflow.
+        """
+        if self.is_new() or self.dept_name != "CBS":
+            return
+
+        previous = self.get_doc_before_save()
+        if not previous or previous.status == self.status:
+            return
+
+        # Scheduler/system auto-close runs as Administrator.
+        if frappe.session.user == "Administrator":
+            return
+
+        roles = set(frappe.get_roles())
+        allowed_roles = {
+            "IT Support Executive",
+            "IT Support Manager",
+            "CBS Support Executive",
+            "CBS Support Manager",
+        }
+        if not allowed_roles & roles:
+            frappe.throw(
+                _("Only IT/CBS Support Executive or Manager can change CBS ticket status."),
+                frappe.PermissionError,
+            )
 
     def ensure_agent_item_keys(self):
         """Link agent rows to their typed values even when created from Desk."""
