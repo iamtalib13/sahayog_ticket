@@ -246,7 +246,7 @@
    "fieldname": "agent_request_section",
    "fieldtype": "Section Break",
    "label": "Agent Service Request",
-   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\" && doc.sub_type != \"Agent Authorizer Mapping\""
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\""
   },
   {
    "fieldname": "agent_code",
@@ -287,7 +287,7 @@
    "read_only": 1,
    "in_list_view": 1,
    "columns": 3,
-   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\"",
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\" && doc.sub_type != \"Agent Authorizer Mapping\"",
    "search_index": 1
   },
   {
