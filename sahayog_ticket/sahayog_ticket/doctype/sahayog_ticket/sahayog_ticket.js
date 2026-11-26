@@ -3066,7 +3066,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       frappe.throw("Please add one Request Detail for Agent Service Request.");
     }
     rows.forEach(function (row) {
-      if (!row.agent_code) {
+      if (row.sub_type !== "Agent Authorizer Mapping" && !row.agent_code) {
         frappe.throw("Row #" + row.idx + ": Agent Code is required.");
       }
       if (!row.sub_type) {
