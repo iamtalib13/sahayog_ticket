@@ -165,6 +165,15 @@
   }).catch(e => show(e.message, 'error'));
 
   document.getElementById('sub_type').addEventListener('change', function () {
+    const isAuthorizer = this.value === 'Agent Authorizer Mapping';
+    document.querySelector('.grid').style.display = isAuthorizer ? 'none' : '';
+    if (isAuthorizer) {
+      document.getElementById('agent_code').value = '';
+      document.getElementById('agent_name').value = '';
+      document.getElementById('branch_code').value = '';
+      document.getElementById('branch_name').value = '';
+      document.getElementById('agent_hint').textContent = '';
+    }
     if (!this.value) { renderFields([]); return; }
     call('get_fields', { sub_type: this.value }).then(renderFields).catch(e => show(e.message, 'error'));
   });
