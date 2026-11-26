@@ -2813,6 +2813,12 @@ const AGENT_PREFILL_KEYS = [
   "operative_account", "savings_account", "security_account", "cif",
 ];
 
+// Link field -> [doctype, field to read, target field to fill]
+const AGENT_LINK_FILL = {
+  new_authorizer_id: ["Employee", "employee_name", "new_authorizer_name"],
+  new_sol_id: ["Sahayog Branch", "branch", "new_branch"],
+};
+
 function agent_clear_prefill_values(frm, row) {
   const before = (frm.doc.request_values || []).length;
   frm.doc.request_values = (frm.doc.request_values || []).filter(function (v) {
@@ -2926,9 +2932,10 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
               if (initializing) return;
               const emp = control.get_value() || "";
               hidden.val(emp);
-              if (key === "new_authorizer_id") {
+              const fill = AGENT_LINK_FILL[key];
+              if (fill) {
                 const nameInput = function () {
-                  return $(ctrl.wrapper).find('.agent-val[data-key="new_authorizer_name"]');
+                  return $(ctrl.wrapper).find('.agent-val[data-key="' + fill[2] + '"]');
                 };
                 if (!emp) {
                   nameInput().val("");
@@ -2936,13 +2943,13 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
                   frappe.call({
                     method: "frappe.client.get_value",
                     args: {
-                      doctype: "Employee",
-                      fieldname: "employee_name",
+                      doctype: fill[0],
+                      fieldname: fill[1],
                       filters: { name: emp },
                     },
                     callback: function (r) {
                       if (hidden.val() !== emp) return;
-                      nameInput().val((r.message && r.message.employee_name) || "");
+                      nameInput().val((r.message && r.message[fill[1]]) || "");
                       sync_agent_values(frm, cdt, cdn);
                     },
                   });
