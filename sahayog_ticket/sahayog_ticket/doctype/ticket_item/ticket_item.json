@@ -35,11 +35,11 @@
   "from_cif",
   "to_cif",
   "agent_request_section",
+  "sub_type",
   "agent_code",
   "agent_name",
   "branch_code",
   "branch_name",
-  "sub_type",
   "agent_dynamic_fields",
   "item_key"
  ],
