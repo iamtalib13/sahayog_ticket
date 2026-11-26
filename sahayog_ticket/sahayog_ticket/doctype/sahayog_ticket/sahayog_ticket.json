@@ -41,6 +41,7 @@
   "status",
   "dept_name",
   "ticket_type",
+  "request_values",
   "column_break_mbxv4",
   "priority",
   "tat",
@@ -307,6 +308,13 @@
    "read_only": 1
   },
   {
+   "fieldname": "request_values",
+   "fieldtype": "Table",
+   "hidden": 1,
+   "label": "Request Values",
+   "options": "Ticket Item Value"
+  },
+  {
    "fieldname": "reopen_remark",
    "fieldtype": "Small Text",
    "label": "Re-open Remark",
@@ -360,7 +368,7 @@
    "label": "Support System Email"
   },
   {
-   "depends_on": "eval:doc.ticket_type ==\"Account Service Request\"",
+   "depends_on": "eval:doc.ticket_type==\"Account Service Request\" || doc.ticket_type==\"Agent Service Request\"",
    "fieldname": "request_detail",
    "fieldtype": "Table",
    "label": "Request Detail",

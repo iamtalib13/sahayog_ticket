@@ -1,0 +1,105 @@
+{
+ "actions": [],
+ "autoname": "format:{service_request_sub_type}-{field_key}",
+ "creation": "2026-11-23 16:31:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "field_key",
+  "label",
+  "field_type",
+  "options",
+  "service_request_sub_type",
+  "reqd",
+  "is_active"
+ ],
+ "fields": [
+  {
+   "fieldname": "field_key",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Field Key",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Label",
+   "reqd": 1
+  },
+  {
+   "fieldname": "field_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Field Type",
+   "options": "Data\nSmall Text\nSelect\nDate",
+   "reqd": 1
+  },
+  {
+   "fieldname": "options",
+   "fieldtype": "Small Text",
+   "label": "Options (for Select)",
+   "depends_on": "eval:doc.field_type=='Select'"
+  },
+  {
+   "fieldname": "service_request_sub_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Service Request Sub Type",
+   "options": "Service Request Sub Type",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "reqd",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Mandatory"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-11-23 16:31:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sahayog Ticket",
+ "name": "Request Field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "select": 1,
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

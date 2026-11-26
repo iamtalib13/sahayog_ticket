@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Service Request</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f7fa; margin: 0; padding: 24px; color: #1f2937; }
+    .card { max-width: 860px; margin: 0 auto; background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.08); padding: 28px; }
+    h1 { margin-top: 0; font-size: 22px; }
+    .row { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+    label .req { color: #dc2626; }
+    input, select, textarea { width: 100%; padding: 9px 11px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+    textarea { min-height: 80px; resize: vertical; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    button { background: #04665b; color: #fff; border: 0; border-radius: 6px; padding: 10px 20px; font-size: 14px; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .msg { padding: 10px 12px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; display: none; }
+    .msg.error { background: #fee2e2; color: #991b1b; display: block; }
+    .msg.ok { background: #d1fae5; color: #065f46; display: block; }
+    .hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Agent Service Request</h1>
+    <div id="msg" class="msg"></div>
+
+    <div class="grid">
+      <div class="row">
+        <label>Agent Code <span class="req">*</span></label>
+        <input id="agent_code" list="agent_options" placeholder="Type agent code or name" autocomplete="off" />
+        <datalist id="agent_options"></datalist>
+        <div class="hint" id="agent_hint"></div>
+      </div>
+      <div class="row">
+        <label>Agent Name</label>
+        <input id="agent_name" readonly />
+      </div>
+      <div class="row">
+        <label>Branch Code</label>
+        <input id="branch_code" readonly />
+      </div>
+      <div class="row">
+        <label>Branch Name</label>
+        <input id="branch_name" readonly />
+      </div>
+    </div>
+
+    <div class="row">
+      <label>Request Type <span class="req">*</span></label>
+      <select id="sub_type"><option value="">-- select --</option></select>
+    </div>
+
+    <div id="dynamic_fields"></div>
+
+    <div class="row">
+      <label>Reason / Description <span class="req">*</span></label>
+      <textarea id="remarks" placeholder="Explain the requested change"></textarea>
+    </div>
+
+    <div class="row">
+      <label>Supporting Documents</label>
+      <input type="file" id="doc_file" multiple />
+      <div class="hint" id="upload_hint"></div>
+    </div>
+
+    <div class="row">
+      <label>Priority</label>
+      <select id="priority">
+        <option value="Low">Low</option>
+        <option value="Medium" selected>Medium</option>
+        <option value="High">High</option>
+      </select>
+    </div>
+
+    <button id="submit_btn">Submit Request</button>
+  </div>
+
+<script>
+  {% for key in boot %}
+  window["{{ key }}"] = {{ boot[key] | tojson }};
+  {% endfor %}
+</script>
+
+<script>
+  const API = '/api/method/sahayog_ticket.sahayog_ticket.page.agent_service.agent_service_api.';
+  const CSRF = window.csrf_token || '';
+  let attachUrls = [];
+
+  function call(method, args) {
+    return fetch(API + method, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': CSRF },
+      body: JSON.stringify(args || {})
+    }).then(r => r.json()).then(r => {
+      if (r.exc || (r.message && r.message.exc)) throw new Error(r.exc || r.message.exc);
+      return r.message;
+    });
+  }
+
+  function show(msg, type) {
+    const el = document.getElementById('msg');
+    el.textContent = msg; el.className = 'msg ' + type;
+  }
+
+  function inputHtml(f) {
+    const req = f.reqd ? ' <span class="req">*</span>' : '';
+    const k = f.field_key;
+    let input = '';
+    if (f.field_type === 'Select') {
+      const opts = (f.options || '').split('\n').filter(Boolean);
+      input = '<select data-key="' + k + '"><option value="">-- select --</option>' +
+        opts.map(o => '<option value="' + o + '">' + o + '</option>').join('') + '</select>';
+    } else if (f.field_type === 'Date') {
+      input = '<input type="date" data-key="' + k + '" />';
+    } else if (f.field_type === 'Small Text') {
+      input = '<textarea data-key="' + k + '"></textarea>';
+    } else {
+      input = '<input type="text" data-key="' + k + '" />';
+    }
+    return '<div class="row"><label>' + (f.label || k) + req + '</label>' + input + '</div>';
+  }
+
+  function renderFields(list) {
+    document.getElementById('dynamic_fields').innerHTML = list.map(inputHtml).join('');
+  }
+
+  call('get_agents', {}).then(list => {
+    const dl = document.getElementById('agent_options');
+    dl.innerHTML = list.map(a => '<option value="' + a.code + '">' + (a.agent_name || '') + '</option>').join('');
+  }).catch(e => show(e.message, 'error'));
+
+  document.getElementById('agent_code').addEventListener('change', function () {
+    const code = this.value;
+    if (!code) {
+      document.getElementById('agent_name').value = '';
+      document.getElementById('branch_code').value = '';
+      document.getElementById('branch_name').value = '';
+      document.getElementById('agent_hint').textContent = '';
+      return;
+    }
+    call('get_agent_details', { agent_code: code }).then(d => {
+      document.getElementById('agent_name').value = d.agent_name || '';
+      document.getElementById('branch_code').value = d.branch_code || '';
+      document.getElementById('branch_name').value = d.branch_name || '';
+      if (!d.agent_name) {
+        document.getElementById('agent_hint').textContent = 'Agent not found';
+        return;
+      }
+      const parts = [];
+      if (d.branch) parts.push('Branch: ' + d.branch);
+      if (d.sol_id) parts.push('SOL: ' + d.sol_id);
+      document.getElementById('agent_hint').textContent = parts.join(' | ');
+    });
+  });
+
+  call('get_sub_types', {}).then(list => {
+    const sel = document.getElementById('sub_type');
+    list.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.name; o.textContent = s.sub_type_name; sel.appendChild(o);
+    });
+  }).catch(e => show(e.message, 'error'));
+
+  document.getElementById('sub_type').addEventListener('change', function () {
+    if (!this.value) { renderFields([]); return; }
+    call('get_fields', { sub_type: this.value }).then(renderFields).catch(e => show(e.message, 'error'));
+  });
+
+  document.getElementById('doc_file').addEventListener('change', function () {
+    const files = Array.from(this.files || []);
+    if (!files.length) return;
+    document.getElementById('upload_hint').textContent = 'Uploading...';
+    const fd = new FormData();
+    files.forEach(f => fd.append('file', f, f.name));
+    fetch('/api/method/uploadfile', {
+      method: 'POST',
+      headers: { 'X-Frappe-CSRF-Token': CSRF },
+      body: fd
+    }).then(r => r.json()).then(r => {
+      const d = r.message;
+      if (d && d.file_url) { attachUrls.push(d.file_url); document.getElementById('upload_hint').textContent = files.length + ' file(s) attached'; }
+      else document.getElementById('upload_hint').textContent = 'Upload failed';
+    }).catch(() => document.getElementById('upload_hint').textContent = 'Upload failed');
+  });
+
+  document.getElementById('submit_btn').addEventListener('click', function () {
+    show('', '');
+    const values = {};
+    document.querySelectorAll('#dynamic_fields [data-key]').forEach(el => {
+      values[el.dataset.key] = el.value;
+    });
+    const args = {
+      agent_code: document.getElementById('agent_code').value,
+      agent_name: document.getElementById('agent_name').value,
+      branch_code: document.getElementById('branch_code').value,
+      branch_name: document.getElementById('branch_name').value,
+      sub_type: document.getElementById('sub_type').value,
+      values: values,
+      remarks: document.getElementById('remarks').value,
+      priority: document.getElementById('priority').value,
+      attach_urls: attachUrls
+    };
+    this.disabled = true;
+    call('create_agent_request', { args: args }).then(r => {
+      show('Request submitted: ' + r.name, 'ok');
+      document.getElementById('submit_btn').disabled = false;
+    }).catch(e => {
+      show(e.message, 'error');
+      document.getElementById('submit_btn').disabled = false;
+    });
+  });
+</script>
+</body>
+</html>

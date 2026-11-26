@@ -1,9 +1,98 @@
 frappe.pages["asr-report"].on_page_load = function (wrapper) {
+	// Same page, two modes. Default (no param) stays exactly Account.
+	const _urlTicketType = new URLSearchParams(window.location.search).get("ticket_type")
+		|| (frappe.urllib && frappe.urllib.get_arg ? frappe.urllib.get_arg("ticket_type") : "")
+		|| (frappe.utils.get_url_arg ? frappe.utils.get_url_arg("ticket_type") : "") || "";
+	const IS_AGENT = String(_urlTicketType).trim() === "Agent Service Request";
+
 	const page = frappe.ui.make_app_page({
 		parent: wrapper,
-		title: "Account Service Request",
+		title: IS_AGENT ? "Agent Service Request" : "Account Service Request",
 		single_column: true,
 	});
+
+	// ── Agent mode config (isolated; account strings stay unchanged) ─────────
+	const API_BASE = "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.";
+	const API = IS_AGENT ? {
+		filterOptions: API_BASE + "agent_get_filter_options",
+		report:       API_BASE + "agent_get_report_data",
+		comments:     API_BASE + "agent_get_ticket_comments",
+		detail:       API_BASE + "agent_get_ticket_detail",
+		addComment:   API_BASE + "agent_add_ticket_comment",
+		attachFile:   API_BASE + "agent_attach_file_to_ticket",
+		export:       API_BASE + "agent_export_report",
+		exportEvent:  "asr_agent_export_ready",
+	} : {
+		filterOptions: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_filter_options",
+		report:       "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_report_data",
+		comments:     "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
+		detail:       "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_detail",
+		addComment:   "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
+		attachFile:   "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.attach_file_to_ticket",
+		export:       "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.export_report",
+		exportEvent:  "asr_export_ready",
+	};
+
+	const AGENT_COLUMNS = [
+		{ label: "S.No",            width: 50,  sticky: "" },
+		{ label: "Comments",        width: 88,  sticky: "left" },
+		{ label: "Ticket",          width: 110 },
+		{ label: "Creation Date",   width: 100 },
+		{ label: "Request Type",        width: 160 },
+		{ label: "Agent Code",      width: 110 },
+		{ label: "Agent Name",      width: 140 },
+		{ label: "Branch Code",     width: 110 },
+		{ label: "Branch Name",     width: 140 },
+		{ label: "Status",          width: 100 },
+		{ label: "Response Pending",width: 160 },
+		{ label: "Cycle",           width: 50 },
+		{ label: "Employee",        width: 130 },
+		{ label: "State",           width: 90 },
+		{ label: "Zone",            width: 90 },
+		{ label: "Region",          width: 90 },
+		{ label: "District",        width: 90 },
+		{ label: "Resolved By",     width: 110 },
+		{ label: "Resolved Date",   width: 120 },
+		{ label: "Remark",          width: 160 },
+		{ label: "Last Modified",   width: 130, sticky: "right" },
+	];
+	const AGENT_COL_SEARCH = [
+		null, null, { key: "ticket", label: "Ticket" }, { key: "creation_date", label: "Creation Date" },
+		{ key: "sub_type", label: "Request Type" }, { key: "agent_code", label: "Agent Code" },
+		{ key: "agent_name", label: "Agent Name" }, { key: "branch_code", label: "Branch Code" },
+		{ key: "branch_name", label: "Branch Name" }, null, null, null,
+		{ key: "employee", label: "Employee" }, { key: "state", label: "State" },
+		{ key: "zone", label: "Zone" }, { key: "region", label: "Region" },
+		{ key: "district", label: "District" }, { key: "resolved_by", label: "Resolved By" },
+		{ key: "resolved_date", label: "Resolved Date" },
+		{ key: "remark", label: "Remark" }, { key: "modified", label: "Last Modified" },
+	];
+
+	function buildAgentColumnFilters() {
+		const $row = $("#asr-filter-row");
+		if (!$row.length) return;
+		AGENT_COLUMNS.forEach((c, i) => {
+			const s = AGENT_COL_SEARCH[i] || null;
+			const sticky = c.sticky === "left"
+				? "position:sticky;left:0;z-index:5;border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);"
+				: c.sticky === "right"
+					? "position:sticky;right:0;z-index:5;border-left:1px solid #e2e8f0;box-shadow:-2px 0 4px rgba(0,0,0,0.06);"
+					: "";
+			if (!s || !s.key) {
+				$row.append(`<td style="padding:4px 6px;background:#f8fafc;${sticky}"></td>`);
+				return;
+			}
+			$row.append(`
+				<td style="padding:4px 6px;background:#f8fafc;${sticky}">
+					<div style="position:relative;">
+						<span style="position:absolute;left:6px;top:50%;transform:translateY(-50%);color:#94a3b8;">⌕</span>
+						<input class="asr-col-search" data-col="${s.key}" placeholder="${s.label}"
+							style="width:100%;height:26px;border:1px solid #e2e8f0;border-radius:5px;
+							padding:0 6px 0 20px;font-size:11px;color:#1e293b;background:#f8fafc;outline:none;" />
+					</div>
+				</td>`);
+		});
+	}
 
 	// ── State ────────────────────────────────────────────────────────────────
 	const state = {
@@ -18,6 +107,22 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		summary:   {},      // global status counts (ignores status filter)
 		colSearch: {},      // per-column text search {key: text}
 	};
+
+	// Clear every filter and tab selection, then reload from page 1.
+	function clearAllFilters() {
+		// Agent mode has no Status/RP dropdowns — tabs own those filters.
+		if (!IS_AGENT) $("#asr-filter-status,#asr-filter-rp").val("");
+		$("#asr-filter-rt,#asr-filter-sol").val("");
+		$("#asr-filter-from,#asr-filter-to").val("");
+		if (IS_AGENT) $("#asr-filter-branch-code").val("");
+		$(".asr-col-search").val("");
+		state.colSearch = {};
+		state.mainTab = "all";
+		state.subStatus = "";
+		renderTabs();
+		state.filters = {};
+		resetAndLoad();
+	}
 
 	// Taskflow-style groups: Pending = Open+In-Progress, Completed = Closed+Resolved.
 	const TAB_GROUPS = {
@@ -97,8 +202,15 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	}
 
 	// ── Page toolbar buttons ─────────────────────────────────────────────────
-	page.add_button(__("Refresh"), () => resetAndLoad(), { icon: "refresh" });
+	// Refresh hata diya; Clear Filters upar toolbar me (icon-only) aa gaya.
+	const $clearTop = page.add_button(__("Clear Filters"), clearAllFilters, { icon: "filter-x" });
+	$clearTop.attr({ title: __("Clear Filters"), "aria-label": __("Clear Filters") })
+		.contents().filter(function () { return this.nodeType === 3; }).remove();
 	page.set_primary_action(__("Export CSV"), () => exportCSV(), "download");
+
+	// Page head me 3-dot menu hide (dono modes ke liye).
+	page.hide_menu();
+	page.wrapper.find(".more-button").hide();
 
 	// ── Filter bar HTML ──────────────────────────────────────────────────────
 	const $filterBar = $(`
@@ -159,16 +271,23 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					padding:0 8px;font-size:12px;min-width:130px;background:#fff;" />
 			</div>
 
-			<div style="display:flex;align-items:flex-end;gap:6px;margin-top:auto;">
-				<button id="asr-clear-btn" title="Clear Filters"
-					style="height:32px;width:32px;display:flex;align-items:center;justify-content:center;
-					background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;
-					border-radius:6px;font-size:16px;cursor:pointer;padding:0;">
-					↺
-				</button>
-			</div>
 		</div>
 	`).appendTo(page.main);
+
+	// Agent mode: tabs handle Status/Response Pending, so drop those two
+	// dropdowns and keep the remaining 5 filters together in one row.
+	if (IS_AGENT) {
+		$filterBar.find("#asr-filter-status, #asr-filter-rp").closest("div").remove();
+		$filterBar.find("label:contains('SOL ID')").text("Agent Code");
+		$filterBar.find("#asr-filter-from").closest("div").before(`
+			<div style="display:flex;flex-direction:column;gap:3px;">
+				<label style="font-size:11px;font-weight:600;color:#64748b;">Branch Code</label>
+				<select id="asr-filter-branch-code" style="height:32px;border:1px solid #cbd5e1;
+					border-radius:6px;padding:0 8px;font-size:12px;min-width:140px;background:#fff;">
+					<option value="">All</option>
+				</select>
+			</div>`);
+	}
 
 	// ── Page layout: main = flex column, exact viewport height ─────────────
 	// NOTE: page.main KHUD .layout-main-section hai (direct ref). Purani
@@ -239,9 +358,29 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 	// ── Load filter options ──────────────────────────────────────────────────
 	frappe.call({
-		method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_filter_options",
+		method: API.filterOptions,
 		callback(r) {
 			const opts = r.message || {};
+			if (IS_AGENT) {
+				const $rt = $("#asr-filter-rt");
+				(opts.sub_types || []).forEach(s => {
+					const v = frappe.utils.escape_html(s);
+					$rt.append(`<option value="${v}">${v}</option>`);
+				});
+				const $sol = $("#asr-filter-sol");
+				(opts.agent_codes || []).forEach(a => {
+					const code = frappe.utils.escape_html(a.agent_code || "");
+					const nm = frappe.utils.escape_html(a.agent_name || "");
+					$sol.append(`<option value="${code}">${code}${nm ? " – " + nm : ""}</option>`);
+				});
+				const $branch = $("#asr-filter-branch-code");
+				(opts.branch_codes || []).forEach(b => {
+					const code = frappe.utils.escape_html(b.branch_code || "");
+					const nm = frappe.utils.escape_html(b.branch_name || "");
+					$branch.append(`<option value="${code}">${code}${nm ? " – " + nm : ""}</option>`);
+				});
+				return;
+			}
 			const $rt = $("#asr-filter-rt");
 			(opts.request_types || []).forEach(rt => {
 				$rt.append(`<option value="${rt}">${rt}</option>`);
@@ -291,7 +430,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		$main.find("button").on("click", function () {
 			state.mainTab = $(this).data("tab");
 			state.subStatus = "";
-			$("#asr-filter-status").val("");
+			if (!IS_AGENT) $("#asr-filter-status").val("");
 			renderTabs();
 			applyFilters();
 		});
@@ -321,7 +460,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		$sub.find("button").on("click", function () {
 			const s = $(this).data("sub");
 			state.subStatus = (state.subStatus === s) ? "" : s;
-			$("#asr-filter-status").val("");
+			if (!IS_AGENT) $("#asr-filter-status").val("");
 			renderTabs();
 			applyFilters();
 		});
@@ -334,32 +473,40 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		return TAB_GROUPS[state.mainTab] || [];
 	}
 	function applyFilters() {
-	 // Tabs win when set; else fall back to the Status dropdown (as-is).
+	 // Tabs win when set; Account alone falls back to the Status dropdown.
 		let statuses = statusList();
-		if (!statuses.length) {
+		if (!statuses.length && !IS_AGENT) {
 			const s = $("#asr-filter-status").val();
 			if (s) statuses = [s];
 		}
 		// RP sub-badges filter on response_pending (within pending statuses).
 		const rpSub = RP_SUBS.includes(state.subStatus) ? state.subStatus : "";
+		const rpFallback = IS_AGENT ? "" : ($("#asr-filter-rp").val() || "");
 		state.filters = {
 			statuses:         statuses,
-			response_pending: rpSub || $("#asr-filter-rp").val(),
+			response_pending: rpSub || rpFallback,
 			request_type:     $("#asr-filter-rt").val(),
 			sol_id:           $("#asr-filter-sol").val(),
 			from_date:        $("#asr-filter-from").val(),
 			to_date:          $("#asr-filter-to").val(),
 			column_search:    state.colSearch || {},
 		};
+		if (IS_AGENT) {
+			state.filters.sub_type   = $("#asr-filter-rt").val();
+			state.filters.agent_code = $("#asr-filter-sol").val();
+			state.filters.branch_code = (($("#asr-filter-branch-code").val()) || "").trim();
+		}
 		resetAndLoad();
 	}
 
-	$("#asr-filter-status").on("change", () => {
-		state.mainTab = "all";
-		state.subStatus = "";
-		renderTabs();
-		applyFilters();
-	});
+	if (!IS_AGENT) {
+		$("#asr-filter-status").on("change", () => {
+			state.mainTab = "all";
+			state.subStatus = "";
+			renderTabs();
+			applyFilters();
+		});
+	}
 	// ── Per-column search (only where needed; server filters) ──────────────
 	// Order = thead order (empty cell keeps alignment).
 	const COL_SEARCH_COLS = [
@@ -414,6 +561,22 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				</td>`);
 		});
 	})();
+
+	// Agent mode replaces only its own header/filter row. Account table stays
+	// exactly as written above.
+	if (IS_AGENT) {
+		const headerWidth = AGENT_COLUMNS.reduce((a, c) => a + c.width, 0);
+		$("#asr-table").css({ width: headerWidth + "px", "min-width": headerWidth + "px" });
+		$("#asr-table thead tr:first").html(AGENT_COLUMNS.map(c => {
+			let extra = "";
+			if (c.sticky === "left") extra = "position:sticky;left:0;z-index:5;background:#f8fafc;border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);";
+			if (c.sticky === "right") extra = "position:sticky;right:0;z-index:5;background:#f8fafc;border-left:1px solid #e2e8f0;box-shadow:-2px 0 4px rgba(0,0,0,0.06);";
+			return `<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:${c.width}px;${extra}">${c.label}</th>`;
+		}).join(""));
+		$("#asr-filter-row").empty();
+		buildAgentColumnFilters();
+	}
+
 	let colTimer = null;
 	$("#asr-table-wrap").on("input", ".asr-col-search", function () {
 		clearTimeout(colTimer);
@@ -433,20 +596,13 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	$("#asr-table-wrap").on("blur", ".asr-col-search", function () {
 		$(this).css({ "border-color": "#e2e8f0", background: "#f8fafc" });
 	});
-	$("#asr-filter-rp, #asr-filter-rt, #asr-filter-sol").on("change", applyFilters);
+	$("#asr-filter-rt, #asr-filter-sol").on("change", applyFilters);
+	if (!IS_AGENT) $("#asr-filter-rp").on("change", applyFilters);
 	$("#asr-filter-from, #asr-filter-to").on("change", applyFilters);
 
-	$("#asr-clear-btn").on("click", () => {
-		$("#asr-filter-status,#asr-filter-rp,#asr-filter-rt,#asr-filter-sol").val("");
-		$("#asr-filter-from,#asr-filter-to").val("");
-		$(".asr-col-search").val("");
-		state.colSearch = {};
-		state.mainTab = "all";
-		state.subStatus = "";
-		renderTabs();
-		state.filters = {};
-		resetAndLoad();
-	});
+	if (IS_AGENT) {
+		$("#asr-filter-branch-code").on("change", applyFilters);
+	}
 
 	// ── Infinite scroll via IntersectionObserver ─────────────────────────────
 	const sentinel = document.getElementById("asr-scroll-sentinel");
@@ -475,7 +631,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		$("#asr-loading").show();
 
 		frappe.call({
-			method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_report_data",
+			method: API.report,
 			args: {
 				filters:   state.filters,
 				page_no:   Math.floor(state.offset / state.pageSize) + 1,
@@ -523,7 +679,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				field: "executive_remark", commentAfter: true,
 				title: "Enter Remark for Branch", label: "Branch Remark" });
 		}
-		if (br && st === "In-Progress" && rp !== "Pending Operations") {
+		if (br && !frappe.user.has_role("Operations Support Executive") && st === "In-Progress" && rp !== "Pending Operations") {
 			out.push({ key: "Send to CPC", rp: "Pending Operations",
 				field: "executive_remark", commentAfter: true,
 				title: "Enter Info Provided", label: "Info for CPC" });
@@ -563,7 +719,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			const postCommentThenWf = () => {
 				if (toComment) {
 					frappe.call({
-						method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
+						method: API.addComment,
 						args: { ticket: ticket, text: remark },
 						callback: applyWf,
 						error: () => frappe.msgprint(__("Could not save remark.")),
@@ -669,6 +825,10 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 	// ── Append rows ──────────────────────────────────────────────────────────
 	function appendRows(rows) {
+		if (IS_AGENT) {
+			appendAgentRows(rows);
+			return;
+		}
 		state.byTicket = state.byTicket || {};
 		rows.forEach(rr => { state.byTicket[rr.ticket] = rr; });
 		const $tbody  = $("#asr-tbody");
@@ -785,6 +945,10 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		return `${d[2]}-${d[1]}-${d[0].slice(2)} ${String(h).padStart(2, "0")}:${mi} ${ampm}`;
 	}
 	function showComments(ticket, row) {
+		if (IS_AGENT) {
+			showAgentComments(ticket, row || {});
+			return;
+		}
 		row = row || {};
 		// Same visibility as the form (shared helper). Recomputed on
 		// fresh doc below (table row may be stale).
@@ -976,6 +1140,35 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				}
 				return null;
 			}
+			// Pull the same named group from EVERY child request (not just the first).
+			function _getGroups(sectionName) {
+				const out = [];
+				(row.updates || []).forEach(u => {
+					(u.groups || []).forEach(g => {
+						if (g.section === sectionName && (g.lines || []).length) {
+							out.push({
+								title: u.title || "",
+								status: (u.request_status || "").trim(),
+								lines: g.lines,
+							});
+						}
+					});
+				});
+				return out;
+			}
+			// Status pill for one child request (Pending / Completed / Rejected).
+			function _statusPill(status) {
+				const s = status || "Pending";
+				const palette = s === "Completed"
+					? { bg: "#dcfce7", fg: "#15803d", bd: "#86efac" }
+					: s === "Rejected"
+						? { bg: "#fee2e2", fg: "#b91c1c", bd: "#fecaca" }
+						: { bg: "#fef3c7", fg: "#b45309", bd: "#fcd34d" };
+				const mark = s === "Completed" ? "✓" : s === "Rejected" ? "✕" : "•";
+				return `<span style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;
+					font-size:9.5px;font-weight:700;line-height:1;padding:3px 7px;border-radius:999px;
+					background:${palette.bg};color:${palette.fg};border:1px solid ${palette.bd};">${mark} ${frappe.utils.escape_html(s)}</span>`;
+			}
 			// Return value by label inside a group.
 			function _groupVal(g, label) {
 				if (!g) return "";
@@ -1004,7 +1197,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			// AND CIF / attatchment from section='' group.
 			const _grpRoot   = _getGroup("");
 			const _grpAcct   = _getGroup("Account Holder Details");
-			const _grpNew    = _getGroup("New Information");
 
 			const cifVal      = _groupVal(_grpRoot, "Customer ID");
 			const custName    = _groupVal(_grpAcct, "Customer Name");
@@ -1013,8 +1205,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			const emailVal    = _groupVal(_grpAcct, "Email");   // account email (not new)
 			const contactVal  = _groupVal(_grpAcct, "Contact Number");
 
-			// New Information lines (only filled, any request type).
-			const newLines    = (_grpNew && _grpNew.lines) ? _grpNew.lines : [];
+			// New Information from all requests in this ticket.
+			const newGroups   = _getGroups("New Information");
 
 			// Attachments from dt.files (ticket-level) — inline in Account Holder section.
 			const files = (dt.files && dt.files.length) ? dt.files : [];
@@ -1195,8 +1387,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						</div>
 					</div>
 
-					<!-- ── REQUESTED UPDATES ── -->
-					${newLines.length ? `
+					<!-- ── REQUESTED UPDATES (all child requests) ── -->
+					${newGroups.length ? `
 					<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
 					<div style="padding:10px 16px;">
 						<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
@@ -1204,16 +1396,23 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 							<div style="flex:1;height:1px;background:#e2e8f0;"></div>
 						</div>
 						<div style="display:flex;flex-direction:column;gap:0;">
-							${newLines.map((ln) => {
-								const escaped = frappe.utils.escape_html(ln.value || "");
-								const isDate = /^\d{4}-\d{2}-\d{2}$/.test((ln.value || "").trim());
-								const display = isDate ? ln.value.trim().split("-").reverse().join("-") : escaped;
-								const isLong = (ln.value || "").length > 40;
-								return `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">
-									<div style="font-size:10.5px;color:#94a3b8;font-weight:500;margin-bottom:2px;">${frappe.utils.escape_html(ln.label || "")}</div>
-									<div style="${isLong ? "white-space:pre-wrap;word-break:break-word;" : ""}font-size:12.5px;color:#0f172a;font-weight:600;">${isDate ? frappe.utils.escape_html(display) : escaped}</div>
-								</div>`;
-							}).join("")}
+							${newGroups.map((grp) => `
+								<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;
+									margin:8px 0 2px;background:#f1f5f9;border-radius:5px;padding:4px 7px;">
+									<span style="font-size:10.5px;font-weight:700;color:#417c7d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${frappe.utils.escape_html(grp.title || "Request")}</span>
+									${_statusPill(grp.status)}
+								</div>
+								${grp.lines.map((ln) => {
+									const escaped = frappe.utils.escape_html(ln.value || "");
+									const isDate = /^\d{4}-\d{2}-\d{2}$/.test((ln.value || "").trim());
+									const display = isDate ? ln.value.trim().split("-").reverse().join("-") : escaped;
+									const isLong = (ln.value || "").length > 40;
+									return `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">
+										<div style="font-size:10.5px;color:#94a3b8;font-weight:500;margin-bottom:2px;">${frappe.utils.escape_html(ln.label || "")}</div>
+										<div style="${isLong ? "white-space:pre-wrap;word-break:break-word;" : ""}font-size:12.5px;color:#0f172a;font-weight:600;">${isDate ? frappe.utils.escape_html(display) : escaped}</div>
+									</div>`;
+								}).join("")}
+							`).join("")}
 						</div>
 					</div>` : ""}
 
@@ -1286,11 +1485,11 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						clearBlur();
 						const furl = (file && file.file_url) || "";
 						frappe.call({
-							method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.attach_file_to_ticket",
+							method: API.attachFile,
 							args: { ticket: ticket, file_url: furl },
 							callback: () => {
 								frappe.call({
-									method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
+									method: API.comments,
 									args: { ticket: ticket },
 									callback(r2) {
 										list = r2.message || [];
@@ -1489,13 +1688,13 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				d.$wrapper.find("#asr-send-btn").prop("disabled", true);
 
 				frappe.call({
-					method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.add_ticket_comment",
+					method: API.addComment,
 					args:   { ticket, text },
 					callback(r) {
 						d.$wrapper.find("#asr-send-btn").prop("disabled", false);
 						if (r.exc) return;
 						frappe.call({
-							method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
+							method: API.comments,
 							args:   { ticket },
 							callback(r2) {
 								list = r2.message || [];
@@ -1508,7 +1707,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		}
 
 		frappe.call({
-			method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_comments",
+			method: API.comments,
 			args:   { ticket },
 			callback(r) {
 				// Fresh ticket state (table row may be stale) + detail pane data.
@@ -1523,7 +1722,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						if (fresh.resolved_remark !== undefined) row.remark = fresh.resolved_remark || "";
 						computeActions();
 						frappe.call({
-							method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.get_ticket_detail",
+							method: API.detail,
 							args: { ticket: ticket },
 							callback(r3) { buildUI(r.message || [], r3.message || {}); },
 							error: () => buildUI(r.message || [], {}),
@@ -1535,12 +1734,532 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		});
 	}
 
+	// Agent row popup. Same look as the account popup, but passes the remark
+	// prompt correctly (undefined preset) and never touches account code.
+	function openAgentWfPopup(ticket, actions, x, y) {
+		$(".asr-agent-wf-float").remove();
+		if (!actions.length) return;
+		const $p = $(`
+			<div class="asr-agent-wf-float" style="position:fixed;z-index:2000;background:#fff;
+				border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);
+				padding:6px;min-width:200px;">
+				<div style="font-size:10px;color:#94a3b8;font-weight:700;letter-spacing:.05em;padding:4px 8px 6px;">WORKFLOW</div>
+				${actions.map((a, i) => `
+					<button data-idx="${i}" style="display:flex;width:100%;text-align:left;gap:8px;
+						align-items:center;background:#fff;cursor:pointer;border:none;border-radius:7px;
+						padding:7px 8px;font-size:12.5px;font-weight:600;color:#0f172a;">
+						<span style="width:24px;height:24px;border-radius:50%;background:#e6f2f2;color:#1f5c5d;
+							display:flex;align-items:center;justify-content:center;font-size:12px;">➤</span>
+						${frappe.utils.escape_html(a.key)}
+					</button>`).join("")}
+			</div>`);
+		const w = 220, h = 60 + actions.length * 44;
+		$p.css({
+			left: Math.max(8, Math.min(x, window.innerWidth - w)) + "px",
+			top: Math.max(8, Math.min(y, window.innerHeight - h)) + "px",
+		});
+		$p.find("[data-idx]").on("click", function () {
+			const a = actions[+$(this).data("idx")];
+			$p.remove();
+			runWfAction(ticket, a, undefined, () => resetAndLoad());
+		});
+		$(document).one("click", () => $p.remove());
+		$("body").append($p);
+	}
+
+	// ── Agent-only row renderer (account renderer above stays untouched) ─────
+	function appendAgentRows(rows) {
+		state.byTicket = state.byTicket || {};
+		rows.forEach(rr => { state.byTicket[rr.ticket] = rr; });
+		const $tbody = $("#asr-tbody");
+		const baseIdx = $tbody.children().length;
+		const tdBase = `padding:9px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`;
+		const esc = frappe.utils.escape_html;
+		const timePart = t => {
+			if (!t) return "";
+			const p = String(t).slice(0, 8).split(":");
+			let h = parseInt(p[0], 10);
+			const ap = h >= 12 ? "PM" : "AM";
+			h = h % 12 || 12;
+			return String(h).padStart(2, "0") + ":" + p[1] + " " + ap;
+		};
+
+		rows.forEach((r, idx) => {
+			const rowIdx  = baseIdx + idx;
+			const bg      = rowIdx % 2 === 0 ? "#fff" : "#fafafa";
+			const mod     = formatModified(r.modified);
+			const shortId = String(r.ticket || "").split("-").slice(-2).join("-") || r.ticket;
+			const resolvedDateHtml = (function () {
+				if (!r.resolved_date) return "—";
+				const d = esc(r.resolved_date.split("-").reverse().join("-"));
+				const tm = timePart(r.resolved_time);
+				return `<div style="white-space:nowrap;color:#475569;">${d}</div>` +
+					(tm ? `<div style="font-size:10.5px;color:#94a3b8;white-space:nowrap;">${tm}</div>` : "");
+			})();
+			const $tr = $(`<tr style="cursor:pointer;border-bottom:1px solid #f1f5f9;background:${bg};">
+				<td style="${tdBase}color:#94a3b8;">${rowIdx + 1}</td>
+				<td class="asr-cmt-cell" style="${tdBase}position:sticky;left:0;z-index:2;background:${bg};border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);cursor:default;" title="${esc((r.last_comment_by ? r.last_comment_by + ': ' : '') + (r.last_comment || ''))}">
+					${r.comments_count
+						? `<span class="asr-cmt-count" style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:4px;">${r.comments_count}</span>`
+						: ""}
+					<button class="asr-cmt-btn" data-ticket="${esc(r.ticket)}" title="View comments" style="border:1px solid #cbd5e1;background:#fff;cursor:pointer;border-radius:6px;padding:1px 6px;font-size:11px;color:#417c7d;">💬</button>
+				</td>
+				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${esc(r.ticket)}">${esc(shortId)}${wfActionsFor(r).length ? ` <button class="asr-row-act" title="Workflow actions" style="border:1px solid #cbd5e1;background:#fff;cursor:pointer;border-radius:6px;padding:0 6px;margin-left:4px;font-size:11px;color:#417c7d;font-weight:700;">›</button>` : ""}</td>
+				<td style="${tdBase}color:#475569;">${esc(r.creation_date ? r.creation_date.split("-").reverse().join("-") : "—")}<span style="display:block;font-size:10.5px;color:#94a3b8;">${timePart(r.creation_time)}</span></td>
+				<td style="${tdBase}color:#475569;">${esc(r.sub_type || "—")}</td>
+				<td style="${tdBase}color:#475569;">${esc(r.agent_code || "—")}</td>
+				<td style="${tdBase}color:#475569;">${esc(r.agent_name || "—")}</td>
+				<td style="${tdBase}color:#475569;">${esc(r.branch_code || "—")}</td>
+				<td style="${tdBase}color:#475569;">${esc(r.branch_name || "—")}</td>
+				<td style="${tdBase}">${badge(r.status, STATUS_STYLE[r.status])}</td>
+				<td style="${tdBase}">${r.response_pending ? badge(r.response_pending, RP_STYLE[r.response_pending]) : "—"}</td>
+				<td style="${tdBase}text-align:center;color:#64748b;">${r.ticket_cycle || 0}</td>
+				<td style="${tdBase}color:#475569;" title="${esc(r.employee_name || r.employee_id || "")}">
+					<span style="font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;">${esc(r.employee_name || "—")}</span>
+					<span style="font-size:10.5px;color:#94a3b8;display:block;overflow:hidden;text-overflow:ellipsis;">${esc(r.employee_id || "")}</span>
+				</td>
+				<td style="${tdBase}color:#475569;">${esc(r.state || "—")}</td>
+				<td style="${tdBase}color:#475569;">${esc(r.zone || "—")}</td>
+				<td style="${tdBase}color:#475569;">${esc(r.region || "—")}</td>
+				<td style="${tdBase}color:#475569;">${esc(r.district || "—")}</td>
+				<td style="${tdBase}color:#475569;">${esc(r.resolved_by || "—")}</td>
+				<td style="${tdBase}overflow:hidden;">${resolvedDateHtml}</td>
+				<td style="${tdBase}font-size:11.5px;color:#475569;">${esc(r.remark || "—")}</td>
+				<td style="${tdBase}border-left:1px solid #e2e8f0;position:sticky;right:0;z-index:2;background:${bg};box-shadow:-2px 0 4px rgba(0,0,0,0.06);">${mod.html}</td>
+			</tr>`);
+
+			$tr.on("mouseenter", function () {
+				$(this).css("background", "#f0f9f9");
+				$(this).find("td[style*='position:sticky']").css("background", "#f0f9f9");
+			});
+			$tr.on("mouseleave", function () {
+				$(this).css("background", bg);
+				$(this).find("td[style*='position:sticky']").css("background", bg);
+			});
+			$tr.on("click", () => frappe.set_route("Form", "Sahayog Ticket", r.ticket));
+			$tr.find(".asr-cmt-count").on("click", e => e.stopPropagation());
+			$tr.find(".asr-cmt-btn").on("click", function (e) {
+				e.stopPropagation();
+				showAgentComments($(this).data("ticket"), r);
+			});
+			$tr.find(".asr-row-act").on("click", function (e) {
+				e.stopPropagation();
+				openAgentWfPopup(r.ticket, wfActionsFor(r), e.clientX, e.clientY);
+			});
+			$tr.find(".asr-cmt-cell").on("click", function (e) {
+				if ($(e.target).closest(".asr-cmt-btn").length) return;
+				e.stopPropagation();
+				showAgentComments(r.ticket, r);
+			});
+			$tbody.append($tr);
+		});
+	}
+
+	// ── Agent-only comments dialog (shares workflow runner with account) ─────
+	function showAgentComments(ticket, row) {
+		const esc = frappe.utils.escape_html;
+		const wfActions = [];
+		const computeActions = () => {
+			wfActions.length = 0;
+			wfActions.push(...wfActionsFor(row));
+		};
+		computeActions();
+
+		const d = new frappe.ui.Dialog({
+			title: "",
+			size: "large",
+			fields: [{ fieldtype: "HTML", fieldname: "chat_html", options: "" }],
+		});
+		d.show();
+		d.$wrapper.find(".modal-footer").hide();
+		d.$wrapper.find(".modal-header").css({ "border-bottom": "none", "padding": "10px 16px 0" });
+		d.$wrapper.find(".modal-body").css("padding", "0");
+		d.$wrapper.find(".modal-dialog").css({ "max-width": "1080px", width: "1080px" });
+
+		const initial = n => (n || "?").trim().charAt(0).toUpperCase();
+		const avatarColor = n => {
+			const colors = ["#0f766e", "#1d4ed8", "#7e22ce", "#b45309", "#b91c1c", "#047857"];
+			let h = 0;
+			for (let i = 0; i < (n || "").length; i++) h = n.charCodeAt(i) + ((h << 5) - h);
+			return colors[Math.abs(h) % colors.length];
+		};
+		const fmtTime = s => {
+			if (!s) return "";
+			const dt = new Date(String(s).replace(" ", "T"));
+			if (isNaN(dt)) return "";
+			let h = dt.getHours(), mi = String(dt.getMinutes()).padStart(2, "0");
+			const ap = h >= 12 ? "PM" : "AM";
+			h = h % 12 || 12;
+			return `${String(h).padStart(2, "0")}:${mi} ${ap}`;
+		};
+		const fmtDateKey = s => {
+			if (!s) return "";
+			const dt = new Date(String(s).replace(" ", "T"));
+			if (isNaN(dt)) return "";
+			const today = new Date(), yest = new Date();
+			yest.setDate(today.getDate() - 1);
+			if (dt.toDateString() === today.toDateString()) return "Today";
+			if (dt.toDateString() === yest.toDateString()) return "Yesterday";
+			return `${String(dt.getDate()).padStart(2, "0")}/${String(dt.getMonth() + 1).padStart(2, "0")}/${dt.getFullYear()}`;
+		};
+		const sidePill = side => {
+			if (!side) return "";
+			const ops = side === "Operations";
+			return `<span style="font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:999px;background:${ops ? "#f3e8ff" : "#dbeafe"};color:${ops ? "#7e22ce" : "#1d4ed8"};border:1px solid ${ops ? "#d8b4fe" : "#93c5fd"};">${esc(side)}</span>`;
+		};
+
+		let list = [];
+		function renderMessages() {
+			const $area = d.$wrapper.find("#asr-agent-messages");
+			$area.empty();
+			if (!list.length) {
+				$area.html(`<div style="text-align:center;color:#94a3b8;padding:50px 0;font-size:13px;">No messages yet</div>`);
+				return;
+			}
+			let lastDate = "";
+			list.forEach(c => {
+				const disp = c.name || (c.by || "").split("@")[0];
+				const mine = c.by === frappe.session.user;
+				const color = avatarColor(disp);
+				const dk = fmtDateKey(c.on);
+				if (dk && dk !== lastDate) {
+					lastDate = dk;
+					$area.append(`<div style="text-align:center;margin:10px 0 8px;"><span style="font-size:10.5px;color:#94a3b8;background:#f8fafc;border:1px solid #e2e8f0;border-radius:999px;padding:1px 8px;">${esc(dk)}</span></div>`);
+				}
+				$area.append(`
+					<div style="display:flex;justify-content:${mine ? "flex-end" : "flex-start"};margin-bottom:6px;">
+						<div style="max-width:72%;">
+							<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;justify-content:${mine ? "flex-end" : "flex-start"};">
+								<span style="font-size:10.5px;color:${color};font-weight:600;">${mine ? "You" : esc(disp)}</span>
+								${sidePill(c.side)}
+								<div style="width:18px;height:18px;border-radius:50%;background:${color};color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;">${esc(initial(disp))}</div>
+							</div>
+							<div style="background:${mine ? "#e2f0d9" : "#f1f5f9"};border-radius:12px;padding:6px 11px;font-size:13px;line-height:1.45;white-space:pre-wrap;word-break:break-word;">${esc(c.text)}</div>
+							<div style="font-size:10px;color:#94a3b8;margin-top:2px;text-align:${mine ? "right" : "left"};">${esc(fmtTime(c.on))}</div>
+						</div>
+					</div>`);
+			});
+			const el = $area[0];
+			el.scrollTop = el.scrollHeight;
+		}
+
+		function reloadComments() {
+			frappe.call({
+				method: API.comments,
+				args: { ticket },
+				callback(r) { list = r.message || []; renderMessages(); },
+			});
+		}
+
+		function detailLine(label, value, mono) {
+			if (!value) return "";
+			return `<div style="margin-bottom:7px;">
+				<div style="font-size:10.5px;color:#94a3b8;margin-bottom:2px;">${esc(label)}</div>
+				<div style="font-size:12.5px;color:#1e293b;font-weight:600;${mono ? "font-family:monospace;" : "word-break:break-word;"}">${esc(value)}</div>
+			</div>`;
+		}
+
+		function buildUI(dt) {
+			dt = dt || {};
+
+			// ── Modal title (header, not a chat message) ──
+			d.$wrapper.find(".modal-title").html(`
+				<div style="display:flex;align-items:center;gap:8px;">
+					<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#417c7d,#0f766e);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;">
+						${esc(initial(ticket))}
+					</div>
+					<div>
+						<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+							<span style="font-size:14px;font-weight:700;color:#0f172a;line-height:1.2;">${esc(ticket)}</span>
+							${badge(row.status, STATUS_STYLE[row.status]).replace("font-size:11.5px", "font-size:9px").replace("padding:2px 10px", "padding:0 6px")}
+						</div>
+						<div style="font-size:11px;color:#64748b;">Sahayog Ticket · Agent Service Request</div>
+					</div>
+				</div>`);
+
+			const agentStatusPill = status => {
+				const s = status || "Pending";
+				const palette = s === "Completed"
+					? { bg: "#dcfce7", fg: "#15803d", bd: "#86efac" }
+					: s === "Rejected"
+						? { bg: "#fee2e2", fg: "#b91c1c", bd: "#fecaca" }
+						: { bg: "#fef3c7", fg: "#b45309", bd: "#fcd34d" };
+				const mark = s === "Completed" ? "✓" : s === "Rejected" ? "✕" : "•";
+				return `<span style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;line-height:1;padding:3px 7px;border-radius:999px;background:${palette.bg};color:${palette.fg};border:1px solid ${palette.bd};">${mark} ${esc(s)}</span>`;
+			};
+
+			const files = dt.files || [];
+			const assignees = dt.assignees || [];
+			const agent = dt.agent || {};
+			const resolver = dt.resolver || {};
+
+			const assignHtml = row.assigned_to
+				? `<div style="display:flex;align-items:center;justify-content:space-between;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:5px 10px;">
+						<span style="font-size:12px;color:#15803d;font-weight:600;">
+							${esc(row.assigned_to_name || row.assigned_to)}
+							<span style="font-size:10.5px;color:#64748b;font-weight:400;margin-left:4px;">(current)</span>
+						</span>
+						<button id="asr-agent-unassign" title="Remove assignment" style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 2px;">✕</button>
+				   </div>`
+				: `<div style="display:flex;gap:6px;">
+						<select id="asr-agent-assign-sel" style="flex:1;height:32px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;background:#fff;">
+							<option value="">Assign to…</option>
+							${assignees.map(a => `<option value="${esc(a.value)}">${esc(a.label || a.value)}</option>`).join("")}
+						</select>
+						<button id="asr-agent-assign-btn" style="border:1px solid #417c7d;background:#417c7d;color:#fff;border-radius:6px;padding:0 10px;font-size:12px;cursor:pointer;">Assign</button>
+				   </div>`;
+
+			const resolverHtml = resolver.name ? `
+					<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
+					<div style="padding:10px 16px 14px;">
+						<div style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">Resolved By</div>
+						<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px 10px;">
+							<div style="font-size:12.5px;font-weight:700;color:#15803d;">${esc(resolver.name)}</div>
+							<div style="font-size:11.5px;color:#64748b;">${esc(resolver.on || "")}${resolver.designation ? " · " + esc(resolver.designation) : ""}${resolver.branch ? " · " + esc(resolver.branch) : ""}</div>
+						</div>
+					</div>` : "";
+
+			d.fields_dict.chat_html.$wrapper.html(`
+				<div style="display:flex;height:560px;border-radius:0 0 8px 8px;overflow:hidden;">
+
+					<!-- LEFT: ticket + raised-by (agent) + assignment + resolver -->
+					<div style="width:340px;flex-shrink:0;background:#f8fafc;border-right:1px solid #e2e8f0;overflow-y:auto;">
+						<div style="padding:14px 16px 10px;">
+							<div style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">Ticket Details</div>
+							${detailLine("Request Type", row.sub_type)}
+						</div>
+
+						<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
+
+						<div style="padding:10px 16px;">
+							<div style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">Raised By</div>
+							<div style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
+								<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;">
+									<span style="font-size:12.5px;font-weight:700;color:#0f172a;">${esc((dt.employee && dt.employee.employee_name) || row.employee_name || "—")}</span>
+									<span style="font-size:11px;color:#64748b;">${esc(row.employee_id || "")}</span>
+								</div>
+								${[
+									["Designation", dt.employee && dt.employee.designation],
+									["Department", dt.employee && dt.employee.department],
+									["Branch", (dt.employee && dt.employee.branch) || row.branch_name || row.branch_code],
+									["Mobile", dt.employee && dt.employee.cell_number],
+									["Email", dt.employee && (dt.employee.company_email || dt.employee.personal_email)],
+								].filter(([l, v]) => v).map(([l, v]) => `
+									<div style="font-size:11.5px;color:#64748b;margin-top:2px;">${esc(l)}: <span style="color:#1e293b;">${esc(v)}</span></div>`).join("")}
+							</div>
+						</div>
+
+						<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
+
+						<div style="padding:10px 16px;">
+							<div style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">Assign To</div>
+							<div id="asr-agent-assign-box">${assignHtml}</div>
+						</div>
+
+						${resolverHtml}
+					</div>
+
+					<!-- MIDDLE: chat -->
+					<div style="flex:1;display:flex;flex-direction:column;min-width:0;">
+						${row.executive_remark || row.remark || resolver.remark ? `
+						<div style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 16px;font-size:12px;color:#1e293b;">
+							${row.executive_remark ? `<div style="margin-bottom:4px;"><span style="color:#417c7d;font-weight:700;">FIRST REMARK · </span>${esc(row.executive_remark)}</div>` : ""}
+							${(row.remark || resolver.remark) ? `<div><span style="color:#15803d;font-weight:700;">RESOLUTION · </span>${esc(row.remark || resolver.remark)}</div>` : ""}
+						</div>` : ""}
+
+						<div id="asr-agent-messages" style="flex:1;overflow-y:auto;padding:12px 16px;background:#fff;"></div>
+
+						<div style="border-top:1px solid #e2e8f0;padding:10px 14px;background:#fff;">
+							<div style="display:flex;align-items:flex-end;gap:6px;border:1.5px solid #cbd5e1;border-radius:10px;padding:6px 10px;">
+								<button id="asr-agent-attach-btn" title="Attach file" style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:15px;">📎</button>
+								<textarea id="asr-agent-msg-input" rows="1" placeholder="Add comment"
+									style="flex:1;border:none;outline:none;resize:none;font-size:13px;padding:2px 0;max-height:96px;font-family:inherit;"></textarea>
+								<button id="asr-agent-send-btn" style="border:none;background:#417c7d;color:#fff;cursor:pointer;padding:6px 9px;border-radius:7px;">➤</button>
+							</div>
+						</div>
+					</div>
+
+					<!-- RIGHT: agent details + requested updates + attachments -->
+					<div style="width:290px;flex-shrink:0;background:#f8fafc;border-left:1px solid #e2e8f0;overflow-y:auto;display:flex;flex-direction:column;">
+
+						<!-- ── AGENT DETAILS ── -->
+						<div style="padding:14px 16px 10px;">
+							<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+								<span style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;">Agent Details</span>
+								<div style="flex:1;height:1px;background:#e2e8f0;"></div>
+							</div>
+							<div style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;">
+								<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;">
+									<span style="font-size:12.5px;font-weight:700;color:#0f172a;">${esc(agent.agent_name || row.agent_name || "—")}</span>
+									<span style="font-size:11px;color:#64748b;">${esc(agent.name || row.agent_code || "")}</span>
+								</div>
+								${[
+									["Phone", agent.phone_number],
+									["Branch Code", agent.branch_code || row.branch_code],
+									["Branch Name", agent.branch_name || row.branch_name],
+									["Role", agent.role],
+									["Status", agent.status],
+									["Requested By", agent.requested_by],
+								].filter(([l, v]) => v).map(([l, v]) => `
+									<div style="font-size:11.5px;color:#64748b;margin-top:2px;">${esc(l)}: <span style="color:#1e293b;">${esc(v)}</span></div>`).join("")}
+							</div>
+						</div>
+
+						<!-- ── REQUESTED UPDATES (all child requests) ── -->
+						${(row.updates || []).length ? `
+						<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
+						<div style="padding:10px 16px;">
+							<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+								<span style="font-size:10.5px;font-weight:700;color:#0f766e;letter-spacing:.06em;text-transform:uppercase;">Requested Updates</span>
+								<div style="flex:1;height:1px;background:#e2e8f0;"></div>
+							</div>
+							${(row.updates || []).map(u => `
+								<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 2px;background:#f1f5f9;border-radius:5px;padding:4px 7px;">
+									<span style="font-size:10.5px;font-weight:700;color:#417c7d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(u.title || "Request")}</span>
+									${agentStatusPill(u.request_status)}
+								</div>
+								${(u.groups || []).flatMap(g => g.lines || []).map(l => {
+									const raw = String(l.value || "");
+									const isDate = /^\d{4}-\d{2}-\d{2}$/.test(raw.trim());
+									const val = isDate ? raw.trim().split("-").reverse().join("-") : raw;
+									const long = raw.length > 40;
+									return `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">
+										<div style="font-size:10.5px;color:#94a3b8;font-weight:500;margin-bottom:2px;">${esc(l.label || "")}</div>
+										<div style="${long ? "white-space:pre-wrap;word-break:break-word;" : ""}font-size:12.5px;color:#0f172a;font-weight:600;">${esc(val)}</div>
+									</div>`;
+								}).join("")}
+							`).join("")}
+						</div>` : ""}
+
+						${files.length ? `
+						<div style="height:1px;background:#e2e8f0;margin:0 16px;"></div>
+						<div style="padding:10px 16px 14px;">
+							<div style="font-size:10.5px;font-weight:700;color:#417c7d;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">Attachments</div>
+							<div style="display:flex;flex-direction:column;gap:4px;">
+								${files.map(f => {
+									const fname = esc(f.file_name || "file");
+									const furl = esc(f.file_url || "");
+									const ext = (f.file_name || "").split(".").pop().toLowerCase();
+									const isImg = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"].includes(ext);
+									const icon = isImg ? "🖼️" : ext === "pdf" ? "📄" : "📎";
+									return `<div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:5px 9px;">
+										<span style="font-size:13px;flex-shrink:0;">${icon}</span>
+										<a href="${furl}" target="_blank" title="${fname}" style="flex:1;font-size:12px;color:#417c7d;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${fname}</a>
+										<a href="${furl}" download target="_blank" title="Download" style="flex-shrink:0;color:#94a3b8;font-size:11px;text-decoration:none;border:1px solid #e2e8f0;border-radius:4px;padding:1px 5px;line-height:1.6;">↓</a>
+									</div>`;
+								}).join("")}
+							</div>
+						</div>` : ""}
+					</div>
+				</div>`);
+
+			renderMessages();
+
+			// Header workflow buttons.
+			d.$wrapper.find(".modal-actions").css({ display: "flex", "align-items": "center", gap: "6px" });
+			d.$wrapper.find(".asr-agent-hdr-act").remove();
+			if (wfActions.length) {
+				d.$wrapper.find(".modal-header .btn-modal-close").before(`
+					<div class="asr-agent-hdr-act" style="display:flex;gap:6px;align-items:center;">
+						${wfActions.map((a, i) => `<button data-wf-idx="${i}" style="cursor:pointer;border-radius:999px;padding:3px 12px;font-size:11.5px;font-weight:600;background:${i === 0 ? "#417c7d;color:#fff;border:1px solid #417c7d;" : "#fff;color:#1f5c5d;border:1px solid #417c7d;"}">${esc(a.key)}</button>`).join("")}
+					</div>`);
+			}
+			d.$wrapper.find("[data-wf-idx]").on("click", function () {
+				const lastText = list.length ? (list[list.length - 1].text || "") : "";
+				runWfAction(ticket, wfActions[+$(this).data("wf-idx")], lastText, () => {
+					d.hide();
+					resetAndLoad();
+				});
+			});
+
+			d.$wrapper.find("#asr-agent-send-btn").on("click", function () {
+				const $ta = d.$wrapper.find("#asr-agent-msg-input");
+				const text = ($ta.val() || "").trim();
+				if (!text) return;
+				$ta.val("");
+				frappe.call({
+					method: API.addComment,
+					args: { ticket, text },
+					callback(r) { if (!r.exc) reloadComments(); },
+				});
+			});
+
+			d.$wrapper.find("#asr-agent-attach-btn").on("click", function () {
+				const $content = d.$wrapper.find(".modal-content");
+				$content.css("filter", "blur(2px)");
+				const clear = () => $content.css("filter", "");
+				const up = new frappe.ui.FileUploader({
+					on_failure: clear,
+					on_success: file => {
+						clear();
+						frappe.call({
+							method: API.attachFile,
+							args: { ticket, file_url: (file && file.file_url) || "" },
+							callback: reloadComments,
+						});
+					},
+				});
+				if (up && up.dialog && up.dialog.$wrapper) {
+					up.dialog.$wrapper.on("hide.bs.modal", clear);
+				}
+			});
+
+			const setAssignee = (user, label) => frappe.call({
+				method: "frappe.client.set_value",
+				args: { doctype: "Sahayog Ticket", name: ticket, fieldname: "assigned_to", value: user },
+				callback: () => {
+					row.assigned_to = user;
+					row.assigned_to_name = label;
+					resetAndLoad();
+					d.hide();
+				},
+				error: () => frappe.msgprint(__("Could not update assignment.")),
+			});
+			d.$wrapper.find("#asr-agent-assign-btn").on("click", function () {
+				const u = d.$wrapper.find("#asr-agent-assign-sel").val();
+				if (!u) { frappe.msgprint(__("Select a user first.")); return; }
+				const label = d.$wrapper.find("#asr-agent-assign-sel option:selected").text();
+				setAssignee(u, label);
+			});
+			d.$wrapper.find("#asr-agent-unassign").on("click", () => setAssignee("", ""));
+		}
+
+		frappe.call({
+			method: API.comments,
+			args: { ticket },
+			callback(r) {
+				list = r.message || [];
+				frappe.call({
+					method: "frappe.client.get",
+					args: { doctype: "Sahayog Ticket", name: ticket },
+					callback(r2) {
+						const fresh = (r2 && r2.message) || {};
+						if (fresh.status) row.status = fresh.status;
+						if (fresh.response_pending !== undefined) row.response_pending = fresh.response_pending || "";
+						if (fresh.dept_name) row.dept_name = fresh.dept_name;
+						if (fresh.executive_remark !== undefined) row.executive_remark = fresh.executive_remark || "";
+						if (fresh.resolved_remark !== undefined) row.remark = fresh.resolved_remark || "";
+						if (fresh.assigned_to !== undefined) row.assigned_to = fresh.assigned_to || "";
+						computeActions();
+						frappe.call({
+							method: API.detail,
+							args: { ticket },
+							callback(r3) { buildUI(r3.message || {}); },
+							error: () => buildUI({}),
+						});
+					},
+					error: () => buildUI({}),
+				});
+			},
+		});
+	}
+
 	// ── Export CSV (small → instant; large → background job) ─────────────────
 	function exportCSV() {
 		if (!state.total) { frappe.msgprint(__("No data to export.")); return; }
 
 		frappe.call({
-			method: "sahayog_ticket.sahayog_ticket.page.asr_report.asr_report_api.export_report",
+			method: API.export,
 			args: { filters: state.filters },
 			callback(r) {
 				const msg = r.message || {};
@@ -1550,7 +2269,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					const url  = URL.createObjectURL(blob);
 					const a    = document.createElement("a");
 					a.href     = url;
-					a.download = msg.filename || `Account_Service_Report_${frappe.datetime.nowdate()}.csv`;
+					a.download = msg.filename || `${IS_AGENT ? "Agent" : "Account"}_Service_Report_${frappe.datetime.nowdate()}.csv`;
 					a.click();
 					URL.revokeObjectURL(url);
 					return;
@@ -1560,7 +2279,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					// Listen once for the background export to finish.
 					if (!state.exportListener) {
 						state.exportListener = true;
-						frappe.realtime.on("asr_export_ready", function (m) {
+						frappe.realtime.on(API.exportEvent, function (m) {
 							frappe.msgprint({
 								title: __("Report Ready"),
 								message: __(
