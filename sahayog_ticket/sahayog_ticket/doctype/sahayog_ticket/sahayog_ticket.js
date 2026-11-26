@@ -2819,6 +2819,9 @@ const AGENT_LINK_FILL = {
   new_sol_id: ["Sahayog Branch", "branch", "new_branch"],
 };
 
+// One optional attachment is available for every Agent request type.
+const AGENT_ATTACH_KEY = "attachment";
+
 function agent_clear_prefill_values(frm, row) {
   const before = (frm.doc.request_values || []).length;
   frm.doc.request_values = (frm.doc.request_values || []).filter(function (v) {
@@ -2857,6 +2860,7 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
       // Request Type badla to purane field keys ki values hata do, warna
       // stale rows save ho jayengi.
       const allowedKeys = new Set(fields.map(function (f) { return f.field_key; }));
+      allowedKeys.add(AGENT_ATTACH_KEY);
       const before = (frm.doc.request_values || []).length;
       frm.doc.request_values = (frm.doc.request_values || []).filter(function (v) {
         return v.item_key !== row.item_key || allowedKeys.has(v.field_key);
@@ -2915,8 +2919,39 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
         }
         html += "</div>";
       });
+
+      // Attachment (same for all request types).
+      html += '<div class="frappe-control agent-field" style="margin-bottom:10px;">';
+      html += '<label class="control-label">Attachment</label>';
+      html += '<input type="hidden" class="agent-val" data-key="' + AGENT_ATTACH_KEY +
+        '" value="' + agent_escape_html(saved[AGENT_ATTACH_KEY] || "") + '">';
+      html += '<div class="agent-attach-control" data-key="' + AGENT_ATTACH_KEY + '"></div>';
+      html += "</div>";
       html += "</div>";
       ctrl.html(html);
+      $(ctrl.wrapper).find(".agent-attach-control").each(function () {
+        const holder = $(this);
+        const hidden = $(ctrl.wrapper).find('.agent-val[data-key="' + AGENT_ATTACH_KEY + '"]');
+        let control;
+        let initializing = true;
+        control = frappe.ui.form.make_control({
+          df: {
+            fieldname: AGENT_ATTACH_KEY,
+            fieldtype: "Attach",
+            label: "Attachment",
+          },
+          parent: holder,
+          only_input: true,
+          render_input: 1,
+          change: function () {
+            if (initializing) return;
+            hidden.val(control.get_value() || "");
+            sync_agent_values(frm, cdt, cdn);
+          },
+        });
+        const ready = function () { initializing = false; };
+        $.when(control.set_value(hidden.val() || "")).then(ready, ready);
+      });
       $(ctrl.wrapper).find(".agent-link-control").each(function () {
         const holder = $(this);
         const key = holder.data("key");
