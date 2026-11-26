@@ -27,7 +27,7 @@ REQUEST_TYPES = {
     "Agent SOL ID Modification": [
         ("existing_sol_id", "Existing SOL ID", "Data", None, 0),
         ("existing_branch", "Existing Branch", "Data", None, 0),
-        ("new_sol_id", "New SOL ID", "Data", None, 1),
+        ("new_sol_id", "New SOL ID", "Link", "Sahayog Branch", 1),
         ("new_branch", "New Branch", "Data", None, 0),
         ("reason", "Reason", "Small Text", None, 1),
     ],
