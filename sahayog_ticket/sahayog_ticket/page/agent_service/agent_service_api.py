@@ -91,12 +91,14 @@ def create_agent_request(args):
         args = _json.loads(args or "{}")
     args = dict(args or {})
 
-    agent_code = args.get("agent_code")
+    agent_code = (args.get("agent_code") or "").strip()
     sub_type = args.get("sub_type")
-    if not agent_code:
-        frappe.throw(_("Agent Code is required."))
     if not sub_type:
         frappe.throw(_("Request Type is required."))
+    # Agent Authorizer Mapping only updates authorizer IDs; no Agent master
+    # data is needed there.
+    if sub_type != "Agent Authorizer Mapping" and not agent_code:
+        frappe.throw(_("Agent Code is required."))
 
     values = args.get("values") or {}
     if isinstance(values, str):
@@ -112,14 +114,14 @@ def create_agent_request(args):
             not str(values.get("new_agent_code") or "").strip():
         frappe.throw(_("New Agent Code is required."))
 
-    agent = get_agent_details(agent_code)
+    agent = get_agent_details(agent_code) if agent_code else {}
     agent_name = args.get("agent_name") or agent.get("agent_name") or ""
     item_key = frappe.generate_hash(length=12)
 
     row = {
         "doctype": "Ticket Item",
         "sub_type": sub_type,
-        "agent_code": agent_code,
+        "agent_code": agent_code or None,
         "agent_name": agent_name,
         "branch_code": agent.get("branch_code") or "",
         "branch_name": agent.get("branch_name") or "",
