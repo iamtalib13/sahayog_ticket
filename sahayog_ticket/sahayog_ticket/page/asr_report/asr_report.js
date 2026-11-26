@@ -202,7 +202,11 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	}
 
 	// ── Page toolbar buttons ─────────────────────────────────────────────────
-	// Refresh hata diya; Clear Filters upar toolbar me (icon-only) aa gaya.
+	// Account mode: Refresh button restore (client requested).
+	if (!IS_AGENT) {
+		page.add_button(__("Refresh"), () => resetAndLoad(), { icon: "refresh" });
+	}
+	// Clear Filters stays in the toolbar (icon-only).
 	const $clearTop = page.add_button(__("Clear Filters"), clearAllFilters, { icon: "filter-x" });
 	$clearTop.attr({ title: __("Clear Filters"), "aria-label": __("Clear Filters") })
 		.contents().filter(function () { return this.nodeType === 3; }).remove();
