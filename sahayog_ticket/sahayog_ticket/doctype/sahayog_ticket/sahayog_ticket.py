@@ -416,6 +416,19 @@ class SahayogTicket(Document):
                     _("Row #{0}: New Account Number cannot be more than 15 digits.").format(row.idx)
                 )
 
+        if row.sub_type == "Agent Mobile Number Update":
+            value = values.get("new_mobile")
+            mobile = ""
+            if value:
+                mobile = str(
+                    value.value_display or value.value_data
+                    or value.value_text or value.value_date or ""
+                ).strip()
+            if len(mobile) > 10:
+                frappe.throw(
+                    _("Row #{0}: New Mobile Number cannot be more than 10 digits.").format(row.idx)
+                )
+
     def validate_close_remark(self):
         # Closing Remark is mandatory whenever a ticket transitions to Closed
         if self.status != "Closed" or (self.close_remark or "").strip():
