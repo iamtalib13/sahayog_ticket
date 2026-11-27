@@ -91,6 +91,18 @@ $(document).on('input', 'input[data-fieldname="account_number"]', function() {
     }
 });
 
+// Agent Account Mapping: same 15-digit typing limit for the dynamic field.
+$(document).on('focus', '.agent-val[data-key="new_account_number"]', function() {
+    $(this).attr('maxlength', 15);
+});
+
+$(document).on('input', '.agent-val[data-key="new_account_number"]', function() {
+    let val = $(this).val().replace(/\D/g, '').slice(0, 15);
+    if ($(this).val() !== val) {
+        $(this).val(val).trigger('change');
+    }
+});
+
 $(document).on('input', 'input[data-fieldname="contact_number"], input[data-fieldname="new_contact_number"]', function() {
     let val = $(this).val().replace(/\D/g, '');
     // Handle Indian mobile prefixes (e.g. +91, 91, or 0)
@@ -2806,7 +2818,11 @@ const AGENT_LINK_FILL = {
   existing_authorizer_id: ["Employee", "employee_name", "existing_authorizer_name"],
   new_authorizer_id: ["Employee", "employee_name", "new_authorizer_name"],
   new_sol_id: ["Sahayog Branch", "branch", "new_branch"],
+  new_branch_code: ["Sahayog Branch", "branch", "new_branch_name"],
 };
+
+// Auto-filled from a Link field, so the user should not type over it.
+const AGENT_READONLY_KEYS = ["new_branch_name"];
 
 // Columns hidden only for Authorizer Mapping rows in the Request Detail grid.
 const AGENT_AUTHORIZER_GRID_FIELDS = [
@@ -2864,7 +2880,7 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
   agent_item_key(row);
   if (!row.sub_type) {
     ctrl._agent_fields = [];
-    ctrl.html('<div class="text-muted small">Request Type select karein.</div>');
+    ctrl.html('<div class="text-muted small">Please select a Request Type.</div>');
     return;
   }
   frappe.call({
@@ -2896,7 +2912,8 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
       });
       const prefillInfo = ctrl._agent_info || null;
       let appliedPrefill = false;
-      let html = '<div class="agent-dynamic-fields">';
+      let html = '<div class="agent-dynamic-fields" style="display:grid;' +
+        'grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;">';
       fields.forEach(function (f) {
         const key = f.field_key;
         let val = saved[key] || "";
@@ -2904,10 +2921,19 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
           val = agent_prefill_value(prefillInfo, key, saved);
           if (val) appliedPrefill = true;
         }
+        if (key === "action_type" && row.sub_type === "Agent Customer Mapping") {
+          // Desk shows this as a static control beside Request Type. Keep a
+          // hidden input so existing sync/validation code stays unchanged.
+          html += '<input type="hidden" class="agent-val" data-key="action_type"' +
+            ' value="' + agent_escape_html(val) + '">';
+          return;
+        }
         const condRequired = key === "new_agent_code" &&
           String(saved.action_type || "").trim().toLowerCase() === "modify";
         const star = (f.reqd || condRequired) ? ' <span class="text-danger">*</span>' : "";
-        html += '<div class="frappe-control agent-field" style="margin-bottom:10px;">';
+        const fullWidth = f.field_type === "Small Text";
+        html += '<div class="frappe-control agent-field" style="margin-bottom:10px;' +
+          (fullWidth ? "grid-column:1 / -1;" : "") + '">';
         html += '<label class="control-label">' + agent_escape_html(f.label || key) + star + "</label>";
         if (f.field_type === "Small Text") {
           html += '<textarea class="form-control agent-val" data-key="' + agent_escape_html(key) +
@@ -2931,14 +2957,15 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
           html += '<input type="date" class="form-control agent-val" data-key="' + agent_escape_html(key) +
             '" value="' + agent_escape_html(val) + '">';
         } else {
+          const readonly = AGENT_READONLY_KEYS.indexOf(key) !== -1 ? " readonly" : "";
           html += '<input type="text" class="form-control agent-val" data-key="' + agent_escape_html(key) +
-            '" value="' + agent_escape_html(val) + '">';
+            '" value="' + agent_escape_html(val) + '"' + readonly + ">";
         }
         html += "</div>";
       });
 
       // Attachment (same for all request types).
-      html += '<div class="frappe-control agent-field" style="margin-bottom:10px;">';
+      html += '<div class="frappe-control agent-field" style="margin-bottom:10px;grid-column:1 / -1;">';
       html += '<label class="control-label">Attachment</label>';
       html += '<input type="hidden" class="agent-val" data-key="' + AGENT_ATTACH_KEY +
         '" value="' + agent_escape_html(saved[AGENT_ATTACH_KEY] || "") + '">';
@@ -2946,6 +2973,10 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
       html += "</div>";
       html += "</div>";
       ctrl.html(html);
+      if (row.sub_type === "Agent Customer Mapping") {
+        const actionVal = $(ctrl.wrapper).find('.agent-val[data-key="action_type"]').val() || "";
+        frappe.model.set_value(cdt, cdn, "agent_action_type", actionVal);
+      }
       $(ctrl.wrapper).find(".agent-attach-control").each(function () {
         const holder = $(this);
         const hidden = $(ctrl.wrapper).find('.agent-val[data-key="' + AGENT_ATTACH_KEY + '"]');
@@ -3196,7 +3227,20 @@ frappe.ui.form.on("Ticket Item", {
     if (row && frm.doc.ticket_type === "Agent Service Request") {
       agent_item_key(row);
       frm.dirty();
+      if (row.sub_type !== "Agent Customer Mapping" && row.agent_action_type) {
+        frappe.model.set_value(cdt, cdn, "agent_action_type", "");
+      }
     }
     render_agent_dynamic_fields(frm, cdt, cdn);
+  },
+  agent_action_type: function (frm, cdt, cdn) {
+    const row = agent_row(frm, cdt, cdn);
+    if (!row || row.sub_type !== "Agent Customer Mapping") return;
+    const ctrl = agent_dynamic_ctrl(frm, cdn);
+    const hidden = ctrl && $(ctrl.wrapper).find('.agent-val[data-key="action_type"]');
+    if (!hidden || !hidden.length) return;
+    const value = row.agent_action_type || "";
+    if ((hidden.val() || "") === value) return;
+    hidden.val(value).trigger("change");
   },
 });
