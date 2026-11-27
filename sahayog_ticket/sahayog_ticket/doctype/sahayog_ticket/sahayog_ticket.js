@@ -3147,13 +3147,24 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
             fieldname: AGENT_ATTACH_KEY,
             fieldtype: "Attach",
             label: "Attachment",
+            make_attachment_public: 1,
+            options: {
+              make_attachments_public: 1,
+              allow_toggle_private: false,
+              on_success: function (file) {
+                if (!file || !file.file_url) return;
+                control.set_value(file.file_url);
+                hidden.val(file.file_url);
+                sync_agent_values(frm, cdt, cdn);
+              },
+            },
           },
           parent: holder,
           only_input: true,
           render_input: 1,
           change: function () {
             if (initializing) return;
-            hidden.val(control.get_value() || "");
+            hidden.val(control.value || control.get_value() || "");
             sync_agent_values(frm, cdt, cdn);
           },
         });
