@@ -12,3 +12,4 @@ sahayog_ticket.sahayog_ticket.patches.set_existing_authorizer_id_link
 sahayog_ticket.sahayog_ticket.patches.set_new_sol_id_link
 sahayog_ticket.sahayog_ticket.patches.add_agent_read_for_employee
 sahayog_ticket.sahayog_ticket.patches.add_agent_customer_branch_fields
+sahayog_ticket.sahayog_ticket.patches.set_new_agent_code_link
