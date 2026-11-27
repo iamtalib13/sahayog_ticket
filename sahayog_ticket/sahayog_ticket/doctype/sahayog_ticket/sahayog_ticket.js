@@ -3111,8 +3111,15 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
           // Keep a hidden agent-val input so validation / sync stay unchanged.
           html += '<input type="hidden" class="agent-val" data-key="' + agent_escape_html(key) +
             '" value="' + agent_escape_html(val) + '">';
-          html += '<div class="agent-link-control" data-key="' + agent_escape_html(key) +
-            '" data-options="' + agent_escape_html(f.options || "Employee") + '"></div>';
+          // Authorizer ID fields: screen par "SAH0" prefix dikhao (value
+          // employee ID hi rahe, link/auto-fill safe).
+          if (key === "existing_authorizer_id" || key === "new_authorizer_id") {
+            html += '<div class="agent-link-control agent-sah0-field" data-key="' + agent_escape_html(key) +
+              '" data-options="' + agent_escape_html(f.options || "Employee") + '"></div>';
+          } else {
+            html += '<div class="agent-link-control" data-key="' + agent_escape_html(key) +
+              '" data-options="' + agent_escape_html(f.options || "Employee") + '"></div>';
+          }
         } else if (f.field_type === "Date") {
           html += '<input type="date" class="form-control agent-val" data-key="' + agent_escape_html(key) +
             '" value="' + agent_escape_html(val) + '">';
@@ -3186,6 +3193,12 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
               if (initializing) return;
               const emp = control.get_value() || "";
               hidden.val(emp);
+              // Display-only: field me SAH0 + employee ID dikhao.
+              if (holder.hasClass("agent-sah0-field")) {
+                control.title_value_map = control.title_value_map || {};
+                if (emp) control.title_value_map["SAH0" + emp] = emp;
+                $(control.wrapper).find("input").val(emp ? ("SAH0" + emp) : "");
+              }
               const fill = AGENT_LINK_FILL[key];
               if (fill) {
                 const nameInput = function () {
@@ -3216,8 +3229,19 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
           only_input: true,
           render_input: 1,
         });
-        const ready = function () { initializing = false; };
+        // SAH0 prefix sirf display ke liye; value (employee ID) waise hi rahe.
+        control.is_title_link = function () { return false; };
+        const showSah0 = function () {
+          if (!holder.hasClass("agent-sah0-field")) return;
+          const v = hidden.val() || "";
+          control.title_value_map = control.title_value_map || {};
+          if (v) control.title_value_map["SAH0" + v] = v;
+          $(control.wrapper).find("input").val(v ? ("SAH0" + v) : "");
+        };
+        const ready = function () { initializing = false; showSah0(); };
         $.when(control.set_value(hidden.val() || "")).then(ready, ready);
+        // set_value async ho sakta hai; ensure display override.
+        setTimeout(showSah0, 0);
       });
       $(ctrl.wrapper).find(".agent-val").off("change.agent").on("change.agent", function () {
         const changedKey = $(this).data("key");
