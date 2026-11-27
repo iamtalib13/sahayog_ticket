@@ -118,7 +118,8 @@
     } else if (f.field_type === 'Small Text') {
       input = '<textarea data-key="' + k + '"></textarea>';
     } else {
-      input = '<input type="text" data-key="' + k + '" />';
+      const max = k === 'new_account_number' ? ' maxlength="15"' : '';
+      input = '<input type="text" data-key="' + k + '"' + max + ' />';
     }
     return '<div class="row"><label>' + (f.label || k) + req + '</label>' + input + '</div>';
   }
@@ -126,6 +127,12 @@
   function renderFields(list) {
     document.getElementById('dynamic_fields').innerHTML = list.map(inputHtml).join('');
   }
+
+  document.getElementById('dynamic_fields').addEventListener('input', function (e) {
+    if (!e.target || e.target.dataset.key !== 'new_account_number') return;
+    const val = e.target.value.replace(/\D/g, '').slice(0, 15);
+    if (e.target.value !== val) e.target.value = val;
+  });
 
   call('get_agents', {}).then(list => {
     const dl = document.getElementById('agent_options');
