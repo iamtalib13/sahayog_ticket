@@ -2978,11 +2978,10 @@ const AGENT_LINK_FILL = {
   existing_authorizer_id: ["Employee", "employee_name", "existing_authorizer_name"],
   new_authorizer_id: ["Employee", "employee_name", "new_authorizer_name"],
   new_sol_id: ["Sahayog Branch", "branch", "new_branch"],
-  new_branch_code: ["Sahayog Branch", "branch", "new_branch_name"],
 };
 
 // Auto-filled from a Link field, so the user should not type over it.
-const AGENT_READONLY_KEYS = ["new_branch_name"];
+const AGENT_READONLY_KEYS = ["new_branch_code", "new_branch_name"];
 
 // Columns hidden only for Authorizer Mapping rows in the Request Detail grid.
 const AGENT_AUTHORIZER_GRID_FIELDS = [
@@ -3199,6 +3198,39 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
                 if (emp) control.title_value_map["SAH0" + emp] = emp;
                 $(control.wrapper).find("input").val(emp ? ("SAH0" + emp) : "");
               }
+              // New Agent Code: agent details auto-fetch (name + branch).
+              if (key === "new_agent_code") {
+                const nameInput = function () {
+                  return $(ctrl.wrapper).find('.agent-val[data-key="new_agent_name"]');
+                };
+                const branchCodeInput = function () {
+                  return $(ctrl.wrapper).find('.agent-val[data-key="new_branch_code"]');
+                };
+                const branchNameInput = function () {
+                  return $(ctrl.wrapper).find('.agent-val[data-key="new_branch_name"]');
+                };
+                if (!emp) {
+                  nameInput().val("");
+                  branchCodeInput().val("");
+                  branchNameInput().val("");
+                  sync_agent_values(frm, cdt, cdn);
+                  return;
+                }
+                frappe.call({
+                  method: "sahayog_ticket.sahayog_ticket.page.agent_service.agent_service_api.get_agent_details",
+                  args: { agent_code: emp },
+                  callback: function (r) {
+                    if (hidden.val() !== emp) return;
+                    const d = r.message || {};
+                    nameInput().val(d.agent_name || "");
+                    branchCodeInput().val(d.branch_code || "");
+                    branchNameInput().val(d.branch_name || "");
+                    sync_agent_values(frm, cdt, cdn);
+                  },
+                });
+                return;
+              }
+
               const fill = AGENT_LINK_FILL[key];
               if (fill) {
                 const nameInput = function () {
