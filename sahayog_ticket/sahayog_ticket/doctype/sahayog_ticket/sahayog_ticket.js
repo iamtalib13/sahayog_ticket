@@ -103,6 +103,18 @@ $(document).on('input', '.agent-val[data-key="new_account_number"]', function() 
     }
 });
 
+// Agent Mobile Number Update: same typing limit, 10 digits for mobile.
+$(document).on('focus', '.agent-val[data-key="new_mobile"]', function() {
+    $(this).attr('maxlength', 10);
+});
+
+$(document).on('input', '.agent-val[data-key="new_mobile"]', function() {
+    let val = $(this).val().replace(/\D/g, '').slice(0, 10);
+    if ($(this).val() !== val) {
+        $(this).val(val).trigger('change');
+    }
+});
+
 $(document).on('input', 'input[data-fieldname="contact_number"], input[data-fieldname="new_contact_number"]', function() {
     let val = $(this).val().replace(/\D/g, '');
     // Handle Indian mobile prefixes (e.g. +91, 91, or 0)
