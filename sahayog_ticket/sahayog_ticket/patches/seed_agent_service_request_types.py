@@ -7,7 +7,7 @@ TICKET_TYPE = "Agent Service Request"
 REQUEST_TYPES = {
     "Agent Customer Mapping": [
         ("action_type", "Action Type", "Select", "Modify\nRemove", 1),
-        ("new_agent_code", "New Agent Code", "Data", None, 0),
+        ("new_agent_code", "New Agent Code", "Link", "Agent", 0),
         ("new_agent_name", "New Agent Name", "Data", None, 0),
         ("reason", "Reason", "Small Text", None, 1),
     ],

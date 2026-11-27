@@ -4,8 +4,8 @@ SUB_TYPE = "Agent Customer Mapping"
 
 # (field_key, label, field_type, options, reqd)
 FIELDS = [
-    ("new_branch_code", "New Branch Code", "Link", "Sahayog Branch", 0),
-    ("new_branch_name", "New Branch Name", "Data", None, 0),
+    ("new_branch_code", "Branch Code", "Data", None, 0),
+    ("new_branch_name", "Branch Name", "Data", None, 0),
 ]
 
 # Keep each request type's fields in the same order as the request layout.

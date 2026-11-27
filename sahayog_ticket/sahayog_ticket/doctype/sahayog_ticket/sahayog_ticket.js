@@ -2978,11 +2978,10 @@ const AGENT_LINK_FILL = {
   existing_authorizer_id: ["Employee", "employee_name", "existing_authorizer_name"],
   new_authorizer_id: ["Employee", "employee_name", "new_authorizer_name"],
   new_sol_id: ["Sahayog Branch", "branch", "new_branch"],
-  new_branch_code: ["Sahayog Branch", "branch", "new_branch_name"],
 };
 
 // Auto-filled from a Link field, so the user should not type over it.
-const AGENT_READONLY_KEYS = ["new_branch_name"];
+const AGENT_READONLY_KEYS = ["new_branch_code", "new_branch_name"];
 
 // Columns hidden only for Authorizer Mapping rows in the Request Detail grid.
 const AGENT_AUTHORIZER_GRID_FIELDS = [
@@ -3111,8 +3110,15 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
           // Keep a hidden agent-val input so validation / sync stay unchanged.
           html += '<input type="hidden" class="agent-val" data-key="' + agent_escape_html(key) +
             '" value="' + agent_escape_html(val) + '">';
-          html += '<div class="agent-link-control" data-key="' + agent_escape_html(key) +
-            '" data-options="' + agent_escape_html(f.options || "Employee") + '"></div>';
+          // Authorizer ID fields: screen par "SAH0" prefix dikhao (value
+          // employee ID hi rahe, link/auto-fill safe).
+          if (key === "existing_authorizer_id" || key === "new_authorizer_id") {
+            html += '<div class="agent-link-control agent-sah0-field" data-key="' + agent_escape_html(key) +
+              '" data-options="' + agent_escape_html(f.options || "Employee") + '"></div>';
+          } else {
+            html += '<div class="agent-link-control" data-key="' + agent_escape_html(key) +
+              '" data-options="' + agent_escape_html(f.options || "Employee") + '"></div>';
+          }
         } else if (f.field_type === "Date") {
           html += '<input type="date" class="form-control agent-val" data-key="' + agent_escape_html(key) +
             '" value="' + agent_escape_html(val) + '">';
@@ -3147,13 +3153,24 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
             fieldname: AGENT_ATTACH_KEY,
             fieldtype: "Attach",
             label: "Attachment",
+            make_attachment_public: 1,
+            options: {
+              make_attachments_public: 1,
+              allow_toggle_private: false,
+              on_success: function (file) {
+                if (!file || !file.file_url) return;
+                control.set_value(file.file_url);
+                hidden.val(file.file_url);
+                sync_agent_values(frm, cdt, cdn);
+              },
+            },
           },
           parent: holder,
           only_input: true,
           render_input: 1,
           change: function () {
             if (initializing) return;
-            hidden.val(control.get_value() || "");
+            hidden.val(control.value || control.get_value() || "");
             sync_agent_values(frm, cdt, cdn);
           },
         });
@@ -3175,6 +3192,45 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
               if (initializing) return;
               const emp = control.get_value() || "";
               hidden.val(emp);
+              // Display-only: field me SAH0 + employee ID dikhao.
+              if (holder.hasClass("agent-sah0-field")) {
+                control.title_value_map = control.title_value_map || {};
+                if (emp) control.title_value_map["SAH0" + emp] = emp;
+                $(control.wrapper).find("input").val(emp ? ("SAH0" + emp) : "");
+              }
+              // New Agent Code: agent details auto-fetch (name + branch).
+              if (key === "new_agent_code") {
+                const nameInput = function () {
+                  return $(ctrl.wrapper).find('.agent-val[data-key="new_agent_name"]');
+                };
+                const branchCodeInput = function () {
+                  return $(ctrl.wrapper).find('.agent-val[data-key="new_branch_code"]');
+                };
+                const branchNameInput = function () {
+                  return $(ctrl.wrapper).find('.agent-val[data-key="new_branch_name"]');
+                };
+                if (!emp) {
+                  nameInput().val("");
+                  branchCodeInput().val("");
+                  branchNameInput().val("");
+                  sync_agent_values(frm, cdt, cdn);
+                  return;
+                }
+                frappe.call({
+                  method: "sahayog_ticket.sahayog_ticket.page.agent_service.agent_service_api.get_agent_details",
+                  args: { agent_code: emp },
+                  callback: function (r) {
+                    if (hidden.val() !== emp) return;
+                    const d = r.message || {};
+                    nameInput().val(d.agent_name || "");
+                    branchCodeInput().val(d.branch_code || "");
+                    branchNameInput().val(d.branch_name || "");
+                    sync_agent_values(frm, cdt, cdn);
+                  },
+                });
+                return;
+              }
+
               const fill = AGENT_LINK_FILL[key];
               if (fill) {
                 const nameInput = function () {
@@ -3205,8 +3261,19 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
           only_input: true,
           render_input: 1,
         });
-        const ready = function () { initializing = false; };
+        // SAH0 prefix sirf display ke liye; value (employee ID) waise hi rahe.
+        control.is_title_link = function () { return false; };
+        const showSah0 = function () {
+          if (!holder.hasClass("agent-sah0-field")) return;
+          const v = hidden.val() || "";
+          control.title_value_map = control.title_value_map || {};
+          if (v) control.title_value_map["SAH0" + v] = v;
+          $(control.wrapper).find("input").val(v ? ("SAH0" + v) : "");
+        };
+        const ready = function () { initializing = false; showSah0(); };
         $.when(control.set_value(hidden.val() || "")).then(ready, ready);
+        // set_value async ho sakta hai; ensure display override.
+        setTimeout(showSah0, 0);
       });
       $(ctrl.wrapper).find(".agent-val").off("change.agent").on("change.agent", function () {
         const changedKey = $(this).data("key");
