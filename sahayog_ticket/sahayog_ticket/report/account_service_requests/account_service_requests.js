@@ -45,6 +45,15 @@ frappe.query_reports["Account Service Requests"] = {
 	"formatter": function(value, row, column, data, default_formatter) {
 		value = default_formatter(value, row, column, data);
 
+		// Ticket column: show only the short number (e.g. 5219 from 261126-5219).
+		// Full ticket name stays in the link and in the tooltip.
+		if (column.fieldname == "ticket" && value) {
+			const full = String((data && data.ticket) || (row && row.ticket) || value);
+			value = frappe.utils.get_form_link(
+				"Sahayog Ticket", full, true, full.split("-").pop()
+			);
+		}
+
 		if (column.fieldname == "status") {
 			let color = "";
 			let bg_color = "";

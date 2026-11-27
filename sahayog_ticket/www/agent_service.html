@@ -27,6 +27,11 @@
     <h1>Agent Service Request</h1>
     <div id="msg" class="msg"></div>
 
+    <div class="row">
+      <label>Request Type <span class="req">*</span></label>
+      <select id="sub_type"><option value="">-- select --</option></select>
+    </div>
+
     <div class="grid">
       <div class="row">
         <label>Agent Code <span class="req">*</span></label>
@@ -46,11 +51,6 @@
         <label>Branch Name</label>
         <input id="branch_name" readonly />
       </div>
-    </div>
-
-    <div class="row">
-      <label>Request Type <span class="req">*</span></label>
-      <select id="sub_type"><option value="">-- select --</option></select>
     </div>
 
     <div id="dynamic_fields"></div>
@@ -118,7 +118,9 @@
     } else if (f.field_type === 'Small Text') {
       input = '<textarea data-key="' + k + '"></textarea>';
     } else {
-      input = '<input type="text" data-key="' + k + '" />';
+      const max = k === 'new_account_number' ? ' maxlength="15"'
+        : k === 'new_mobile' ? ' maxlength="10"' : '';
+      input = '<input type="text" data-key="' + k + '"' + max + ' />';
     }
     return '<div class="row"><label>' + (f.label || k) + req + '</label>' + input + '</div>';
   }
@@ -126,6 +128,14 @@
   function renderFields(list) {
     document.getElementById('dynamic_fields').innerHTML = list.map(inputHtml).join('');
   }
+
+  document.getElementById('dynamic_fields').addEventListener('input', function (e) {
+    const key = e.target && e.target.dataset.key;
+    if (key !== 'new_account_number' && key !== 'new_mobile') return;
+    const limit = key === 'new_account_number' ? 15 : 10;
+    const val = e.target.value.replace(/\D/g, '').slice(0, limit);
+    if (e.target.value !== val) e.target.value = val;
+  });
 
   call('get_agents', {}).then(list => {
     const dl = document.getElementById('agent_options');
@@ -165,6 +175,15 @@
   }).catch(e => show(e.message, 'error'));
 
   document.getElementById('sub_type').addEventListener('change', function () {
+    const isAuthorizer = this.value === 'Agent Authorizer Mapping';
+    document.querySelector('.grid').style.display = isAuthorizer ? 'none' : '';
+    if (isAuthorizer) {
+      document.getElementById('agent_code').value = '';
+      document.getElementById('agent_name').value = '';
+      document.getElementById('branch_code').value = '';
+      document.getElementById('branch_name').value = '';
+      document.getElementById('agent_hint').textContent = '';
+    }
     if (!this.value) { renderFields([]); return; }
     call('get_fields', { sub_type: this.value }).then(renderFields).catch(e => show(e.message, 'error'));
   });

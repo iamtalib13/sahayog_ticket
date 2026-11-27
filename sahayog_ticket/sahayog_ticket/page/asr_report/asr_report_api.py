@@ -13,11 +13,6 @@ OPERATIONS_ROLES = frozenset(("Operations Support Executive",
                               "Operations Support Manager",
                               "CPC Loan User"))
 
-# Request types temporarily disabled in the UI. They stay in the doctype
-# options so existing records keep validating, but are hidden from pickers.
-DISABLED_REQUEST_TYPES = ("Account Transfer",)
-
-
 def _handoff_counts(ticket_names):
     """Branch <-> Operations handoff count per ticket (report "Cycle").
 
@@ -820,10 +815,6 @@ def get_filter_options():
         raw = rt_field.options
         opts = raw.split("\n") if isinstance(raw, str) else list(raw or [])
         request_types = [str(o).strip() for o in opts if str(o).strip()]
-        # Temporarily disabled request types stay in the doctype (so old
-        # records keep validating) but are hidden from the report filter.
-        request_types = [rt for rt in request_types
-                         if rt not in DISABLED_REQUEST_TYPES]
 
     return {
         "request_types": request_types,

@@ -110,8 +110,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 	// Clear every filter and tab selection, then reload from page 1.
 	function clearAllFilters() {
-		// Agent mode has no Status/RP dropdowns — tabs own those filters.
-		if (!IS_AGENT) $("#asr-filter-status,#asr-filter-rp").val("");
+		$("#asr-filter-status,#asr-filter-rp").val("");
 		$("#asr-filter-rt,#asr-filter-sol").val("");
 		$("#asr-filter-from,#asr-filter-to").val("");
 		if (IS_AGENT) $("#asr-filter-branch-code").val("");
@@ -202,7 +201,9 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 	}
 
 	// ── Page toolbar buttons ─────────────────────────────────────────────────
-	// Refresh hata diya; Clear Filters upar toolbar me (icon-only) aa gaya.
+	// Refresh available in both Account and Agent report modes.
+	page.add_button(__("Refresh"), () => resetAndLoad(), { icon: "refresh" });
+	// Clear Filters stays in the toolbar (icon-only).
 	const $clearTop = page.add_button(__("Clear Filters"), clearAllFilters, { icon: "filter-x" });
 	$clearTop.attr({ title: __("Clear Filters"), "aria-label": __("Clear Filters") })
 		.contents().filter(function () { return this.nodeType === 3; }).remove();
@@ -214,8 +215,8 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 
 	// ── Filter bar HTML ──────────────────────────────────────────────────────
 	const $filterBar = $(`
-		<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
-			padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;
+		<div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;
+			align-items:end;padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;
 			border:1px solid #e2e8f0;border-top:none;">
 
 		<div style="display:flex;flex-direction:column;gap:3px;">
@@ -274,11 +275,10 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		</div>
 	`).appendTo(page.main);
 
-	// Agent mode: tabs handle Status/Response Pending, so drop those two
-	// dropdowns and keep the remaining 5 filters together in one row.
+	// Agent mode: Agent Code filter removed; Status / Response Pending stay,
+	// together with Request Type, Branch Code and dates in one row.
 	if (IS_AGENT) {
-		$filterBar.find("#asr-filter-status, #asr-filter-rp").closest("div").remove();
-		$filterBar.find("label:contains('SOL ID')").text("Agent Code");
+		$filterBar.find("#asr-filter-sol").closest("div").remove();
 		$filterBar.find("#asr-filter-from").closest("div").before(`
 			<div style="display:flex;flex-direction:column;gap:3px;">
 				<label style="font-size:11px;font-weight:600;color:#64748b;">Branch Code</label>
@@ -288,6 +288,12 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				</select>
 			</div>`);
 	}
+
+	// One row for all filters: equal columns, no wrapping / overflow.
+	$filterBar.css("grid-template-columns",
+		`repeat(${$filterBar.children().length}, minmax(0, 1fr))`);
+	$filterBar.find("select, input").css({ width: "100%", "min-width": "0" });
+	$filterBar.find("label").css("white-space", "nowrap");
 
 	// ── Page layout: main = flex column, exact viewport height ─────────────
 	// NOTE: page.main KHUD .layout-main-section hai (direct ref). Purani
@@ -311,7 +317,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					<tr style="background:#f8fafc;border-bottom:2px solid rgba(65,124,125,0.2);">
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:50px;">S.No</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:88px;position:sticky;left:0;z-index:5;background:#f8fafc;border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);">Comments</th>
-						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:110px;">Ticket</th>
+						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:90px;">Ticket</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:100px;">Creation Date</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:160px;">Request Type</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:80px;">SOL ID</th>
@@ -366,12 +372,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 				(opts.sub_types || []).forEach(s => {
 					const v = frappe.utils.escape_html(s);
 					$rt.append(`<option value="${v}">${v}</option>`);
-				});
-				const $sol = $("#asr-filter-sol");
-				(opts.agent_codes || []).forEach(a => {
-					const code = frappe.utils.escape_html(a.agent_code || "");
-					const nm = frappe.utils.escape_html(a.agent_name || "");
-					$sol.append(`<option value="${code}">${code}${nm ? " – " + nm : ""}</option>`);
 				});
 				const $branch = $("#asr-filter-branch-code");
 				(opts.branch_codes || []).forEach(b => {
@@ -430,7 +430,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		$main.find("button").on("click", function () {
 			state.mainTab = $(this).data("tab");
 			state.subStatus = "";
-			if (!IS_AGENT) $("#asr-filter-status").val("");
+			$("#asr-filter-status").val("");
 			renderTabs();
 			applyFilters();
 		});
@@ -460,7 +460,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		$sub.find("button").on("click", function () {
 			const s = $(this).data("sub");
 			state.subStatus = (state.subStatus === s) ? "" : s;
-			if (!IS_AGENT) $("#asr-filter-status").val("");
+			$("#asr-filter-status").val("");
 			renderTabs();
 			applyFilters();
 		});
@@ -473,40 +473,37 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		return TAB_GROUPS[state.mainTab] || [];
 	}
 	function applyFilters() {
-	 // Tabs win when set; Account alone falls back to the Status dropdown.
+	 // Tabs win when set; otherwise Status / Response Pending dropdowns apply.
 		let statuses = statusList();
-		if (!statuses.length && !IS_AGENT) {
+		if (!statuses.length) {
 			const s = $("#asr-filter-status").val();
 			if (s) statuses = [s];
 		}
 		// RP sub-badges filter on response_pending (within pending statuses).
 		const rpSub = RP_SUBS.includes(state.subStatus) ? state.subStatus : "";
-		const rpFallback = IS_AGENT ? "" : ($("#asr-filter-rp").val() || "");
+		const rpFallback = $("#asr-filter-rp").val() || "";
 		state.filters = {
 			statuses:         statuses,
 			response_pending: rpSub || rpFallback,
 			request_type:     $("#asr-filter-rt").val(),
-			sol_id:           $("#asr-filter-sol").val(),
+			sol_id:           $("#asr-filter-sol").val() || "",
 			from_date:        $("#asr-filter-from").val(),
 			to_date:          $("#asr-filter-to").val(),
 			column_search:    state.colSearch || {},
 		};
 		if (IS_AGENT) {
-			state.filters.sub_type   = $("#asr-filter-rt").val();
-			state.filters.agent_code = $("#asr-filter-sol").val();
+			state.filters.sub_type    = $("#asr-filter-rt").val();
 			state.filters.branch_code = (($("#asr-filter-branch-code").val()) || "").trim();
 		}
 		resetAndLoad();
 	}
 
-	if (!IS_AGENT) {
-		$("#asr-filter-status").on("change", () => {
-			state.mainTab = "all";
-			state.subStatus = "";
-			renderTabs();
-			applyFilters();
-		});
-	}
+	$("#asr-filter-status").on("change", () => {
+		state.mainTab = "all";
+		state.subStatus = "";
+		renderTabs();
+		applyFilters();
+	});
 	// ── Per-column search (only where needed; server filters) ──────────────
 	// Order = thead order (empty cell keeps alignment).
 	const COL_SEARCH_COLS = [
@@ -597,7 +594,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 		$(this).css({ "border-color": "#e2e8f0", background: "#f8fafc" });
 	});
 	$("#asr-filter-rt, #asr-filter-sol").on("change", applyFilters);
-	if (!IS_AGENT) $("#asr-filter-rp").on("change", applyFilters);
+	$("#asr-filter-rp").on("change", applyFilters);
 	$("#asr-filter-from, #asr-filter-to").on("change", applyFilters);
 
 	if (IS_AGENT) {
@@ -849,7 +846,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						? `<span class="asr-cmt-count" style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:4px;cursor:default;">${r.comments_count}</span><button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="View comments" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`
 						: `<button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="Add comment" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`}
 				</td>
-				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${frappe.utils.escape_html(r.ticket)}">${frappe.utils.escape_html((r.ticket || "").split("-").slice(-2).join("-") || r.ticket)}${wfActionsFor(r).length ? ` <button class="asr-row-act" title="Workflow actions" style="border:1px solid #cbd5e1;background:#fff;cursor:pointer;border-radius:6px;padding:0 6px;margin-left:4px;font-size:11px;color:#417c7d;font-weight:700;">›</button>` : ""}</td>
+				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${frappe.utils.escape_html(r.ticket)}">${frappe.utils.escape_html((r.ticket || "").split("-").pop() || r.ticket)}</td>
 				<td ${tdGray}>
 					${r.creation_date ? r.creation_date.split("-").reverse().join("-") : "—"}
 					<span style="display:block;font-size:10.5px;color:#94a3b8;">${(function(){
@@ -912,11 +909,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			$tr.find(".asr-cmt-btn").on("click", function (e) {
 				e.stopPropagation();
 				showComments($(this).data("ticket"), r);
-			});
-			// Row action trigger: small popup (like old send-icon menu).
-			$tr.find(".asr-row-act").on("click", function (e) {
-				e.stopPropagation();
-				openWfPopup(r.ticket, wfActionsFor(r), e.clientX, e.clientY);
 			});
 			// Comments cell: anywhere click = dialog only, never the form.
 			$tr.find(".asr-cmt-cell").on("click", function (e) {
@@ -1788,7 +1780,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			const rowIdx  = baseIdx + idx;
 			const bg      = rowIdx % 2 === 0 ? "#fff" : "#fafafa";
 			const mod     = formatModified(r.modified);
-			const shortId = String(r.ticket || "").split("-").slice(-2).join("-") || r.ticket;
+			const shortId = String(r.ticket || "").split("-").pop() || r.ticket;
 			const resolvedDateHtml = (function () {
 				if (!r.resolved_date) return "—";
 				const d = esc(r.resolved_date.split("-").reverse().join("-"));
@@ -1804,7 +1796,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						: ""}
 					<button class="asr-cmt-btn" data-ticket="${esc(r.ticket)}" title="View comments" style="border:1px solid #cbd5e1;background:#fff;cursor:pointer;border-radius:6px;padding:1px 6px;font-size:11px;color:#417c7d;">💬</button>
 				</td>
-				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${esc(r.ticket)}">${esc(shortId)}${wfActionsFor(r).length ? ` <button class="asr-row-act" title="Workflow actions" style="border:1px solid #cbd5e1;background:#fff;cursor:pointer;border-radius:6px;padding:0 6px;margin-left:4px;font-size:11px;color:#417c7d;font-weight:700;">›</button>` : ""}</td>
+				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${esc(r.ticket)}">${esc(shortId)}</td>
 				<td style="${tdBase}color:#475569;">${esc(r.creation_date ? r.creation_date.split("-").reverse().join("-") : "—")}<span style="display:block;font-size:10.5px;color:#94a3b8;">${timePart(r.creation_time)}</span></td>
 				<td style="${tdBase}color:#475569;">${esc(r.sub_type || "—")}</td>
 				<td style="${tdBase}color:#475569;">${esc(r.agent_code || "—")}</td>
@@ -1841,10 +1833,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			$tr.find(".asr-cmt-btn").on("click", function (e) {
 				e.stopPropagation();
 				showAgentComments($(this).data("ticket"), r);
-			});
-			$tr.find(".asr-row-act").on("click", function (e) {
-				e.stopPropagation();
-				openAgentWfPopup(r.ticket, wfActionsFor(r), e.clientX, e.clientY);
 			});
 			$tr.find(".asr-cmt-cell").on("click", function (e) {
 				if ($(e.target).closest(".asr-cmt-btn").length) return;

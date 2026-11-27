@@ -35,14 +35,14 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Field Type",
-   "options": "Data\nSmall Text\nSelect\nDate",
+   "options": "Data\nSmall Text\nSelect\nDate\nLink",
    "reqd": 1
   },
   {
    "fieldname": "options",
    "fieldtype": "Small Text",
-   "label": "Options (for Select)",
-   "depends_on": "eval:doc.field_type=='Select'"
+   "label": "Options (for Select / Link)",
+   "depends_on": "eval:doc.field_type=='Select' || doc.field_type=='Link'"
   },
   {
    "fieldname": "service_request_sub_type",

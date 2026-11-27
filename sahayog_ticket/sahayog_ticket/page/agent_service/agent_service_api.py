@@ -53,12 +53,31 @@ def get_agent_details(agent_code):
         d = frappe.get_doc("Agent", agent_code)
     except frappe.DoesNotExistError:
         return {}
+    account_numbers = {
+        "Operative": d.get("agent_operative_account") or "",
+        "Savings": d.get("agent_saving_account") or "",
+        "Security": d.get("agent_security_account") or "",
+    }
     return {
         "agent_name": d.get("agent_name") or "",
         "branch": d.get("branch_name") or "",
         "branch_code": d.get("branch_code") or "",
         "branch_name": d.get("branch_name") or "",
         "sol_id": d.get("sol_id") or "",
+        # Values for the "Existing ..." fields of Agent request types.
+        # Desk fills only the fields that exist in the selected Request Type.
+        "prefill": {
+            "account_holder_name": d.get("agent_name") or "",
+            "existing_mobile": d.get("phone_number") or "",
+            "existing_authorizer_id": d.get("auth_id") or "",
+            "existing_sol_id": d.get("branch_code") or "",
+            "existing_branch": d.get("branch_name") or "",
+            "operative_account": account_numbers["Operative"],
+            "savings_account": account_numbers["Savings"],
+            "security_account": account_numbers["Security"],
+            "cif": d.get("cif") or "",
+        },
+        "account_numbers": account_numbers,
     }
 
 
@@ -72,12 +91,14 @@ def create_agent_request(args):
         args = _json.loads(args or "{}")
     args = dict(args or {})
 
-    agent_code = args.get("agent_code")
+    agent_code = (args.get("agent_code") or "").strip()
     sub_type = args.get("sub_type")
-    if not agent_code:
-        frappe.throw(_("Agent Code is required."))
     if not sub_type:
         frappe.throw(_("Request Type is required."))
+    # Agent Authorizer Mapping only updates authorizer IDs; no Agent master
+    # data is needed there.
+    if sub_type != "Agent Authorizer Mapping" and not agent_code:
+        frappe.throw(_("Agent Code is required."))
 
     values = args.get("values") or {}
     if isinstance(values, str):
@@ -93,14 +114,14 @@ def create_agent_request(args):
             not str(values.get("new_agent_code") or "").strip():
         frappe.throw(_("New Agent Code is required."))
 
-    agent = get_agent_details(agent_code)
+    agent = get_agent_details(agent_code) if agent_code else {}
     agent_name = args.get("agent_name") or agent.get("agent_name") or ""
     item_key = frappe.generate_hash(length=12)
 
     row = {
         "doctype": "Ticket Item",
         "sub_type": sub_type,
-        "agent_code": agent_code,
+        "agent_code": agent_code or None,
         "agent_name": agent_name,
         "branch_code": agent.get("branch_code") or "",
         "branch_name": agent.get("branch_name") or "",

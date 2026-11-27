@@ -91,6 +91,30 @@ $(document).on('input', 'input[data-fieldname="account_number"]', function() {
     }
 });
 
+// Agent Account Mapping: same 15-digit typing limit for the dynamic field.
+$(document).on('focus', '.agent-val[data-key="new_account_number"]', function() {
+    $(this).attr('maxlength', 15);
+});
+
+$(document).on('input', '.agent-val[data-key="new_account_number"]', function() {
+    let val = $(this).val().replace(/\D/g, '').slice(0, 15);
+    if ($(this).val() !== val) {
+        $(this).val(val).trigger('change');
+    }
+});
+
+// Agent Mobile Number Update: same typing limit, 10 digits for mobile.
+$(document).on('focus', '.agent-val[data-key="new_mobile"]', function() {
+    $(this).attr('maxlength', 10);
+});
+
+$(document).on('input', '.agent-val[data-key="new_mobile"]', function() {
+    let val = $(this).val().replace(/\D/g, '').slice(0, 10);
+    if ($(this).val() !== val) {
+        $(this).val(val).trigger('change');
+    }
+});
+
 $(document).on('input', 'input[data-fieldname="contact_number"], input[data-fieldname="new_contact_number"]', function() {
     let val = $(this).val().replace(/\D/g, '');
     // Handle Indian mobile prefixes (e.g. +91, 91, or 0)
@@ -247,6 +271,98 @@ frappe.ui.form.on("Sahayog Ticket", {
         .closest("li")
         .remove();
     }, 100);
+  },
+
+  // NON-Operations tickets: Frappe workflow ki Actions menu (poora dropdown)
+  // aur setup_btn() ke chhupaye buttons — dono handle karte hain. Status sirf
+  // "Status" dropdown se chalega. Operations ka workflow bilkul untouched.
+  //
+  // Frappe get_transitions() async hai, isliye timeout se race ho sakti thi.
+  // Isliye MutationObserver lagaya hai: jab bhi menu me item aaye, cleanup
+  // turant chalega. Once per page, cur_frm se department check hota hai.
+  //
+  // [COMMENTED OUT — purana timeout-based version, reference ke liye]
+  // hide_non_ops_workflow_actions: function (frm) {
+  //   if (frm.is_new() || frm.doc.dept_name === "Operations") return;
+  //   setTimeout(() => { ... }, 100);
+  // },
+  hide_non_ops_workflow_actions: function (frm) {
+    if (!frm || !frm.page) return;
+
+    const clean = () => {
+      // Kabhi bhi form refresh ko break mat karna — ye sirf UI cleanup hai.
+      try {
+        const f = window.cur_frm;
+        if (!f || !f.page || f.doctype !== "Sahayog Ticket") return;
+
+        const page = f.page;
+        const isOps = f.doc && f.doc.dept_name === "Operations";
+
+        if (isOps) {
+          // Pichhle non-Operations ticket se dropdown chhupa ho to wapas dikhao.
+          // Buttons/workflow actions Frappe core ki tarah hi rahenge.
+          if (page.actions_btn_group) page.actions_btn_group.removeClass("hide");
+          return;
+        }
+
+        // 1) Workflow ke action items + Help hatate hain.
+        if (page.actions && page.actions.length) {
+          const $items = page.actions.find(".menu-item-label").filter((i, el) => {
+            const t = $(el).text().trim();
+            return (
+              t === __("In-Progress") ||
+              t === __("Resolve") ||
+              t === __("Reopen") ||
+              t === __("Close") ||
+              t === __("Mark Resolved") ||
+              t === __("Send to Branch") ||
+              t === __("Send to CPC") ||
+              t === __("Help")
+            );
+          });
+          if ($items.length) $items.closest("li").remove();
+        }
+
+        // 2) Khaali Actions dropdown bhi chhupa dete hain (user ko action
+        //    button bilkul dikhe hi nahi). Koi aur action item ho to rahega.
+        if (page.actions_btn_group && page.actions_btn_group.length) {
+          const left = page.actions && page.actions.length
+            ? page.actions.find(".menu-item-label").length
+            : 0;
+          if (left === 0) {
+            page.actions_btn_group.addClass("hide");
+          } else {
+            page.actions_btn_group.removeClass("hide");
+          }
+        }
+
+        // 3) setup_btn() in buttons hide kar deta tha jab action add hota tha.
+        //    Non-Operations me Status dropdown chalana hai isliye wapas dikhao.
+        if (page.btn_primary && page.btn_primary.length) page.btn_primary.removeClass("hide");
+        if (page.btn_secondary && page.btn_secondary.length) page.btn_secondary.removeClass("hide");
+      } catch (e) {
+        // Safety: UI cleanup fail ho to bhi ticket form khula rahe.
+        console.warn("Sahayog Ticket: workflow action cleanup skipped", e);
+      }
+    };
+
+    // Observer sirf ek baar lagao (page object Desk me reuse hota hai).
+    if (
+      !frm.page.__asrWfCleanupObserver &&
+      window.MutationObserver &&
+      frm.page.actions &&
+      frm.page.actions.length
+    ) {
+      frm.page.__asrWfCleanupObserver = new MutationObserver(clean);
+      frm.page.__asrWfCleanupObserver.observe(frm.page.actions[0], {
+        childList: true,
+      });
+    }
+
+    clean();
+    // Core ka promise thoda der me resolve ho to bhi cleanup pakka ho.
+    setTimeout(clean, 100);
+    setTimeout(clean, 500);
   },
 
   // Hamara holder banner (set_intro) same box me likha jata hai; refresh ke
@@ -434,6 +550,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     frm.trigger("ops_holder_banner");
     frm.trigger("remove_workflow_help");
     frm.trigger("hide_workflow_readonly_banner");
+    frm.trigger("hide_non_ops_workflow_actions");
 
     // Check if the user is an employee and has a specific role
     if (frm.doc.status === "Closed") {
@@ -462,10 +579,9 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
 
     if (!frm.is_new()) {
-      // Status moves (In-Progress/Resolve/Re-Open/Close) are driven by Frappe
-      // Workflow actions for ALL tickets now (free lane covers non-Operations),
-      // so the old direct Status buttons stay hidden to avoid dual UI.
-      // assign_to + Set Executive Remark buttons remain (no status change).
+      // Old Desk flow restored for NON-Operations tickets: the "Status"
+      // dropdown buttons are the only way to move status there. Operations
+      // tickets keep their Frappe Workflow actions exactly as before.
       const assignRoleOk = (
         frappe.user.has_role("IT Support Executive") ||
         frappe.user.has_role("Admin Support Executive") ||
@@ -483,34 +599,57 @@ frappe.ui.form.on("Sahayog Ticket", {
         if (frm.doc.status === "In-Progress") {
           frm.trigger("executive_remark");
         }
+      }
 
-        // IT Support Executive only: restore the old "Status" dropdown
-        // (In-Progress + Resolve, with the same remark dialogs as before the
-        // workflow was added). Purely additive — Workflow Actions, the new
-        // Status button and every other role stay exactly as they are.
-        // Old behaviour kept: Operations-dept tickets stay workflow-only.
-        if (frappe.user.has_role("IT Support Executive")) {
-          const it_ops_workflow = frm.doc.dept_name === "Operations";
-          if (!it_ops_workflow) {
-            if (frm.doc.status === "Open") {
-              frm.trigger("In_Progress_button");
-              frm.trigger("resolve_button");
-            } else if (frm.doc.status === "In-Progress") {
-              frm.trigger("resolve_button");
-            }
-          }
-          // Re-Open + Close: only the ticket owner, only when Resolved.
-          // (These are separate buttons, exactly like the old behaviour;
-          // Close still asks for a Close Remark, Re-Open for a Re-Open Remark.)
-          if (
-            frm.doc.status === "Resolved" &&
-            frm.doc.owner === frappe.session.user
-          ) {
-            frm.trigger("reopen_button");
-            frm.trigger("close_button");
-          }
+      // Status dropdown: old 9-role flow, NON-Operations only. Operations
+      // dept stays on the workflow lane (unchanged).
+      const ops_workflow = frm.doc.dept_name === "Operations";
+      if (assignRoleOk && !ops_workflow) {
+        if (frm.doc.status === "Open") {
+          frm.trigger("In_Progress_button");
+          frm.trigger("resolve_button");
+        } else if (frm.doc.status === "In-Progress") {
+          frm.trigger("resolve_button");
         }
       }
+
+      // Re-Open + Close: only the ticket owner, only when Resolved.
+      // (Separate buttons, exactly like the old behaviour; Close asks for a
+      // Close Remark, Re-Open for a Re-Open Remark.)
+      // Non-Operations only — Operations Reopen stays inside its workflow.
+      if (
+        !ops_workflow &&
+        frm.doc.status === "Resolved" &&
+        frm.doc.owner === frappe.session.user
+      ) {
+        frm.trigger("reopen_button");
+        frm.trigger("close_button");
+      }
+
+      // [COMMENTED OUT — old IT-only restore block, kept for reference]
+      // // IT Support Executive only: restore the old "Status" dropdown
+      // // (In-Progress + Resolve, with the same remark dialogs as before the
+      // // workflow was added). Purely additive — Workflow Actions, the new
+      // // Status button and every other role stay exactly as they are.
+      // // Old behaviour kept: Operations-dept tickets stay workflow-only.
+      // if (frappe.user.has_role("IT Support Executive")) {
+      //   const it_ops_workflow = frm.doc.dept_name === "Operations";
+      //   if (!it_ops_workflow) {
+      //     if (frm.doc.status === "Open") {
+      //       frm.trigger("In_Progress_button");
+      //       frm.trigger("resolve_button");
+      //     } else if (frm.doc.status === "In-Progress") {
+      //       frm.trigger("resolve_button");
+      //     }
+      //   }
+      //   if (
+      //     frm.doc.status === "Resolved" &&
+      //     frm.doc.owner === frappe.session.user
+      //   ) {
+      //     frm.trigger("reopen_button");
+      //     frm.trigger("close_button");
+      //   }
+      // }
       // Designation top-up (cached per session): designation ending with
       // Executive/Manager can also assign. Skipped when role gate already
       // fired (no duplicate button).
@@ -1728,7 +1867,40 @@ frappe.ui.form.on("Sahayog Ticket", {
     } catch (e) {}
   },
 
-  // in progress button : sets the status to In-Progress (no remark prompt now)
+  // in progress button : sets the status to In-Progress (NO remark prompt).
+  // [COMMENTED OUT — mandatory-remark version, kept for reference only]
+  // In_Progress_button: function (frm) {
+  //   frm.add_custom_button(
+  //     __("In-Progress"),
+  //     function () {
+  //       let currentOnHoldRemark = frm.doc.on_hold_remark || "";
+  //       frappe.confirm(__("Do you want to set In-Progress "), function () {
+  //         let d = new frappe.ui.Dialog({
+  //           title: "Enter In-Progress Remarks",
+  //           fields: [{ label: "In-Progress Remark", fieldname: "executive_remark",
+  //                      fieldtype: "Small Text", reqd: 1,
+  //                      default: currentOnHoldRemark }],
+  //           size: "small",
+  //           primary_action_label: "Submit",
+  //           primary_action: function () {
+  //             if (!d.fields_dict.executive_remark.get_value()) {
+  //               frappe.msgprint(__("Please provide In-Progress remark."));
+  //               return;
+  //             }
+  //             frm.set_value("executive_remark", d.fields_dict.executive_remark.get_value());
+  //             frm.set_value("status", "In-Progress");
+  //             frm.refresh_field("status");
+  //             frm.set_value("assigned_to", frappe.session.user);
+  //             frm.save();
+  //             d.hide();
+  //           },
+  //         });
+  //         d.show();
+  //       });
+  //     },
+  //     __("Status"),
+  //   );
+  // },
   In_Progress_button: function (frm) {
     frm.add_custom_button(
       __("In-Progress"),
@@ -2666,6 +2838,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       // Invalidate the cached visible_columns and rebuild the grid so the
       // header and rows reflect the new hidden flags immediately.
       try { grid.reset_grid(); } catch (e) { /* grid not ready */ }
+      setTimeout(function () { sync_agent_authorizer_grid(frm); }, 0);
     };
 
     if (grid.wrapper) {
@@ -2677,36 +2850,23 @@ frappe.ui.form.on("Sahayog Ticket", {
 
     if (!frappe._agent_grid_cols_css) {
       const sel = (cols, cls) => cols.map(f => `.${cls} [data-fieldname="${f}"]`).join(",");
+      const hideSel = (prefix, cols) => cols.map(f => `${prefix} [data-fieldname="${f}"]`).join(",");
       frappe._agent_grid_cols_css = $("<style>")
-        .text(sel(account_cols, "agent-request-grid") + "{display:none!important}" +
-              sel(agent_cols, "account-request-grid") + "{display:none!important}")
+        .text(
+          sel(account_cols, "agent-request-grid") + "{display:none!important}" +
+          sel(agent_cols, "account-request-grid") + "{display:none!important}" +
+          hideSel(".agent-request-grid .agent-authorizer-row", AGENT_AUTHORIZER_GRID_FIELDS) +
+            "{display:none!important}" +
+          hideSel(".agent-request-grid.agent-authorizer-only .grid-heading-row",
+            AGENT_AUTHORIZER_GRID_FIELDS) + "{display:none!important}"
+        )
         .appendTo("head");
     }
   }
 });
 
 // start of ticket_item.js we are adding a button to fetch account details from external API
-// TEMPORARILY DISABLED request type: "Account Transfer" (kept in the doctype so
-// existing records stay valid; only hidden from the picker for new selections).
-const DISABLED_REQUEST_TYPES = ["Account Transfer"];
-
 frappe.ui.form.on("Ticket Item", {
-  form_render: function (frm, cdt, cdn) {
-    const grid = frm.fields_dict.request_detail && frm.fields_dict.request_detail.grid;
-    if (!grid) return;
-    setTimeout(function () {
-      $(grid.wrapper)
-        .find('select[data-fieldname="request_type"]')
-        .each(function () {
-          // Keep the option when the row already uses it, so data is not lost.
-          if ($(this).val() === "Account Transfer") return;
-          DISABLED_REQUEST_TYPES.forEach((rt) => {
-            $(this).find(`option[value="${rt}"]`).remove();
-          });
-        });
-    }, 50);
-  },
-
   get_account_details: function (frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
 
@@ -2805,15 +2965,82 @@ function agent_escape_html(s) {
   });
 }
 
+// Fields whose value comes from the Agent master. When the agent changes,
+// old prefilled values must go away just like Agent Name / Branch Code do.
+const AGENT_PREFILL_KEYS = [
+  "existing_account_number", "account_holder_name", "existing_mobile",
+  "existing_authorizer_id", "existing_sol_id", "existing_branch",
+  "operative_account", "savings_account", "security_account", "cif",
+];
+
+// Link field -> [doctype, field to read, target field to fill]
+const AGENT_LINK_FILL = {
+  existing_authorizer_id: ["Employee", "employee_name", "existing_authorizer_name"],
+  new_authorizer_id: ["Employee", "employee_name", "new_authorizer_name"],
+  new_sol_id: ["Sahayog Branch", "branch", "new_branch"],
+  new_branch_code: ["Sahayog Branch", "branch", "new_branch_name"],
+};
+
+// Auto-filled from a Link field, so the user should not type over it.
+const AGENT_READONLY_KEYS = ["new_branch_name"];
+
+// Columns hidden only for Authorizer Mapping rows in the Request Detail grid.
+const AGENT_AUTHORIZER_GRID_FIELDS = [
+  "agent_code", "agent_name", "branch_code", "branch_name",
+];
+
+// One optional attachment is available for every Agent request type.
+const AGENT_ATTACH_KEY = "attachment";
+
+function agent_clear_prefill_values(frm, row) {
+  const before = (frm.doc.request_values || []).length;
+  frm.doc.request_values = (frm.doc.request_values || []).filter(function (v) {
+    return v.item_key !== row.item_key || AGENT_PREFILL_KEYS.indexOf(v.field_key) === -1;
+  });
+  if ((frm.doc.request_values || []).length !== before) frm.dirty();
+}
+
+function agent_prefill_value(info, key, values) {
+  const prefill = (info && info.prefill) || {};
+  if (key === "existing_account_number") {
+    const type = String((values && values.account_type) || "").trim();
+    return ((info && info.account_numbers) || {})[type] || "";
+  }
+  return prefill[key] || "";
+}
+
+// Row-wise grid flags: Authorizer Mapping rows hide Agent Code/Name/Branch
+// cells, and the column header hides too when every row is authorizer mapping.
+function sync_agent_authorizer_grid(frm) {
+  if (frm.doc.ticket_type !== "Agent Service Request") return;
+  const grid = frm.fields_dict.request_detail && frm.fields_dict.request_detail.grid;
+  if (!grid || !grid.wrapper) return;
+  const rows = frm.doc.request_detail || [];
+  const onlyAuthorizer = rows.length > 0 && rows.every(function (row) {
+    return row.sub_type === "Agent Authorizer Mapping";
+  });
+  $(grid.wrapper).toggleClass("agent-authorizer-only", onlyAuthorizer);
+  rows.forEach(function (row) {
+    const gr = grid.grid_rows_by_docname && grid.grid_rows_by_docname[row.name];
+    if (gr && gr.wrapper) {
+      $(gr.wrapper).toggleClass(
+        "agent-authorizer-row",
+        row.sub_type === "Agent Authorizer Mapping"
+      );
+    }
+  });
+}
+
 function render_agent_dynamic_fields(frm, cdt, cdn) {
   if (frm.doc.ticket_type !== "Agent Service Request") return;
+  sync_agent_authorizer_grid(frm);
   const row = agent_row(frm, cdt, cdn);
   const ctrl = agent_dynamic_ctrl(frm, cdn);
   if (!row || !ctrl) return;
   agent_item_key(row);
   if (!row.sub_type) {
     ctrl._agent_fields = [];
-    ctrl.html('<div class="text-muted small">Request Type select karein.</div>');
+    ctrl.html('<div class="text-muted small">Please select a Request Type.</div>');
     return;
   }
   frappe.call({
@@ -2826,6 +3053,7 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
       // Request Type badla to purane field keys ki values hata do, warna
       // stale rows save ho jayengi.
       const allowedKeys = new Set(fields.map(function (f) { return f.field_key; }));
+      allowedKeys.add(AGENT_ATTACH_KEY);
       const before = (frm.doc.request_values || []).length;
       frm.doc.request_values = (frm.doc.request_values || []).filter(function (v) {
         return v.item_key !== row.item_key || allowedKeys.has(v.field_key);
@@ -2842,14 +3070,30 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
           saved[v.field_key] = v.value_display || v.value_data || v.value_text || v.value_date || "";
         }
       });
-      let html = '<div class="agent-dynamic-fields">';
+      const prefillInfo = ctrl._agent_info || null;
+      let appliedPrefill = false;
+      let html = '<div class="agent-dynamic-fields" style="display:grid;' +
+        'grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;">';
       fields.forEach(function (f) {
         const key = f.field_key;
-        const val = saved[key] || "";
+        let val = saved[key] || "";
+        if (!val) {
+          val = agent_prefill_value(prefillInfo, key, saved);
+          if (val) appliedPrefill = true;
+        }
+        if (key === "action_type" && row.sub_type === "Agent Customer Mapping") {
+          // Desk shows this as a static control beside Request Type. Keep a
+          // hidden input so existing sync/validation code stays unchanged.
+          html += '<input type="hidden" class="agent-val" data-key="action_type"' +
+            ' value="' + agent_escape_html(val) + '">';
+          return;
+        }
         const condRequired = key === "new_agent_code" &&
           String(saved.action_type || "").trim().toLowerCase() === "modify";
         const star = (f.reqd || condRequired) ? ' <span class="text-danger">*</span>' : "";
-        html += '<div class="frappe-control agent-field" style="margin-bottom:10px;">';
+        const fullWidth = f.field_type === "Small Text";
+        html += '<div class="frappe-control agent-field" style="margin-bottom:10px;' +
+          (fullWidth ? "grid-column:1 / -1;" : "") + '">';
         html += '<label class="control-label">' + agent_escape_html(f.label || key) + star + "</label>";
         if (f.field_type === "Small Text") {
           html += '<textarea class="form-control agent-val" data-key="' + agent_escape_html(key) +
@@ -2863,24 +3107,120 @@ function render_agent_dynamic_fields(frm, cdt, cdn) {
               ">" + agent_escape_html(o) + "</option>";
           });
           html += "</select>";
+        } else if (f.field_type === "Link") {
+          // Keep a hidden agent-val input so validation / sync stay unchanged.
+          html += '<input type="hidden" class="agent-val" data-key="' + agent_escape_html(key) +
+            '" value="' + agent_escape_html(val) + '">';
+          html += '<div class="agent-link-control" data-key="' + agent_escape_html(key) +
+            '" data-options="' + agent_escape_html(f.options || "Employee") + '"></div>';
         } else if (f.field_type === "Date") {
           html += '<input type="date" class="form-control agent-val" data-key="' + agent_escape_html(key) +
             '" value="' + agent_escape_html(val) + '">';
         } else {
+          const readonly = AGENT_READONLY_KEYS.indexOf(key) !== -1 ? " readonly" : "";
           html += '<input type="text" class="form-control agent-val" data-key="' + agent_escape_html(key) +
-            '" value="' + agent_escape_html(val) + '">';
+            '" value="' + agent_escape_html(val) + '"' + readonly + ">";
         }
         html += "</div>";
       });
+
+      // Attachment (same for all request types).
+      html += '<div class="frappe-control agent-field" style="margin-bottom:10px;grid-column:1 / -1;">';
+      html += '<label class="control-label">Attachment</label>';
+      html += '<input type="hidden" class="agent-val" data-key="' + AGENT_ATTACH_KEY +
+        '" value="' + agent_escape_html(saved[AGENT_ATTACH_KEY] || "") + '">';
+      html += '<div class="agent-attach-control" data-key="' + AGENT_ATTACH_KEY + '"></div>';
+      html += "</div>";
       html += "</div>";
       ctrl.html(html);
+      if (row.sub_type === "Agent Customer Mapping") {
+        const actionVal = $(ctrl.wrapper).find('.agent-val[data-key="action_type"]').val() || "";
+        frappe.model.set_value(cdt, cdn, "agent_action_type", actionVal);
+      }
+      $(ctrl.wrapper).find(".agent-attach-control").each(function () {
+        const holder = $(this);
+        const hidden = $(ctrl.wrapper).find('.agent-val[data-key="' + AGENT_ATTACH_KEY + '"]');
+        let control;
+        let initializing = true;
+        control = frappe.ui.form.make_control({
+          df: {
+            fieldname: AGENT_ATTACH_KEY,
+            fieldtype: "Attach",
+            label: "Attachment",
+          },
+          parent: holder,
+          only_input: true,
+          render_input: 1,
+          change: function () {
+            if (initializing) return;
+            hidden.val(control.get_value() || "");
+            sync_agent_values(frm, cdt, cdn);
+          },
+        });
+        const ready = function () { initializing = false; };
+        $.when(control.set_value(hidden.val() || "")).then(ready, ready);
+      });
+      $(ctrl.wrapper).find(".agent-link-control").each(function () {
+        const holder = $(this);
+        const key = holder.data("key");
+        const hidden = $(ctrl.wrapper).find('.agent-val[data-key="' + key + '"]');
+        let control;
+        let initializing = true;
+        control = frappe.ui.form.make_control({
+          df: {
+            fieldname: key,
+            fieldtype: "Link",
+            options: holder.data("options") || "Employee",
+            change: function () {
+              if (initializing) return;
+              const emp = control.get_value() || "";
+              hidden.val(emp);
+              const fill = AGENT_LINK_FILL[key];
+              if (fill) {
+                const nameInput = function () {
+                  return $(ctrl.wrapper).find('.agent-val[data-key="' + fill[2] + '"]');
+                };
+                if (!emp) {
+                  nameInput().val("");
+                } else {
+                  frappe.call({
+                    method: "frappe.client.get_value",
+                    args: {
+                      doctype: fill[0],
+                      fieldname: fill[1],
+                      filters: { name: emp },
+                    },
+                    callback: function (r) {
+                      if (hidden.val() !== emp) return;
+                      nameInput().val((r.message && r.message[fill[1]]) || "");
+                      sync_agent_values(frm, cdt, cdn);
+                    },
+                  });
+                }
+              }
+              sync_agent_values(frm, cdt, cdn);
+            },
+          },
+          parent: holder,
+          only_input: true,
+          render_input: 1,
+        });
+        const ready = function () { initializing = false; };
+        $.when(control.set_value(hidden.val() || "")).then(ready, ready);
+      });
       $(ctrl.wrapper).find(".agent-val").off("change.agent").on("change.agent", function () {
         const changedKey = $(this).data("key");
+        if (changedKey === "account_type") {
+          const num = ((ctrl._agent_info && ctrl._agent_info.account_numbers) || {})[$(this).val()] || "";
+          $(ctrl.wrapper).find('.agent-val[data-key="existing_account_number"]').val(num);
+        }
         sync_agent_values(frm, cdt, cdn);
         if (changedKey === "action_type") {
           render_agent_dynamic_fields(frm, cdt, cdn);
         }
       });
+      // Prefilled values never fire a change event; persist them explicitly.
+      if (appliedPrefill) sync_agent_values(frm, cdt, cdn);
     },
   });
 }
@@ -2954,7 +3294,7 @@ frappe.ui.form.on("Sahayog Ticket", {
       frappe.throw("Please add one Request Detail for Agent Service Request.");
     }
     rows.forEach(function (row) {
-      if (!row.agent_code) {
+      if (row.sub_type !== "Agent Authorizer Mapping" && !row.agent_code) {
         frappe.throw("Row #" + row.idx + ": Agent Code is required.");
       }
       if (!row.sub_type) {
@@ -3017,10 +3357,14 @@ frappe.ui.form.on("Ticket Item", {
   agent_code: function (frm, cdt, cdn) {
     const row = agent_row(frm, cdt, cdn);
     if (!row || frm.doc.ticket_type !== "Agent Service Request") return;
+    const ctrl = agent_dynamic_ctrl(frm, cdn);
     if (!row.agent_code) {
+      if (ctrl) ctrl._agent_info = null;
       frappe.model.set_value(cdt, cdn, "agent_name", "");
       frappe.model.set_value(cdt, cdn, "branch_code", "");
       frappe.model.set_value(cdt, cdn, "branch_name", "");
+      agent_clear_prefill_values(frm, row);
+      render_agent_dynamic_fields(frm, cdt, cdn);
       return;
     }
     frappe.call({
@@ -3032,6 +3376,9 @@ frappe.ui.form.on("Ticket Item", {
         frappe.model.set_value(cdt, cdn, "agent_name", d.agent_name || "");
         frappe.model.set_value(cdt, cdn, "branch_code", d.branch_code || "");
         frappe.model.set_value(cdt, cdn, "branch_name", d.branch_name || "");
+        if (ctrl) ctrl._agent_info = d;
+        agent_clear_prefill_values(frm, row);
+        render_agent_dynamic_fields(frm, cdt, cdn);
       },
     });
   },
@@ -3040,7 +3387,20 @@ frappe.ui.form.on("Ticket Item", {
     if (row && frm.doc.ticket_type === "Agent Service Request") {
       agent_item_key(row);
       frm.dirty();
+      if (row.sub_type !== "Agent Customer Mapping" && row.agent_action_type) {
+        frappe.model.set_value(cdt, cdn, "agent_action_type", "");
+      }
     }
     render_agent_dynamic_fields(frm, cdt, cdn);
+  },
+  agent_action_type: function (frm, cdt, cdn) {
+    const row = agent_row(frm, cdt, cdn);
+    if (!row || row.sub_type !== "Agent Customer Mapping") return;
+    const ctrl = agent_dynamic_ctrl(frm, cdn);
+    const hidden = ctrl && $(ctrl.wrapper).find('.agent-val[data-key="action_type"]');
+    if (!hidden || !hidden.length) return;
+    const value = row.agent_action_type || "";
+    if ((hidden.val() || "") === value) return;
+    hidden.val(value).trigger("change");
   },
 });

@@ -20,7 +20,7 @@ def get_columns():
     return [
         {"label": "Creation Date",    "fieldname": "creation_date",    "fieldtype": "Date",       "width": 120},
         {"label": "Creation Time",    "fieldname": "creation_time",    "fieldtype": "Time",       "width": 120},
-        {"label": "Ticket",           "fieldname": "ticket",           "fieldtype": "Link",       "options": "Sahayog Ticket", "width": 130},
+        {"label": "Ticket",           "fieldname": "ticket",           "fieldtype": "Link",       "options": "Sahayog Ticket", "width": 100},
         {"label": "Ticket Type",      "fieldname": "ticket_type",      "fieldtype": "Data",       "width": 150},
         {"label": "Request Type",     "fieldname": "request_type",     "fieldtype": "Data",       "width": 200},
         {"label": "SOL ID",           "fieldname": "sol_id",           "fieldtype": "Data",       "width": 100},

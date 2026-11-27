@@ -12,9 +12,9 @@ REQUEST_TYPES = {
         ("reason", "Reason", "Small Text", None, 1),
     ],
     "Agent Authorizer Mapping": [
-        ("existing_authorizer_id", "Existing Authorizer ID", "Data", None, 0),
+        ("existing_authorizer_id", "Existing Authorizer ID", "Link", "Employee", 0),
         ("existing_authorizer_name", "Existing Authorizer Name", "Data", None, 0),
-        ("new_authorizer_id", "New Authorizer ID", "Data", None, 1),
+        ("new_authorizer_id", "New Authorizer ID", "Link", "Employee", 1),
         ("new_authorizer_name", "New Authorizer Name", "Data", None, 0),
         ("effective_date", "Effective Date", "Date", None, 0),
         ("reason", "Reason", "Small Text", None, 1),
@@ -27,7 +27,7 @@ REQUEST_TYPES = {
     "Agent SOL ID Modification": [
         ("existing_sol_id", "Existing SOL ID", "Data", None, 0),
         ("existing_branch", "Existing Branch", "Data", None, 0),
-        ("new_sol_id", "New SOL ID", "Data", None, 1),
+        ("new_sol_id", "New SOL ID", "Link", "Sahayog Branch", 1),
         ("new_branch", "New Branch", "Data", None, 0),
         ("reason", "Reason", "Small Text", None, 1),
     ],
@@ -46,9 +46,9 @@ REQUEST_TYPES = {
         ("reason", "Reason", "Small Text", None, 1),
     ],
     "Other Modification": [
-        ("modification_category", "Modification Category", "Data", None, 1),
+        ("modification_category", "Modification Category", "Data", None, 0),
         ("existing_details", "Existing Details", "Small Text", None, 0),
-        ("proposed_details", "Proposed / New Details", "Small Text", None, 1),
+        ("proposed_details", "Proposed / New Details", "Small Text", None, 0),
         ("reason", "Reason", "Small Text", None, 1),
     ],
 }
