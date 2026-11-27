@@ -273,6 +273,98 @@ frappe.ui.form.on("Sahayog Ticket", {
     }, 100);
   },
 
+  // NON-Operations tickets: Frappe workflow ki Actions menu (poora dropdown)
+  // aur setup_btn() ke chhupaye buttons — dono handle karte hain. Status sirf
+  // "Status" dropdown se chalega. Operations ka workflow bilkul untouched.
+  //
+  // Frappe get_transitions() async hai, isliye timeout se race ho sakti thi.
+  // Isliye MutationObserver lagaya hai: jab bhi menu me item aaye, cleanup
+  // turant chalega. Once per page, cur_frm se department check hota hai.
+  //
+  // [COMMENTED OUT — purana timeout-based version, reference ke liye]
+  // hide_non_ops_workflow_actions: function (frm) {
+  //   if (frm.is_new() || frm.doc.dept_name === "Operations") return;
+  //   setTimeout(() => { ... }, 100);
+  // },
+  hide_non_ops_workflow_actions: function (frm) {
+    if (!frm || !frm.page) return;
+
+    const clean = () => {
+      // Kabhi bhi form refresh ko break mat karna — ye sirf UI cleanup hai.
+      try {
+        const f = window.cur_frm;
+        if (!f || !f.page || f.doctype !== "Sahayog Ticket") return;
+
+        const page = f.page;
+        const isOps = f.doc && f.doc.dept_name === "Operations";
+
+        if (isOps) {
+          // Pichhle non-Operations ticket se dropdown chhupa ho to wapas dikhao.
+          // Buttons/workflow actions Frappe core ki tarah hi rahenge.
+          if (page.actions_btn_group) page.actions_btn_group.removeClass("hide");
+          return;
+        }
+
+        // 1) Workflow ke action items + Help hatate hain.
+        if (page.actions && page.actions.length) {
+          const $items = page.actions.find(".menu-item-label").filter((i, el) => {
+            const t = $(el).text().trim();
+            return (
+              t === __("In-Progress") ||
+              t === __("Resolve") ||
+              t === __("Reopen") ||
+              t === __("Close") ||
+              t === __("Mark Resolved") ||
+              t === __("Send to Branch") ||
+              t === __("Send to CPC") ||
+              t === __("Help")
+            );
+          });
+          if ($items.length) $items.closest("li").remove();
+        }
+
+        // 2) Khaali Actions dropdown bhi chhupa dete hain (user ko action
+        //    button bilkul dikhe hi nahi). Koi aur action item ho to rahega.
+        if (page.actions_btn_group && page.actions_btn_group.length) {
+          const left = page.actions && page.actions.length
+            ? page.actions.find(".menu-item-label").length
+            : 0;
+          if (left === 0) {
+            page.actions_btn_group.addClass("hide");
+          } else {
+            page.actions_btn_group.removeClass("hide");
+          }
+        }
+
+        // 3) setup_btn() in buttons hide kar deta tha jab action add hota tha.
+        //    Non-Operations me Status dropdown chalana hai isliye wapas dikhao.
+        if (page.btn_primary && page.btn_primary.length) page.btn_primary.removeClass("hide");
+        if (page.btn_secondary && page.btn_secondary.length) page.btn_secondary.removeClass("hide");
+      } catch (e) {
+        // Safety: UI cleanup fail ho to bhi ticket form khula rahe.
+        console.warn("Sahayog Ticket: workflow action cleanup skipped", e);
+      }
+    };
+
+    // Observer sirf ek baar lagao (page object Desk me reuse hota hai).
+    if (
+      !frm.page.__asrWfCleanupObserver &&
+      window.MutationObserver &&
+      frm.page.actions &&
+      frm.page.actions.length
+    ) {
+      frm.page.__asrWfCleanupObserver = new MutationObserver(clean);
+      frm.page.__asrWfCleanupObserver.observe(frm.page.actions[0], {
+        childList: true,
+      });
+    }
+
+    clean();
+    // Core ka promise thoda der me resolve ho to bhi cleanup pakka ho.
+    setTimeout(clean, 100);
+    setTimeout(clean, 500);
+  },
+
   // Hamara holder banner (set_intro) same box me likha jata hai; refresh ke
   // baad koi aur cheez box overwrite kar jaye to banner dobara laga do.
   // (clear_headline() use NAHI karna — wo shared box khaali karke hamara
@@ -458,6 +550,7 @@ frappe.ui.form.on("Sahayog Ticket", {
     frm.trigger("ops_holder_banner");
     frm.trigger("remove_workflow_help");
     frm.trigger("hide_workflow_readonly_banner");
+    frm.trigger("hide_non_ops_workflow_actions");
 
     // Check if the user is an employee and has a specific role
     if (frm.doc.status === "Closed") {
@@ -486,10 +579,9 @@ frappe.ui.form.on("Sahayog Ticket", {
     }
 
     if (!frm.is_new()) {
-      // Status moves (In-Progress/Resolve/Re-Open/Close) are driven by Frappe
-      // Workflow actions for ALL tickets now (free lane covers non-Operations),
-      // so the old direct Status buttons stay hidden to avoid dual UI.
-      // assign_to + Set Executive Remark buttons remain (no status change).
+      // Old Desk flow restored for NON-Operations tickets: the "Status"
+      // dropdown buttons are the only way to move status there. Operations
+      // tickets keep their Frappe Workflow actions exactly as before.
       const assignRoleOk = (
         frappe.user.has_role("IT Support Executive") ||
         frappe.user.has_role("Admin Support Executive") ||
@@ -507,34 +599,57 @@ frappe.ui.form.on("Sahayog Ticket", {
         if (frm.doc.status === "In-Progress") {
           frm.trigger("executive_remark");
         }
+      }
 
-        // IT Support Executive only: restore the old "Status" dropdown
-        // (In-Progress + Resolve, with the same remark dialogs as before the
-        // workflow was added). Purely additive — Workflow Actions, the new
-        // Status button and every other role stay exactly as they are.
-        // Old behaviour kept: Operations-dept tickets stay workflow-only.
-        if (frappe.user.has_role("IT Support Executive")) {
-          const it_ops_workflow = frm.doc.dept_name === "Operations";
-          if (!it_ops_workflow) {
-            if (frm.doc.status === "Open") {
-              frm.trigger("In_Progress_button");
-              frm.trigger("resolve_button");
-            } else if (frm.doc.status === "In-Progress") {
-              frm.trigger("resolve_button");
-            }
-          }
-          // Re-Open + Close: only the ticket owner, only when Resolved.
-          // (These are separate buttons, exactly like the old behaviour;
-          // Close still asks for a Close Remark, Re-Open for a Re-Open Remark.)
-          if (
-            frm.doc.status === "Resolved" &&
-            frm.doc.owner === frappe.session.user
-          ) {
-            frm.trigger("reopen_button");
-            frm.trigger("close_button");
-          }
+      // Status dropdown: old 9-role flow, NON-Operations only. Operations
+      // dept stays on the workflow lane (unchanged).
+      const ops_workflow = frm.doc.dept_name === "Operations";
+      if (assignRoleOk && !ops_workflow) {
+        if (frm.doc.status === "Open") {
+          frm.trigger("In_Progress_button");
+          frm.trigger("resolve_button");
+        } else if (frm.doc.status === "In-Progress") {
+          frm.trigger("resolve_button");
         }
       }
+
+      // Re-Open + Close: only the ticket owner, only when Resolved.
+      // (Separate buttons, exactly like the old behaviour; Close asks for a
+      // Close Remark, Re-Open for a Re-Open Remark.)
+      // Non-Operations only — Operations Reopen stays inside its workflow.
+      if (
+        !ops_workflow &&
+        frm.doc.status === "Resolved" &&
+        frm.doc.owner === frappe.session.user
+      ) {
+        frm.trigger("reopen_button");
+        frm.trigger("close_button");
+      }
+
+      // [COMMENTED OUT — old IT-only restore block, kept for reference]
+      // // IT Support Executive only: restore the old "Status" dropdown
+      // // (In-Progress + Resolve, with the same remark dialogs as before the
+      // // workflow was added). Purely additive — Workflow Actions, the new
+      // // Status button and every other role stay exactly as they are.
+      // // Old behaviour kept: Operations-dept tickets stay workflow-only.
+      // if (frappe.user.has_role("IT Support Executive")) {
+      //   const it_ops_workflow = frm.doc.dept_name === "Operations";
+      //   if (!it_ops_workflow) {
+      //     if (frm.doc.status === "Open") {
+      //       frm.trigger("In_Progress_button");
+      //       frm.trigger("resolve_button");
+      //     } else if (frm.doc.status === "In-Progress") {
+      //       frm.trigger("resolve_button");
+      //     }
+      //   }
+      //   if (
+      //     frm.doc.status === "Resolved" &&
+      //     frm.doc.owner === frappe.session.user
+      //   ) {
+      //     frm.trigger("reopen_button");
+      //     frm.trigger("close_button");
+      //   }
+      // }
       // Designation top-up (cached per session): designation ending with
       // Executive/Manager can also assign. Skipped when role gate already
       // fired (no duplicate button).
@@ -1752,7 +1867,40 @@ frappe.ui.form.on("Sahayog Ticket", {
     } catch (e) {}
   },
 
-  // in progress button : sets the status to In-Progress (no remark prompt now)
+  // in progress button : sets the status to In-Progress (NO remark prompt).
+  // [COMMENTED OUT — mandatory-remark version, kept for reference only]
+  // In_Progress_button: function (frm) {
+  //   frm.add_custom_button(
+  //     __("In-Progress"),
+  //     function () {
+  //       let currentOnHoldRemark = frm.doc.on_hold_remark || "";
+  //       frappe.confirm(__("Do you want to set In-Progress "), function () {
+  //         let d = new frappe.ui.Dialog({
+  //           title: "Enter In-Progress Remarks",
+  //           fields: [{ label: "In-Progress Remark", fieldname: "executive_remark",
+  //                      fieldtype: "Small Text", reqd: 1,
+  //                      default: currentOnHoldRemark }],
+  //           size: "small",
+  //           primary_action_label: "Submit",
+  //           primary_action: function () {
+  //             if (!d.fields_dict.executive_remark.get_value()) {
+  //               frappe.msgprint(__("Please provide In-Progress remark."));
+  //               return;
+  //             }
+  //             frm.set_value("executive_remark", d.fields_dict.executive_remark.get_value());
+  //             frm.set_value("status", "In-Progress");
+  //             frm.refresh_field("status");
+  //             frm.set_value("assigned_to", frappe.session.user);
+  //             frm.save();
+  //             d.hide();
+  //           },
+  //         });
+  //         d.show();
+  //       });
+  //     },
+  //     __("Status"),
+  //   );
+  // },
   In_Progress_button: function (frm) {
     frm.add_custom_button(
       __("In-Progress"),
