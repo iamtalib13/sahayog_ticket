@@ -403,6 +403,19 @@ class SahayogTicket(Document):
                     _("Row #{0}: New Agent Code is required.").format(row.idx)
                 )
 
+        if row.sub_type == "Agent Account Mapping":
+            value = values.get("new_account_number")
+            account_number = ""
+            if value:
+                account_number = str(
+                    value.value_display or value.value_data
+                    or value.value_text or value.value_date or ""
+                ).strip()
+            if len(account_number) > 15:
+                frappe.throw(
+                    _("Row #{0}: New Account Number cannot be more than 15 digits.").format(row.idx)
+                )
+
     def validate_close_remark(self):
         # Closing Remark is mandatory whenever a ticket transitions to Closed
         if self.status != "Closed" or (self.close_remark or "").strip():
