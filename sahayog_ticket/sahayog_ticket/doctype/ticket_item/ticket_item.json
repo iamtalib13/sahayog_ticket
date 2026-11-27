@@ -36,10 +36,15 @@
   "to_cif",
   "agent_request_section",
   "sub_type",
+  "agent_action_type_column",
+  "agent_action_type",
+  "agent_old_details_section",
   "agent_code",
   "agent_name",
+  "agent_old_details_column",
   "branch_code",
   "branch_name",
+  "agent_new_details_section",
   "agent_dynamic_fields",
   "item_key"
  ],
@@ -311,6 +316,35 @@
    "fieldtype": "Data",
    "hidden": 1,
    "label": "Item Key"
+  },
+  {
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\" && doc.sub_type != \"Agent Authorizer Mapping\"",
+   "fieldname": "agent_old_details_section",
+   "fieldtype": "Section Break",
+   "label": "Old Agent Details"
+  },
+  {
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\" && doc.sub_type != \"Agent Authorizer Mapping\"",
+   "fieldname": "agent_old_details_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\"",
+   "fieldname": "agent_new_details_section",
+   "fieldtype": "Section Break",
+   "label": "New Agent Details"
+  },
+  {
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\" && doc.sub_type==\"Agent Customer Mapping\"",
+   "fieldname": "agent_action_type_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:parent.ticket_type==\"Agent Service Request\" && doc.sub_type==\"Agent Customer Mapping\"",
+   "fieldname": "agent_action_type",
+   "fieldtype": "Select",
+   "label": "Action Type",
+   "options": "\nModify\nRemove"
   }
  ],
  "grid_page_length": 50,
