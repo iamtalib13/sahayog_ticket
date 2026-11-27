@@ -317,7 +317,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 					<tr style="background:#f8fafc;border-bottom:2px solid rgba(65,124,125,0.2);">
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:50px;">S.No</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:88px;position:sticky;left:0;z-index:5;background:#f8fafc;border-right:1px solid #e2e8f0;box-shadow:2px 0 4px rgba(0,0,0,0.06);">Comments</th>
-						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:110px;">Ticket</th>
+						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:90px;">Ticket</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:100px;">Creation Date</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:160px;">Request Type</th>
 						<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:#64748b;white-space:nowrap;width:80px;">SOL ID</th>
@@ -846,7 +846,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						? `<span class="asr-cmt-count" style="display:inline-block;min-width:20px;text-align:center;font-weight:700;font-size:11px;color:#1f5c5d;background:#e6f2f2;border:1px solid #417c7d;border-radius:999px;padding:0 6px;margin-right:4px;cursor:default;">${r.comments_count}</span><button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="View comments" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`
 						: `<button class="btn btn-xs btn-default asr-cmt-btn" data-ticket="${frappe.utils.escape_html(r.ticket)}" title="Add comment" style="padding:1px 6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`}
 				</td>
-				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${frappe.utils.escape_html(r.ticket)}">${frappe.utils.escape_html((r.ticket || "").split("-").slice(-2).join("-") || r.ticket)}${wfActionsFor(r).length ? ` <button class="asr-row-act" title="Workflow actions" style="border:1px solid #cbd5e1;background:#fff;cursor:pointer;border-radius:6px;padding:0 6px;margin-left:4px;font-size:11px;color:#417c7d;font-weight:700;">›</button>` : ""}</td>
+				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${frappe.utils.escape_html(r.ticket)}">${frappe.utils.escape_html((r.ticket || "").split("-").pop() || r.ticket)}</td>
 				<td ${tdGray}>
 					${r.creation_date ? r.creation_date.split("-").reverse().join("-") : "—"}
 					<span style="display:block;font-size:10.5px;color:#94a3b8;">${(function(){
@@ -909,11 +909,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			$tr.find(".asr-cmt-btn").on("click", function (e) {
 				e.stopPropagation();
 				showComments($(this).data("ticket"), r);
-			});
-			// Row action trigger: small popup (like old send-icon menu).
-			$tr.find(".asr-row-act").on("click", function (e) {
-				e.stopPropagation();
-				openWfPopup(r.ticket, wfActionsFor(r), e.clientX, e.clientY);
 			});
 			// Comments cell: anywhere click = dialog only, never the form.
 			$tr.find(".asr-cmt-cell").on("click", function (e) {
@@ -1785,7 +1780,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			const rowIdx  = baseIdx + idx;
 			const bg      = rowIdx % 2 === 0 ? "#fff" : "#fafafa";
 			const mod     = formatModified(r.modified);
-			const shortId = String(r.ticket || "").split("-").slice(-2).join("-") || r.ticket;
+			const shortId = String(r.ticket || "").split("-").pop() || r.ticket;
 			const resolvedDateHtml = (function () {
 				if (!r.resolved_date) return "—";
 				const d = esc(r.resolved_date.split("-").reverse().join("-"));
@@ -1801,7 +1796,7 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 						: ""}
 					<button class="asr-cmt-btn" data-ticket="${esc(r.ticket)}" title="View comments" style="border:1px solid #cbd5e1;background:#fff;cursor:pointer;border-radius:6px;padding:1px 6px;font-size:11px;color:#417c7d;">💬</button>
 				</td>
-				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${esc(r.ticket)}">${esc(shortId)}${wfActionsFor(r).length ? ` <button class="asr-row-act" title="Workflow actions" style="border:1px solid #cbd5e1;background:#fff;cursor:pointer;border-radius:6px;padding:0 6px;margin-left:4px;font-size:11px;color:#417c7d;font-weight:700;">›</button>` : ""}</td>
+				<td style="${tdBase}font-weight:600;color:#417c7d;" title="${esc(r.ticket)}">${esc(shortId)}</td>
 				<td style="${tdBase}color:#475569;">${esc(r.creation_date ? r.creation_date.split("-").reverse().join("-") : "—")}<span style="display:block;font-size:10.5px;color:#94a3b8;">${timePart(r.creation_time)}</span></td>
 				<td style="${tdBase}color:#475569;">${esc(r.sub_type || "—")}</td>
 				<td style="${tdBase}color:#475569;">${esc(r.agent_code || "—")}</td>
@@ -1838,10 +1833,6 @@ frappe.pages["asr-report"].on_page_load = function (wrapper) {
 			$tr.find(".asr-cmt-btn").on("click", function (e) {
 				e.stopPropagation();
 				showAgentComments($(this).data("ticket"), r);
-			});
-			$tr.find(".asr-row-act").on("click", function (e) {
-				e.stopPropagation();
-				openAgentWfPopup(r.ticket, wfActionsFor(r), e.clientX, e.clientY);
 			});
 			$tr.find(".asr-cmt-cell").on("click", function (e) {
 				if ($(e.target).closest(".asr-cmt-btn").length) return;
