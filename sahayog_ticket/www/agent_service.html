@@ -118,7 +118,8 @@
     } else if (f.field_type === 'Small Text') {
       input = '<textarea data-key="' + k + '"></textarea>';
     } else {
-      const max = k === 'new_account_number' ? ' maxlength="15"' : '';
+      const max = k === 'new_account_number' ? ' maxlength="15"'
+        : k === 'new_mobile' ? ' maxlength="10"' : '';
       input = '<input type="text" data-key="' + k + '"' + max + ' />';
     }
     return '<div class="row"><label>' + (f.label || k) + req + '</label>' + input + '</div>';
@@ -129,8 +130,10 @@
   }
 
   document.getElementById('dynamic_fields').addEventListener('input', function (e) {
-    if (!e.target || e.target.dataset.key !== 'new_account_number') return;
-    const val = e.target.value.replace(/\D/g, '').slice(0, 15);
+    const key = e.target && e.target.dataset.key;
+    if (key !== 'new_account_number' && key !== 'new_mobile') return;
+    const limit = key === 'new_account_number' ? 15 : 10;
+    const val = e.target.value.replace(/\D/g, '').slice(0, limit);
     if (e.target.value !== val) e.target.value = val;
   });
 
